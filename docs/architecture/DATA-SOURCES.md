@@ -1,6 +1,6 @@
 # Fontes de Dados
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-04-14
 > Status: accepted
 
@@ -160,6 +160,8 @@ Fontes complementares são usadas em contextos analíticos (L3/L4). A indisponib
 
 ### Arquitetura dos pipelines
 
+Os pipelines de ingestão são **scripts TypeScript standalone** (`tsx`) executados via **GitHub Actions scheduled workflows** — nunca na Vercel (serverless functions não suportam processos de longa duração). Ver [ADR-007](ADR/007-monolith-first-strategy.md).
+
 ```mermaid
 flowchart TD
     subgraph Fontes Externas
@@ -169,23 +171,16 @@ flowchart TD
         CGU[Portal Transparência]
     end
 
-    subgraph Ingestion Pipelines
-        AC[Adapter Câmara]
-        AS[Adapter Senado]
-        AT[Adapter TSE]
-        ACGU[Adapter CGU]
-    end
-
-    subgraph Normalização
+    subgraph "GitHub Actions"
+        AC[Adapter Câmara<br/>TypeScript]
+        AS[Adapter Senado<br/>TypeScript]
+        AT[Adapter TSE<br/>TypeScript]
+        ACGU[Adapter CGU<br/>TypeScript]
         NORM[Normalizer<br/>encoding, datas, IDs]
     end
 
-    subgraph Persistência
+    subgraph "Supabase"
         PG[(PostgreSQL)]
-    end
-
-    subgraph Eventos
-        EB{{NATS JetStream}}
     end
 
     CAM --> AC
@@ -199,8 +194,22 @@ flowchart TD
     ACGU --> NORM
 
     NORM --> PG
-    PG --> EB
 ```
+
+### Cron schedules (GitHub Actions)
+
+```yaml
+# .github/workflows/ingestion.yml
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # votações: 4x por dia
+    - cron: '0 2 * * *'     # parlamentares/comissões: diário
+    - cron: '0 3 * * 0'     # gastos CEAP: semanal
+    - cron: '0 4 1 * *'     # reconciliação: mensal
+  workflow_dispatch:         # trigger manual para re-sync
+```
+
+GitHub Actions para repositórios open-source tem **minutos ilimitados** — sem custo adicional.
 
 ### Princípios dos pipelines
 

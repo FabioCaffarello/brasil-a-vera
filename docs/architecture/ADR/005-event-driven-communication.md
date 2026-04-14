@@ -1,6 +1,6 @@
-# ADR-005: Comunicação Event-Driven entre Bounded Contexts
+# ADR-005: Comunicação entre Bounded Contexts — Estratégia em Fases
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-04-14
 > Status: accepted
 
@@ -10,6 +10,9 @@
 
 - [Contexto](#contexto)
 - [Decisão](#decisão)
+- [Fase 1 — Chamada de Função no Monolito (Waves 0–2)](#fase-1--chamada-de-função-no-monolito-waves-02)
+- [Fase 2 — NATS JetStream (Wave 3+)](#fase-2--nats-jetstream-wave-3)
+- [Contratos de Domain Events](#contratos-de-domain-events)
 - [Alternativas Consideradas](#alternativas-consideradas)
 - [Consequências](#consequências)
 - [Referências](#referências)
@@ -26,23 +29,85 @@ O Brasil a Vera é composto por 9 bounded contexts (ver [Bounded Contexts](../BO
 
 O princípio arquitetural da [Pirâmide de Confiança](../TRUST-PYRAMID.md) exige que contextos de L3/L4 (Impacto) nunca contaminem contextos de L1 (Parlamentares, Votações). O isolamento deve ser estrutural, não convencional.
 
-Restrições:
-
-- Bounded contexts não fazem queries diretos ao banco de outro contexto
-- A comunicação deve ser assíncrona para desacoplar ciclos de vida e deploy
-- O mecanismo deve ser simples de operar — projeto open-source com orçamento zero
-- Contribuidores devem conseguir rodar localmente com `docker-compose`
-- Garantia de entrega: at-least-once é suficiente (consumers devem ser idempotentes)
-
 ## Decisão
 
-**Adotamos comunicação via domain events assíncronos usando NATS JetStream como message broker.**
+**A comunicação entre bounded contexts evolui em duas fases**, acompanhando a migração do monolito para microserviços (ver [ADR-007](007-monolith-first-strategy.md)):
 
-### Arquitetura de eventos
+| Fase | Waves | Mecanismo | Broker |
+|------|-------|-----------|--------|
+| 1 | 0–2 | Chamada de função TypeScript direta entre services | Nenhum |
+| 2 | 3+ | Domain events assíncronos via NATS JetStream | NATS JetStream |
+
+## Fase 1 — Chamada de Função no Monolito (Waves 0–2)
+
+No monolito Next.js, bounded contexts comunicam via **chamada de serviço TypeScript direta**. Domain events existem como interfaces TypeScript em `src/shared/domain-events/` para documentar os contratos, mas a transmissão é síncrona dentro do processo.
+
+### Arquitetura (Waves 0–2)
 
 ```mermaid
 flowchart LR
-    subgraph Producers L1
+    subgraph "Monolito Next.js"
+        subgraph "Producers L1"
+            PARL[Parlamentares<br/>Service]
+            PROP[Proposições<br/>Service]
+            VOTA[Votações<br/>Service]
+        end
+
+        subgraph "Consumers L2/L3"
+            COER[Coerência<br/>Service]
+        end
+
+        VOTA -->|"chamada de função<br/>VotacaoRegistrada"| COER
+        PROP -->|"chamada de função<br/>ProposicaoRegistrada"| COER
+    end
+```
+
+### Isolamento no monolito
+
+O isolamento entre bounded contexts é garantido por **tooling, não por infraestrutura**:
+
+1. **ESLint `import/no-restricted-paths`** — bloqueia imports diretos entre módulos no CI
+2. **Schemas separados no PostgreSQL** — nenhum JOIN cross-schema
+3. **Interface de serviço** — módulos que precisam de dados de outro módulo chamam a interface de serviço do shared kernel, nunca importam a implementação
+
+### Como preparar para a migração
+
+Services devem ser escritos para facilitar a extração futura:
+
+```typescript
+// src/modules/votacoes/service/votacao-service.ts
+
+// O service recebe e retorna tipos de domain event,
+// mesmo que a transmissão seja direta no monolito.
+// Na Wave 3, esta chamada vira publicação no NATS.
+
+import type { VotacaoRegistrada } from '@/shared/domain-events'
+
+export class VotacaoService {
+  async registrarVotacao(/* ... */): Promise<VotacaoRegistrada> {
+    // ... lógica de negócio ...
+    const event: VotacaoRegistrada = {
+      type: 'votacao.registrada',
+      occurredAt: new Date(),
+      trustLevel: 'L1',
+      payload: { votacaoId, proposicaoId, votos, resultado }
+    }
+    // Wave 0–2: retorna o evento para o caller (síncrono)
+    // Wave 3+: publica no NATS
+    return event
+  }
+}
+```
+
+## Fase 2 — NATS JetStream (Wave 3+)
+
+Quando os primeiros módulos Go são extraídos do monolito (ver [ADR-002](002-backend-language-and-framework.md)), NATS JetStream é introduzido como message broker.
+
+### Arquitetura (Wave 3+)
+
+```mermaid
+flowchart LR
+    subgraph "Producers L1"
         PARL[Parlamentares]
         PROP[Proposições]
         VOTA[Votações]
@@ -54,7 +119,7 @@ flowchart LR
         NATS{{NATS JetStream}}
     end
 
-    subgraph Consumers L2/L3
+    subgraph "Consumers L2/L3"
         COER[Coerência]
         GRAF[Grafo Legislativo]
         IMPA[Impacto]
@@ -84,22 +149,6 @@ flowchart LR
 | Licença | Apache 2.0 |
 | Custo | Zero — open-source, single binary |
 
-### Contratos de eventos
-
-Eventos são definidos no shared kernel `libs/domain-events/` (ver [ADR-001](001-monorepo-strategy.md)) como structs Go com serialização JSON. Cada evento carrega:
-
-```go
-type DomainEvent struct {
-    ID            string    `json:"id"`             // UUID v7
-    Type          string    `json:"type"`           // ex: "votacao.registrada"
-    Source        string    `json:"source"`         // bounded context de origem
-    OccurredAt    time.Time `json:"occurred_at"`    // timestamp do fato
-    TrustLevel    string    `json:"trust_level"`    // L1, L2, L3, L4
-    CorrelationID string    `json:"correlation_id"` // rastreabilidade
-    Payload       any       `json:"payload"`        // dados específicos do evento
-}
-```
-
 ### Tópicos (subjects)
 
 Convenção: `bav.<context>.<aggregate>.<action>`
@@ -119,47 +168,74 @@ Convenção: `bav.<context>.<aggregate>.<action>`
 - Retention policy: `WorkQueue` para consumers exclusivos, `Interest` para fan-out
 - Replay: consumers podem ser reiniciados do início do stream para reprocessamento
 
+## Contratos de Domain Events
+
+Independente da fase, os contratos de eventos são definidos em `src/shared/domain-events/` como TypeScript interfaces. Na Wave 3+, estes mesmos contratos são transcritos para structs Go.
+
+```typescript
+// src/shared/domain-events/types.ts
+
+export type TrustLevel = 'L1' | 'L2' | 'L3' | 'L4'
+
+export interface DomainEvent<T = unknown> {
+  id: string              // UUID v7
+  type: string            // ex: "votacao.registrada"
+  source: string          // bounded context de origem
+  occurredAt: Date        // timestamp do fato
+  trustLevel: TrustLevel  // L1, L2, L3, L4
+  correlationId: string   // rastreabilidade
+  payload: T              // dados específicos do evento
+}
+
+export interface VotacaoRegistradaPayload {
+  votacaoId: string
+  proposicaoId: string | null
+  votos: Array<{ parlamentarId: string; voto: string }>
+  resultado: { sim: number; nao: number; aprovada: boolean }
+}
+
+export type VotacaoRegistrada = DomainEvent<VotacaoRegistradaPayload>
+```
+
 ## Alternativas Consideradas
 
-### RabbitMQ
+### NATS JetStream desde o início
 
-- **Prós**: maduro, bem documentado, suporte a múltiplos protocolos (AMQP, MQTT, STOMP), UI de management
-- **Contras**: mais complexo de operar que NATS, Erlang runtime, consumo de memória maior, driver Go funcional mas menos idiomático
-- **Veredicto**: viável, mas NATS é mais simples e leve para o caso de uso
+- **Prós**: desacoplamento real desde o dia 1, replay nativo, idempotência forçada
+- **Contras**: infraestrutura adicional sem benefício no monolito (bounded contexts já estão no mesmo processo), complexidade operacional, contribuidores precisam entender mensageria
+- **Veredicto**: no monolito, o isolamento é garantido por ESLint — mensageria adiciona complexidade sem benefício. Introduzir quando os primeiros módulos forem extraídos.
 
-### Apache Kafka
+### RabbitMQ (Wave 3+)
 
-- **Prós**: padrão da indústria para event streaming, log imutável, replay nativo, ecossistema rico
-- **Contras**: complexidade operacional muito alta (ZooKeeper/KRaft, partições, rebalancing), consumo de recursos desproporcional para o volume do Brasil a Vera (~600 parlamentares, sync diário), curva de aprendizado íngreme para contribuidores
-- **Veredicto**: sobredimensionado — Kafka resolve problemas que o Brasil a Vera não tem
+- **Prós**: maduro, bem documentado, suporte a múltiplos protocolos
+- **Contras**: mais complexo que NATS, Erlang runtime, consumo de memória maior
+- **Veredicto**: viável, mas NATS é mais simples e leve
 
-### PostgreSQL LISTEN/NOTIFY + Outbox Pattern
+### Apache Kafka (Wave 3+)
 
-- **Prós**: sem infraestrutura adicional (reutiliza PostgreSQL existente), transactional outbox garante consistência
-- **Contras**: LISTEN/NOTIFY não persiste mensagens (se o consumer estiver offline, perde), outbox requer polling ou CDC, sem consumer groups nativos, não escala para múltiplos consumers independentes
-- **Veredicto**: aceitável como stepping stone no Wave 0 se NATS for prematuramente complexo, mas não como solução definitiva. Pode ser usado como fallback.
+- **Prós**: padrão da indústria, log imutável, replay nativo
+- **Contras**: complexidade operacional muito alta, consumo de recursos desproporcional para o volume do Brasil a Vera
+- **Veredicto**: sobredimensionado
 
-### Comunicação síncrona (HTTP/gRPC entre serviços)
+### Comunicação síncrona permanente (HTTP entre serviços)
 
-- **Prós**: simples de implementar, sem broker adicional
-- **Contras**: acoplamento temporal (se Coerência está fora, Votações falha?), cascading failures, viola o princípio de isolamento da Pirâmide de Confiança
-- **Veredicto**: incompatível com os princípios arquiteturais do projeto
+- **Prós**: simples, sem broker
+- **Contras**: acoplamento temporal, cascading failures, viola isolamento da Pirâmide
+- **Veredicto**: aceitável no monolito (Fase 1) onde é chamada de função; inaceitável entre serviços independentes (Fase 2)
 
 ## Consequências
 
 ### Positivas
 
-- **Desacoplamento real** — bounded contexts não conhecem seus consumers; publicam eventos e pronto
-- **Isolamento da Pirâmide** — L3/L4 consomem via eventos, nunca acessam L1 diretamente; remover Impacto não afeta Votações
-- **Replay** — se Coerência tiver bug, pode reprocessar todos os eventos desde o início
-- **Simplicidade operacional** — NATS é um binário de ~20MB, configuração mínima
-- **Idempotência forçada** — at-least-once obriga consumers a serem idempotentes, o que é bom para resiliência
+- **Zero infraestrutura adicional nas Waves 0–2** — comunicação é chamada de função, sem broker
+- **Contratos definidos desde o dia 1** — domain events como TypeScript interfaces documentam os contratos mesmo antes do NATS
+- **Migração incremental** — ao extrair um módulo para Go, só precisa trocar a chamada de função por publicação/consumo no NATS
+- **Isolamento da Pirâmide preservado** — ESLint bloqueia imports cruzados no monolito; NATS garante isolamento físico nos microserviços
 
 ### Negativas
 
-- **Eventual consistency** — consumers processam eventos com delay (milissegundos a segundos) — mitigação: acceptable dado que dados são ingeridos em batch diário
-- **Infraestrutura adicional** — NATS é mais um componente para operar — mitigação: binário único, `docker-compose` inclui
-- **Debug mais difícil** — rastrear fluxo de eventos é menos intuitivo que request/response — mitigação: `correlation_id` em todos os eventos, logging estruturado
+- **Sem replay nas Waves 0–2** — se o módulo de Coerência tiver bug, não pode reprocessar eventos passados automaticamente — mitigação: pode recalcular a partir de queries ao banco
+- **Migração requer trabalho** — trocar chamadas de função por publicação no NATS não é automático — mitigação: services já usam tipos de domain event, facilitando a migração
 
 ### Neutras
 
@@ -168,5 +244,5 @@ Convenção: `bav.<context>.<aggregate>.<action>`
 ## Referências
 
 - [NATS JetStream Documentation](https://docs.nats.io/nats-concepts/jetstream)
-- [NATS Go Client](https://github.com/nats-io/nats.go)
 - [Domain Events — Martin Fowler](https://martinfowler.com/eaaDev/DomainEvent.html)
+- [Monolith First — Martin Fowler](https://martinfowler.com/bliki/MonolithFirst.html)

@@ -1,6 +1,6 @@
 # Diagramas C4
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-04-14
 > Status: draft
 
@@ -9,9 +9,10 @@
 ## Sumário
 
 - [Nível 1 — Contexto do Sistema](#nível-1--contexto-do-sistema)
-- [Nível 2 — Containers](#nível-2--containers)
-- [Nível 3 — Componentes (Backend)](#nível-3--componentes-backend)
+- [Nível 2 — Containers (Waves 0–2)](#nível-2--containers-waves-02)
+- [Nível 3 — Componentes (Módulo Backend)](#nível-3--componentes-módulo-backend)
 - [Nível 3 — Componentes (Ingestão)](#nível-3--componentes-ingestão)
+- [Nível 2 — Containers (Wave 3+)](#nível-2--containers-wave-3)
 
 ---
 
@@ -57,9 +58,9 @@ graph TB
     BAV -.-> IPEA
 ```
 
-## Nível 2 — Containers
+## Nível 2 — Containers (Waves 0–2)
 
-Componentes de deploy do sistema e como se comunicam.
+Componentes de deploy do sistema durante as Waves 0–2 (monolito Next.js).
 
 ```mermaid
 graph TB
@@ -68,156 +69,113 @@ graph TB
         API_CLIENT["API Client<br/>(desenvolvedores)"]
     end
 
-    subgraph "Brasil a Vera"
-        WEB["Web App<br/>(Next.js)<br/>SSR / SSG"]
-        
-        subgraph "Backend Services (Go)"
-            SVC_PARL["Parlamentares<br/>Service"]
-            SVC_PROP["Proposições<br/>Service"]
-            SVC_VOTA["Votações<br/>Service"]
-            SVC_GAST["Gastos<br/>Service"]
-            SVC_ELEI["Eleitoral<br/>Service"]
-            SVC_COER["Coerência<br/>Service"]
-            SVC_GRAF["Grafo<br/>Service"]
-        end
+    subgraph "Vercel"
+        NEXT["Next.js Monolito<br/>(TypeScript)<br/>Frontend SSR/SSG +<br/>API Route Handlers"]
+    end
 
-        subgraph "API Gateway"
-            GW["API Gateway / BFF<br/>Roteamento, auth, rate limit"]
-        end
+    subgraph "Supabase"
+        PG["PostgreSQL<br/>(schema por bounded context)"]
+    end
 
-        subgraph "Mensageria"
-            NATS["NATS JetStream<br/>Domain Events"]
-        end
+    subgraph "GitHub Actions"
+        ING["Scripts de Ingestão<br/>(TypeScript)"]
+    end
 
-        subgraph "Persistência"
-            PG["PostgreSQL<br/>(core transacional)"]
-            NEO["Neo4j<br/>(analytical twin)"]
-        end
-
-        subgraph "Ingestão"
-            ING["Pipelines de Ingestão<br/>(Go + Python para NLP)"]
-        end
+    subgraph "Cloudflare"
+        CF["CDN / Proxy<br/>(cache, DDoS)"]
+        R2["R2 Object Storage<br/>(backups, bulk downloads)"]
     end
 
     subgraph "Fontes Externas"
         EXT["APIs Oficiais<br/>(Câmara, Senado, TSE, CGU)"]
     end
 
-    BROWSER --> WEB
-    WEB --> GW
-    API_CLIENT --> GW
-
-    GW --> SVC_PARL
-    GW --> SVC_PROP
-    GW --> SVC_VOTA
-    GW --> SVC_GAST
-    GW --> SVC_ELEI
-    GW --> SVC_COER
-    GW --> SVC_GRAF
-
-    SVC_PARL --> PG
-    SVC_PROP --> PG
-    SVC_VOTA --> PG
-    SVC_GAST --> PG
-    SVC_ELEI --> PG
-    SVC_COER --> PG
-    SVC_GRAF --> NEO
-
-    SVC_PARL --> NATS
-    SVC_PROP --> NATS
-    SVC_VOTA --> NATS
-    NATS --> SVC_COER
-    NATS --> SVC_GRAF
-
+    BROWSER --> CF
+    API_CLIENT --> CF
+    CF --> NEXT
+    NEXT --> PG
     ING --> PG
     EXT --> ING
 ```
 
-### Descrição dos containers
+### Descrição dos containers (Waves 0–2)
 
 | Container | Tecnologia | Responsabilidade |
 |-----------|-----------|-----------------|
-| Web App | Next.js (TypeScript) | Interface web com SSR/SSG, SEO, compartilhamento social |
-| API Gateway / BFF | Go (ou NGINX + config) | Roteamento, autenticação de API keys, rate limiting, CORS |
-| Backend Services | Go | Um serviço por bounded context, Clean Architecture |
-| NATS JetStream | NATS | Message broker para domain events entre bounded contexts |
-| PostgreSQL | PostgreSQL 16+ | Core transacional — schema por bounded context |
-| Neo4j | Neo4j CE | Grafo legislativo — analytical twin alimentado por eventos |
-| Pipelines de Ingestão | Go + Python | Sync com APIs oficiais, normalização, persistência |
+| Next.js Monolito | TypeScript, Vercel | Frontend SSR/SSG + API Route Handlers. Módulos internos por bounded context em `src/modules/` |
+| PostgreSQL | Supabase (free tier) | Core transacional — schema por bounded context. Trust level em todas as tabelas |
+| Scripts de Ingestão | TypeScript (`tsx`), GitHub Actions | Sync periódico com APIs oficiais. Executados via cron workflows, nunca na Vercel |
+| CDN / Proxy | Cloudflare (free) | Cache, DDoS protection, SSL |
+| Object Storage | Cloudflare R2 (free) | Backups, bulk downloads (Wave 2) |
 
-## Nível 3 — Componentes (Backend)
+> **Wave 3+**: módulos Go são extraídos do monolito via Strangler Fig. Um API Gateway (Caddy) na frente roteia requests entre Next.js e os microserviços Go. NATS JetStream é introduzido para domain events. Ver diagrama abaixo.
 
-Detalhamento interno de um bounded context representativo (Votações). Todos os bounded contexts seguem a mesma estrutura hexagonal (ver [ADR-002](ADR/002-backend-language-and-framework.md)).
+## Nível 3 — Componentes (Módulo Backend)
+
+Detalhamento interno de um bounded context representativo (Votações) no monolito Next.js. Todos os bounded contexts seguem a mesma estrutura (ver [ADR-002](ADR/002-backend-language-and-framework.md)).
 
 ```mermaid
 graph TB
-    subgraph "Votações Service"
-        subgraph "Driving Adapters (entrada)"
-            HTTP["HTTP Handler<br/>(REST API)"]
-            EVT_IN["Event Subscriber<br/>(NATS consumer)"]
+    subgraph "Módulo Votações (src/modules/votacoes/)"
+        subgraph "Routes (entrada)"
+            HTTP["Route Handler<br/>(app/api/votacoes/route.ts)"]
         end
 
-        subgraph "Application Layer"
-            UC1["RegistrarVotacao<br/>Use Case"]
-            UC2["ConsultarVotos<br/>Use Case"]
-            UC3["ListarVotacoes<br/>Use Case"]
+        subgraph "Service Layer"
+            UC1["registrarVotacao()"]
+            UC2["consultarVotos()"]
+            UC3["listarVotacoes()"]
         end
 
         subgraph "Domain Layer"
-            AGG["Votacao<br/>Aggregate Root"]
-            VO["VotoNominal<br/>Value Object"]
-            REPO["VotacaoRepository<br/>Interface (Port)"]
-            PUB["EventPublisher<br/>Interface (Port)"]
+            AGG["Votacao<br/>(domain types)"]
+            VO["VotoNominal<br/>(domain types)"]
+            EVT["VotacaoRegistrada<br/>(domain event interface)"]
+            REPO_IF["VotacaoRepository<br/>(interface / port)"]
         end
 
-        subgraph "Driven Adapters (saída)"
-            PG_REPO["PostgreSQL<br/>Repository"]
-            NATS_PUB["NATS<br/>Event Publisher"]
+        subgraph "Repository (saída)"
+            PG_REPO["PostgreSQL<br/>Repository (Drizzle)"]
         end
     end
 
     HTTP --> UC2
     HTTP --> UC3
-    EVT_IN --> UC1
 
     UC1 --> AGG
-    UC2 --> REPO
-    UC3 --> REPO
-    UC1 --> PUB
+    UC1 --> EVT
+    UC2 --> REPO_IF
+    UC3 --> REPO_IF
 
     AGG --> VO
 
-    REPO -.->|implementa| PG_REPO
-    PUB -.->|implementa| NATS_PUB
+    REPO_IF -.->|implementa| PG_REPO
 ```
 
 ### Fluxo de dados
 
-1. **Ingestão** → Pipeline extrai votações da API da Câmara/Senado e publica evento `VotacaoBrutaExtraida` no NATS
-2. **Event Subscriber** → Consome o evento e aciona o use case `RegistrarVotacao`
-3. **Use Case** → Valida, cria aggregate `Votacao` com votos nominais, persiste via `VotacaoRepository`
-4. **Domain Event** → Após persistir, publica `VotacaoRegistrada` via `EventPublisher`
-5. **Consumers externos** → Coerência e Grafo Legislativo consomem `VotacaoRegistrada`
-6. **API Query** → HTTP Handler recebe request, aciona use case `ConsultarVotos`, retorna com `trust_level: L1`
+1. **Ingestão** → Script TypeScript no GitHub Actions extrai votações da API da Câmara/Senado e persiste no PostgreSQL
+2. **Service** → Módulo Coerência chama `VotacaoService.consultarVotos()` via interface de serviço (chamada de função síncrona no monolito)
+3. **API Query** → Route Handler recebe request, aciona service `consultarVotos()`, retorna com `trust_level: L1`
+4. **Wave 3+** → O service publica `VotacaoRegistrada` no NATS em vez de ser chamado diretamente
 
 ## Nível 3 — Componentes (Ingestão)
 
 ```mermaid
 graph LR
-    subgraph "Pipeline Câmara"
-        EXT["Extractor<br/>HTTP client + paginação"]
-        TRANS["Transformer<br/>Normalização + validação"]
-        LOAD["Loader<br/>Upsert PostgreSQL"]
-        PUB["Publisher<br/>Domain event"]
+    subgraph "GitHub Actions Workflow"
+        subgraph "Pipeline Câmara (TypeScript)"
+            EXT["Extractor<br/>fetch + paginação"]
+            TRANS["Transformer<br/>Normalização + validação"]
+            LOAD["Loader<br/>Upsert PostgreSQL"]
+        end
     end
 
     API["Câmara API v2"] --> EXT
     EXT --> TRANS
     TRANS --> LOAD
-    LOAD --> PUB
 
-    LOAD --> PG[(PostgreSQL)]
-    PUB --> NATS{{NATS JetStream}}
+    LOAD --> PG[(PostgreSQL<br/>Supabase)]
 ```
 
 Cada pipeline segue o padrão ETL:
@@ -225,8 +183,43 @@ Cada pipeline segue o padrão ETL:
 | Fase | Responsabilidade |
 |------|-----------------|
 | **Extract** | Chamada HTTP à API externa com retry, paginação, rate limiting |
-| **Transform** | Normalização de encoding (UTF-8), datas (ISO 8601), IDs; validação de schema; enriquecimento com `trust_level: L1` e `source_url` |
+| **Transform** | Normalização de encoding (UTF-8), datas (ISO 8601), IDs; validação com Zod; enriquecimento com `trust_level: L1` e `source_url` |
 | **Load** | Upsert idempotente no PostgreSQL via ID da fonte |
-| **Publish** | Publicação de domain event no NATS para consumers downstream |
 
-Detalhes das fontes e estratégia de ingestão em [Fontes de Dados](DATA-SOURCES.md).
+Scripts executados via `tsx` (TypeScript runner). Schedules configurados no GitHub Actions workflow (ver [Fontes de Dados](DATA-SOURCES.md)).
+
+## Nível 2 — Containers (Wave 3+)
+
+Visão futura quando os primeiros módulos Go são extraídos via Strangler Fig.
+
+```mermaid
+graph TB
+    subgraph "Usuários"
+        BROWSER["Browser / Mobile"]
+        API_CLIENT["API Client"]
+    end
+
+    subgraph "VPS (Hostinger)"
+        CADDY["Caddy<br/>(API Gateway)"]
+        GO_SVC["Go Services<br/>(módulos extraídos)"]
+        NATS["NATS JetStream<br/>(domain events)"]
+    end
+
+    subgraph "Vercel"
+        NEXT["Next.js<br/>(frontend + módulos restantes)"]
+    end
+
+    subgraph "Supabase"
+        PG["PostgreSQL"]
+    end
+
+    BROWSER --> CADDY
+    API_CLIENT --> CADDY
+    CADDY -->|"módulos migrados"| GO_SVC
+    CADDY -->|"restante"| NEXT
+    GO_SVC --> PG
+    GO_SVC <--> NATS
+    NEXT --> PG
+```
+
+Detalhes da estratégia de migração no [ADR-007](ADR/007-monolith-first-strategy.md).

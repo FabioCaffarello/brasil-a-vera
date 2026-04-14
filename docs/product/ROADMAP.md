@@ -1,6 +1,6 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.1
+> Brasil a Vera · Produto · v0.2
 > Última atualização: 2026-04-14
 > Status: accepted
 
@@ -60,14 +60,14 @@ gantt
 
 ### Escopo
 
-- Pipelines de ingestão: Câmara API + Senado API
-- Modelo de domínio: bounded contexts core (Parlamentares, Proposições, Votações, Gastos)
-- PostgreSQL com schema por bounded context
-- NATS JetStream para domain events
-- API interna (não pública) para validação
-- Docker Compose para desenvolvimento local
-- CI/CD básico (lint, testes, build)
-- Trust Metadata como shared kernel implementado
+- Scripts TypeScript de ingestão: Câmara API + Senado API (executados via GitHub Actions)
+- Modelo de domínio: bounded contexts core (Parlamentares, Proposições, Votações, Gastos) como módulos TypeScript
+- PostgreSQL (Supabase free tier) com schema por bounded context
+- Migrations SQL puras em `src/shared/db/migrations/`
+- Estrutura de módulos com ESLint `import/no-restricted-paths` bloqueando imports cross-module
+- API interna (Next.js Route Handlers, não pública) para validação
+- CI/CD básico (ESLint, Vitest, build Next.js)
+- Trust Metadata como shared kernel implementado em `src/shared/trust/`
 
 ### Critérios de Done
 
@@ -77,9 +77,9 @@ gantt
 - [ ] Pipeline do Senado ingere senadores em exercício
 - [ ] Pipeline do Senado ingere votações do último ano
 - [ ] Todos os registros persistidos com `trust_level: L1` e `source_url`
-- [ ] Domain events publicados para Votações e Proposições
-- [ ] Bounded contexts Coerência e Grafo consomem eventos com sucesso
-- [ ] `docker-compose up` sobe todo o stack localmente
+- [ ] ESLint `import/no-restricted-paths` bloqueando imports cross-module no CI
+- [ ] Scripts de ingestão rodando via GitHub Actions cron
+- [ ] `npm run dev` sobe o Next.js monolito conectado ao PostgreSQL
 - [ ] Cobertura de testes > 70% no domínio
 - [ ] Reconciliação manual confirma dados vs. fonte oficial
 
@@ -87,7 +87,8 @@ gantt
 
 - ADRs implementados (ver [ADRs](../architecture/ADR/))
 - Monorepo estruturado conforme [ADR-001](../architecture/ADR/001-monorepo-strategy.md)
-- Clean Architecture em cada bounded context conforme [ADR-002](../architecture/ADR/002-backend-language-and-framework.md)
+- Monolito Next.js modular conforme [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)
+- Clean Architecture em cada módulo conforme [ADR-002](../architecture/ADR/002-backend-language-and-framework.md)
 
 ---
 
@@ -99,14 +100,15 @@ gantt
 
 ### Escopo
 
-- Web app Next.js (ver [ADR-006](../architecture/ADR/006-frontend-stack.md))
+- Next.js monolito (ver [ADR-006](../architecture/ADR/006-frontend-stack.md)) — frontend SSR/SSG + API Route Handlers
 - Página 360° do parlamentar (ver [Parlamentar 360°](../features/PARLAMENTAR-360.md))
 - Página da proposição (tipo, ementa, tramitação, votos)
 - Busca unificada (ver [Busca](../features/SEARCH.md))
 - Pares contraditórios básicos (apenas verbos inequívocos)
-- Top 5 parlamentares com maior afinidade de voto
+- Top 5 parlamentares com maior afinidade de voto (SQL simples — GROUP BY + COUNT)
 - Compartilhamento social com cards OG
 - Export CSV básico
+- Deploy na Vercel (free tier)
 
 ### Critérios de Done
 
@@ -133,15 +135,17 @@ gantt
 
 ### Escopo
 
-- API pública REST com documentação OpenAPI
+- API pública REST com documentação OpenAPI (via Next.js Route Handlers)
 - Índice de coerência temática completo (ver [Motor de Coerência](../features/COHERENCE-ENGINE.md))
 - Alinhamento governo/oposição
 - Alertas por email/push (parlamentar, tema)
 - Comparativo entre parlamentares
 - Integração TSE (candidaturas, doações, bens)
-- Bulk download de datasets
+- Bulk download de datasets (Cloudflare R2)
 - Webhooks para desenvolvedores
 - Rate limiting e API keys
+
+> **Nota de infra**: dados TSE (CSV bulk) podem estourar o Supabase free tier (500MB). Avaliar upgrade para Supabase Pro ($25/mês) ou migração para PostgreSQL em VPS nesta wave.
 
 ### Critérios de Done
 
@@ -162,14 +166,17 @@ gantt
 
 ### Escopo
 
+- **Início da extração de módulos Go (Strangler Fig)** — ver [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)
+- **Introdução do NATS JetStream** para domain events entre serviços — ver [ADR-005](../architecture/ADR/005-event-driven-communication.md)
 - Grafo legislativo interativo (ver [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md))
-- Neo4j populado com dados históricos
-- Detecção de comunidades (Louvain/Leiden)
+- **NetworkX + Apache AGE** para análise de grafo (sem Neo4j) — ver [ADR-003](../architecture/ADR/003-database-strategy.md)
+- Detecção de comunidades (Louvain/Leiden) via NetworkX (Python, batch)
 - Métricas de centralidade (betweenness, closeness, degree)
 - Correlação doações × votos (L3, seção isolada com disclaimer)
 - Timeline de impacto (L3/L4)
 - NLP avançado para classificação de direção de proposições
 - Evolução temporal do grafo
+- VPS Hostinger KVM 2 (R$59/mês) para serviços Go + Caddy como API Gateway
 
 ### Critérios de Done
 
@@ -209,19 +216,19 @@ graph LR
     W2 --> W3["Wave 3<br/>Inteligência"]
     W3 --> W4["Wave 4<br/>Escala"]
 
-    W0 -->|"PostgreSQL + NATS<br/>obrigatórios"| W1
-    W1 -->|"Frontend + busca<br/>obrigatórios"| W2
+    W0 -->|"PostgreSQL + Ingestão<br/>obrigatórios"| W1
+    W1 -->|"Next.js monolito + busca<br/>obrigatórios"| W2
     W2 -->|"TSE + API pública<br/>recomendados"| W3
-    W0 -->|"Neo4j pode ser<br/>provisionado"| W3
 ```
 
 | Dependência | De | Para | Tipo |
 |-------------|-----|------|------|
-| PostgreSQL + schemas | Wave 0 | Wave 1 | Obrigatória |
-| NATS + domain events | Wave 0 | Wave 1 | Obrigatória |
-| Pipelines de ingestão | Wave 0 | Wave 1 | Obrigatória |
-| Frontend Next.js | Wave 1 | Wave 2 | Obrigatória |
+| PostgreSQL (Supabase) + schemas | Wave 0 | Wave 1 | Obrigatória |
+| Scripts de ingestão (GitHub Actions) | Wave 0 | Wave 1 | Obrigatória |
+| ESLint import boundaries | Wave 0 | Wave 1 | Obrigatória |
+| Next.js monolito (frontend + API) | Wave 1 | Wave 2 | Obrigatória |
 | Busca unificada | Wave 1 | Wave 2 | Obrigatória |
 | API pública | Wave 2 | Wave 3 | Recomendada |
 | TSE integration | Wave 2 | Wave 3 | Recomendada (para correlação doações × votos) |
-| Neo4j setup | Wave 0 | Wave 3 | Pode ser antecipado |
+| Extração de módulos Go (Strangler Fig) | Wave 2 | Wave 3 | Obrigatória para microserviços |
+| NATS JetStream | Wave 2 | Wave 3 | Obrigatória para event-driven |

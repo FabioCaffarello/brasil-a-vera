@@ -1,6 +1,6 @@
 # Bounded Contexts
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-04-14
 > Status: accepted
 
@@ -20,7 +20,9 @@
 
 ## Visão Geral
 
-O Brasil a Vera é modelado segundo Domain-Driven Design (DDD) com bounded contexts que refletem o domínio legislativo brasileiro e os níveis da [Pirâmide de Confiança](TRUST-PYRAMID.md). Cada contexto é autónomo: tem seu próprio modelo de domínio, repositório, use cases e adapters.
+O Brasil a Vera é modelado segundo Domain-Driven Design (DDD) com bounded contexts que refletem o domínio legislativo brasileiro e os níveis da [Pirâmide de Confiança](TRUST-PYRAMID.md). Cada contexto é autónomo: tem seu próprio modelo de domínio, repositório, use cases e routes.
+
+Nas Waves 0–2, cada contexto vive como módulo TypeScript em `src/modules/<contexto>/` dentro do monolito Next.js (ver [ADR-007](ADR/007-monolith-first-strategy.md)). Na Wave 3+, módulos são extraídos para microserviços Go via Strangler Fig (ver [ADR-002](ADR/002-backend-language-and-framework.md)).
 
 A separação em contextos não é apenas organizacional — é a garantia estrutural de que dados factuais (L1) nunca são contaminados por análises derivadas (L3/L4).
 
@@ -63,7 +65,7 @@ graph TB
     TRUST -.->|shared kernel| IMPA
 ```
 
-**Legenda**: setas sólidas = domain events assíncronos (ver [ADR-005](ADR/005-event-driven-communication.md)); setas tracejadas = dependência de shared kernel.
+**Legenda**: setas sólidas = comunicação entre contextos (chamada de função no monolito Waves 0–2, domain events via NATS na Wave 3+ — ver [ADR-005](ADR/005-event-driven-communication.md)); setas tracejadas = dependência de shared kernel.
 
 ## Contextos Core (L1)
 
@@ -134,7 +136,7 @@ Integração a partir da Wave 2. Dados do TSE são em CSV bulk — pipeline de i
 
 ## Contextos Analíticos (L2/L3)
 
-Estes contextos consomem dados dos contextos core exclusivamente via domain events. Nunca acessam diretamente o banco dos contextos L1.
+Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos contextos L1. Nas Waves 0–2, a comunicação é via chamada de serviço TypeScript dentro do monolito. Na Wave 3+, migra para domain events assíncronos via NATS JetStream (ver [ADR-005](ADR/005-event-driven-communication.md)).
 
 ### Coerência
 
@@ -155,7 +157,7 @@ Princípio: falso negativo > falso positivo. Apenas classificações inequívoca
 | **Responsabilidade** | Rede de vínculos entre parlamentares, métricas de centralidade, detecção de comunidades, evolução temporal |
 | **Trust level** | L2 (arestas e métricas) / L3 (detecção de comunidades e interpretação de clusters) |
 | **Consome eventos de** | Votações, Proposições, Parlamentares |
-| **Persistência** | Neo4j (ver [ADR-004](ADR/004-graph-database-choice.md)) |
+| **Persistência** | PostgreSQL (Waves 0–2: SQL simples; Wave 3: Apache AGE + NetworkX; Wave 4+: avaliar graph database dedicado — ver [ADR-003](ADR/003-database-strategy.md) e [ADR-004](ADR/004-graph-database-choice.md)) |
 | **Spec detalhada** | [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md) |
 
 ### Impacto
@@ -178,7 +180,7 @@ Contexto L4 opera sob sub-brand "Brasil a Vera Labs" com identidade visual disti
 |----------|-------|
 | **Responsabilidade** | Vocabulário de `trust_level` (L1–L4), regras de classificação, textos de disclaimer, validação |
 | **Tipo** | Shared kernel — importado por todos os bounded contexts |
-| **Localização** | `libs/trust-metadata/` (ver [ADR-001](ADR/001-monorepo-strategy.md)) |
+| **Localização** | `src/shared/trust/` (ver [ADR-001](ADR/001-monorepo-strategy.md)) |
 
 O Trust Metadata define:
 
@@ -211,9 +213,17 @@ graph LR
 
 ## Regras de Comunicação
 
-1. **Eventos, nunca queries diretas** — um bounded context nunca faz query ao banco de outro. Toda comunicação é via domain events assíncronos (ver [ADR-005](ADR/005-event-driven-communication.md))
-2. **Direção única: Core → Analítico** — contextos L1 publicam eventos; contextos L2/L3 consomem. Nunca o inverso.
-3. **Contratos em shared lib** — eventos são structs definidas em `libs/domain-events/`, não em cada serviço
-4. **Idempotência obrigatória** — consumers devem tratar duplicação de eventos (at-least-once delivery)
-5. **Sem orquestração centralizada** — cada consumer decide quando e como processar eventos (coreografia, não orquestração)
-6. **Falha isolada** — se o contexto Coerência falhar, Votações e Proposições continuam funcionando normalmente
+### Waves 0–2 (monolito Next.js)
+
+1. **Chamada de serviço, nunca queries diretas ao banco** — um módulo nunca faz query ao schema de outro. Comunicação é via interface de serviço TypeScript (chamada de função síncrona)
+2. **ESLint `import/no-restricted-paths`** — bloqueia imports cruzados entre módulos no CI (ver [ADR-006](ADR/006-frontend-stack.md#import-boundaries-eslint))
+3. **Contratos em shared kernel** — domain events são interfaces TypeScript definidas em `src/shared/domain-events/`, documentando os contratos mesmo antes do NATS
+4. **Direção única: Core → Analítico** — contextos L1 fornecem dados; contextos L2/L3 consomem. Nunca o inverso.
+5. **Falha isolada** — se o módulo Coerência falhar, Votações e Proposições continuam funcionando normalmente
+
+### Wave 3+ (microserviços Go + NATS)
+
+1. **Domain events assíncronos via NATS JetStream** — ver [ADR-005](ADR/005-event-driven-communication.md)
+2. **Idempotência obrigatória** — consumers devem tratar duplicação de eventos (at-least-once delivery)
+3. **Sem orquestração centralizada** — cada consumer decide quando e como processar eventos (coreografia, não orquestração)
+4. **Contratos em shared lib** — eventos são structs Go definidas no shared kernel, espelhando as interfaces TypeScript

@@ -1,6 +1,6 @@
 # Métricas de Sucesso
 
-> Brasil a Vera · Produto · v0.1
+> Brasil a Vera · Produto · v0.2
 > Última atualização: 2026-04-14
 > Status: draft
 
@@ -140,13 +140,14 @@ Princípio: uma taxa alta de "não classificado" é preferível a falsos positiv
 
 ### Ferramentas
 
-| Categoria | Ferramenta | Justificativa |
-|-----------|-----------|---------------|
-| Web analytics | Plausible ou Umami | Open-source, privacy-first, sem cookies |
-| API metrics | Prometheus + Grafana | Padrão open-source para observabilidade |
-| Pipeline health | Logs estruturados + dashboards | Integrado ao slog do Go |
-| Uptime | UptimeRobot ou similar | Monitoramento externo |
-| GitHub metrics | GitHub API | Dados nativos |
+| Categoria | Ferramenta | Wave | Justificativa |
+|-----------|-----------|------|---------------|
+| Web analytics | Vercel Analytics ou Plausible | 0+ | Vercel Analytics integrado no free tier; Plausible se self-hosted |
+| API metrics | Vercel Logs + dashboards | 0–2 | Logs de serverless functions da Vercel |
+| API metrics | Prometheus + Grafana | 3+ | Quando serviços Go tiverem métricas próprias em VPS |
+| Pipeline health | GitHub Actions logs | 0+ | Logs nativos dos workflows de ingestão |
+| Uptime | UptimeRobot ou similar | 1+ | Monitoramento externo |
+| GitHub metrics | GitHub API | 0+ | Dados nativos |
 
 ### Princípios de Medição
 

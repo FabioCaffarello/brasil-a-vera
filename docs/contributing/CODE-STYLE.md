@@ -1,6 +1,6 @@
 # Estilo de Código
 
-> Brasil a Vera · Contribuição · v0.1
+> Brasil a Vera · Contribuição · v0.2
 > Última atualização: 2026-04-14
 > Status: draft
 
@@ -8,26 +8,179 @@
 
 ## Sumário
 
-- [Go (Backend)](#go-backend)
-- [TypeScript (Frontend)](#typescript-frontend)
-- [SQL](#sql)
-- [Cypher (Neo4j)](#cypher-neo4j)
+- [TypeScript (Monolito + Ingestão)](#typescript-monolito--ingestão)
+- [Import Boundaries (ESLint)](#import-boundaries-eslint)
+- [Migrations SQL](#migrations-sql)
+- [SQL (Queries)](#sql-queries)
+- [Wave 3+: Go (Microserviços)](#wave-3-go-microserviços)
+- [Wave 3+: Cypher / Graph Database](#wave-3-cypher--graph-database)
 - [Geral](#geral)
 
 ---
 
-## Go (Backend)
+## TypeScript (Monolito + Ingestão)
+
+TypeScript é a linguagem principal nas Waves 0–2 — para o monolito Next.js e para os scripts de ingestão. Ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md).
 
 ### Formatação
 
-- `gofmt` é obrigatório — código não formatado é rejeitado pelo CI
+- **Prettier** com configuração do projeto (`.prettierrc`)
+- **ESLint** com regras do Next.js + regras customizadas + `import/no-restricted-paths`
+- Semicolons: sem (Prettier default)
+- Quotes: single
+- Indentação: 2 espaços
+
+### Nomenclatura
+
+| Elemento | Convenção | Exemplo |
+|----------|-----------|---------|
+| Componentes React | PascalCase | `TrustBadge`, `ParlamentarCard` |
+| Hooks | camelCase com `use` | `useParlamentar`, `useTrustLevel` |
+| Services | PascalCase (classe) | `VotacaoService`, `ParlamentarService` |
+| Interfaces de domínio | PascalCase | `Parlamentar`, `Votacao`, `TrustLevel` |
+| Interfaces de repositório | PascalCase com sufixo | `VotacaoRepository` |
+| Route Handlers | `route.ts` no diretório correspondente | `app/api/votacoes/route.ts` |
+| Utilitários | camelCase | `formatCurrency`, `parseTrustLevel` |
+| Constantes | UPPER_SNAKE_CASE | `TRUST_LEVELS`, `API_BASE_URL` |
+| Arquivos de componente | kebab-case | `trust-badge.tsx`, `parlamentar-card.tsx` |
+| Arquivos de domínio | kebab-case | `types.ts`, `errors.ts`, `events.ts` |
+
+### Estrutura de módulo (bounded context)
+
+Seguir estritamente a estrutura definida no [ADR-002](../architecture/ADR/002-backend-language-and-framework.md):
+
+```
+src/modules/<contexto>/
+├── domain/
+│   ├── types.ts          # interfaces de domínio (Votacao, VotoNominal, etc.)
+│   ├── events.ts         # interfaces de domain events
+│   └── errors.ts         # erros de domínio tipados
+├── repository/
+│   ├── interface.ts      # interface do repositório (port)
+│   └── postgres.ts       # implementação PostgreSQL (Drizzle)
+├── service/
+│   └── <contexto>-service.ts  # lógica de negócio (use cases)
+└── routes/
+    └── route.ts          # Next.js Route Handler
+```
+
+### Regras
+
+- TypeScript strict mode obrigatório
+- Sem `any` — use `unknown` quando o tipo é realmente desconhecido
+- Componentes React: prefer function components com React Server Components onde aplicável
+- Props tipadas explicitamente (sem `React.FC`)
+- Trust level: todo componente que exibe dados deve receber e renderizar `trustLevel`
+- Domínio (`domain/`) não importa nada de `repository/` ou `routes/` — nunca
+- Services recebem interfaces (ports), não implementações concretas
+- Erros de domínio são classes tipadas, não `throw new Error('string solta')`
+- Todo tipo que vá para a API inclui `trustLevel: TrustLevel` como campo
+
+### Shared Kernel (Trust Metadata)
+
+```typescript
+// src/shared/trust/types.ts — exemplo de referência
+export type TrustLevel = 'L1' | 'L2' | 'L3' | 'L4'
+
+export interface TrustMetadata {
+  trustLevel: TrustLevel
+  sourceUrl?: string
+  formulaUrl?: string
+  disclaimer?: string
+}
+```
+
+Todos os módulos importam de `@/shared/trust/` — nunca redefinem tipos de trust level.
+
+## Import Boundaries (ESLint)
+
+ESLint `import/no-restricted-paths` é configurado no dia 1 e executado no CI. Bloqueia imports cruzados entre módulos:
+
+```javascript
+// .eslintrc.js (trecho)
+rules: {
+  'import/no-restricted-paths': ['error', {
+    zones: [
+      // Cada módulo é isolado — não pode importar de outro módulo
+      {
+        target: './src/modules/parlamentares/**',
+        from: './src/modules/!(parlamentares)/**',
+        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
+      },
+      {
+        target: './src/modules/votacoes/**',
+        from: './src/modules/!(votacoes)/**',
+        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
+      },
+      // ... regra análoga para cada módulo
+      // Exceção: todos podem importar de src/shared/
+    ]
+  }]
+}
+```
+
+**PRs que violam import boundaries são bloqueados automaticamente pelo CI.**
+
+## Migrations SQL
+
+Migrations são **SQL puro**, nunca geradas por ORM. Isso garante compatibilidade com Go na migração futura (Wave 3+).
+
+### Convenções
+
+- Localização: `src/shared/db/migrations/`
+- Nomeação: `NNN_descricao.sql` (ex: `001_create_parlamentares.sql`, `002_create_votacoes.sql`)
+- Cada migration cria tabelas no schema do bounded context: `CREATE TABLE parlamentares.parlamentar (...)`
+- Sempre incluir `trust_level` e `source_url` em tabelas L1
+- Up e down na mesma file (separados por `-- migrate:down`)
+- Executadas via script npm: `npm run db:migrate`
+
+### Exemplo
+
+```sql
+-- 001_create_parlamentares.sql
+
+CREATE SCHEMA IF NOT EXISTS parlamentares;
+
+CREATE TABLE parlamentares.parlamentar (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_id       TEXT NOT NULL UNIQUE,
+    nome            TEXT NOT NULL,
+    partido_sigla   TEXT NOT NULL,
+    uf              CHAR(2) NOT NULL,
+    casa            TEXT NOT NULL CHECK (casa IN ('CAMARA', 'SENADO')),
+    trust_level     TEXT NOT NULL DEFAULT 'L1' CHECK (trust_level IN ('L1','L2','L3','L4')),
+    source_url      TEXT NOT NULL,
+    ingested_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- migrate:down
+DROP TABLE IF EXISTS parlamentares.parlamentar;
+DROP SCHEMA IF EXISTS parlamentares;
+```
+
+## SQL (Queries)
+
+### Convenções
+
+- Palavras-chave em UPPER CASE: `SELECT`, `FROM`, `WHERE`, `JOIN`
+- Nomes de tabela e coluna em snake_case: `votos_nominais`, `parlamentar_id`
+- Schema por bounded context: `parlamentares.parlamentar`, `votacoes.voto_nominal`
+- Sempre incluir `trust_level` e `source_url` em tabelas L1
+- Nenhum JOIN cross-schema — se precisar de dados de outro contexto, use a interface de serviço
+
+## Wave 3+: Go (Microserviços)
+
+Quando módulos forem extraídos para Go (ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md)), aplicam-se as seguintes regras:
+
+### Formatação
+
+- `gofmt` obrigatório — código não formatado é rejeitado pelo CI
 - `goimports` para organização de imports
-- Line length: sem limite rígido, mas manter legibilidade (guia: ~100 caracteres)
 
 ### Linting
 
-- **golangci-lint** com configuração do projeto (`.golangci.yml` na raiz)
-- Linters habilitados: `errcheck`, `govet`, `staticcheck`, `unused`, `gosimple`, `ineffassign`
+- **golangci-lint** com configuração do projeto (`.golangci.yml`)
+- Linters: `errcheck`, `govet`, `staticcheck`, `unused`, `gosimple`, `ineffassign`
 
 ### Nomenclatura
 
@@ -36,15 +189,9 @@
 | Packages | minúsculas, singular | `parlamentar`, `votacao` |
 | Interfaces | sem prefixo `I` | `Repository`, `EventPublisher` |
 | Structs | PascalCase | `Parlamentar`, `VotoNominal` |
-| Métodos públicos | PascalCase | `FindByID`, `ListByTema` |
-| Métodos privados | camelCase | `validateVoto`, `buildQuery` |
-| Constantes | PascalCase | `TrustLevelL1`, `CasaCamara` |
-| Variáveis | camelCase | `parlamentarID`, `trustLevel` |
 | Arquivos | snake_case | `parlamentar_repository.go` |
 
-### Estrutura de bounded context
-
-Seguir estritamente a estrutura hexagonal definida no [ADR-002](../architecture/ADR/002-backend-language-and-framework.md):
+### Estrutura
 
 ```
 services/<contexto>/
@@ -56,65 +203,17 @@ services/<contexto>/
 │   └── adapters/
 │       ├── http/     # handlers REST
 │       ├── postgres/ # repositório
-│       ├── neo4j/    # repositório graph
-│       └── messaging/# publisher/subscriber
+│       └── messaging/# publisher/subscriber NATS
 ```
 
-### Regras
+## Wave 3+: Cypher / Graph Database
 
-- Domínio não importa nada de `adapters/` — nunca
-- Use cases recebem interfaces (ports), não implementações concretas
-- Erros de domínio são tipos próprios, não `errors.New("string solta")`
-- Todo struct que vá para a API carrega `TrustLevel` como campo
-
-## TypeScript (Frontend)
-
-### Formatação
-
-- **Prettier** com configuração do projeto (`.prettierrc`)
-- **ESLint** com regras do Next.js + regras customizadas
-- Semicolons: sem (Prettier default)
-- Quotes: single
-- Indentação: 2 espaços
-
-### Nomenclatura
-
-| Elemento | Convenção | Exemplo |
-|----------|-----------|---------|
-| Componentes | PascalCase | `TrustBadge`, `ParlamentarCard` |
-| Hooks | camelCase com `use` | `useParlamentar`, `useTrustLevel` |
-| Utilitários | camelCase | `formatCurrency`, `parseTrustLevel` |
-| Tipos/Interfaces | PascalCase | `Parlamentar`, `TrustLevel` |
-| Constantes | UPPER_SNAKE_CASE | `TRUST_LEVELS`, `API_BASE_URL` |
-| Arquivos de componente | kebab-case | `trust-badge.tsx`, `parlamentar-card.tsx` |
-| Arquivos de utilidade | kebab-case | `format-currency.ts` |
-
-### Regras
-
-- TypeScript strict mode obrigatório
-- Sem `any` — use `unknown` quando o tipo é realmente desconhecido
-- Componentes: prefer function components com React Server Components onde aplicável
-- Props tipadas explicitamente (sem `React.FC`)
-- Trust level: todo componente que exibe dados deve receber e renderizar `trustLevel`
-
-## SQL
-
-### Convenções
-
-- Palavras-chave em UPPER CASE: `SELECT`, `FROM`, `WHERE`, `JOIN`
-- Nomes de tabela e coluna em snake_case: `votos_nominais`, `parlamentar_id`
-- Schema por bounded context: `parlamentares.parlamentar`, `votacoes.voto_nominal`
-- Migrations nomeadas sequencialmente: `001_create_parlamentares.sql`, `002_create_votacoes.sql`
-- Sempre incluir `trust_level` e `source_url` em tabelas L1
-
-## Cypher (Neo4j)
-
-### Convenções
+Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](../architecture/ADR/004-graph-database-choice.md)):
 
 - Labels em PascalCase: `(:Parlamentar)`, `(:Proposicao)`
 - Relationship types em UPPER_SNAKE_CASE: `[:CO_VOTACAO]`, `[:MESMO_PARTIDO]`
 - Properties em camelCase: `{nome: "...", trustLevel: "L1"}`
-- Usar parâmetros (`$paramName`) em vez de interpolação de strings
+- Usar parâmetros em vez de interpolação de strings
 
 ## Geral
 
@@ -124,7 +223,7 @@ Seguir a [Convenção de Commits](COMMIT-CONVENTION.md).
 
 ### Documentação no código
 
-- Docstrings em funções públicas (Go: comentário acima da função; TS: JSDoc)
+- JSDoc em funções públicas de services e repositórios
 - Sem comentários óbvios — o código deve ser autoexplicativo
 - Comentários para "por quê", não para "o quê"
 - TODOs com issue number: `// TODO(#123): implementar cache`

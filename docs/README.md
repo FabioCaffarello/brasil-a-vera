@@ -82,9 +82,15 @@ Três capacidades diferenciadoras:
 
 ---
 
+## Arquitetura: Monolith First
+
+Nas Waves 0–2, o Brasil a Vera é um **monolito Next.js modular** (TypeScript) deployado na Vercel, com PostgreSQL no Supabase e ingestão via GitHub Actions. Custo total: ~R$3,30/mês (só o domínio).
+
+Na Wave 3+, módulos são extraídos para **microserviços Go** via Strangler Fig, com NATS JetStream para eventos e Caddy como API Gateway. Detalhes no [ADR-007](architecture/ADR/007-monolith-first-strategy.md).
+
 ## Como Navegar
 
 - **Novo no projeto?** Comece pelo [Product Vision](product/PRODUCT-VISION.md) e depois [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md)
-- **Quer entender a arquitetura?** Leia os [ADRs](architecture/ADR/) em ordem numérica
+- **Quer entender a arquitetura?** Leia os [ADRs](architecture/ADR/) em ordem numérica — especialmente o [ADR-007 (Monolith First)](architecture/ADR/007-monolith-first-strategy.md)
 - **Quer contribuir?** Vá direto para [Guia de Contribuição](contributing/CONTRIBUTING.md)
 - **Quer entender o domínio?** Comece pelo [Processo Legislativo](domain/LEGISLATIVE-PROCESS.md)

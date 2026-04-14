@@ -1,6 +1,6 @@
 # Pirâmide de Confiança — Arquitetura de Credibilidade
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-04-14
 > Status: accepted
 
@@ -139,26 +139,26 @@ A coluna `trust_level` acompanha cada linha do export, garantindo que dados reti
 
 ### Trust Level como Shared Kernel
 
-O vocabulário de trust level é definido no shared kernel `libs/trust-metadata/` (ver [ADR-001](ADR/001-monorepo-strategy.md) e [Bounded Contexts](BOUNDED-CONTEXTS.md)):
+O vocabulário de trust level é definido no shared kernel `src/shared/trust/` (ver [ADR-001](ADR/001-monorepo-strategy.md) e [Bounded Contexts](BOUNDED-CONTEXTS.md)):
 
-```go
-// libs/trust-metadata/trust.go
+```typescript
+// src/shared/trust/types.ts
 
-type TrustLevel string
+export type TrustLevel = 'L1' | 'L2' | 'L3' | 'L4'
 
-const (
-    L1 TrustLevel = "L1" // Dados brutos — fonte oficial
-    L2 TrustLevel = "L2" // Agregações determinísticas
-    L3 TrustLevel = "L3" // Correlações observadas
-    L4 TrustLevel = "L4" // Impacto / consequências
-)
-
-type TrustMetadata struct {
-    Level      TrustLevel `json:"trust_level"`
-    SourceURL  *string    `json:"source_url,omitempty"`   // URL da fonte (L1)
-    FormulaURL *string    `json:"formula_url,omitempty"`  // URL da fórmula (L2)
-    Disclaimer *string    `json:"disclaimer,omitempty"`   // Disclaimer (L3/L4)
+export interface TrustMetadata {
+  trustLevel: TrustLevel
+  sourceUrl?: string    // URL da fonte (L1)
+  formulaUrl?: string   // URL da fórmula (L2)
+  disclaimer?: string   // Disclaimer (L3/L4)
 }
+
+export const TRUST_LEVELS = {
+  L1: { label: 'Dados Brutos', description: 'Fonte oficial, auditável' },
+  L2: { label: 'Agregações', description: 'Cálculos determinísticos' },
+  L3: { label: 'Correlações', description: 'Padrões observados' },
+  L4: { label: 'Impacto', description: 'Consequências no mundo real' },
+} as const
 ```
 
 ### No Banco de Dados (PostgreSQL)
@@ -179,22 +179,18 @@ CREATE TABLE votacoes.votos_nominais (
 );
 ```
 
-### No Neo4j
+### No grafo (Wave 3+)
 
-```cypher
-// Nós e arestas carregam trust_level como propriedade
-CREATE (p:Parlamentar {
-  id: '178957',
-  nome: 'Dep. Exemplo',
-  trust_level: 'L1'
-})
+Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](ADR/004-graph-database-choice.md)), nós e arestas carregarão `trust_level` como propriedade:
 
-CREATE (p1)-[:CO_VOTACAO {
-  peso: 42,
-  periodo: '2025-S1',
-  trust_level: 'L1'
-}]->(p2)
+```sql
+-- Apache AGE (openCypher sobre PostgreSQL)
+SELECT * FROM cypher('legislativo', $$
+  CREATE (p:Parlamentar {id: '178957', nome: 'Dep. Exemplo', trust_level: 'L1'})
+$$) AS (v agtype);
 ```
+
+A implementação específica será definida quando a decisão de graph database for retomada na Wave 3.
 
 ## Regras por Camada
 
