@@ -21,7 +21,6 @@
 /build
 
 # misc
-.DS_Store
 *.pem
 
 # debug
@@ -33,6 +32,21 @@ yarn-error.log*
 # env files
 .env*
 !.env.example
+
+# drizzle
+/drizzle
+
+# biome
+.biome/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
 
 # vercel
 .vercel

@@ -1,0 +1,39 @@
+name: Ingestão Câmara
+
+# Votações: 4x por dia (00:00, 06:00, 12:00, 18:00 UTC)
+# Parlamentares: 1x por dia (02:00 UTC)
+# Secrets necessários no repositório GitHub antes de ativar:
+#   - DATABASE_URL (conexão pooled)
+#   - DIRECT_URL (conexão direta para migrations)
+
+on:
+  schedule:
+    - cron: '0 0,6,12,18 * * *' # votações
+    - cron: '0 2 * * *'          # parlamentares
+  workflow_dispatch:
+
+jobs:
+  sync-camara:
+    name: Sync dados da Câmara
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-modules-
+
+      - run: npm ci
+
+      # Ativar na Wave 1:
+      # - run: npx tsx ingestion/camara/sync.ts
+      #   env:
+      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      #     DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      - run: echo "Ingestão será configurada na Wave 1"
