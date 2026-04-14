@@ -10,6 +10,10 @@
     "format": "biome format --write .",
     "check": "biome check .",
     "ci": "biome ci .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push",
     "prepare": "husky"
   },
   "dependencies": {
