@@ -124,7 +124,7 @@ Todo PR passa por review com foco em:
 2. **Trust level**: dados novos têm `trust_level` correto?
 3. **Neutralidade**: nenhuma linguagem valorativa ou viés?
 4. **Testes**: cobertura adequada, especialmente no domínio?
-5. **Import boundaries**: nenhum import cruzado entre módulos? (ESLint `import/no-restricted-paths`)
+5. **Import boundaries**: nenhum import cruzado entre módulos? (Biome `noRestrictedImports`)
 6. **Clean Architecture**: domínio não depende de infraestrutura?
 7. **Documentação**: mudanças de API ou comportamento documentadas?
 
@@ -132,10 +132,10 @@ Todo PR passa por review com foco em:
 
 O CI executa automaticamente em cada PR:
 
-- Lint (ESLint com regras de import boundary + Prettier)
+- Lint e formatação (Biome CI — `biome ci .`)
+- Pre-commit local (Husky — `biome check` nos arquivos staged)
 - Testes unitários (Vitest)
 - Build (Next.js)
-- Verificação de formatação
 
 ## Padrões de Qualidade
 
@@ -143,7 +143,7 @@ O CI executa automaticamente em cada PR:
 
 - Siga Clean Architecture em cada módulo: `domain/` → `repository/` → `service/` → `routes/` (ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md))
 - Domínio não depende de frameworks, bancos ou APIs externas
-- Bounded contexts isolados — ESLint bloqueia imports cruzados (ver [ADR-006](../architecture/ADR/006-frontend-stack.md#import-boundaries-eslint))
+- Bounded contexts isolados — Biome `noRestrictedImports` bloqueia imports cruzados (ver [ADR-006](../architecture/ADR/006-frontend-stack.md#import-boundaries-biome))
 - Migrations em SQL puro — nunca geradas por ORM
 - Todo registro deve ter `trust_level` (ver [Pirâmide de Confiança](../architecture/TRUST-PYRAMID.md))
 

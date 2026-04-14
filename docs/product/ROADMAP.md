@@ -64,9 +64,9 @@ gantt
 - Modelo de domínio: bounded contexts core (Parlamentares, Proposições, Votações, Gastos) como módulos TypeScript
 - PostgreSQL (Supabase free tier) com schema por bounded context
 - Migrations SQL puras em `src/shared/db/migrations/`
-- Estrutura de módulos com ESLint `import/no-restricted-paths` bloqueando imports cross-module
+- Estrutura de módulos com Biome `noRestrictedImports` bloqueando imports cross-module
 - API interna (Next.js Route Handlers, não pública) para validação
-- CI/CD básico (ESLint, Vitest, build Next.js)
+- CI/CD básico (Biome CI, Vitest, build Next.js) com pre-commit via Husky
 - Trust Metadata como shared kernel implementado em `src/shared/trust/`
 
 ### Critérios de Done
@@ -77,7 +77,8 @@ gantt
 - [ ] Pipeline do Senado ingere senadores em exercício
 - [ ] Pipeline do Senado ingere votações do último ano
 - [ ] Todos os registros persistidos com `trust_level: L1` e `source_url`
-- [ ] ESLint `import/no-restricted-paths` bloqueando imports cross-module no CI
+- [ ] Biome `noRestrictedImports` bloqueando imports cross-module no CI
+- [ ] Husky pre-commit executando `biome check` nos arquivos staged
 - [ ] Scripts de ingestão rodando via GitHub Actions cron
 - [ ] `npm run dev` sobe o Next.js monolito conectado ao PostgreSQL
 - [ ] Cobertura de testes > 70% no domínio
@@ -225,7 +226,7 @@ graph LR
 |-------------|-----|------|------|
 | PostgreSQL (Supabase) + schemas | Wave 0 | Wave 1 | Obrigatória |
 | Scripts de ingestão (GitHub Actions) | Wave 0 | Wave 1 | Obrigatória |
-| ESLint import boundaries | Wave 0 | Wave 1 | Obrigatória |
+| Biome import boundaries + Husky pre-commit | Wave 0 | Wave 1 | Obrigatória |
 | Next.js monolito (frontend + API) | Wave 1 | Wave 2 | Obrigatória |
 | Busca unificada | Wave 1 | Wave 2 | Obrigatória |
 | API pública | Wave 2 | Wave 3 | Recomendada |

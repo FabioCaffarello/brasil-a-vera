@@ -46,7 +46,7 @@ O Brasil a Vera segue o [Conventional Commits](https://www.conventionalcommits.o
 | `test` | Adição ou correção de testes | `test(coerencia): add edge case for substitutivos` |
 | `chore` | Manutenção (CI, deps, config) | `chore(ci): add golangci-lint to pipeline` |
 | `perf` | Melhoria de performance | `perf(search): add GIN index for full-text search` |
-| `style` | Formatação (sem mudança de lógica) | `style(web): apply prettier formatting` |
+| `style` | Formatação (sem mudança de lógica) | `style(web): apply biome formatting` |
 | `build` | Build system e dependências | `build(go): upgrade to Go 1.23` |
 | `ci` | CI/CD | `ci: add integration test stage` |
 

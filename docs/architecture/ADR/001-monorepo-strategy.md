@@ -69,7 +69,7 @@ Princípios de organização:
 
 - Cada diretório em `src/modules/` segue a mesma estrutura interna (domain, repository, service, routes) — Clean Architecture aplicada ao TypeScript
 - `src/shared/` contém apenas código genuinamente transversal — o default é cada módulo ter seu próprio código
-- Dependências entre `src/modules/` são bloqueadas via ESLint `import/no-restricted-paths` — nenhum módulo importa implementação de outro, apenas tipos do shared kernel
+- Dependências entre `src/modules/` são bloqueadas via Biome `noRestrictedImports` — nenhum módulo importa implementação de outro, apenas tipos do shared kernel
 - `ingestion/` scripts são TypeScript standalone, executados no GitHub Actions (nunca na Vercel) — ver [ADR-007](007-monolith-first-strategy.md)
 - Na Wave 3+, módulos extraídos para Go entram em `services/` seguindo a estratégia Strangler Fig — o monorepo acomoda ambas as linguagens simultaneamente
 
@@ -101,7 +101,7 @@ Princípios de organização:
 ### Negativas
 
 - O repositório crescerá em tamanho — mitigação: `.gitattributes` para large files, shallow clones documentados
-- Risco de coupling acidental entre modules se as fronteiras não forem enforce por tooling — mitigação: ESLint `import/no-restricted-paths` configurado no CI desde o dia 1
+- Risco de coupling acidental entre modules se as fronteiras não forem enforce por tooling — mitigação: Biome `noRestrictedImports` configurado no CI desde o dia 1
 
 ### Neutras
 

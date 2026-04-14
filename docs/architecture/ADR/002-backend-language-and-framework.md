@@ -56,7 +56,8 @@ O monolito Next.js serve tanto o frontend (SSR/SSG) quanto a API (Route Handlers
 | Estilização | Tailwind CSS |
 | Componentes UI | shadcn/ui |
 | Testes | Vitest + React Testing Library |
-| Linting | ESLint (+ `import/no-restricted-paths`) + Prettier |
+| Linting e formatação | Biome (lint + format unificados) |
+| Pre-commit | Husky |
 
 ### Estrutura de um bounded context (TypeScript)
 

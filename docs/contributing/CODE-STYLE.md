@@ -9,7 +9,8 @@
 ## Sumário
 
 - [TypeScript (Monolito + Ingestão)](#typescript-monolito--ingestão)
-- [Import Boundaries (ESLint)](#import-boundaries-eslint)
+- [Import Boundaries (Biome)](#import-boundaries-biome)
+- [Pre-commit (Husky)](#pre-commit-husky)
 - [Migrations SQL](#migrations-sql)
 - [SQL (Queries)](#sql-queries)
 - [Wave 3+: Go (Microserviços)](#wave-3-go-microserviços)
@@ -22,13 +23,16 @@
 
 TypeScript é a linguagem principal nas Waves 0–2 — para o monolito Next.js e para os scripts de ingestão. Ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md).
 
-### Formatação
+### Formatação e Linting
 
-- **Prettier** com configuração do projeto (`.prettierrc`)
-- **ESLint** com regras do Next.js + regras customizadas + `import/no-restricted-paths`
-- Semicolons: sem (Prettier default)
+- **Biome** como ferramenta unificada de lint + format (substitui ESLint + Prettier)
+- Configuração em `biome.json` na raiz do projeto
+- Semicolons: sem (`asNeeded`)
 - Quotes: single
 - Indentação: 2 espaços
+- Rodar localmente: `npm run check` (equivalente a `biome check .`)
+- Rodar só lint: `npm run lint`
+- Rodar só format: `npm run format`
 
 ### Nomenclatura
 
@@ -92,34 +96,53 @@ export interface TrustMetadata {
 
 Todos os módulos importam de `@/shared/trust/` — nunca redefinem tipos de trust level.
 
-## Import Boundaries (ESLint)
+## Import Boundaries (Biome)
 
-ESLint `import/no-restricted-paths` é configurado no dia 1 e executado no CI. Bloqueia imports cruzados entre módulos:
+Biome `noRestrictedImports` é configurado no dia 1 e executado no CI. Bloqueia imports cruzados entre módulos:
 
-```javascript
-// .eslintrc.js (trecho)
-rules: {
-  'import/no-restricted-paths': ['error', {
-    zones: [
-      // Cada módulo é isolado — não pode importar de outro módulo
-      {
-        target: './src/modules/parlamentares/**',
-        from: './src/modules/!(parlamentares)/**',
-        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
-      },
-      {
-        target: './src/modules/votacoes/**',
-        from: './src/modules/!(votacoes)/**',
-        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
-      },
-      // ... regra análoga para cada módulo
-      // Exceção: todos podem importar de src/shared/
-    ]
-  }]
+```json
+// biome.json (trecho)
+{
+  "linter": {
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": [
+              {
+                "name": "@/modules/votacoes",
+                "importNames": [],
+                "message": "Bounded contexts não podem importar uns dos outros. Use shared kernel em @/shared/."
+              },
+              {
+                "name": "@/modules/parlamentares",
+                "importNames": [],
+                "message": "Bounded contexts não podem importar uns dos outros. Use shared kernel em @/shared/."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
-**PRs que violam import boundaries são bloqueados automaticamente pelo CI.**
+**PRs que violam import boundaries são bloqueados automaticamente pelo CI via `biome ci .`.**
+
+## Pre-commit (Husky)
+
+O projeto usa [Husky](https://typicode.github.io/husky/) para executar verificações automaticamente antes de cada commit. O hook roda `biome check` apenas nos arquivos staged — não no projeto inteiro — mantendo o pre-commit rápido.
+
+O Husky é ativado automaticamente ao rodar `npm install` (via script `prepare`). Nenhum passo adicional de configuração é necessário.
+
+Se o pre-commit falhar, o commit é bloqueado. Corrija os erros reportados pelo Biome e tente novamente.
+
+```bash
+# Para verificar manualmente o que o pre-commit checaria:
+npx biome check $(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$' | tr '\n' ' ')
+```
 
 ## Migrations SQL
 

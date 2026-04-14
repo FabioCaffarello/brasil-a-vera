@@ -96,7 +96,7 @@ Estas 7 regras são **inegociáveis** — garantem que o monolito possa ser deco
 
 1. **Um módulo por bounded context** — cada contexto em `src/modules/<contexto>/` com domain, repository, service e routes. Nunca um módulo importa implementação de outro.
 
-2. **ESLint `import/no-restricted-paths` no CI** — bloqueia imports cruzados entre módulos desde o dia 1. Ver [ADR-006](006-frontend-stack.md#import-boundaries-eslint).
+2. **Biome `noRestrictedImports` no CI** — bloqueia imports cruzados entre módulos desde o dia 1. Ver [ADR-006](006-frontend-stack.md#import-boundaries-biome).
 
 3. **Schema por módulo no banco** — `parlamentares.*`, `votacoes.*`, etc. Nenhuma query faz JOIN cross-schema.
 
@@ -157,9 +157,9 @@ A decisão Monolith First muda **como** e **com que tecnologia** o sistema é co
 
 ### Monolito sem modularização interna
 
-- **Prós**: mais simples no início, sem overhead de ESLint rules e schemas separados
+- **Prós**: mais simples no início, sem overhead de Biome rules e schemas separados
 - **Contras**: coupling cresce silenciosamente, extração futura requer reescrita em vez de migração incremental
-- **Veredicto**: a modularização é barata no dia 1 e cara depois — ESLint rules e schemas separados são investimentos mínimos com retorno alto
+- **Veredicto**: a modularização é barata no dia 1 e cara depois — Biome rules e schemas separados são investimentos mínimos com retorno alto
 
 ## Consequências
 

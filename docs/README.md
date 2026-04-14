@@ -33,6 +33,7 @@ Três capacidades diferenciadoras:
 | Documento | Descrição |
 |-----------|-----------|
 | [ADRs](architecture/ADR/) | Architecture Decision Records |
+| [ADR-008 — Tooling Frontend](architecture/ADR/008-frontend-tooling.md) | Biome, Husky e React Flow |
 | [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md) | Mapa de contextos DDD com responsabilidades e relações |
 | [Modelo de Domínio](architecture/DOMAIN-MODEL.md) | Aggregates, entities, value objects e domain events |
 | [Pirâmide de Confiança](architecture/TRUST-PYRAMID.md) | Arquitetura de credibilidade L1–L4 |

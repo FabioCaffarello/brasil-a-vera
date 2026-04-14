@@ -66,7 +66,7 @@ flowchart LR
 
 O isolamento entre bounded contexts é garantido por **tooling, não por infraestrutura**:
 
-1. **ESLint `import/no-restricted-paths`** — bloqueia imports diretos entre módulos no CI
+1. **Biome `noRestrictedImports`** — bloqueia imports diretos entre módulos no CI
 2. **Schemas separados no PostgreSQL** — nenhum JOIN cross-schema
 3. **Interface de serviço** — módulos que precisam de dados de outro módulo chamam a interface de serviço do shared kernel, nunca importam a implementação
 
@@ -203,7 +203,7 @@ export type VotacaoRegistrada = DomainEvent<VotacaoRegistradaPayload>
 
 - **Prós**: desacoplamento real desde o dia 1, replay nativo, idempotência forçada
 - **Contras**: infraestrutura adicional sem benefício no monolito (bounded contexts já estão no mesmo processo), complexidade operacional, contribuidores precisam entender mensageria
-- **Veredicto**: no monolito, o isolamento é garantido por ESLint — mensageria adiciona complexidade sem benefício. Introduzir quando os primeiros módulos forem extraídos.
+- **Veredicto**: no monolito, o isolamento é garantido por Biome — mensageria adiciona complexidade sem benefício. Introduzir quando os primeiros módulos forem extraídos.
 
 ### RabbitMQ (Wave 3+)
 
@@ -230,7 +230,7 @@ export type VotacaoRegistrada = DomainEvent<VotacaoRegistradaPayload>
 - **Zero infraestrutura adicional nas Waves 0–2** — comunicação é chamada de função, sem broker
 - **Contratos definidos desde o dia 1** — domain events como TypeScript interfaces documentam os contratos mesmo antes do NATS
 - **Migração incremental** — ao extrair um módulo para Go, só precisa trocar a chamada de função por publicação/consumo no NATS
-- **Isolamento da Pirâmide preservado** — ESLint bloqueia imports cruzados no monolito; NATS garante isolamento físico nos microserviços
+- **Isolamento da Pirâmide preservado** — Biome bloqueia imports cruzados no monolito; NATS garante isolamento físico nos microserviços
 
 ### Negativas
 

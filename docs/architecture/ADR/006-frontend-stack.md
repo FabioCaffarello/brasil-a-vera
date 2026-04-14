@@ -12,7 +12,7 @@
 - [Decisão](#decisão)
 - [Estrutura de Módulos no Serving Layer](#estrutura-de-módulos-no-serving-layer)
 - [Deploy na Vercel](#deploy-na-vercel)
-- [Import Boundaries (ESLint)](#import-boundaries-eslint)
+- [Import Boundaries (Biome)](#import-boundaries-biome)
 - [Alternativas Consideradas](#alternativas-consideradas)
 - [Consequências](#consequências)
 - [Referências](#referências)
@@ -50,11 +50,12 @@ Adicionalmente, a decisão Monolith First (ver [ADR-007](007-monolith-first-stra
 | Componentes UI | shadcn/ui (components copiados, não dependency) |
 | Acesso a banco | Drizzle ORM (queries type-safe; migrations em SQL puro) |
 | Validação | Zod |
-| Visualização de grafo | D3.js (força-dirigida) ou Sigma.js (WebGL, Wave 3) |
+| Visualização de grafo | React Flow (Wave 3) |
 | Gráficos | Recharts ou Nivo (baseados em D3) |
 | Estado do cliente | React Server Components + `use` hook; Zustand para estado client-side complexo |
 | Testes | Vitest + React Testing Library |
-| Linting | ESLint (+ `import/no-restricted-paths`) + Prettier |
+| Linting e formatação | Biome (lint + format unificados) |
+| Pre-commit | Husky |
 
 ### Estrutura de diretórios
 
@@ -158,35 +159,40 @@ Esta estrutura mapeia diretamente para a estrutura hexagonal do Go (Wave 3+), fa
 | Object storage | Cloudflare R2 | Free (10GB) |
 | Domínio | Registro.br | ~R$3,30/mês |
 
-## Import Boundaries (ESLint)
+## Import Boundaries (Biome)
 
-ESLint `import/no-restricted-paths` é configurado no dia 1 para bloquear imports cruzados entre módulos:
+Biome `noRestrictedImports` é configurado no dia 1 para bloquear imports cruzados entre módulos:
 
-```javascript
-// .eslintrc.js (trecho)
-rules: {
-  'import/no-restricted-paths': ['error', {
-    zones: [
-      // parlamentares não pode importar de votacoes
-      {
-        target: './src/modules/parlamentares/**',
-        from: './src/modules/votacoes/**',
-        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
-      },
-      // votacoes não pode importar de parlamentares
-      {
-        target: './src/modules/votacoes/**',
-        from: './src/modules/parlamentares/**',
-        message: 'Bounded contexts não podem importar uns dos outros. Use shared kernel.'
-      },
-      // ... regra para cada par de módulos
-      // Shared kernel é a única exceção — todos podem importar de shared/
-    ]
-  }]
+```json
+// biome.json (trecho)
+{
+  "linter": {
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": [
+              {
+                "name": "@/modules/votacoes",
+                "importNames": [],
+                "message": "Bounded contexts não podem importar uns dos outros. Use shared kernel em @/shared/."
+              },
+              {
+                "name": "@/modules/parlamentares",
+                "importNames": [],
+                "message": "Bounded contexts não podem importar uns dos outros. Use shared kernel em @/shared/."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
-Esta regra é executada no CI — PRs que violam boundaries são bloqueados automaticamente.
+Esta regra é executada no CI via `biome ci .` — PRs que violam boundaries são bloqueados automaticamente.
 
 ## Alternativas Consideradas
 
@@ -224,7 +230,8 @@ Esta regra é executada no CI — PRs que violam boundaries são bloqueados auto
 - **Monolito full-stack** — frontend e API no mesmo deploy, sem overhead de integração
 - **Compartilhamento social** — OG images dinâmicas por parlamentar
 - **Trust level nativo** — componente `TrustBadge` reutilizável em toda a UI
-- **Import boundaries** — ESLint garante isolamento de bounded contexts desde o dia 1
+- **Import boundaries** — Biome `noRestrictedImports` garante isolamento de bounded contexts desde o dia 1
+- **Pre-commit hooks** — Husky executa `biome check` nos arquivos staged antes de cada commit, evitando que erros de lint cheguem ao CI
 
 ### Negativas
 
@@ -235,7 +242,7 @@ Esta regra é executada no CI — PRs que violam boundaries são bloqueados auto
 ### Neutras
 
 - Na Wave 3+, quando módulos Go forem extraídos, o Next.js se torna apenas o frontend + módulos não migrados, com Caddy como gateway na frente
-- D3.js para o grafo interativo (Wave 3) pode ser substituído por Sigma.js se o número de nós crescer
+- React Flow para o grafo interativo (Wave 3) é adequado para ~600 nós. Se expandir para assembleias estaduais (Wave 4+), reavaliar Sigma.js (WebGL) com dados reais de performance.
 
 ## Referências
 
@@ -243,4 +250,7 @@ Esta regra é executada no CI — PRs que violam boundaries são bloqueados auto
 - [React Server Components](https://react.dev/reference/rsc/server-components)
 - [Vercel Free Tier Limits](https://vercel.com/docs/accounts/plans)
 - [shadcn/ui](https://ui.shadcn.com/)
-- [eslint-plugin-import — no-restricted-paths](https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-restricted-paths.md)
+- [Biome — Linter e Formatter unificado](https://biomejs.dev/)
+- [Biome — noRestrictedImports](https://biomejs.dev/linter/rules/no-restricted-imports/)
+- [Husky — Git hooks](https://typicode.github.io/husky/)
+- [React Flow](https://reactflow.dev/)

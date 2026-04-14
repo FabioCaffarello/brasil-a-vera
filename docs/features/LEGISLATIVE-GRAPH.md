@@ -236,7 +236,7 @@ graph LR
 
 ### Wave 3 — Requisitos
 
-- Grafo força-dirigida (D3.js ou Sigma.js) com zoom, pan e seleção
+- Grafo força-dirigida com React Flow — zoom, pan e seleção nativos
 - Cores por partido ou por comunidade detectada (toggle)
 - Tamanho do nó proporcional a uma métrica selecionável (degree, betweenness, etc.)
 - Espessura da aresta proporcional ao peso
@@ -247,7 +247,7 @@ graph LR
 
 ### Performance
 
-- ~600 nós + milhares de arestas → D3.js force-directed é suficiente no desktop
-- Se expandir para assembleias estaduais (Wave 4): avaliar Sigma.js (WebGL) para milhares de nós
+- ~600 nós + milhares de arestas → React Flow é adequado para este volume no desktop
+- Se expandir para assembleias estaduais (Wave 4+): reavaliar Sigma.js (WebGL) com dados reais de performance — não antecipar esta necessidade
 - Target: > 30fps no desktop, > 15fps no mobile
 - Lazy loading: carregar arestas sob demanda por tipo e período

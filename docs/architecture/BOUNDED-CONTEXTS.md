@@ -216,7 +216,7 @@ graph LR
 ### Waves 0–2 (monolito Next.js)
 
 1. **Chamada de serviço, nunca queries diretas ao banco** — um módulo nunca faz query ao schema de outro. Comunicação é via interface de serviço TypeScript (chamada de função síncrona)
-2. **ESLint `import/no-restricted-paths`** — bloqueia imports cruzados entre módulos no CI (ver [ADR-006](ADR/006-frontend-stack.md#import-boundaries-eslint))
+2. **Biome `noRestrictedImports`** — bloqueia imports cruzados entre módulos no CI (ver [ADR-006](ADR/006-frontend-stack.md#import-boundaries-biome))
 3. **Contratos em shared kernel** — domain events são interfaces TypeScript definidas em `src/shared/domain-events/`, documentando os contratos mesmo antes do NATS
 4. **Direção única: Core → Analítico** — contextos L1 fornecem dados; contextos L2/L3 consomem. Nunca o inverso.
 5. **Falha isolada** — se o módulo Coerência falhar, Votações e Proposições continuam funcionando normalmente
