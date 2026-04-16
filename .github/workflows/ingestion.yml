@@ -1,31 +1,47 @@
 name: Ingestion
 
 on:
+  # Execução agendada diária às 03:00 UTC (00:00 BRT)
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 3 * * *'
+
+  # Execução manual com seleção do script
   workflow_dispatch:
     inputs:
       script:
-        description: 'Script a executar'
+        description: 'Qual script executar'
         required: true
         type: choice
+        default: all-daily
         options:
-          - all
+          - all-daily
           - deputados
           - deputados-detalhes
           - senadores
+          - senadores-detalhes
           - votacoes-camara
           - votacoes-senado
-          - despesas
+          - despesas-camara
+      ano:
+        description: 'Ano (apenas para votações/despesas)'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: ingestion
+  cancel-in-progress: false  # NÃO cancelar — ingestão em andamento deve completar
 
 env:
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   DIRECT_URL: ${{ secrets.DIRECT_URL }}
+  NODE_ENV: production
 
 jobs:
   ingest:
+    name: Run ingestion
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -35,24 +51,61 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Sync deputados
-        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'deputados'
+      - name: Validate env
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL não configurado"
+            exit 1
+          fi
+          if [ -z "$DIRECT_URL" ]; then
+            echo "::error::DIRECT_URL não configurado"
+            exit 1
+          fi
+          echo "✓ Variáveis de ambiente OK"
+
+      # --- Scripts "leves" (rodam no cron diário ou sob demanda) ---
+
+      - name: Sync deputados (lista)
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all-daily' || github.event.inputs.script == 'deputados'
         run: npm run ingest:deputados
 
-      - name: Sync senadores
-        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'senadores'
+      - name: Sync senadores (lista)
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all-daily' || github.event.inputs.script == 'senadores'
         run: npm run ingest:senadores
 
       - name: Sync votações Câmara (últimos 30 dias)
-        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'votacoes-camara'
-        run: npm run ingest:votacoes -- --desde=$(date -d '-30 days' '+%Y-%m-%d' 2>/dev/null || date -v-30d '+%Y-%m-%d')
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all-daily' || github.event.inputs.script == 'votacoes-camara'
+        run: |
+          DATA_INICIO=$(date -u -d '30 days ago' '+%Y-%m-%d')
+          npm run ingest:votacoes:camara -- --desde=$DATA_INICIO
 
       - name: Sync votações Senado (ano corrente)
-        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'votacoes-senado'
-        run: npm run ingest:votacoes:senado
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all-daily' || github.event.inputs.script == 'votacoes-senado'
+        run: |
+          ANO=${{ github.event.inputs.ano || '' }}
+          if [ -z "$ANO" ]; then
+            ANO=$(date -u '+%Y')
+          fi
+          npm run ingest:votacoes:senado -- --ano=$ANO
 
-      - name: Sync despesas (ano corrente)
-        if: github.event.inputs.script == 'all' || github.event.inputs.script == 'despesas'
-        run: npm run ingest:despesas
+      # --- Scripts sob demanda (NÃO rodam no cron diário por serem pesados) ---
+
+      - name: Sync deputados detalhes (~15min)
+        if: github.event.inputs.script == 'deputados-detalhes'
+        run: npm run ingest:deputados:detalhes
+
+      - name: Sync senadores detalhes (~1min)
+        if: github.event.inputs.script == 'senadores-detalhes'
+        run: npm run ingest:senadores:detalhes
+
+      - name: Sync despesas Câmara (MUITO pesado — só sob demanda)
+        if: github.event.inputs.script == 'despesas-camara'
+        run: |
+          ANO=${{ github.event.inputs.ano || '' }}
+          if [ -z "$ANO" ]; then
+            ANO=$(date -u '+%Y')
+          fi
+          npm run ingest:despesas:camara -- --ano=$ANO

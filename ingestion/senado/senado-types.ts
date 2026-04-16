@@ -156,3 +156,52 @@ export type SenadoComissaoMembro = {
   DataInicio: string // YYYY-MM-DD
   DataFim?: string // YYYY-MM-DD (ausente para participações ativas)
 }
+
+// --- GET /materia/atualizadas?numdias=N ---
+// Estrutura confirmada via curl da API real (16/04/2026).
+// IMPORTANTE: este endpoint está em depreciação programada (ver Metadados.Descontinuacao).
+// Para Wave 1 ele basta; em Wave 2 migrar para /processo (substituto oficial).
+
+export type SenadoListaMateriasAtualizadasResponse = {
+  ListaMateriasAtualizadas: {
+    Metadados?: SenadoMetadados & {
+      Descontinuacao?: {
+        DataDepreciacao?: string
+        DataDesativacaoCompleta?: string
+        UrlServicoSubstituto?: string
+      }
+    }
+    Materias?: {
+      Materia: ArrayOrSingle<SenadoMateriaAtualizada>
+    }
+  }
+}
+
+export type SenadoMateriaAtualizada = {
+  IdentificacaoMateria: {
+    CodigoMateria: string
+    SiglaCasaIdentificacaoMateria?: string // 'SF' | 'CD'
+    NomeCasaIdentificacaoMateria?: string
+    SiglaSubtipoMateria: string // 'PL' | 'PEC' | 'PLP' | 'PLC' | etc.
+    DescricaoSubtipoMateria?: string
+    NumeroMateria: string
+    AnoMateria: string
+    DescricaoObjetivoProcesso?: string
+    DescricaoIdentificacaoMateria?: string // ex: 'PLC 66/1992'
+    IndicadorTramitando?: string // 'Sim' | 'Não'
+    IdentificacaoProcesso?: string
+  }
+  DadosBasicosMateria?: {
+    EmentaMateria?: string
+    IndexacaoMateria?: string
+    IndicadorComplementar?: string
+    DataApresentacao?: string // YYYY-MM-DD
+    DataLeitura?: string
+  }
+  AtualizacoesRecentes?: {
+    Atualizacao: ArrayOrSingle<{
+      InformacaoAtualizada: string
+      DataUltimaAtualizacao: string
+    }>
+  }
+}

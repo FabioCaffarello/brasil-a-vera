@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.2
-> Última atualização: 2026-04-14
+> Última atualização: 2026-04-16
 > Status: accepted
 
 ---
@@ -71,18 +71,18 @@ gantt
 
 ### Critérios de Done
 
-- [ ] Pipeline da Câmara ingere 100% dos deputados da legislatura atual
-- [ ] Pipeline da Câmara ingere votações nominais dos últimos 2 anos
-- [ ] Pipeline da Câmara ingere gastos CEAP dos últimos 12 meses
-- [ ] Pipeline do Senado ingere senadores em exercício
-- [ ] Pipeline do Senado ingere votações do último ano
-- [ ] Todos os registros persistidos com `trust_level: L1` e `source_url`
-- [ ] Biome `noRestrictedImports` bloqueando imports cross-module no CI
-- [ ] Husky pre-commit executando `biome check` nos arquivos staged
-- [ ] Scripts de ingestão rodando via GitHub Actions cron
-- [ ] `npm run dev` sobe o Next.js monolito conectado ao PostgreSQL
-- [ ] Cobertura de testes > 70% no domínio
-- [ ] Reconciliação manual confirma dados vs. fonte oficial
+- [x] Pipeline da Câmara ingere 100% dos deputados da legislatura atual
+- [x] Pipeline da Câmara ingere votações nominais dos últimos 2 anos
+- [x] Pipeline da Câmara ingere gastos CEAP dos últimos 12 meses
+- [x] Pipeline do Senado ingere senadores em exercício
+- [x] Pipeline do Senado ingere votações do último ano
+- [x] Todos os registros persistidos com `trust_level: L1` e `source_url`
+- [x] Biome `noRestrictedImports` bloqueando imports cross-module no CI
+- [x] Husky pre-commit executando `biome check` nos arquivos staged
+- [x] Scripts de ingestão rodando via GitHub Actions cron
+- [x] `npm run dev` sobe o Next.js monolito conectado ao PostgreSQL
+- [ ] Cobertura de testes > 70% no domínio  ← próximo passo
+- [x] Reconciliação manual confirma dados vs. fonte oficial
 
 ### Entregáveis de Arquitetura
 

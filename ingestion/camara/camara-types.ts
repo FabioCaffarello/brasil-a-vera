@@ -154,6 +154,72 @@ export type CamaraPartido = {
   nome: string
 }
 
+// --- Proposições ---
+
+// Resposta de GET /proposicoes (lista)
+export type CamaraProposicaoResumo = {
+  id: number
+  uri: string
+  siglaTipo: string
+  codTipo: number
+  numero: number
+  ano: number
+  ementa: string
+  dataApresentacao?: string | null
+}
+
+// Sub-objeto presente em GET /proposicoes/{id}
+export type CamaraStatusProposicao = {
+  dataHora: string
+  sequencia: number
+  siglaOrgao: string
+  uriOrgao: string
+  uriUltimoRelator?: string | null
+  regime: string
+  descricaoTramitacao: string
+  codTipoTramitacao?: string
+  descricaoSituacao: string | null
+  codSituacao?: number | null
+  despacho: string
+  url?: string | null
+  ambito?: string
+  apreciacao?: string
+}
+
+// Resposta de GET /proposicoes/{id} (detalhe)
+export type CamaraProposicaoDetalhe = CamaraProposicaoResumo & {
+  uriOrgaoNumerador?: string | null
+  statusProposicao: CamaraStatusProposicao | null
+  uriAutores: string
+  descricaoTipo?: string
+  ementaDetalhada: string | null
+  keywords?: string
+  uriPropPrincipal?: string | null
+  uriPropAnterior?: string | null
+  uriPropPosterior?: string | null
+  urlInteiroTeor: string | null
+  urnFinal?: string | null
+  texto?: string | null
+  justificativa?: string | null
+}
+
+// Resposta de GET /proposicoes/{id}/temas
+export type CamaraTema = {
+  codTema: number
+  tema: string
+  relevancia: number
+}
+
+// Resposta de GET /proposicoes/{id}/autores
+export type CamaraAutor = {
+  uri: string | null
+  nome: string
+  codTipo: number
+  tipo: string
+  ordemAssinatura: number
+  proponente: number
+}
+
 export type CamaraResponse<T> = {
   dados: T
   links: Array<{ rel: string; href: string }>
