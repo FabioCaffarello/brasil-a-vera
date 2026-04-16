@@ -80,13 +80,24 @@ async function main() {
 
   const desc = response.ListaMateriasAtualizadas?.Metadados?.Descontinuacao
   if (desc?.DataDesativacaoCompleta) {
-    logger.warn(
-      'Endpoint /materia/atualizadas em depreciação — migrar para /processo',
-      {
+    const hoje = new Date()
+    const dataDesativacao = new Date(desc.DataDesativacaoCompleta)
+    const diasAposDesativacao = Math.floor(
+      (hoje.getTime() - dataDesativacao.getTime()) / (1000 * 60 * 60 * 24),
+    )
+    if (diasAposDesativacao > 0) {
+      logger.error('ENDPOINT DESCONTINUADO — funcionando em grace period', {
+        diasAposDesativacao,
         dataDesativacao: desc.DataDesativacaoCompleta,
         substituto: desc.UrlServicoSubstituto,
-      },
-    )
+        acao: 'Ver ingestion/senado/MIGRATION.md',
+      })
+    } else {
+      logger.warn('Endpoint /materia/atualizadas em depreciação', {
+        dataDesativacao: desc.DataDesativacaoCompleta,
+        substituto: desc.UrlServicoSubstituto,
+      })
+    }
   }
 
   const materias = ensureArray<SenadoMateriaAtualizada>(
