@@ -146,6 +146,20 @@ async function main() {
       result.total++
       processedCount++
 
+      // A API retorna alguns registros operacionais (RPD = Votação Nominal,
+      // alguns RIC, etc.) com `ano: 0` — não são proposições no sentido
+      // estrito do domínio. O validador (corretamente) exige ano > 0, então
+      // filtramos aqui antes de tentar criar a entidade. Isso evita um cascade
+      // de "Entity validation failed" no log e mantém o validator rigoroso.
+      if (!resumo.ano || resumo.ano <= 0) {
+        logger.warn('Proposição ignorada: ano inválido', {
+          propId: resumo.id,
+          siglaTipo: resumo.siglaTipo,
+          ano: resumo.ano,
+        })
+        continue
+      }
+
       try {
         const detalheResponse = await camaraClient.get<
           CamaraResponse<CamaraProposicaoDetalhe>
