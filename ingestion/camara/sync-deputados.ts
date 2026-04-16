@@ -77,6 +77,13 @@ async function main() {
     ...result,
     durationMs: result.finished.getTime() - result.started.getTime(),
   })
+
+  if (result.errors > 0) {
+    logger.error('Resumo de erros', {
+      totalErrors: result.errors,
+      primeiros10: result.errorDetails.slice(0, 10),
+    })
+  }
 }
 
 main()

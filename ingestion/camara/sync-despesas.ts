@@ -66,6 +66,15 @@ async function main() {
         { ano: anos, itens: '100', ordenarPor: 'ano', ordem: 'DESC' },
       )) {
         for (const despesa of page) {
+          if (despesa.codDocumento === 0) {
+            logger.warn('Despesa sem codDocumento, ignorando', {
+              deputadoId: dep.id,
+              tipoDespesa: despesa.tipoDespesa,
+              valor: despesa.valorDocumento,
+            })
+            continue
+          }
+
           result.total++
 
           try {
@@ -103,6 +112,13 @@ async function main() {
     ...result,
     durationMs: result.finished.getTime() - result.started.getTime(),
   })
+
+  if (result.errors > 0) {
+    logger.error('Resumo de erros', {
+      totalErrors: result.errors,
+      primeiros10: result.errorDetails.slice(0, 10),
+    })
+  }
 }
 
 main()

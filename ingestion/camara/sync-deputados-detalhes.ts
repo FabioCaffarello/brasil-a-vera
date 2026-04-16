@@ -90,11 +90,14 @@ async function main() {
         })
       }
 
+      const cpf =
+        detalhes.cpf && detalhes.cpf !== '00000000000' ? detalhes.cpf : null
+
       await useCase.execute({
         idExterno: String(dep.id),
         nome: dep.nome,
         nomeCivil: detalhes.nomeCivil,
-        cpf: detalhes.cpf,
+        cpf,
         uf: dep.siglaUf,
         partidoSigla: dep.siglaPartido,
         partidoNome: partidoMap.get(dep.siglaPartido) ?? dep.siglaPartido,
@@ -132,6 +135,13 @@ async function main() {
     ...result,
     durationMs: result.finished.getTime() - result.started.getTime(),
   })
+
+  if (result.errors > 0) {
+    logger.error('Resumo de erros', {
+      totalErrors: result.errors,
+      primeiros10: result.errorDetails.slice(0, 10),
+    })
+  }
 }
 
 main()

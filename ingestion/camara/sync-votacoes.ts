@@ -110,9 +110,17 @@ async function main() {
         ).length
         const ausentes = votos.filter((v) => v.tipoVoto === 'AUSENTE').length
 
-        const dataHora = votacao.dataHoraRegistro
-          ? new Date(votacao.dataHoraRegistro)
-          : new Date(votacao.data)
+        let dataHora: Date
+        if (votacao.dataHoraRegistro) {
+          dataHora = new Date(votacao.dataHoraRegistro)
+        } else if (votacao.data) {
+          dataHora = new Date(votacao.data)
+        } else {
+          logger.warn('Votação sem data, usando data de ingestão', {
+            votacaoId: votacao.id,
+          })
+          dataHora = new Date()
+        }
 
         await useCase.execute({
           idExterno: votacao.id,
@@ -158,6 +166,13 @@ async function main() {
     ...result,
     durationMs: result.finished.getTime() - result.started.getTime(),
   })
+
+  if (result.errors > 0) {
+    logger.error('Resumo de erros', {
+      totalErrors: result.errors,
+      primeiros10: result.errorDetails.slice(0, 10),
+    })
+  }
 }
 
 main()
