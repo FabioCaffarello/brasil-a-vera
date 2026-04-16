@@ -106,6 +106,29 @@ export function printReport(report: ReconciliationReport): void {
     lines.push('')
   }
 
+  if (report.divergenceCount > 0) {
+    lines.push('  SUGESTÃO DE CORREÇÃO:')
+    if (report.gaps.length > 0) {
+      lines.push(
+        '    • Gaps: execute o sync apropriado para preencher dados faltantes',
+      )
+      lines.push(
+        '      Exemplo: npm run ingest:votacoes:camara -- --desde=<YYYY-MM-DD>',
+      )
+    }
+    if (report.stale.length > 0) {
+      lines.push(
+        '    • Stale: execute o sync para sobrescrever com valores oficiais atuais',
+      )
+    }
+    if (report.orphans.length > 0) {
+      lines.push(
+        '    • Orphans: registros locais que saíram da fonte oficial — investigar manualmente',
+      )
+    }
+    lines.push('')
+  }
+
   const exitCode = report.divergenceCount === 0 ? 0 : 1
   lines.push(
     `  Resultado: ${exitCode === 0 ? '✓ SEM DIVERGÊNCIAS' : '✗ DIVERGÊNCIAS DETECTADAS (exit code 1)'}`,

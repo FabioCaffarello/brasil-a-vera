@@ -157,23 +157,36 @@ async function main() {
       })
     }
 
-    // Para Senado podemos comparar contagem total (votos vêm na resposta).
-    const oficialVotos = isSecreta
-      ? 0 // votação secreta: não persistimos votos nominais
-      : ensureArray(v.Votos?.VotoParlamentar).length
-    const totalLocal =
-      localOutput.resultado.votosSim +
-      localOutput.resultado.votosNao +
-      localOutput.resultado.abstencoes +
-      localOutput.resultado.ausentes
+    // Votações secretas: por design, NÃO persistimos votos nominais.
+    // Não faz sentido comparar totalVotos. Validamos apenas que o orgao
+    // está marcado como SECRETA (sentinela usada em sync-votacoes-senado.ts).
+    if (isSecreta) {
+      if (localOutput.orgao !== 'PLENARIO-SF-SECRETA') {
+        report.stale.push({
+          idExterno,
+          field: 'orgao (deveria ser SECRETA)',
+          official: 'PLENARIO-SF-SECRETA',
+          local: localOutput.orgao,
+        })
+      }
+    } else {
+      // Senado abertas: a resposta da API traz a lista nominal — podemos
+      // comparar a contagem total (sim+nao+abstencao+ausente).
+      const oficialVotos = ensureArray(v.Votos?.VotoParlamentar).length
+      const totalLocal =
+        localOutput.resultado.votosSim +
+        localOutput.resultado.votosNao +
+        localOutput.resultado.abstencoes +
+        localOutput.resultado.ausentes
 
-    if (oficialVotos !== totalLocal) {
-      report.stale.push({
-        idExterno,
-        field: 'totalVotos',
-        official: String(oficialVotos),
-        local: String(totalLocal),
-      })
+      if (oficialVotos !== totalLocal) {
+        report.stale.push({
+          idExterno,
+          field: 'totalVotos',
+          official: String(oficialVotos),
+          local: String(totalLocal),
+        })
+      }
     }
   }
 
