@@ -123,7 +123,9 @@ async function main() {
     '/proposicoes',
     {
       idLegislatura: legislatura,
-      dataApresentacaoInicio: dataInicio,
+      // Nome oficial do parâmetro é `dataInicio` (NÃO `dataApresentacaoInicio`).
+      // Confirmado em CamaraDosDeputados/dados-abertos#128 e fonte oficial.
+      dataInicio,
       itens: '100',
       ordenarPor: 'id',
       ordem: 'DESC',
