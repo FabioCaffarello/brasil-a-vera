@@ -1,39 +1,58 @@
-name: Ingestão Câmara
-
-# Votações: 4x por dia (00:00, 06:00, 12:00, 18:00 UTC)
-# Parlamentares: 1x por dia (02:00 UTC)
-# Secrets necessários no repositório GitHub antes de ativar:
-#   - DATABASE_URL (conexão pooled)
-#   - DIRECT_URL (conexão direta para migrations)
+name: Ingestion
 
 on:
   schedule:
-    - cron: '0 0,6,12,18 * * *' # votações
-    - cron: '0 2 * * *'          # parlamentares
+    - cron: '0 2 * * *'
   workflow_dispatch:
+    inputs:
+      script:
+        description: 'Script a executar'
+        required: true
+        type: choice
+        options:
+          - all
+          - deputados
+          - deputados-detalhes
+          - senadores
+          - votacoes-camara
+          - votacoes-senado
+          - despesas
+
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
 jobs:
-  sync-camara:
-    name: Sync dados da Câmara
+  ingest:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node-modules-
+          node-version: '22'
+          cache: 'npm'
 
       - run: npm ci
 
-      # Ativar na Wave 1:
-      # - run: npx tsx ingestion/camara/sync.ts
-      #   env:
-      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      #     DIRECT_URL: ${{ secrets.DIRECT_URL }}
-      - run: echo "Ingestão será configurada na Wave 1"
+      - name: Sync deputados
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'deputados'
+        run: npm run ingest:deputados
+
+      - name: Sync senadores
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'senadores'
+        run: npm run ingest:senadores
+
+      - name: Sync votações Câmara (últimos 30 dias)
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'votacoes-camara'
+        run: npm run ingest:votacoes -- --desde=$(date -d '-30 days' '+%Y-%m-%d' 2>/dev/null || date -v-30d '+%Y-%m-%d')
+
+      - name: Sync votações Senado (ano corrente)
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'all' || github.event.inputs.script == 'votacoes-senado'
+        run: npm run ingest:votacoes:senado
+
+      - name: Sync despesas (ano corrente)
+        if: github.event.inputs.script == 'all' || github.event.inputs.script == 'despesas'
+        run: npm run ingest:despesas

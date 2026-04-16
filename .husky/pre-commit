@@ -1,7 +1,1 @@
-#!/bin/sh
-
-FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$')
-
-if [ -n "$FILES" ]; then
-  npx biome check --no-errors-on-unmatched $FILES
-fi
+npx biome check --staged --no-errors-on-unmatched "**/*.{ts,tsx,js,jsx,json}"
