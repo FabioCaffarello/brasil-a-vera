@@ -20,10 +20,15 @@ describe('ParlamentarId', () => {
 })
 
 describe('Partido', () => {
-  it('should create a partido with uppercase sigla', () => {
-    const partido = new Partido('pt', 'Partido dos Trabalhadores')
+  it('should preserve original casing of sigla (PCdoB ≠ PCDOB)', () => {
+    const partido = new Partido('PCdoB', 'Partido Comunista do Brasil')
+    expect(partido.sigla).toBe('PCdoB')
+    expect(partido.nome).toBe('Partido Comunista do Brasil')
+  })
+
+  it('should trim whitespace from sigla', () => {
+    const partido = new Partido('  PT  ', 'Partido dos Trabalhadores')
     expect(partido.sigla).toBe('PT')
-    expect(partido.nome).toBe('Partido dos Trabalhadores')
   })
 
   it('should return sigla via toString()', () => {
