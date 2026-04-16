@@ -1,4 +1,7 @@
-import { TRUST_LEVEL_LABELS, type TrustLevel } from '@/shared/trust'
+import {
+  TRUST_LEVEL_LABELS,
+  type TrustLevel,
+} from '@/core/shared/domain/value-objects/trust-metadata.vo'
 
 export function getTrustLevelColor(level: TrustLevel): string {
   const colors: Record<TrustLevel, string> = {

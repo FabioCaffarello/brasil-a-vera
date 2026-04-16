@@ -1,6 +1,8 @@
 import { TrustBadge } from '@/components/trust/trust-badge'
-import type { TrustLevel } from '@/shared/trust'
-import { TRUST_LEVEL_DESCRIPTIONS } from '@/shared/trust'
+import {
+  TRUST_LEVEL_DESCRIPTIONS,
+  type TrustLevel,
+} from '@/core/shared/domain/value-objects/trust-metadata.vo'
 
 const trustExamples: { level: TrustLevel; example: string }[] = [
   { level: 'L1', example: 'Nome e partido do deputado via API da Câmara' },

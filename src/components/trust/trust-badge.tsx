@@ -1,5 +1,5 @@
+import type { TrustLevel } from '@/core/shared/domain/value-objects/trust-metadata.vo'
 import { getTrustLevelColor, getTrustLevelLabel } from '@/lib/trust'
-import type { TrustLevel } from '@/shared/trust'
 
 export function TrustBadge({ trustLevel }: { trustLevel: TrustLevel }) {
   return (
