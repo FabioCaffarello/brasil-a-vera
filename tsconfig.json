@@ -34,5 +34,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "ingestion"]
+  "exclude": ["node_modules", "ingestion", "reference"]
 }

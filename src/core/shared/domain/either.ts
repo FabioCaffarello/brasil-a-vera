@@ -56,7 +56,11 @@ export class Fail<T = unknown> {
   }
 
   *[Symbol.iterator](): Generator<this, never> {
-    return yield this
+    // O consumer (do-notation) detecta `Fail` antes de chegar aqui — esse
+    // `return` na prática nunca é alcançado. O cast satisfaz o TS porque
+    // `Generator<this, never>` exige `never` como tipo de retorno, mas
+    // `yield this` retorna `unknown` (tipo do valor enviado via `.next()`).
+    return (yield this) as never
   }
 }
 

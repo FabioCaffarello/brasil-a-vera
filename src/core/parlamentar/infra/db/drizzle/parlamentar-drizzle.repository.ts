@@ -1,4 +1,5 @@
 import { asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { InvalidArgumentError } from '@/core/shared/domain/errors/invalid-argument.error'
 import { NotFoundError } from '@/core/shared/domain/errors/not-found.error'
@@ -183,12 +184,15 @@ export class ParlamentarDrizzleRepository implements IParlamentarRepository {
 
     // Paginated query
     const offset = (props.page - 1) * props.perPage
+    // .$dynamic() permite re-atribuir após chamar orderBy condicionalmente
+    // sem perder métodos do query builder na inferência de tipo.
     let query = this.db
       .select()
       .from(parlamentares)
       .where(whereClause)
       .limit(props.perPage)
       .offset(offset)
+      .$dynamic()
 
     if (orderClause) {
       query = query.orderBy(orderClause)
@@ -292,12 +296,9 @@ export class ParlamentarDrizzleRepository implements IParlamentarRepository {
     ])
   }
 
-  private resolveOrderColumn(sort: string | null) {
+  private resolveOrderColumn(sort: string | null): AnyPgColumn | null {
     if (!sort || !this.sortableFields.includes(sort)) return null
-    const columnMap: Record<
-      string,
-      (typeof parlamentares)[keyof typeof parlamentares]
-    > = {
+    const columnMap: Record<string, AnyPgColumn> = {
       nome: parlamentares.nome,
       uf: parlamentares.uf,
       createdAt: parlamentares.createdAt,

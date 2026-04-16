@@ -1,4 +1,5 @@
 import { asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { InvalidArgumentError } from '@/core/shared/domain/errors/invalid-argument.error'
 import { NotFoundError } from '@/core/shared/domain/errors/not-found.error'
@@ -150,12 +151,15 @@ export class VotacaoDrizzleRepository implements IVotacaoRepository {
     const orderDir = props.sortDir === 'desc' ? desc : asc
     const offset = (props.page - 1) * props.perPage
 
+    // .$dynamic() permite re-atribuir após chamar orderBy condicionalmente
+    // sem perder métodos do query builder na inferência de tipo.
     let query = this.db
       .select()
       .from(votacoes)
       .where(whereClause)
       .limit(props.perPage)
       .offset(offset)
+      .$dynamic()
     if (orderColumn) query = query.orderBy(orderDir(orderColumn))
 
     const rows = await query
@@ -222,15 +226,14 @@ export class VotacaoDrizzleRepository implements IVotacaoRepository {
     ])
   }
 
-  private resolveOrderColumn(sort: string | null) {
+  private resolveOrderColumn(sort: string | null): AnyPgColumn | null {
     if (!sort || !this.sortableFields.includes(sort)) return null
-    const columnMap: Record<string, (typeof votacoes)[keyof typeof votacoes]> =
-      {
-        descricao: votacoes.descricao,
-        dataHora: votacoes.dataHora,
-        orgao: votacoes.orgao,
-        createdAt: votacoes.createdAt,
-      }
+    const columnMap: Record<string, AnyPgColumn> = {
+      descricao: votacoes.descricao,
+      dataHora: votacoes.dataHora,
+      orgao: votacoes.orgao,
+      createdAt: votacoes.createdAt,
+    }
     return columnMap[sort] ?? null
   }
 }

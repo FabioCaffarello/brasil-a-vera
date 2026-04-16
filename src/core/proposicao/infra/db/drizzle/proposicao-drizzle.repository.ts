@@ -1,4 +1,5 @@
 import { asc, count, desc, eq, ilike, inArray, or } from 'drizzle-orm'
+import type { AnyPgColumn } from 'drizzle-orm/pg-core'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { InvalidArgumentError } from '@/core/shared/domain/errors/invalid-argument.error'
 import { NotFoundError } from '@/core/shared/domain/errors/not-found.error'
@@ -134,12 +135,15 @@ export class ProposicaoDrizzleRepository implements IProposicaoRepository {
     const orderDir = props.sortDir === 'desc' ? desc : asc
     const offset = (props.page - 1) * props.perPage
 
+    // .$dynamic() permite re-atribuir após chamar orderBy condicionalmente
+    // sem perder métodos do query builder na inferência de tipo.
     let query = this.db
       .select()
       .from(proposicoes)
       .where(whereClause)
       .limit(props.perPage)
       .offset(offset)
+      .$dynamic()
     if (orderColumn) query = query.orderBy(orderDir(orderColumn))
 
     const rows = await query
@@ -159,12 +163,9 @@ export class ProposicaoDrizzleRepository implements IProposicaoRepository {
     ) => Proposicao
   }
 
-  private resolveOrderColumn(sort: string | null) {
+  private resolveOrderColumn(sort: string | null): AnyPgColumn | null {
     if (!sort || !this.sortableFields.includes(sort)) return null
-    const columnMap: Record<
-      string,
-      (typeof proposicoes)[keyof typeof proposicoes]
-    > = {
+    const columnMap: Record<string, AnyPgColumn> = {
       ano: proposicoes.ano,
       numero: proposicoes.numero,
       dataApresentacao: proposicoes.dataApresentacao,
