@@ -54,3 +54,9 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# references
+reference/*
+
+# draft
+*.zip

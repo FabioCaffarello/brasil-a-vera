@@ -1,8 +1,9 @@
+import dotenv from 'dotenv'
 import { defineConfig } from 'drizzle-kit'
 
-// Migrations são SQL puro gerado pelo Drizzle Kit em src/shared/db/migrations/.
-// Nunca edite migrations via ORM — o Kit apenas gera, e nós revisamos o SQL resultante.
-// Usa DIRECT_URL (conexão direta, sem pooling) para migrations.
+dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env' })
+
 export default defineConfig({
   dialect: 'postgresql',
   schema: './src/shared/db/schema.ts',

@@ -30,20 +30,26 @@
           "level": "error",
           "options": {
             "paths": {
-              "@/modules/parlamentares": {
-                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/shared/"
+              "@/core/parlamentar": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
               },
-              "@/modules/votacoes": {
-                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/shared/"
+              "@/core/votacao": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
               },
-              "@/modules/proposicoes": {
-                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/shared/"
+              "@/core/proposicao": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
               },
-              "@/modules/gastos": {
-                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/shared/"
+              "@/core/gasto": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
               },
-              "@/modules/coerencia": {
-                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/shared/"
+              "@/core/coerencia": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
+              },
+              "@/core/grafo": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
+              },
+              "@/core/eleitoral": {
+                "message": "Bounded contexts não podem importar uns dos outros. Use apenas @/core/shared/"
               }
             }
           }
