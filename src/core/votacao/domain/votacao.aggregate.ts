@@ -100,6 +100,42 @@ export class Votacao extends AggregateRoot {
     this.touch()
   }
 
+  /**
+   * Atualiza os campos da votação a partir de um command vindo da fonte oficial.
+   * Sobrescreve TUDO — design wave 0/1: a fonte oficial é a verdade, não há
+   * estado local que mereça ser preservado num re-sync. Wave 2 pode introduzir
+   * versionamento se o caso justificar (ex.: anotações de ONGs sobre a votação).
+   *
+   * IMPORTANTE: chamar `replaceVotos`/`replaceOrientacoes` separadamente após
+   * `updateFrom`, já que essas listas são gerenciadas explicitamente para
+   * permitir que o caller decida se deve substituir ou apenas adicionar.
+   */
+  updateFrom(command: VotacaoCreateCommand): void {
+    this.proposicaoIdExterno = command.proposicaoIdExterno ?? null
+    this.dataHora = command.dataHora
+    this.descricao = command.descricao
+    this.orgao = command.orgao
+    this.resultado = new ResultadoVotacao(
+      command.votosSim,
+      command.votosNao,
+      command.abstencoes,
+      command.ausentes,
+      command.aprovada,
+    )
+    this.trust = TrustMetadata.official(command.sourceUrl)
+    this.touch()
+  }
+
+  replaceVotos(votos: VotoNominal[]): void {
+    this.votos = votos
+    this.touch()
+  }
+
+  replaceOrientacoes(orientacoes: OrientacaoBancada[]): void {
+    this.orientacoes = orientacoes
+    this.touch()
+  }
+
   validate(): boolean {
     return validateVotacao(this.notification, {
       descricao: this.descricao,

@@ -34,6 +34,11 @@ export class SyncVotacaoUseCase
     const existing = await this.repo.findByIdExterno(input.idExterno)
 
     if (existing) {
+      // Sobrescrever campos do agregado com o command atual e
+      // re-validar (descricao/orgao/dataHora podem ter mudado).
+      existing.updateFrom(input)
+      existing.replaceVotos(buildVotos(input.votos))
+      existing.replaceOrientacoes(buildOrientacoes(input.orientacoes))
       existing.validate()
       if (existing.notification.hasErrors()) {
         throw EntityValidationError.fromNotification(existing.notification)
@@ -44,24 +49,12 @@ export class SyncVotacaoUseCase
 
     const votacao = Votacao.create(input)
 
-    if (input.votos) {
-      for (const v of input.votos) {
-        votacao.addVoto(
-          new VotoNominal({
-            parlamentarIdExterno: v.parlamentarIdExterno,
-            tipoVoto: v.tipoVoto,
-            dataHora: v.dataHora,
-          }),
-        )
-      }
+    for (const voto of buildVotos(input.votos)) {
+      votacao.addVoto(voto)
     }
 
-    if (input.orientacoes) {
-      for (const o of input.orientacoes) {
-        votacao.addOrientacao(
-          new OrientacaoBancada(o.partidoSigla, o.orientacao),
-        )
-      }
+    for (const o of buildOrientacoes(input.orientacoes)) {
+      votacao.addOrientacao(o)
     }
 
     if (votacao.notification.hasErrors()) {
@@ -70,4 +63,23 @@ export class SyncVotacaoUseCase
     await this.repo.insert(votacao)
     return toVotacaoOutput(votacao)
   }
+}
+
+function buildVotos(input: SyncVotacaoInput['votos']): VotoNominal[] {
+  if (!input) return []
+  return input.map(
+    (v) =>
+      new VotoNominal({
+        parlamentarIdExterno: v.parlamentarIdExterno,
+        tipoVoto: v.tipoVoto,
+        dataHora: v.dataHora,
+      }),
+  )
+}
+
+function buildOrientacoes(
+  input: SyncVotacaoInput['orientacoes'],
+): OrientacaoBancada[] {
+  if (!input) return []
+  return input.map((o) => new OrientacaoBancada(o.partidoSigla, o.orientacao))
 }

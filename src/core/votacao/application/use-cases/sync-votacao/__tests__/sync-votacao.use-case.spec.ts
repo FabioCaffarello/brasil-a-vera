@@ -38,6 +38,82 @@ describe('SyncVotacaoUseCase', () => {
     expect(repo.items).toHaveLength(1)
   })
 
+  it('should overwrite mutable fields on UPDATE (regression: bug onde UPDATE não copiava input)', async () => {
+    const repo = new VotacaoInMemoryRepository()
+    const useCase = new SyncVotacaoUseCase(repo)
+
+    // Primeiro sync: dados antigos
+    await useCase.execute({
+      ...validInput,
+      descricao: 'Descrição antiga',
+      orgao: 'PLENARIO-SF',
+      votosSim: 50,
+      votosNao: 30,
+      abstencoes: 1,
+      ausentes: 0,
+      aprovada: true,
+    })
+
+    // Segundo sync: simula re-ingestão com dados corrigidos
+    await useCase.execute({
+      ...validInput,
+      descricao: 'Descrição nova',
+      orgao: 'PLENARIO-SF-SECRETA',
+      votosSim: 0,
+      votosNao: 0,
+      abstencoes: 0,
+      ausentes: 0,
+      aprovada: false,
+    })
+
+    expect(repo.items).toHaveLength(1)
+    const updated = repo.items[0]
+    expect(updated.descricao).toBe('Descrição nova')
+    expect(updated.orgao).toBe('PLENARIO-SF-SECRETA')
+    expect(updated.resultado.votosSim).toBe(0)
+    expect(updated.resultado.aprovada).toBe(false)
+  })
+
+  it('should replace votos and orientacoes on UPDATE (não acumular)', async () => {
+    const repo = new VotacaoInMemoryRepository()
+    const useCase = new SyncVotacaoUseCase(repo)
+
+    await useCase.execute({
+      ...validInput,
+      votos: [
+        {
+          parlamentarIdExterno: '1001',
+          tipoVoto: 'SIM',
+          dataHora: null,
+        },
+      ],
+      orientacoes: [{ partidoSigla: 'PT', orientacao: 'SIM' }],
+    })
+
+    await useCase.execute({
+      ...validInput,
+      votos: [
+        {
+          parlamentarIdExterno: '2002',
+          tipoVoto: 'NAO',
+          dataHora: null,
+        },
+        {
+          parlamentarIdExterno: '2003',
+          tipoVoto: 'NAO',
+          dataHora: null,
+        },
+      ],
+      orientacoes: [{ partidoSigla: 'PL', orientacao: 'NAO' }],
+    })
+
+    expect(repo.items).toHaveLength(1)
+    expect(repo.items[0].votos).toHaveLength(2)
+    expect(repo.items[0].votos[0].parlamentarIdExterno).toBe('2002')
+    expect(repo.items[0].orientacoes).toHaveLength(1)
+    expect(repo.items[0].orientacoes[0].partidoSigla).toBe('PL')
+  })
+
   it('should throw validation error for invalid data', async () => {
     const repo = new VotacaoInMemoryRepository()
     const useCase = new SyncVotacaoUseCase(repo)
