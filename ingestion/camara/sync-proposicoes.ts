@@ -31,10 +31,10 @@ function parseDesdeArg(): string {
   return d.toISOString().split('T')[0]
 }
 
-function parseLegislaturaArg(): string {
+function parseLegislaturaArg(): string | null {
   const idx = process.argv.indexOf('--legislatura')
   if (idx !== -1 && process.argv[idx + 1]) return process.argv[idx + 1]
-  return '57'
+  return null
 }
 
 /**
@@ -118,18 +118,29 @@ async function main() {
 
   let processedCount = 0
 
+  // A API recusa idLegislatura + dataInicio na mesma chamada (HTTP 400).
+  // Por padrão filtramos por dataInicio (necessário p/ ingestão incremental);
+  // idLegislatura só é incluído quando o operador o passa explicitamente
+  // E não houver --desde (ex.: `--legislatura=56` sem `--desde`).
+  const queryParams: Record<string, string> = {
+    // Nome oficial do parâmetro é `dataInicio` (NÃO `dataApresentacaoInicio`).
+    // Confirmado em CamaraDosDeputados/dados-abertos#128 e fonte oficial.
+    dataInicio,
+    itens: '100',
+    ordenarPor: 'id',
+    ordem: 'DESC',
+  }
+  if (legislatura) {
+    logger.warn(
+      'Ignorando --legislatura: a API rejeita idLegislatura+dataInicio na mesma chamada',
+      { legislatura },
+    )
+  }
+
   for await (const page of fetchAllPages<CamaraProposicaoResumo>(
     camaraClient,
     '/proposicoes',
-    {
-      idLegislatura: legislatura,
-      // Nome oficial do parâmetro é `dataInicio` (NÃO `dataApresentacaoInicio`).
-      // Confirmado em CamaraDosDeputados/dados-abertos#128 e fonte oficial.
-      dataInicio,
-      itens: '100',
-      ordenarPor: 'id',
-      ordem: 'DESC',
-    },
+    queryParams,
   )) {
     for (const resumo of page) {
       result.total++
