@@ -49,6 +49,14 @@ export default function RootLayout({
                   Parlamentares
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/proposicoes"
+                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                >
+                  Proposições
+                </Link>
+              </li>
             </ul>
           </nav>
         </header>
