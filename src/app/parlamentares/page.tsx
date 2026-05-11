@@ -1,3 +1,4 @@
+import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import {
@@ -56,10 +57,23 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
         <Filtros partidos={partidos} ufs={ufs} selecionado={filtros} />
       </div>
 
-      <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
-        {parlamentares.length}{' '}
-        {parlamentares.length === 1 ? 'resultado' : 'resultados'}
-      </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <span>
+          {parlamentares.length}{' '}
+          {parlamentares.length === 1 ? 'resultado' : 'resultados'}
+        </span>
+        {parlamentares.length > 0 && (
+          <ExportCsvLink
+            href={`/api/export/parlamentares?${new URLSearchParams(
+              Object.entries({
+                casa: filtros.casa ?? '',
+                partido: filtros.partido ?? '',
+                uf: filtros.uf ?? '',
+              }).filter(([, v]) => v !== ''),
+            ).toString()}`}
+          />
+        )}
+      </div>
 
       {parlamentares.length === 0 ? (
         <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
