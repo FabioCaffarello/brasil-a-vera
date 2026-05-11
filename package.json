@@ -22,6 +22,7 @@
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "ingest:camara:deputados": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/deputados.ts",
     "ingest:senado:senadores": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/senadores.ts",
+    "ingest:camara:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/votacoes.ts",
     "prepare": "husky"
   },
   "dependencies": {
