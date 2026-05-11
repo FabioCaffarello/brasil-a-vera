@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1778522308284,
+      "tag": "0000_open_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778523625542,
+      "tag": "0001_strange_imperial_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778523724812,
+      "tag": "0002_clear_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778523763427,
+      "tag": "0003_bouncy_cassandra_nova",
+      "breakpoints": true
+    }
+  ]
+}
