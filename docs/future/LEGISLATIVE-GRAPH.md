@@ -23,7 +23,7 @@
 
 O Grafo Legislativo escala o Brasil a Vera da análise individual para a **análise sistêmica do poder legislativo**. Relações entre políticos são naturalmente um grafo, e a literatura em ciência política já validou extensamente essa abordagem.
 
-O grafo opera dentro do bounded context Grafo Legislativo (ver [Bounded Contexts](../architecture/BOUNDED-CONTEXTS.md)), persistido no Neo4j (ver [ADR-004](../architecture/ADR/004-graph-database-choice.md)) e alimentado por domain events de Votações, Proposições e Parlamentares.
+O grafo opera dentro do bounded context Grafo Legislativo (ver [Bounded Contexts](../architecture/BOUNDED-CONTEXTS.md)), persistido no Neo4j (ver [ADR-004](adr/004-graph-database-choice.md)) e alimentado por domain events de Votações, Proposições e Parlamentares.
 
 ### Insights que o Grafo Revela
 

@@ -6,7 +6,9 @@
 
 ---
 
-> **Nota**: esta decisão foi **adiada para a Wave 3+**. O [ADR-003](003-database-strategy.md) estabeleceu PostgreSQL como único banco nas Waves 0–2, com estratégia faseada para capacidades de grafo (SQL simples → NetworkX + Apache AGE → graph database dedicado se necessário). Este ADR permanece como referência para quando a decisão precisar ser retomada.
+> **Status: Deferred (Wave 3+).** Este ADR foi movido para `docs/future/` e
+> não representa compromisso de implementação. Será revalidado quando a wave
+> correspondente for ativada.
 
 ---
 
@@ -23,13 +25,13 @@
 
 ## Contexto
 
-O [ADR-003](003-database-strategy.md) originalmente estabeleceu uma estratégia de persistência poliglota com Neo4j como analytical twin para o [Grafo Legislativo](../../features/LEGISLATIVE-GRAPH.md). Após revisão das necessidades reais e restrições de custo, a decisão foi adiada.
+O [ADR-003](../../architecture/ADR/003-database-neon.md) originalmente estabeleceu uma estratégia de persistência poliglota com Neo4j como analytical twin para o [Grafo Legislativo](../LEGISLATIVE-GRAPH.md). Após revisão das necessidades reais e restrições de custo, a decisão foi adiada.
 
 Requisitos do Grafo Legislativo (inalterados):
 
 - **~600 nós** (deputados + senadores) com propriedades ricas (partido, estado, comissões)
 - **Milhões de arestas** — co-votação ao longo de múltiplas legislaturas, co-autoria, comissões em comum
-- **4 tipos de aresta** com pesos: co-votação, co-autoria, comissão, partido/bloco (ver [Grafo Legislativo](../../features/LEGISLATIVE-GRAPH.md))
+- **4 tipos de aresta** com pesos: co-votação, co-autoria, comissão, partido/bloco (ver [Grafo Legislativo](../LEGISLATIVE-GRAPH.md))
 - **Queries de traversal** — adjacência, caminho, vizinhança
 - **Métricas de centralidade** — betweenness, closeness, degree
 - **Detecção de comunidades** — Louvain/Leiden

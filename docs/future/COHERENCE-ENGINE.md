@@ -25,7 +25,7 @@ O Motor de Coerência é a capacidade mais diferenciadora do Brasil a Vera. Ele 
 
 > A plataforma é o espelho — não o juiz.
 
-O motor opera dentro do bounded context Coerência (ver [Bounded Contexts](../architecture/BOUNDED-CONTEXTS.md)), consumindo domain events de Votações e Proposições via NATS JetStream (ver [ADR-005](../architecture/ADR/005-event-driven-communication.md)).
+O motor opera dentro do bounded context Coerência (ver [Bounded Contexts](../architecture/BOUNDED-CONTEXTS.md)), consumindo domain events de Votações e Proposições via NATS JetStream (ver [ADR-005](adr/005-event-driven-communication.md)).
 
 ## Pipeline de Detecção
 
@@ -255,7 +255,7 @@ IC = 9 / 12 = 0.75 (75%)
 │                                                    │
 │  ℹ Sem substitutivos · Mesmo partido              │
 │                                                    │
-│  Metodologia: docs/features/COHERENCE-ENGINE.md   │
+│  Metodologia: docs/future/COHERENCE-ENGINE.md     │
 └──────────────────────────────────────────────────┘
 ```
 

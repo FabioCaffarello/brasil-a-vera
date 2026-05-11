@@ -1,8 +1,14 @@
 # ADR-005: Comunicação entre Bounded Contexts — Estratégia em Fases
 
 > Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-04-14
-> Status: accepted
+> Última atualização: 2026-05-11
+> Status: deferred
+
+---
+
+> **Status: Deferred (Wave 3+).** Este ADR foi movido para `docs/future/` e
+> não representa compromisso de implementação. Será revalidado quando a wave
+> correspondente for ativada.
 
 ---
 
@@ -21,17 +27,17 @@
 
 ## Contexto
 
-O Brasil a Vera é composto por 9 bounded contexts (ver [Bounded Contexts](../BOUNDED-CONTEXTS.md)) que precisam trocar informações sem acoplamento direto. Especificamente:
+O Brasil a Vera é composto por 9 bounded contexts (ver [Bounded Contexts](../../architecture/BOUNDED-CONTEXTS.md)) que precisam trocar informações sem acoplamento direto. Especificamente:
 
 - **Coerência** consome dados de Votações e Proposições para detectar pares contraditórios
 - **Grafo Legislativo** consome dados de Votações, Proposições e Parlamentares para construir a rede de vínculos
 - **Impacto** consome dados de Proposições para correlacionar com indicadores externos
 
-O princípio arquitetural da [Pirâmide de Confiança](../TRUST-PYRAMID.md) exige que contextos de L3/L4 (Impacto) nunca contaminem contextos de L1 (Parlamentares, Votações). O isolamento deve ser estrutural, não convencional.
+O princípio arquitetural da [Pirâmide de Confiança](../../architecture/TRUST-PYRAMID.md) exige que contextos de L3/L4 (Impacto) nunca contaminem contextos de L1 (Parlamentares, Votações). O isolamento deve ser estrutural, não convencional.
 
 ## Decisão
 
-**A comunicação entre bounded contexts evolui em duas fases**, acompanhando a migração do monolito para microserviços (ver [ADR-007](007-monolith-first-strategy.md)):
+**A comunicação entre bounded contexts evolui em duas fases**, acompanhando a migração do monolito para microserviços (ver [ADR-007](../../architecture/ADR/007-monolith-first-strategy.md)):
 
 | Fase | Waves | Mecanismo | Broker |
 |------|-------|-----------|--------|
@@ -101,7 +107,7 @@ export class VotacaoService {
 
 ## Fase 2 — NATS JetStream (Wave 3+)
 
-Quando os primeiros módulos Go são extraídos do monolito (ver [ADR-002](002-backend-language-and-framework.md)), NATS JetStream é introduzido como message broker.
+Quando os primeiros módulos Go são extraídos do monolito (ver [ADR-002](../../architecture/ADR/002-backend-language-and-framework.md)), NATS JetStream é introduzido como message broker.
 
 ### Arquitetura (Wave 3+)
 
