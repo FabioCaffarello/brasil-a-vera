@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$')
+FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|json)$' || true)
 
 if [ -n "$FILES" ]; then
   npx biome check --no-errors-on-unmatched $FILES
