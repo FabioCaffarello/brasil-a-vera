@@ -57,6 +57,14 @@ export default function RootLayout({
                   Proposições
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/votacoes"
+                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                >
+                  Votações
+                </Link>
+              </li>
             </ul>
           </nav>
         </header>
