@@ -27,6 +27,7 @@
     "ingest:camara:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/votacoes.ts",
     "ingest:camara:proposicoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/proposicoes.ts",
     "backfill:camara:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-votacao-proposicao.ts",
+    "ingest:camara:gastos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/gastos.ts",
     "prepare": "husky"
   },
   "dependencies": {
