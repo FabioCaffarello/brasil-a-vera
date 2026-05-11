@@ -1,8 +1,15 @@
 # ADR-002: Linguagem e Framework do Backend — Estratégia em Duas Fases
 
 > Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-04-14
-> Status: accepted
+> Última atualização: 2026-05-11
+> Status: proposed
+
+---
+
+> **Atualização (2026-05):** a migração para Go (Fase 2) é especulativa. Não há
+> compromisso de implementação. TypeScript permanente é viável e esta é a
+> hipótese de trabalho atual. A decisão será revalidada na Wave 3 com dados
+> reais de performance, não antes. Status atual: `proposed`.
 
 ---
 
@@ -27,7 +34,7 @@ O backend do Brasil a Vera precisa atender requisitos específicos:
 - **API REST de leitura** — servir dados agregados para o frontend e para a API pública (leitura intensa, escrita eventual)
 - **DDD e Clean Architecture** — a linguagem deve suportar modelagem de domínio expressiva com tipos ricos
 - **Open-source e vitrine técnica** — o código deve ser referência de qualidade; a linguagem deve ter comunidade ativa e ser acessível a contribuidores
-- **Custos de infraestrutura zero** — projeto open-source sem funding inicial; deploy no free tier da Vercel + Supabase
+- **Custos de infraestrutura zero** — projeto open-source sem funding inicial; deploy no free tier do Cloudflare Workers + Neon
 - **Velocidade de desenvolvimento** — equipe pequena precisa iterar rápido nas Waves 0/1
 
 A tensão principal é entre **velocidade de entrega no curto prazo** (TypeScript + Next.js, free tier) e **performance/escalabilidade no longo prazo** (Go, binários estáticos, concorrência nativa). A solução é uma estratégia em duas fases.
@@ -38,7 +45,7 @@ A tensão principal é entre **velocidade de entrega no curto prazo** (TypeScrip
 
 | Fase | Waves | Linguagem | Runtime | Deploy |
 |------|-------|-----------|---------|--------|
-| 1 | 0–2 | TypeScript | Next.js (monolito modular) | Vercel |
+| 1 | 0–2 | TypeScript | Next.js (monolito modular) | Cloudflare Workers |
 | 2 | 3+ | Go | Microserviços extraídos via Strangler Fig | VPS + Caddy |
 
 ## Fase 1 — TypeScript / Next.js (Waves 0–2)
@@ -78,7 +85,7 @@ src/modules/votacoes/
 
 ### Justificativa da Fase 1
 
-- **Custo zero** — Vercel free tier + Supabase free tier = ~R$3,30/mês (só domínio)
+- **Custo zero** — Cloudflare Workers free tier + Neon free tier = ~R$3,30/mês (só domínio)
 - **Velocidade** — uma linguagem para frontend e backend; sem overhead de integração
 - **Read-heavy workload** — o Brasil a Vera é majoritariamente leitura; Next.js + PostgreSQL é fit natural
 - **SSR/SSG** — SEO e compartilhamento social resolvidos nativamente
@@ -94,7 +101,7 @@ Na Wave 3, módulos são extraídos do monolito Next.js para microserviços Go v
 | HTTP routing | `net/http` (stdlib) + router leve (chi ou similar) |
 | Serialização JSON | `encoding/json` (stdlib) |
 | Acesso a banco relacional | `database/sql` + driver PostgreSQL |
-| Mensageria / eventos | NATS client (`nats.go`) — ver [ADR-005](005-event-driven-communication.md) |
+| Mensageria / eventos | NATS client (`nats.go`) — ver [ADR-005](../../future/adr/005-event-driven-communication.md) |
 | Configuração | `envconfig` ou similar |
 | Logging estruturado | `slog` (stdlib, Go 1.21+) |
 | Testes | `testing` (stdlib) + `testify` para assertions |
@@ -170,7 +177,7 @@ Antes de atingir esses critérios, **não migrar**. Complexidade prematura é o 
 
 ### Positivas
 
-- **Custo zero nas Waves 0/1** — Vercel + Supabase free tier viabiliza o projeto sem funding
+- **Custo zero nas Waves 0/1** — Cloudflare Workers + Neon free tier viabiliza o projeto sem funding
 - **Velocidade de desenvolvimento** — uma linguagem (TypeScript) para todo o stack nas Waves 0/1
 - **Porta aberta para Go** — a estrutura modular do monolito (domain/repository/service/routes) mapeia diretamente para a estrutura hexagonal do Go
 - **Migrations compatíveis** — SQL puro (não gerado por ORM) funciona com qualquer linguagem de backend

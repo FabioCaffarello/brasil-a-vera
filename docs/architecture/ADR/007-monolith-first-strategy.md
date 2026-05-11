@@ -1,8 +1,15 @@
 # ADR-007: Estratégia Monolith First
 
 > Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-04-14
+> Última atualização: 2026-05-11
 > Status: accepted
+
+---
+
+> **Atualização (2026-05):** a parte deste ADR sobre deploy na Vercel foi
+> superseded pelo [ADR-009](009-cloudflare-pages.md) (Cloudflare Workers). A
+> estratégia de monolith first permanece válida. A extração futura para Go é
+> `proposed` (ver [ADR-002](002-backend-language-and-framework.md)).
 
 ---
 
@@ -46,9 +53,9 @@ O padrão Monolith First de Martin Fowler recomenda começar com um monolito bem
 
 | Componente | Waves 0–2 | Wave 3+ |
 |-----------|-----------|---------|
-| Serving (frontend + API) | Next.js monolito (Vercel) | Next.js frontend + Go microserviços (VPS + Caddy) |
+| Serving (frontend + API) | Next.js monolito (Cloudflare Workers) | Next.js frontend + Go microserviços (VPS + Caddy) |
 | Ingestão | Scripts TypeScript (GitHub Actions) | Scripts TypeScript ou Go (GitHub Actions) |
-| Banco de dados | PostgreSQL (Supabase free) | PostgreSQL (Supabase Pro ou VPS) |
+| Banco de dados | PostgreSQL (Neon free) | PostgreSQL (Neon Launch ou VPS) |
 | Graph database | SQL simples (PostgreSQL) | NetworkX + Apache AGE |
 | Mensageria | Chamada de função TypeScript | NATS JetStream |
 | CDN | Cloudflare (free) | Cloudflare (free) |
@@ -165,7 +172,7 @@ A decisão Monolith First muda **como** e **com que tecnologia** o sistema é co
 
 ### Positivas
 
-- **Custo zero nas Waves 0/1** — Vercel + Supabase free tier viabiliza o projeto sem funding
+- **Custo zero nas Waves 0/1** — Cloudflare Workers + Neon free tier viabiliza o projeto sem funding
 - **Velocidade de desenvolvimento** — uma linguagem, um deploy, um banco
 - **Porta aberta para escalar** — as 7 regras de modularização garantem que a migração para Go é viável
 - **Validação de hipóteses primeiro** — o produto prova valor antes de investir em infraestrutura complexa
