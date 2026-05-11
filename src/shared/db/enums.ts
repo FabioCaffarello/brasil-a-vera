@@ -46,3 +46,20 @@ export const situacaoProposicao = pgEnum('situacao_proposicao', [
 
 // Papel de um autor numa proposição
 export const tipoAutoria = pgEnum('tipo_autoria', ['AUTOR', 'COAUTOR'])
+
+// Voto individual de um parlamentar numa votação nominal
+export const tipoVoto = pgEnum('tipo_voto', [
+  'SIM',
+  'NAO',
+  'ABSTENCAO',
+  'AUSENTE',
+  'OBSTRUCAO',
+])
+
+// Orientação de bancada (partido) para uma votação
+export const orientacaoBancada = pgEnum('orientacao_bancada', [
+  'SIM',
+  'NAO',
+  'LIBERADO',
+  'OBSTRUCAO',
+])

@@ -5,4 +5,5 @@
 
 export * from '@/modules/parlamentares/domain/schema'
 export * from '@/modules/proposicoes/domain/schema'
+export * from '@/modules/votacoes/domain/schema'
 export * from './enums'
