@@ -1,98 +1,16 @@
-// Cliente HTTP mínimo para a API da Câmara dos Deputados.
-// Responsável por: paginação por header Link, retry com backoff exponencial e
-// rate limiting básico. APIs públicas brasileiras são instáveis — retry e
-// log estruturado são obrigatórios (ver CLAUDE.md).
+// Cliente da API da Câmara dos Deputados — paginação por header Link.
+// Retry/backoff/timeout estão em ingestion/shared/http.ts.
+
+import { fetchWithRetry, HttpFetchError } from '../shared/http'
 
 const BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
 const USER_AGENT =
   'brasil-a-vera/0.1 (+https://github.com/FabioCaffarello/brasil-a-vera)'
 
-const RETRY_DELAYS_MS = [1_000, 5_000, 30_000] as const
-const REQUEST_TIMEOUT_MS = 30_000
-
-export class CamaraApiError extends Error {
-  constructor(
-    message: string,
-    readonly status: number | undefined,
-    readonly url: string,
-  ) {
-    super(message)
-    this.name = 'CamaraApiError'
-  }
-}
-
-interface FetchOptions {
-  signal?: AbortSignal
-}
-
-async function fetchWithRetry(
-  url: string,
-  options: FetchOptions = {},
-): Promise<Response> {
-  let lastError: unknown
-  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
-    const signal = options.signal
-      ? AbortSignal.any([options.signal, controller.signal])
-      : controller.signal
-    try {
-      const response = await fetch(url, {
-        headers: {
-          accept: 'application/json',
-          'user-agent': USER_AGENT,
-        },
-        signal,
-      })
-      clearTimeout(timeout)
-
-      if (response.status === 429) {
-        // Rate limit: respeita Retry-After se vier, senão usa backoff.
-        const retryAfter = response.headers.get('retry-after')
-        const waitMs = retryAfter
-          ? Number(retryAfter) * 1_000
-          : RETRY_DELAYS_MS[Math.min(attempt, RETRY_DELAYS_MS.length - 1)]
-        await sleep(waitMs)
-        continue
-      }
-
-      if (response.status >= 500 && attempt < RETRY_DELAYS_MS.length) {
-        // Erro do servidor — retry.
-        lastError = new CamaraApiError(
-          `Server error ${response.status}`,
-          response.status,
-          url,
-        )
-        await sleep(RETRY_DELAYS_MS[attempt])
-        continue
-      }
-
-      if (!response.ok) {
-        throw new CamaraApiError(
-          `HTTP ${response.status} ${response.statusText}`,
-          response.status,
-          url,
-        )
-      }
-
-      return response
-    } catch (err) {
-      clearTimeout(timeout)
-      lastError = err
-      // Timeout/network errors: retry com backoff.
-      if (attempt < RETRY_DELAYS_MS.length) {
-        await sleep(RETRY_DELAYS_MS[attempt])
-        continue
-      }
-      throw err
-    }
-  }
-  throw lastError ?? new CamaraApiError('Exhausted retries', undefined, url)
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+const HEADERS = {
+  accept: 'application/json',
+  'user-agent': USER_AGENT,
+} as const
 
 // O header `Link` da Câmara segue RFC 5988. Extraímos `rel="next"` quando existir.
 function parseNextUrl(linkHeader: string | null): string | null {
@@ -117,7 +35,7 @@ interface CamaraEnvelope<T> {
 export async function* paginate<T>(
   path: string,
   params: Record<string, string | number> = {},
-  options: FetchOptions = {},
+  options: { signal?: AbortSignal } = {},
 ): AsyncGenerator<T, void, void> {
   const query = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
@@ -125,10 +43,13 @@ export async function* paginate<T>(
   }
   let url: string | null = `${BASE_URL}${path}?${query.toString()}`
   while (url) {
-    const response: Response = await fetchWithRetry(url, options)
+    const response: Response = await fetchWithRetry(url, {
+      headers: HEADERS,
+      signal: options.signal,
+    })
     const json = (await response.json()) as CamaraEnvelope<T[]>
     if (!Array.isArray(json.dados)) {
-      throw new CamaraApiError(
+      throw new HttpFetchError(
         'Resposta sem `dados` array',
         response.status,
         url,
