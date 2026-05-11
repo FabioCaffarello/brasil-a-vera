@@ -52,6 +52,9 @@ Thumbs.db
 /.open-next/
 /.wrangler/
 
+# claude code (local state)
+/.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -1,11 +1,12 @@
 // Cliente da API do Senado Federal.
 //
-// Diferenças relevantes em relação à Câmara:
-// - Não usa paginação (endpoint /lista/atual retorna ~81 senadores numa
-//   resposta única).
-// - `Accept: application/json` é obrigatório — sem isso a API retorna XML.
-// - Estrutura nested verbose em estilo XML (envelopes do tipo
-//   `{ "ListaX": { "Y": { "Z": [...] } } }`).
+// Endpoints em uso:
+// - /senador/lista/atual — listagem de senadores (XML-style nested JSON).
+// - /votacao — votações em plenário com votos nominais inline (JSON flat).
+// - /processo — proposições/matérias (JSON flat, substitui /materia/atualizadas
+//   descontinuado em 2026-02-01).
+//
+// Todos exigem `Accept: application/json` — sem isso a API responde XML.
 
 import { fetchWithRetry } from '../shared/http'
 
