@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import Link from 'next/link'
 import './globals.css'
 
 const geistSans = Geist({
@@ -27,7 +28,47 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <nav
+            aria-label="Principal"
+            className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3"
+          >
+            <Link
+              href="/"
+              className="font-semibold tracking-tight hover:text-zinc-700 dark:hover:text-zinc-300"
+            >
+              Brasil a Vera
+            </Link>
+            <ul className="flex items-center gap-4 text-sm">
+              <li>
+                <Link
+                  href="/parlamentares"
+                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                >
+                  Parlamentares
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </header>
+        <main className="min-h-[calc(100vh-3rem)]">{children}</main>
+        <footer className="border-t border-zinc-200 bg-white py-4 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4">
+            <span>
+              Dados oficiais da Câmara dos Deputados e do Senado Federal.
+            </span>
+            <a
+              href="https://github.com/FabioCaffarello/brasil-a-vera"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-zinc-900 dark:hover:text-zinc-100"
+            >
+              Código no GitHub ↗
+            </a>
+          </div>
+        </footer>
+      </body>
     </html>
   )
 }
