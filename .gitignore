@@ -48,8 +48,9 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
-# vercel
-.vercel
+# cloudflare (opennextjs adapter)
+/.open-next/
+/.wrangler/
 
 # typescript
 *.tsbuildinfo
