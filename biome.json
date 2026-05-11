@@ -11,9 +11,12 @@
       "**",
       "!node_modules",
       "!.next",
+      "!.open-next",
+      "!.wrangler",
       "!dist",
       "!.cache",
-      "!coverage"
+      "!coverage",
+      "!src/shared/db/migrations/meta"
     ]
   },
   "formatter": {
