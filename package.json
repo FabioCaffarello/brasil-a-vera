@@ -23,6 +23,7 @@
     "ingest:camara:deputados": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/deputados.ts",
     "ingest:senado:senadores": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/senadores.ts",
     "ingest:camara:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/votacoes.ts",
+    "ingest:camara:proposicoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/proposicoes.ts",
     "prepare": "husky"
   },
   "dependencies": {
