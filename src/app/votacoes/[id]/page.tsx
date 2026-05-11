@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 
+import { ExportCsvLink } from '@/components/export-csv-link'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
@@ -131,6 +132,12 @@ export default async function VotacaoPage({ params, searchParams }: PageProps) {
         title="Votos individuais"
         hint="Clique no nome para ver o perfil 360° do parlamentar. Use os filtros para ver só uma direção."
       >
+        <div className="mb-3 flex justify-end">
+          <ExportCsvLink
+            href={`/api/export/votacoes/${v.id}/votos`}
+            label="Exportar todos os votos (CSV)"
+          />
+        </div>
         <VotosIndividuais
           votos={votos}
           filtroAtual={filtroVoto}

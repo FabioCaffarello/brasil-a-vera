@@ -1,3 +1,4 @@
+import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import {
@@ -91,11 +92,24 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
         />
       </div>
 
-      <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
-        {proposicoes.length === LIMITE
-          ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-          : `${proposicoes.length} ${proposicoes.length === 1 ? 'resultado' : 'resultados'}`}
-      </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <span>
+          {proposicoes.length === LIMITE
+            ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
+            : `${proposicoes.length} ${proposicoes.length === 1 ? 'resultado' : 'resultados'}`}
+        </span>
+        {proposicoes.length > 0 && (
+          <ExportCsvLink
+            href={`/api/export/proposicoes?${new URLSearchParams(
+              Object.entries({
+                tipo: filtros.tipo ?? '',
+                ano: filtros.ano ? String(filtros.ano) : '',
+                situacao: filtros.situacao ?? '',
+              }).filter(([, v]) => v !== ''),
+            ).toString()}`}
+          />
+        )}
+      </div>
 
       {proposicoes.length === 0 ? (
         <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">

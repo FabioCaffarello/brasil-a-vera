@@ -1,3 +1,4 @@
+import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import {
@@ -80,11 +81,25 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
         />
       </div>
 
-      <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">
-        {votacoes.length === LIMITE
-          ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-          : `${votacoes.length} ${votacoes.length === 1 ? 'resultado' : 'resultados'}`}
-      </p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <span>
+          {votacoes.length === LIMITE
+            ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
+            : `${votacoes.length} ${votacoes.length === 1 ? 'resultado' : 'resultados'}`}
+        </span>
+        {votacoes.length > 0 && (
+          <ExportCsvLink
+            href={`/api/export/votacoes?${new URLSearchParams(
+              Object.entries({
+                casa: filtros.casa ?? '',
+                ano: filtros.ano ? String(filtros.ano) : '',
+                resultado: filtros.resultado ?? '',
+                somenteNominais: filtros.somenteNominais ? '1' : '',
+              }).filter(([, v]) => v !== ''),
+            ).toString()}`}
+          />
+        )}
+      </div>
 
       {votacoes.length === 0 ? (
         <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
