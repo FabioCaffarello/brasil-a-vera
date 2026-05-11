@@ -160,7 +160,7 @@ Fontes complementares são usadas em contextos analíticos (L3/L4). A indisponib
 
 ### Arquitetura dos pipelines
 
-Os pipelines de ingestão são **scripts TypeScript standalone** (`tsx`) executados via **GitHub Actions scheduled workflows** — nunca na Vercel (serverless functions não suportam processos de longa duração). Ver [ADR-007](ADR/007-monolith-first-strategy.md).
+Os pipelines de ingestão são **scripts TypeScript standalone** (`tsx`) executados via **GitHub Actions scheduled workflows** — nunca em Cloudflare Workers (limites de CPU time e ausência de processos persistentes inviabilizam jobs longos). Ver [ADR-007](ADR/007-monolith-first-strategy.md) e [ADR-009](ADR/009-cloudflare-pages.md).
 
 ```mermaid
 flowchart TD
@@ -179,7 +179,7 @@ flowchart TD
         NORM[Normalizer<br/>encoding, datas, IDs]
     end
 
-    subgraph "Supabase"
+    subgraph "Neon"
         PG[(PostgreSQL)]
     end
 

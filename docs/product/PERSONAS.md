@@ -138,7 +138,7 @@ graph LR
 - Alertas temáticos (email, push) quando há nova votação ou proposição no tema
 - Rankings por tema: quem mais votou a favor/contra
 - Relatórios periódicos exportáveis
-- Índice de coerência temática por parlamentar (ver [Motor de Coerência](../features/COHERENCE-ENGINE.md))
+- Índice de coerência temática por parlamentar (ver [Motor de Coerência](../future/COHERENCE-ENGINE.md))
 
 #### Necessidades de Trust Level
 

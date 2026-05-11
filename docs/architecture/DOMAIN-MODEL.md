@@ -394,13 +394,13 @@ classDiagram
     ParContraditorio --> DirecaoProposicao
 ```
 
-Detalhes do pipeline no [Motor de Coerência](../features/COHERENCE-ENGINE.md).
+Detalhes do pipeline no [Motor de Coerência](../future/COHERENCE-ENGINE.md).
 
 ---
 
 ## Grafo Legislativo
 
-O modelo de domínio do Grafo Legislativo é persistido no PostgreSQL nas Waves 0–2 (SQL simples para afinidade de voto) e migra para Apache AGE + NetworkX na Wave 3 (ver [ADR-003](ADR/003-database-strategy.md) e [ADR-004](ADR/004-graph-database-choice.md)). A representação conceitual:
+O modelo de domínio do Grafo Legislativo é persistido no PostgreSQL nas Waves 0–2 (SQL simples para afinidade de voto) e migra para Apache AGE + NetworkX na Wave 3 (ver [ADR-003](ADR/003-database-neon.md) e [ADR-004](../future/adr/004-graph-database-choice.md)). A representação conceitual:
 
 ```mermaid
 graph LR
@@ -432,13 +432,13 @@ graph LR
 | Closeness centrality | Proximidade média a todos os outros parlamentares | `(N-1) / soma_distancias` |
 | Community ID | Cluster detectado por algoritmo | Louvain/Leiden com resolução documentada |
 
-Detalhes dos algoritmos no [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md).
+Detalhes dos algoritmos no [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md).
 
 ---
 
 ## Domain Events
 
-Todos os eventos seguem o contrato base definido em `src/shared/domain-events/` (ver [ADR-005](ADR/005-event-driven-communication.md)). Nas Waves 0–2, domain events são interfaces TypeScript — a transmissão é via chamada de função síncrona no monolito. Na Wave 3+, migram para mensagens NATS JetStream.
+Todos os eventos seguem o contrato base definido em `src/shared/domain-events/` (ver [ADR-005](../future/adr/005-event-driven-communication.md)). Nas Waves 0–2, domain events são interfaces TypeScript — a transmissão é via chamada de função síncrona no monolito. Na Wave 3+, migram para mensagens NATS JetStream.
 
 ```typescript
 // src/shared/domain-events/types.ts

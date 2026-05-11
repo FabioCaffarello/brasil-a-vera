@@ -69,11 +69,11 @@ graph TB
         API_CLIENT["API Client<br/>(desenvolvedores)"]
     end
 
-    subgraph "Vercel"
+    subgraph "Cloudflare Workers"
         NEXT["Next.js Monolito<br/>(TypeScript)<br/>Frontend SSR/SSG +<br/>API Route Handlers"]
     end
 
-    subgraph "Supabase"
+    subgraph "Neon"
         PG["PostgreSQL<br/>(schema por bounded context)"]
     end
 
@@ -102,9 +102,9 @@ graph TB
 
 | Container | Tecnologia | Responsabilidade |
 |-----------|-----------|-----------------|
-| Next.js Monolito | TypeScript, Vercel | Frontend SSR/SSG + API Route Handlers. Módulos internos por bounded context em `src/modules/` |
-| PostgreSQL | Supabase (free tier) | Core transacional — schema por bounded context. Trust level em todas as tabelas |
-| Scripts de Ingestão | TypeScript (`tsx`), GitHub Actions | Sync periódico com APIs oficiais. Executados via cron workflows, nunca na Vercel |
+| Next.js Monolito | TypeScript, Cloudflare Workers | Frontend SSR/SSG + API Route Handlers. Módulos internos por bounded context em `src/modules/` |
+| PostgreSQL | Neon (free tier) | Core transacional — schema por bounded context. Trust level em todas as tabelas |
+| Scripts de Ingestão | TypeScript (`tsx`), GitHub Actions | Sync periódico com APIs oficiais. Executados via cron workflows, nunca em Cloudflare Workers |
 | CDN / Proxy | Cloudflare (free) | Cache, DDoS protection, SSL |
 | Object Storage | Cloudflare R2 (free) | Backups, bulk downloads (Wave 2) |
 
@@ -175,7 +175,7 @@ graph LR
     EXT --> TRANS
     TRANS --> LOAD
 
-    LOAD --> PG[(PostgreSQL<br/>Supabase)]
+    LOAD --> PG[(PostgreSQL<br/>Neon)]
 ```
 
 Cada pipeline segue o padrão ETL:
@@ -205,11 +205,11 @@ graph TB
         NATS["NATS JetStream<br/>(domain events)"]
     end
 
-    subgraph "Vercel"
+    subgraph "Cloudflare Workers"
         NEXT["Next.js<br/>(frontend + módulos restantes)"]
     end
 
-    subgraph "Supabase"
+    subgraph "Neon"
         PG["PostgreSQL"]
     end
 

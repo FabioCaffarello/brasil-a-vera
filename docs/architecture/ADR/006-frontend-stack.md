@@ -11,7 +11,7 @@
 - [Contexto](#contexto)
 - [Decisão](#decisão)
 - [Estrutura de Módulos no Serving Layer](#estrutura-de-módulos-no-serving-layer)
-- [Deploy na Vercel](#deploy-na-vercel)
+- [Deploy em Cloudflare Workers](#deploy-em-cloudflare-workers)
 - [Import Boundaries (Biome)](#import-boundaries-biome)
 - [Alternativas Consideradas](#alternativas-consideradas)
 - [Consequências](#consequências)
@@ -34,7 +34,7 @@ Requisitos técnicos:
 - **Trust level visual** — cada dado renderiza seu trust_level (L1-L4) com tratamento visual diferenciado
 - **Acessibilidade** — WCAG 2.1 AA mínimo
 - **Compartilhamento social** — cards OG/Twitter ricos para cada página de parlamentar
-- **Custo zero** — deploy no free tier da Vercel nas Waves 0/1
+- **Custo zero** — deploy no free tier do Cloudflare Workers nas Waves 0/1 (ver [ADR-009](009-cloudflare-pages.md))
 
 Adicionalmente, a decisão Monolith First (ver [ADR-007](007-monolith-first-strategy.md)) estabelece que o Next.js serve **tanto o frontend quanto a API** nas Waves 0–2.
 
@@ -133,29 +133,35 @@ Cada bounded context vive em `src/modules/<contexto>/` com a mesma organização
 
 Esta estrutura mapeia diretamente para a estrutura hexagonal do Go (Wave 3+), facilitando a extração via Strangler Fig.
 
-## Deploy na Vercel
+## Deploy em Cloudflare Workers
+
+Detalhes da escolha em [ADR-009](009-cloudflare-pages.md). O Next.js é processado
+pelo adapter `@opennextjs/cloudflare`, que gera um Worker em `.open-next/worker.js`
+mais um bundle de assets, deployado no edge da Cloudflare via Wrangler.
 
 ### Free tier (Waves 0/1)
 
 | Recurso | Limite |
 |---------|--------|
-| Bandwidth | 100GB/mês |
-| Serverless functions | 100GB-hours/mês |
-| Build time | 6.000 min/mês |
-| Edge functions | 500.000 invocações/mês |
+| Bandwidth | Ilimitado |
+| Workers requests | 100.000/dia |
+| Builds | 500/mês |
+| Build time | 20 min por build (free) |
+| Workers CPU time | 10ms por request (free) / 50ms (paid) |
 
 ### Limitações importantes
 
-- **Sem processo persistente** — serverless functions encerram após retornar o response. Background tasks via `waitUntil()` têm timeout de 60s e sem garantia de execução. Por isso, **ingestão roda no GitHub Actions, nunca na Vercel** (ver [ADR-007](007-monolith-first-strategy.md)).
-- **Spending limit** — configurar spending limit de $0 na Vercel para evitar cobranças acidentais.
-- **Cold starts** — serverless functions podem ter cold starts de ~500ms. Mitigação: ISR para páginas populares.
+- **Sem processo persistente** — Workers encerram após retornar o response. Não há equivalente confiável a background tasks para jobs longos. Por isso, **ingestão roda no GitHub Actions, nunca em Cloudflare Workers** (ver [ADR-007](007-monolith-first-strategy.md) e [ADR-009](009-cloudflare-pages.md)).
+- **Spending limit** — mesmo com upgrade para Workers Paid ($5/mês), configurar billing alerts na Cloudflare para evitar surpresas.
+- **CPU time por request** — limite de 10ms (free) ou 50ms (paid) por request. Operações pesadas devem ir para GitHub Actions ou Workers separados.
+- **Server Actions** — comportamento de Server Actions em Workers runtime difere em alguns aspectos de runtimes Node — consultar docs do adapter antes de adotar.
 
 ### Stack complementar
 
 | Componente | Serviço | Tier |
 |-----------|---------|------|
-| PostgreSQL | Supabase | Free (500MB) |
-| CDN/proxy | Cloudflare | Free |
+| PostgreSQL | Neon | Free (3GB) |
+| CDN/proxy | Cloudflare (nativo no Pages) | Free |
 | Object storage | Cloudflare R2 | Free (10GB) |
 | Domínio | Registro.br | ~R$3,30/mês |
 
@@ -211,7 +217,7 @@ Esta regra é executada no CI via `biome ci .` — PRs que violam boundaries sã
 ### Remix
 
 - **Prós**: web standards first, data loading elegante, nested routes
-- **Contras**: ecossistema menor que Next.js, deploy na Vercel menos integrado
+- **Contras**: ecossistema menor que Next.js, deploy no Cloudflare Workers menos integrado
 - **Veredicto**: filosoficamente interessante, mas Next.js tem vantagem prática em ecossistema
 
 ### SPA puro (React + Vite) + API Go separada
@@ -225,7 +231,7 @@ Esta regra é executada no CI via `biome ci .` — PRs que violam boundaries sã
 ### Positivas
 
 - **SEO garantido** — SSR/SSG para todas as páginas públicas
-- **Custo zero** — Vercel free tier é suficiente para Waves 0/1
+- **Custo zero** — Cloudflare Workers free tier é suficiente para Waves 0/1 (bandwidth ilimitado)
 - **Performance** — React Server Components reduzem JavaScript no cliente; ISR para páginas diárias
 - **Monolito full-stack** — frontend e API no mesmo deploy, sem overhead de integração
 - **Compartilhamento social** — OG images dinâmicas por parlamentar
@@ -236,7 +242,7 @@ Esta regra é executada no CI via `biome ci .` — PRs que violam boundaries sã
 ### Negativas
 
 - **Bundle size** — React + Next.js têm footprint maior que Svelte/Astro — mitigação: RSC reduz JS no cliente
-- **Sem background tasks** — Vercel não suporta processos persistentes — mitigação: ingestão no GitHub Actions
+- **Sem background tasks** — Cloudflare Workers não suportam processos persistentes — mitigação: ingestão no GitHub Actions
 - **Monolito no curto prazo** — todo o sistema em um único deploy — mitigação: modularização interna permite extração futura via Strangler Fig
 
 ### Neutras
@@ -248,7 +254,8 @@ Esta regra é executada no CI via `biome ci .` — PRs que violam boundaries sã
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [React Server Components](https://react.dev/reference/rsc/server-components)
-- [Vercel Free Tier Limits](https://vercel.com/docs/accounts/plans)
+- [Cloudflare Workers — Pricing](https://developers.cloudflare.com/workers/platform/pricing/)
+- [@opennextjs/cloudflare — adapter](https://github.com/opennextjs/opennextjs-cloudflare)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Biome — Linter e Formatter unificado](https://biomejs.dev/)
 - [Biome — noRestrictedImports](https://biomejs.dev/linter/rules/no-restricted-imports/)

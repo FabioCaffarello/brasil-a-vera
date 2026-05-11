@@ -231,7 +231,7 @@ services/<contexto>/
 
 ## Wave 3+: Cypher / Graph Database
 
-Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](../architecture/ADR/004-graph-database-choice.md)):
+Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](../future/adr/004-graph-database-choice.md)):
 
 - Labels em PascalCase: `(:Parlamentar)`, `(:Proposicao)`
 - Relationship types em UPPER_SNAKE_CASE: `[:CO_VOTACAO]`, `[:MESMO_PARTIDO]`

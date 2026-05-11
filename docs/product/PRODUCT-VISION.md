@@ -60,7 +60,7 @@ Detecta pares de votos contraditórios do mesmo parlamentar de forma puramente f
 - Princípio: falso negativo > falso positivo
 - Trust level: L2 (agregação determinística com fórmula pública)
 
-Spec completa: [Motor de Coerência](../features/COHERENCE-ENGINE.md)
+Spec completa: [Motor de Coerência](../future/COHERENCE-ENGINE.md)
 
 ### 2. Grafo Legislativo
 
@@ -71,7 +71,7 @@ Modela vínculos reais entre parlamentares como grafo com 4 tipos de aresta (co-
 - Evolução temporal de coalizões
 - Trust level: L1 (arestas) / L2 (métricas) / L3 (comunidades)
 
-Spec completa: [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md)
+Spec completa: [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md)
 
 ### 3. Pirâmide de Confiança
 
@@ -107,7 +107,7 @@ Glossário completo: [Processo Legislativo](../domain/LEGISLATIVE-PROCESS.md)
 
 ### Open Source e Vitrine Técnica
 
-Todo o código é open-source. O repositório serve como referência de excelência técnica: DDD, Clean Architecture, arquitetura hexagonal, SOLID, design patterns. A qualidade do código é parte da proposta de valor. Detalhes em [Guia de Contribuição](../contributing/CONTRIBUTING.md).
+Todo o código é open-source. A qualidade do código é parte da proposta de valor — código simples, testado, reprodutível e auditável. Privilegiamos clareza sobre sofisticação: aplicamos padrões quando há ganho concreto, não como ritual. O repositório serve como referência de engenharia pragmática aplicada a um problema cívico real. Detalhes em [Guia de Contribuição](../contributing/CONTRIBUTING.md).
 
 ## Escopo Federativo
 

@@ -62,7 +62,7 @@ gantt
 
 - Scripts TypeScript de ingestão: Câmara API + Senado API (executados via GitHub Actions)
 - Modelo de domínio: bounded contexts core (Parlamentares, Proposições, Votações, Gastos) como módulos TypeScript
-- PostgreSQL (Supabase free tier) com schema por bounded context
+- PostgreSQL (Neon free tier) com schema por bounded context
 - Migrations SQL puras em `src/shared/db/migrations/`
 - Estrutura de módulos com Biome `noRestrictedImports` bloqueando imports cross-module
 - API interna (Next.js Route Handlers, não pública) para validação
@@ -109,7 +109,7 @@ gantt
 - Top 5 parlamentares com maior afinidade de voto (SQL simples — GROUP BY + COUNT)
 - Compartilhamento social com cards OG
 - Export CSV básico
-- Deploy na Vercel (free tier)
+- Deploy em Cloudflare Workers via OpenNext (free tier)
 
 ### Critérios de Done
 
@@ -137,7 +137,7 @@ gantt
 ### Escopo
 
 - API pública REST com documentação OpenAPI (via Next.js Route Handlers)
-- Índice de coerência temática completo (ver [Motor de Coerência](../features/COHERENCE-ENGINE.md))
+- Índice de coerência temática completo (ver [Motor de Coerência](../future/COHERENCE-ENGINE.md))
 - Alinhamento governo/oposição
 - Alertas por email/push (parlamentar, tema)
 - Comparativo entre parlamentares
@@ -146,7 +146,7 @@ gantt
 - Webhooks para desenvolvedores
 - Rate limiting e API keys
 
-> **Nota de infra**: dados TSE (CSV bulk) podem estourar o Supabase free tier (500MB). Avaliar upgrade para Supabase Pro ($25/mês) ou migração para PostgreSQL em VPS nesta wave.
+> **Nota de infra**: dados TSE (CSV bulk) podem estourar o Neon free tier (3GB). Avaliar upgrade para Neon Launch ($19/mês) ou migração para PostgreSQL em VPS nesta wave.
 
 ### Critérios de Done
 
@@ -168,9 +168,9 @@ gantt
 ### Escopo
 
 - **Início da extração de módulos Go (Strangler Fig)** — ver [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)
-- **Introdução do NATS JetStream** para domain events entre serviços — ver [ADR-005](../architecture/ADR/005-event-driven-communication.md)
-- Grafo legislativo interativo (ver [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md))
-- **NetworkX + Apache AGE** para análise de grafo (sem Neo4j) — ver [ADR-003](../architecture/ADR/003-database-strategy.md)
+- **Introdução do NATS JetStream** para domain events entre serviços — ver [ADR-005](../future/adr/005-event-driven-communication.md)
+- Grafo legislativo interativo (ver [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md))
+- **NetworkX + Apache AGE** para análise de grafo (sem Neo4j) — ver [ADR-003](../architecture/ADR/003-database-neon.md)
 - Detecção de comunidades (Louvain/Leiden) via NetworkX (Python, batch)
 - Métricas de centralidade (betweenness, closeness, degree)
 - Correlação doações × votos (L3, seção isolada com disclaimer)
@@ -224,7 +224,7 @@ graph LR
 
 | Dependência | De | Para | Tipo |
 |-------------|-----|------|------|
-| PostgreSQL (Supabase) + schemas | Wave 0 | Wave 1 | Obrigatória |
+| PostgreSQL (Neon) + schemas | Wave 0 | Wave 1 | Obrigatória |
 | Scripts de ingestão (GitHub Actions) | Wave 0 | Wave 1 | Obrigatória |
 | Biome import boundaries + Husky pre-commit | Wave 0 | Wave 1 | Obrigatória |
 | Next.js monolito (frontend + API) | Wave 1 | Wave 2 | Obrigatória |

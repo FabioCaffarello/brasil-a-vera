@@ -65,9 +65,9 @@ O Brasil a Vera é um projeto open-source de transparência legislativa. Toda co
 |-----------|---------------|-----------|
 | Node.js | 20 LTS+ | Monolito Next.js + scripts de ingestão |
 | Git | 2.40+ | Controle de versão |
-| PostgreSQL | 16+ | Banco de dados local (ou conta Supabase free) |
+| PostgreSQL | 16+ | Banco de dados local (ou conta Neon free) |
 
-> **Docker é opcional**: pode ser usado para rodar PostgreSQL localmente (`docker run -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16`), mas não é obrigatório se você tiver PostgreSQL instalado ou usar Supabase free.
+> **Docker é opcional**: pode ser usado para rodar PostgreSQL localmente (`docker run -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16`), mas não é obrigatório se você tiver PostgreSQL instalado ou usar Neon free.
 
 > **Go não é necessário** para contribuições nas Waves 0–2. Go será necessário a partir da Wave 3 quando módulos forem extraídos para microserviços. Ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md).
 
@@ -83,7 +83,7 @@ npm install
 
 # 3. Configure variáveis de ambiente
 cp .env.example .env
-# Edite .env com URL do PostgreSQL (local ou Supabase)
+# Edite .env com URL do PostgreSQL (local ou Neon)
 
 # 4. Rode as migrations
 npm run db:migrate

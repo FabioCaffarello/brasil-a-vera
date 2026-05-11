@@ -142,8 +142,8 @@ Princípio: uma taxa alta de "não classificado" é preferível a falsos positiv
 
 | Categoria | Ferramenta | Wave | Justificativa |
 |-----------|-----------|------|---------------|
-| Web analytics | Vercel Analytics ou Plausible | 0+ | Vercel Analytics integrado no free tier; Plausible se self-hosted |
-| API metrics | Vercel Logs + dashboards | 0–2 | Logs de serverless functions da Vercel |
+| Web analytics | Cloudflare Web Analytics ou Plausible | 0+ | Cloudflare Web Analytics é privacy-first, nativo no Pages; Plausible se self-hosted |
+| API metrics | Cloudflare Workers Logs + Logpush | 0–2 | Logs dos Workers que servem as Route Handlers do Next.js no Cloudflare Workers |
 | API metrics | Prometheus + Grafana | 3+ | Quando serviços Go tiverem métricas próprias em VPS |
 | Pipeline health | GitHub Actions logs | 0+ | Logs nativos dos workflows de ingestão |
 | Uptime | UptimeRobot ou similar | 1+ | Monitoramento externo |

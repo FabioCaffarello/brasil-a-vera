@@ -65,7 +65,7 @@ graph TB
     TRUST -.->|shared kernel| IMPA
 ```
 
-**Legenda**: setas sólidas = comunicação entre contextos (chamada de função no monolito Waves 0–2, domain events via NATS na Wave 3+ — ver [ADR-005](ADR/005-event-driven-communication.md)); setas tracejadas = dependência de shared kernel.
+**Legenda**: setas sólidas = comunicação entre contextos (chamada de função no monolito Waves 0–2, domain events via NATS na Wave 3+ — ver [ADR-005](../future/adr/005-event-driven-communication.md)); setas tracejadas = dependência de shared kernel.
 
 ## Contextos Core (L1)
 
@@ -95,7 +95,7 @@ Estes contextos armazenam dados factuais verificáveis, provenientes diretamente
 | **Eventos publicados** | `ProposicaoRegistrada`, `TramitacaoAtualizada`, `RelatorDesignado` |
 | **Consumers** | Coerência, Grafo Legislativo, Impacto |
 
-Atenção ao domínio: uma proposição pode ter substitutivos que alteram completamente o texto original. O modelo deve capturar versões para que o [Motor de Coerência](../features/COHERENCE-ENGINE.md) tenha contexto (ver [Processo Legislativo](../domain/LEGISLATIVE-PROCESS.md)).
+Atenção ao domínio: uma proposição pode ter substitutivos que alteram completamente o texto original. O modelo deve capturar versões para que o [Motor de Coerência](../future/COHERENCE-ENGINE.md) tenha contexto (ver [Processo Legislativo](../domain/LEGISLATIVE-PROCESS.md)).
 
 ### Votações
 
@@ -136,7 +136,7 @@ Integração a partir da Wave 2. Dados do TSE são em CSV bulk — pipeline de i
 
 ## Contextos Analíticos (L2/L3)
 
-Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos contextos L1. Nas Waves 0–2, a comunicação é via chamada de serviço TypeScript dentro do monolito. Na Wave 3+, migra para domain events assíncronos via NATS JetStream (ver [ADR-005](ADR/005-event-driven-communication.md)).
+Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos contextos L1. Nas Waves 0–2, a comunicação é via chamada de serviço TypeScript dentro do monolito. Na Wave 3+, migra para domain events assíncronos via NATS JetStream (ver [ADR-005](../future/adr/005-event-driven-communication.md)).
 
 ### Coerência
 
@@ -146,7 +146,7 @@ Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos
 | **Trust level** | L2 (agregações determinísticas com fórmula pública) |
 | **Consome eventos de** | Votações (`VotacaoRegistrada`), Proposições (`ProposicaoRegistrada`) |
 | **Eventos publicados** | `ParContraditórioDetectado`, `IndiceCoerenciaCalculado` |
-| **Spec detalhada** | [Motor de Coerência](../features/COHERENCE-ENGINE.md) |
+| **Spec detalhada** | [Motor de Coerência](../future/COHERENCE-ENGINE.md) |
 
 Princípio: falso negativo > falso positivo. Apenas classificações inequívocas de direção (restritiva/permissiva) geram pares.
 
@@ -157,8 +157,8 @@ Princípio: falso negativo > falso positivo. Apenas classificações inequívoca
 | **Responsabilidade** | Rede de vínculos entre parlamentares, métricas de centralidade, detecção de comunidades, evolução temporal |
 | **Trust level** | L2 (arestas e métricas) / L3 (detecção de comunidades e interpretação de clusters) |
 | **Consome eventos de** | Votações, Proposições, Parlamentares |
-| **Persistência** | PostgreSQL (Waves 0–2: SQL simples; Wave 3: Apache AGE + NetworkX; Wave 4+: avaliar graph database dedicado — ver [ADR-003](ADR/003-database-strategy.md) e [ADR-004](ADR/004-graph-database-choice.md)) |
-| **Spec detalhada** | [Grafo Legislativo](../features/LEGISLATIVE-GRAPH.md) |
+| **Persistência** | PostgreSQL (Waves 0–2: SQL simples; Wave 3: Apache AGE + NetworkX; Wave 4+: avaliar graph database dedicado — ver [ADR-003](ADR/003-database-neon.md) e [ADR-004](../future/adr/004-graph-database-choice.md)) |
+| **Spec detalhada** | [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md) |
 
 ### Impacto
 
@@ -223,7 +223,7 @@ graph LR
 
 ### Wave 3+ (microserviços Go + NATS)
 
-1. **Domain events assíncronos via NATS JetStream** — ver [ADR-005](ADR/005-event-driven-communication.md)
+1. **Domain events assíncronos via NATS JetStream** — ver [ADR-005](../future/adr/005-event-driven-communication.md)
 2. **Idempotência obrigatória** — consumers devem tratar duplicação de eventos (at-least-once delivery)
 3. **Sem orquestração centralizada** — cada consumer decide quando e como processar eventos (coreografia, não orquestração)
 4. **Contratos em shared lib** — eventos são structs Go definidas no shared kernel, espelhando as interfaces TypeScript

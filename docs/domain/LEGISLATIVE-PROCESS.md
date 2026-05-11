@@ -126,7 +126,7 @@ A maioria das proposições na Câmara tem **tramitação conclusiva** — são 
 
 Um **substitutivo** é uma nova versão do texto de uma proposição, elaborada pelo relator na comissão. O substitutivo pode alterar completamente o conteúdo original.
 
-**Implicação para o Brasil a Vera**: um parlamentar pode ter votado SIM numa versão do projeto completamente diferente da versão final. O [Motor de Coerência](../features/COHERENCE-ENGINE.md) deve levar isto em conta ao detectar pares contraditórios.
+**Implicação para o Brasil a Vera**: um parlamentar pode ter votado SIM numa versão do projeto completamente diferente da versão final. O [Motor de Coerência](../future/COHERENCE-ENGINE.md) deve levar isto em conta ao detectar pares contraditórios.
 
 ### Emendas
 

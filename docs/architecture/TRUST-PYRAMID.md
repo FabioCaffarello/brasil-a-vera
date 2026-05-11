@@ -126,7 +126,7 @@ Para dados L3:
     "votos_favoraveis_pct": 0.80,
     "trust_level": "L3",
     "disclaimer": "Correlação observada entre doações e votos. Correlação não implica causalidade.",
-    "formula_url": "https://github.com/brasil-a-vera/docs/features/LEGISLATIVE-GRAPH.md"
+    "formula_url": "https://github.com/brasil-a-vera/docs/future/LEGISLATIVE-GRAPH.md"
   }
 }
 ```
@@ -181,7 +181,7 @@ CREATE TABLE votacoes.votos_nominais (
 
 ### No grafo (Wave 3+)
 
-Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](ADR/004-graph-database-choice.md)), nós e arestas carregarão `trust_level` como propriedade:
+Quando o graph database for introduzido (Apache AGE ou Neo4j — ver [ADR-004](../future/adr/004-graph-database-choice.md)), nós e arestas carregarão `trust_level` como propriedade:
 
 ```sql
 -- Apache AGE (openCypher sobre PostgreSQL)
