@@ -8,6 +8,13 @@
       "when": 1778522308284,
       "tag": "0000_open_doomsday",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778523625542,
+      "tag": "0001_strange_imperial_guard",
+      "breakpoints": true
     }
   ]
 }

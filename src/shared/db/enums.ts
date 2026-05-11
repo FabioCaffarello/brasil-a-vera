@@ -24,3 +24,25 @@ export const tipoParticipacao = pgEnum('tipo_participacao', [
   'TITULAR',
   'SUPLENTE',
 ])
+
+// Tipo de proposição legislativa
+export const tipoProposicao = pgEnum('tipo_proposicao', [
+  'PL',
+  'PEC',
+  'PLP',
+  'MPV',
+  'PDC',
+  'PRC',
+])
+
+// Situação atual da tramitação de uma proposição
+export const situacaoProposicao = pgEnum('situacao_proposicao', [
+  'TRAMITANDO',
+  'APROVADA',
+  'REJEITADA',
+  'ARQUIVADA',
+  'TRANSFORMADA_EM_NORMA',
+])
+
+// Papel de um autor numa proposição
+export const tipoAutoria = pgEnum('tipo_autoria', ['AUTOR', 'COAUTOR'])
