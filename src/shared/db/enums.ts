@@ -63,3 +63,10 @@ export const orientacaoBancada = pgEnum('orientacao_bancada', [
   'LIBERADO',
   'OBSTRUCAO',
 ])
+
+// Tipo de gasto parlamentar
+export const tipoGasto = pgEnum('tipo_gasto', [
+  'CEAP',
+  'VERBA_GABINETE',
+  'AUXILIO_MORADIA',
+])
