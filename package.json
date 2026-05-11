@@ -21,6 +21,7 @@
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "ingest:camara:deputados": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/deputados.ts",
+    "ingest:senado:senadores": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/senadores.ts",
     "prepare": "husky"
   },
   "dependencies": {
