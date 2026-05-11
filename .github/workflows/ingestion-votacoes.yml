@@ -1,0 +1,72 @@
+name: Ingestão de votações
+
+# Votações mudam ao longo do dia legislativo — sync 4x/dia para capturar
+# resultados próximos ao tempo real:
+#   00:00 UTC (21:00 BRT do dia anterior) — pós-sessão noturna
+#   06:00 UTC (03:00 BRT)                 — fim de madrugada (pegadinhas)
+#   12:00 UTC (09:00 BRT)                 — abertura da Câmara/Senado
+#   18:00 UTC (15:00 BRT)                 — durante a sessão de plenário
+
+on:
+  schedule:
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ingestion-votacoes
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  votacoes-camara:
+    name: Votações Câmara
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ingest:camara:votacoes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+  votacoes-senado:
+    name: Votações Senado
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ingest:senado:votacoes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+  backfill-votacao-proposicao:
+    name: Backfill votacao.proposicao_id (Câmara)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Depende da ingestão de votações + proposições estar atualizada. Como
+    # essa execução roda DEPOIS dos jobs acima, o lookup já está fresco.
+    needs: [votacoes-camara]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run backfill:camara:votacao-proposicao
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}

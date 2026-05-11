@@ -1,0 +1,34 @@
+name: Ingestão semanal
+
+# Pipelines pesados que mudam pouco — domingo 03:00 UTC (00:00 BRT).
+# Gastos CEAP: ~57k registros, ~2min. Cadência diária seria desperdício
+# (a Câmara só atualiza despesas alguns dias após o documento).
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: ingestion-weekly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  gastos-camara:
+    name: Gastos CEAP da Câmara (ano corrente)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ingest:camara:gastos
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
