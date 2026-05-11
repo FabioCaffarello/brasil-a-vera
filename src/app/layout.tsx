@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Link from 'next/link'
+
+import { SearchForm } from '@/components/busca/search-form'
 import './globals.css'
 
 const geistSans = Geist({
@@ -40,32 +42,35 @@ export default function RootLayout({
             >
               Brasil a Vera
             </Link>
-            <ul className="flex items-center gap-4 text-sm">
-              <li>
-                <Link
-                  href="/parlamentares"
-                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                >
-                  Parlamentares
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/proposicoes"
-                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                >
-                  Proposições
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/votacoes"
-                  className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
-                >
-                  Votações
-                </Link>
-              </li>
-            </ul>
+            <div className="flex items-center gap-4">
+              <ul className="hidden items-center gap-4 text-sm sm:flex">
+                <li>
+                  <Link
+                    href="/parlamentares"
+                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                  >
+                    Parlamentares
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/proposicoes"
+                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                  >
+                    Proposições
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/votacoes"
+                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                  >
+                    Votações
+                  </Link>
+                </li>
+              </ul>
+              <SearchForm variant="header" />
+            </div>
           </nav>
         </header>
         <main className="min-h-[calc(100vh-3rem)]">{children}</main>

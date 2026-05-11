@@ -1,0 +1,112 @@
+import { desc, or, sql } from 'drizzle-orm'
+
+import { escapeIlike, parseProposicaoRef } from '@/lib/busca-parser'
+import { db } from '@/shared/db'
+import { parlamentar, proposicao, votacao } from '@/shared/db/schema'
+
+const LIMIT_POR_SECAO = 10
+
+export interface ResultadosBusca {
+  parlamentares: Array<{
+    id: string
+    nome: string
+    casa: string
+    partidoSigla: string
+    uf: string
+    urlFoto: string | null
+  }>
+  proposicoes: Array<{
+    id: string
+    tipo: string
+    numero: number
+    ano: number
+    ementa: string
+    situacao: string
+  }>
+  votacoes: Array<{
+    id: string
+    casa: string
+    dataHora: Date | string
+    descricao: string
+    orgao: string
+    aprovada: boolean
+    votosSim: number
+    votosNao: number
+    abstencoes: number
+  }>
+  proposicaoMatchExato: { tipo: string; numero: number; ano: number } | null
+}
+
+export async function busca(query: string): Promise<ResultadosBusca> {
+  const termo = query.trim()
+  if (termo.length < 2) {
+    return {
+      parlamentares: [],
+      proposicoes: [],
+      votacoes: [],
+      proposicaoMatchExato: null,
+    }
+  }
+
+  const pattern = escapeIlike(termo)
+  const proposicaoRef = parseProposicaoRef(termo)
+
+  const [parlamentares, proposicoes, votacoes] = await Promise.all([
+    db
+      .select({
+        id: parlamentar.id,
+        nome: parlamentar.nome,
+        casa: parlamentar.casa,
+        partidoSigla: parlamentar.partidoSigla,
+        uf: parlamentar.uf,
+        urlFoto: parlamentar.urlFoto,
+      })
+      .from(parlamentar)
+      .where(
+        or(
+          sql`${parlamentar.nome} ILIKE ${pattern}`,
+          sql`${parlamentar.nomeCivil} ILIKE ${pattern}`,
+        ),
+      )
+      .orderBy(parlamentar.nome)
+      .limit(LIMIT_POR_SECAO),
+
+    db
+      .select({
+        id: proposicao.id,
+        tipo: proposicao.tipo,
+        numero: proposicao.numero,
+        ano: proposicao.ano,
+        ementa: proposicao.ementa,
+        situacao: proposicao.situacao,
+      })
+      .from(proposicao)
+      .where(sql`${proposicao.ementa} ILIKE ${pattern}`)
+      .orderBy(desc(proposicao.ano), desc(proposicao.numero))
+      .limit(LIMIT_POR_SECAO),
+
+    db
+      .select({
+        id: votacao.id,
+        casa: votacao.casa,
+        dataHora: votacao.dataHora,
+        descricao: votacao.descricao,
+        orgao: votacao.orgao,
+        aprovada: votacao.aprovada,
+        votosSim: votacao.votosSim,
+        votosNao: votacao.votosNao,
+        abstencoes: votacao.abstencoes,
+      })
+      .from(votacao)
+      .where(sql`${votacao.descricao} ILIKE ${pattern}`)
+      .orderBy(desc(votacao.dataHora))
+      .limit(LIMIT_POR_SECAO),
+  ])
+
+  return {
+    parlamentares,
+    proposicoes,
+    votacoes,
+    proposicaoMatchExato: proposicaoRef,
+  }
+}
