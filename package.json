@@ -24,6 +24,7 @@
     "ingest:senado:senadores": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/senadores.ts",
     "ingest:camara:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/votacoes.ts",
     "ingest:camara:proposicoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/proposicoes.ts",
+    "backfill:camara:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-votacao-proposicao.ts",
     "prepare": "husky"
   },
   "dependencies": {
