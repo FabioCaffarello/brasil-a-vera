@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Brasil a Vera
 
-## Getting Started
+> **Você escolheu quem te representa. Agora veja o que ele faz.**
 
-First, run the development server:
+![Status](https://img.shields.io/badge/status-Wave%200%20%E2%80%94%20Funda%C3%A7%C3%A3o%20em%20andamento-orange)
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![Node](https://img.shields.io/badge/node-22-green)
+
+Plataforma open source de transparência política brasileira. Consolida dados
+públicos do Legislativo (Câmara, Senado, TSE, Portal da Transparência) em uma
+interface acessível para qualquer cidadão.
+
+## O que é?
+
+O Brasil tem um dos ecossistemas de dados legislativos abertos mais robustos da
+América Latina, mas o cidadão enfrenta três barreiras: fragmentação (dados
+espalhados por 5–6 portais), complexidade (linguagem técnica críptica) e
+ausência de visão integrada (nenhuma plataforma cruza votações, proposições e
+gastos numa visão 360° do parlamentar).
+
+O Brasil a Vera nasce para preencher essa lacuna. É uma plataforma centrada no
+parlamentar que unifica fontes oficiais e responde de forma factual: o que cada
+um vota, propõe e gasta — sem juízo de valor, sem viés, sem recomendação. A
+plataforma é o espelho, não o juiz.
+
+Mantida por doação, com custo operacional próximo de zero por design. Visão
+completa em [docs/product/PRODUCT-VISION.md](docs/product/PRODUCT-VISION.md).
+
+## Stack
+
+Construído com Next.js 16, TypeScript strict, Drizzle ORM, PostgreSQL no Neon e
+deploy em Cloudflare Workers (via OpenNext). Ingestão via scripts tsx rodando em GitHub Actions.
+Lint/format com Biome, testes com Vitest, validação com Zod.
+
+## Como rodar localmente
+
+### Pré-requisitos
+
+- **Node.js 22+** ([volta](https://volta.sh) ou [nvm](https://github.com/nvm-sh/nvm) recomendados)
+- **Conta no [Neon](https://neon.tech)** para criar um banco PostgreSQL gratuito
+- **npm 10+** (vem com Node 22)
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/<seu-usuario>/brasil-a-vera.git
+cd brasil-a-vera
+npm install
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Preencha `DATABASE_URL` e `DIRECT_URL` no `.env.local` com as connection strings
+do seu projeto Neon (a `DATABASE_URL` é a versão pooled; a `DIRECT_URL` é a
+conexão direta usada pelo Drizzle Kit para migrations).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Comandos principais
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev              # Inicia o dev server em http://localhost:3000
+npm run check            # Lint + format check com Biome
+npm run test             # Vitest em watch mode
+npm run build            # Build de produção
+npm run db:generate      # Gera migration a partir do schema Drizzle
+npm run db:migrate       # Aplica migrations no banco
+```
 
-## Learn More
+Lista completa em [CLAUDE.md](CLAUDE.md).
 
-To learn more about Next.js, take a look at the following resources:
+## Como contribuir
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Leia o [Guia de Contribuição](docs/contributing/CONTRIBUTING.md) antes de
+abrir uma PR. Padrões adicionais em
+[CODE-STYLE.md](docs/contributing/CODE-STYLE.md) e
+[COMMIT-CONVENTION.md](docs/contributing/COMMIT-CONVENTION.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+O projeto está em Wave 0 (fundação). Contribuições nesta fase concentram-se em
+infraestrutura, ingestão da API da Câmara e modelagem do schema — não em
+features de UI ainda.
 
-## Deploy on Vercel
+## Documentação
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **[Visão de Produto](docs/product/PRODUCT-VISION.md)** — problema, solução e diferenciais
+- **[Roadmap](docs/product/ROADMAP.md)** — waves, critérios de done, dependências
+- **[ADRs](docs/architecture/ADR/)** — decisões arquiteturais registradas
+- **[Pirâmide de Confiança](docs/architecture/TRUST-PYRAMID.md)** — modelo L1–L4 que organiza todo dado da plataforma
+- **[Fontes de Dados](docs/architecture/DATA-SOURCES.md)** — APIs oficiais consumidas e estratégia de ingestão
+- **[Processo Legislativo](docs/domain/LEGISLATIVE-PROCESS.md)** — glossário do domínio
+- **[Visão de Longo Prazo](docs/future/)** — capacidades futuras (Motor de Coerência, Grafo Legislativo); não representam compromisso
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Índice completo em [docs/README.md](docs/README.md).
+
+## Licença
+
+Distribuído sob a [Licença Apache 2.0](LICENSE). Você pode usar, modificar e
+redistribuir o código livremente, inclusive comercialmente, desde que mantenha
+os avisos de copyright e licença.
