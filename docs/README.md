@@ -32,8 +32,15 @@ Três capacidades diferenciadoras:
 
 | Documento | Descrição |
 |-----------|-----------|
-| [ADRs](architecture/ADR/) | Architecture Decision Records |
+| [ADRs](architecture/ADR/) | Architecture Decision Records ativos |
+| [ADR-001 — Monorepo](architecture/ADR/001-monorepo-strategy.md) | Estratégia de monorepo com módulos por bounded context |
+| [ADR-002 — Backend (TS → Go)](architecture/ADR/002-backend-language-and-framework.md) | TypeScript na Wave 0–2; Go na Wave 3 — `proposed` |
+| [ADR-003 — Banco no Neon](architecture/ADR/003-database-neon.md) | PostgreSQL no Neon (substitui Supabase) |
+| [ADR-006 — Stack Frontend](architecture/ADR/006-frontend-stack.md) | Next.js + TypeScript + Drizzle + Biome |
+| [ADR-007 — Monolith First](architecture/ADR/007-monolith-first-strategy.md) | Monolito Next.js nas Waves 0–2; Strangler Fig na Wave 3 |
 | [ADR-008 — Tooling Frontend](architecture/ADR/008-frontend-tooling.md) | Biome, Husky e React Flow |
+| [ADR-009 — Cloudflare Workers](architecture/ADR/009-cloudflare-pages.md) | Deploy em Cloudflare Workers (substitui Vercel) |
+| [ADR-011 — Driver de Banco](architecture/ADR/011-database-driver.md) | `drizzle-orm/neon-serverless` + `@neondatabase/serverless` |
 | [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md) | Mapa de contextos DDD com responsabilidades e relações |
 | [Modelo de Domínio](architecture/DOMAIN-MODEL.md) | Aggregates, entities, value objects e domain events |
 | [Pirâmide de Confiança](architecture/TRUST-PYRAMID.md) | Arquitetura de credibilidade L1–L4 |
@@ -44,8 +51,8 @@ Três capacidades diferenciadoras:
 
 | Documento | Descrição |
 |-----------|-----------|
-| [Motor de Coerência](features/COHERENCE-ENGINE.md) | Pipeline de detecção de pares contraditórios |
-| [Grafo Legislativo](features/LEGISLATIVE-GRAPH.md) | Rede de vínculos, métricas e algoritmos |
+| [Motor de Coerência](future/COHERENCE-ENGINE.md) | Pipeline de detecção de pares contraditórios (Wave 3+ — deferred) |
+| [Grafo Legislativo](future/LEGISLATIVE-GRAPH.md) | Rede de vínculos, métricas e algoritmos (Wave 3+ — deferred) |
 | [Parlamentar 360°](features/PARLAMENTAR-360.md) | Página unificada do parlamentar (MVP) |
 | [Busca Unificada](features/SEARCH.md) | Busca por parlamentar, proposição e tema |
 
@@ -85,7 +92,7 @@ Três capacidades diferenciadoras:
 
 ## Arquitetura: Monolith First
 
-Nas Waves 0–2, o Brasil a Vera é um **monolito Next.js modular** (TypeScript) deployado na Vercel, com PostgreSQL no Supabase e ingestão via GitHub Actions. Custo total: ~R$3,30/mês (só o domínio).
+Nas Waves 0–2, o Brasil a Vera é um **monolito Next.js modular** (TypeScript) deployado no Cloudflare Workers, com PostgreSQL no Neon e ingestão via GitHub Actions. Custo total: ~R$3,30/mês (só o domínio).
 
 Na Wave 3+, módulos são extraídos para **microserviços Go** via Strangler Fig, com NATS JetStream para eventos e Caddy como API Gateway. Detalhes no [ADR-007](architecture/ADR/007-monolith-first-strategy.md).
 
