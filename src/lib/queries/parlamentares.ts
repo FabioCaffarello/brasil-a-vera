@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql, sum } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, sql, sum } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
@@ -10,6 +10,7 @@ import {
   votacao,
   votoNominal,
 } from '@/shared/db/schema'
+import { LEGISLATURAS_QUENTES } from '@/shared/legislatura'
 
 export type Casa = 'CAMARA' | 'SENADO'
 
@@ -54,6 +55,31 @@ export async function getParlamentarById(id: string) {
       .limit(1)
     return rows[0] ?? null
   })
+}
+
+/**
+ * Lista IDs de parlamentares das legislaturas quentes (ADR-016).
+ *
+ * Não consumido hoje. As páginas de detalhe usam generateStaticParams=[]
+ * (Caminho C, SSG on-demand) para preservar isolation do build CI da
+ * decisão registrada no Batch A (regressão neon-http: build com
+ * placeholder DATABASE_URL).
+ *
+ * Esta função fica disponível como slot para o Caminho B futuro:
+ * pipeline de pre-geração via workflow separado (com secret real) que
+ * produz JSON de IDs commitado no repo, consumido pelo build sem
+ * precisar de DATABASE_URL no step de Next build.
+ *
+ * Migrar para Caminho B se cold-start de primeira request virar
+ * problema visível em produção. Tracking: issue a criar quando
+ * aplicável.
+ */
+export async function getAllParlamentarIdsQuentes(): Promise<string[]> {
+  const rows = await db
+    .select({ id: parlamentar.id })
+    .from(parlamentar)
+    .where(inArray(parlamentar.legislatura, [...LEGISLATURAS_QUENTES]))
+  return rows.map((r) => r.id)
 }
 
 export async function getVotosRecentes(parlamentarId: string, limit = 10) {
