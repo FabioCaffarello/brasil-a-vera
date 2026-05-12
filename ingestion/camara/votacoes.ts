@@ -167,7 +167,6 @@ async function processVotacao(
           votacaoId,
           parlamentarId: vt.parlamentarId,
           voto: vt.voto,
-          trustLevel: 'L1' as const,
         })),
       )
     }

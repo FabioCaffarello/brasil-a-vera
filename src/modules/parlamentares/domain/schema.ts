@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import {
   char,
   date,
+  index,
   integer,
   pgSchema,
   text,
@@ -69,18 +70,39 @@ export const filiacaoPartidaria = parlamentaresSchema.table(
     dataInicio: date('data_inicio').notNull(),
     dataFim: date('data_fim'),
   },
+  (table) => [
+    // FK em parlamentar_id não é auto-indexada pelo Postgres; queries
+    // "histórico de filiação do parlamentar X" são padrão.
+    index('filiacao_partidaria_parlamentar_id_idx').on(table.parlamentarId),
+  ],
 )
 
-export const membroComissao = parlamentaresSchema.table('membro_comissao', {
-  id: uuid('id')
-    .primaryKey()
-    .$defaultFn(() => uuidv7()),
-  parlamentarId: uuid('parlamentar_id')
-    .notNull()
-    .references(() => parlamentar.id, { onDelete: 'cascade' }),
-  comissaoSourceId: text('comissao_source_id').notNull(),
-  comissaoNome: text('comissao_nome').notNull(),
-  tipoParticipacao: tipoParticipacao('tipo_participacao').notNull(),
-  dataInicio: date('data_inicio').notNull(),
-  dataFim: date('data_fim'),
-})
+export const membroComissao = parlamentaresSchema.table(
+  'membro_comissao',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    comissaoSourceId: text('comissao_source_id').notNull(),
+    comissaoNome: text('comissao_nome').notNull(),
+    tipoParticipacao: tipoParticipacao('tipo_participacao').notNull(),
+    dataInicio: date('data_inicio').notNull(),
+    dataFim: date('data_fim'),
+  },
+  (table) => [
+    // Uma participação por par (parlamentar, comissão, data de início).
+    // Re-ingestão idempotente sem duplicar histórico.
+    uniqueIndex('membro_comissao_parlamentar_comissao_inicio_unique').on(
+      table.parlamentarId,
+      table.comissaoSourceId,
+      table.dataInicio,
+    ),
+    // Índice solo em parlamentar_id — redundante com o prefixo do unique
+    // acima na maioria das queries, mas explicitado pra coerência com o
+    // padrão de FKs indexadas nas tabelas filhas.
+    index('membro_comissao_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)

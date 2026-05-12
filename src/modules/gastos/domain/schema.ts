@@ -60,5 +60,19 @@ export const gasto = gastosSchema.table(
     index('gasto_data_emissao_idx').on(table.dataEmissao),
     // Consulta comum: "gastos do dep X em 2025 por tipo"
     index('gasto_parlamentar_tipo_idx').on(table.parlamentarId, table.tipo),
+    // Acelera o DELETE-by-year usado na re-ingestão (delete WHERE
+    // parlamentar_id = X AND EXTRACT(year FROM data_emissao) = N). Sem
+    // este índice, cada deputado escaneava a tabela inteira em cada
+    // execução do workflow semanal.
+    //
+    // Nota: gasto NÃO tem unique constraint em (parlamentar_id, source_id)
+    // porque a API da Câmara reutiliza codDocumento para parcelas/linhas
+    // legítimas distintas da mesma fatura (ex.: estorno + passagem em
+    // SIGEPA). Idempotência é garantida pela estratégia DELETE-by-year +
+    // bulk INSERT dentro de transação no script de ingestão.
+    index('gasto_parlamentar_data_emissao_idx').on(
+      table.parlamentarId,
+      table.dataEmissao,
+    ),
   ],
 )
