@@ -5,6 +5,7 @@ import {
   checkAdminKey,
   getExpectedAdminKey,
 } from '@/lib/admin-auth'
+import { readCacheStats } from '@/lib/cache'
 import { getDbStats } from '@/lib/queries/stats'
 
 export const dynamic = 'force-dynamic'
@@ -33,7 +34,11 @@ export async function GET(request: Request) {
   try {
     const stats = await getDbStats()
     return NextResponse.json(
-      { timestamp: new Date().toISOString(), ...stats },
+      {
+        timestamp: new Date().toISOString(),
+        ...stats,
+        cache: readCacheStats(),
+      },
       { headers: NO_CACHE_HEADERS },
     )
   } catch (err) {
