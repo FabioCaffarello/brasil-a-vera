@@ -10,13 +10,14 @@ on:
 #   Cloudflare Dashboard → Workers & Pages → Create → Connect to Git
 # Esse workflow cobre apenas o deploy de produção em push para main.
 #
-# Pré-requisito de runtime (one-time, fora deste workflow):
-#   npx wrangler secret put DATABASE_URL
-#   npx wrangler secret put DIRECT_URL
-# Esses secrets vivem como Workers Secrets na Cloudflare (não em GitHub).
-# Com `nodejs_compat` em wrangler.jsonc, ficam acessíveis via process.env.X
-# em runtime. Sem isso a aplicação crasha em produção ao tentar conectar no
-# Neon. Ver docs/contributing/DEPLOYMENT.md para o procedimento completo.
+# Secrets de runtime na Cloudflare (acessíveis via `process.env.X` com
+# `nodejs_compat`):
+# - DATABASE_URL e DIRECT_URL — bootstrappados idempotentemente a cada
+#   deploy a partir dos GitHub Secrets (steps abaixo). Resiliente ao
+#   incidente investigado em #52.
+# - ADMIN_API_KEY — single-source no Cloudflare; o workflow só verifica
+#   que ainda está setada e falha rápido caso não esteja.
+# Ver docs/contributing/DEPLOYMENT.md.
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -39,6 +40,39 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Bootstrap idempotente dos Workers Secrets de runtime. Reproduz o
+      # estado esperado a cada deploy a partir dos GitHub Secrets (fonte
+      # de verdade compartilhada com a ingestão). Se um secret sumir
+      # entre deploys — incidente investigado em #52, causa raiz
+      # não-determinística — `wrangler secret put` restaura sem
+      # intervenção manual. `printf '%s'` sem newline evita injetar `\n`
+      # no valor.
+      - name: Bootstrap runtime secrets from GitHub Secrets
+        run: |
+          printf '%s' "$DATABASE_URL_VALUE" | npx wrangler secret put DATABASE_URL
+          printf '%s' "$DIRECT_URL_VALUE" | npx wrangler secret put DIRECT_URL
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DATABASE_URL_VALUE: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL_VALUE: ${{ secrets.DIRECT_URL }}
+
+      # ADMIN_API_KEY não é bootstrappada (single-source no Cloudflare por
+      # design — não vive em GitHub Secrets). Verificação explícita aqui
+      # falha rápido com mensagem clara caso ela tenha sumido; restore
+      # manual é necessário porque não há fonte alternativa.
+      - name: Verify ADMIN_API_KEY still set on Worker
+        run: |
+          set +e
+          secrets=$(npx wrangler secret list 2>/dev/null)
+          if ! echo "$secrets" | grep -q "ADMIN_API_KEY"; then
+            echo "::error::ADMIN_API_KEY missing from Workers Secrets. Restore manually via 'wrangler secret put ADMIN_API_KEY' before re-running deploy."
+            exit 1
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Build with OpenNext for Cloudflare
         run: npm run cf:build
