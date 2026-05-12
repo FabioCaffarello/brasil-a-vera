@@ -11,6 +11,7 @@
   // Secrets esperados (configurar one-time via `wrangler secret put`):
   //   DATABASE_URL   — Neon pooled connection (app em runtime)
   //   DIRECT_URL     — Neon direct connection (migrations; opcional em runtime)
+  //   ADMIN_API_KEY  — chave do header `x-admin-key` em /api/stats (min 32 chars)
   //
   // Cache R2 (incremental cache do OpenNext) ainda não é necessário: todas as
   // rotas são dinâmicas (ƒ). Revisitar quando entrar ISR/Cache Components.
