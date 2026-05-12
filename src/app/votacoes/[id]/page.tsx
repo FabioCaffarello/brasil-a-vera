@@ -31,9 +31,13 @@ export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
   const v = await getVotacaoById(id)
   if (!v) return { title: 'Votação — Brasil a Vera' }
+  const title = `Votação — ${v.descricao.slice(0, 80)}`
+  const description = v.descricao.slice(0, 200)
   return {
-    title: `Votação — ${v.descricao.slice(0, 80)}`,
-    description: v.descricao.slice(0, 200),
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
   }
 }
 

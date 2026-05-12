@@ -18,6 +18,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Brasil a Vera — Transparência Legislativa',
   description: 'Plataforma open-source de transparência legislativa brasileira',
+  openGraph: {
+    title: 'Brasil a Vera',
+    description: 'Você escolheu quem te representa. Agora veja o que ele faz.',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Brasil a Vera',
+    description: 'Você escolheu quem te representa. Agora veja o que ele faz.',
+  },
 }
 
 export default function RootLayout({

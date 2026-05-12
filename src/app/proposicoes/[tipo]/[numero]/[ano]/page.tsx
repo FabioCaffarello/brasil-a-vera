@@ -37,9 +37,13 @@ export async function generateMetadata({ params }: PageProps) {
   const p = await getProposicaoByChave(parsed.tipo, parsed.numero, parsed.ano)
   if (!p) return { title: 'Proposição — Brasil a Vera' }
   const ref = formatProposicaoRef(p.tipo, p.numero, p.ano)
+  const title = `${ref} — Brasil a Vera`
+  const description = p.ementa.slice(0, 200)
   return {
-    title: `${ref} — Brasil a Vera`,
-    description: p.ementa.slice(0, 200),
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
   }
 }
 
