@@ -1,27 +1,29 @@
-import { neonConfig, Pool } from '@neondatabase/serverless'
-import { drizzle } from 'drizzle-orm/neon-serverless'
+import { neon } from '@neondatabase/serverless'
+import { drizzle } from 'drizzle-orm/neon-http'
 
 import * as schema from './schema'
 
-// Em Node (ingestão, build, dev), o driver precisa de WebSocket polyfill.
-// Em Cloudflare Workers, WebSocket é nativo e este bloco é eliminado pelo
-// bundler do adapter.
-if (typeof WebSocket === 'undefined') {
-  const ws = await import('ws')
-  neonConfig.webSocketConstructor = ws.default
-}
+// Driver HTTP para Cloudflare Workers.
+//
+// Por que HTTP e não WebSocket Pool:
+// Cloudflare Workers usa isolates onde I/O objects (incluindo
+// WebSocket) são amarrados ao request handler que os criou.
+// Singleton de Pool em globalThis viola esse contrato e falha
+// com "Cannot perform I/O on behalf of a different request"
+// sob tráfego concorrente. O driver HTTP do Neon usa fetch
+// (sem WebSocket), portanto é compatível com o modelo de
+// isolation.
+//
+// Trade-off: neon-http não suporta transactions multi-statement.
+// Não é perda real porque este módulo é usado apenas pelo
+// app Workers, que faz somente leitura. Scripts de ingestão
+// (que precisam de transactions) usam ingestion/shared/db.ts
+// com neon-serverless + Pool em Node 22.
+//
+// Referências:
+// - https://developers.cloudflare.com/workers/observability/errors/
+// - https://neon.tech/docs/serverless/serverless-driver
+// - Incidente original documentado em ADR (TODO pós-Wave 1)
 
-// Singleton para evitar múltiplas conexões durante hot reload em desenvolvimento.
-// O Next.js recria módulos a cada HMR — sem o singleton, cada reload abre uma conexão nova
-// até estourar o limite do banco.
-const globalForDb = globalThis as unknown as { pool: Pool | undefined }
-
-const pool =
-  globalForDb.pool ??
-  new Pool({ connectionString: process.env.DATABASE_URL as string })
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForDb.pool = pool
-}
-
-export const db = drizzle(pool, { schema })
+const sql = neon(process.env.DATABASE_URL as string)
+export const db = drizzle(sql, { schema })
