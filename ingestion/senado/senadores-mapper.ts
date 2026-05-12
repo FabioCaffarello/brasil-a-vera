@@ -1,13 +1,9 @@
+import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
 import type { ParlamentarRow } from '../shared/parlamentar-row'
 
 import type { SenadorItem } from './senadores-schema'
 
 const BASE_URL = 'https://legis.senado.leg.br/dadosabertos'
-
-// Legislatura corrente em que esta ingestão opera. Mandatos no Senado duram
-// 8 anos (2 legislaturas). TODO Wave 1+: refinar usando DataInicio/DataFim do
-// payload do Senado quando começarmos a precisar deles.
-const LEGISLATURA_ATUAL = 57
 
 // Retorna a legislatura "em exercício hoje" para o senador. Quando a Primeira
 // legislatura do mandato já é >= a atual, o senador está na primeira metade

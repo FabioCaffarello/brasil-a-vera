@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import { parlamentar } from '@/shared/db/schema'
+import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
 import { db } from '../shared/db'
 import { paginate } from './camara-client'
 import { mapDeputadoListagem } from './deputados-mapper'
@@ -12,10 +13,8 @@ interface IngestionStats {
   errors: Array<{ sourceId: string | null; reason: string }>
 }
 
-const LEGISLATURA_PADRAO = 57 // 2023–2026
-
 export async function ingestDeputados(
-  legislatura = LEGISLATURA_PADRAO,
+  legislatura = LEGISLATURA_ATUAL,
 ): Promise<IngestionStats> {
   const stats: IngestionStats = {
     fetched: 0,
