@@ -25,14 +25,19 @@ export function PerfilHeader({ parlamentar }: Props) {
   return (
     <header className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900 sm:flex-row sm:items-start">
       {parlamentar.urlFoto ? (
-        // biome-ignore lint/performance/noImgElement: dynamic remote
+        // biome-ignore lint/performance/noImgElement: foto vem de domínio externo (camara.leg.br / senado.leg.br); Next/Image exige config de remote patterns. Largura/altura explícitas reservam espaço e evitam CLS.
         <img
           src={parlamentar.urlFoto}
           alt={`Foto oficial de ${parlamentar.nome}`}
+          width={112}
+          height={112}
           className="size-24 shrink-0 rounded-full object-cover sm:size-28"
         />
       ) : (
-        <div className="size-24 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 sm:size-28" />
+        <div
+          aria-hidden="true"
+          className="size-24 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 sm:size-28"
+        />
       )}
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">

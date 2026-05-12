@@ -49,15 +49,20 @@ export function Top5Afinidade({ afinidades }: Props) {
               {i + 1}.
             </span>
             {a.urlFoto ? (
-              // biome-ignore lint/performance/noImgElement: dynamic remote
+              // biome-ignore lint/performance/noImgElement: foto remota; dimensões explícitas evitam CLS.
               <img
                 src={a.urlFoto}
                 alt=""
                 loading="lazy"
+                width={40}
+                height={40}
                 className="size-10 shrink-0 rounded-full object-cover"
               />
             ) : (
-              <div className="size-10 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+              <div
+                aria-hidden="true"
+                className="size-10 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700"
+              />
             )}
             <div className="min-w-0 flex-1">
               <Link
