@@ -1,5 +1,21 @@
 import { sql } from 'drizzle-orm'
-
+import { gasto } from '@/modules/gastos/domain/schema'
+import {
+  filiacaoPartidaria,
+  membroComissao,
+  parlamentar,
+} from '@/modules/parlamentares/domain/schema'
+import {
+  proposicao,
+  proposicaoAutor,
+  proposicaoTema,
+  tramitacao,
+} from '@/modules/proposicoes/domain/schema'
+import {
+  orientacao,
+  votacao,
+  votoNominal,
+} from '@/modules/votacoes/domain/schema'
 import { db } from '@/shared/db'
 
 export type DbStats = {
@@ -10,6 +26,31 @@ export type DbStats = {
   rowCounts: Record<string, number>
   lastIngestion: Record<string, string | null>
 }
+
+// Labels que aparecem no JSON de resposta. Resolvemos via ref Drizzle (não
+// string SQL hardcoded) para evitar mismatch entre nome do const JS e nome
+// real da tabela no Postgres — bug que existiu antes deste arquivo usar refs
+// (const `orientacao` aponta para tabela `orientacao_bancada`).
+const ROW_COUNT_TABLES = [
+  { label: 'parlamentares.parlamentar', ref: parlamentar },
+  { label: 'parlamentares.filiacao_partidaria', ref: filiacaoPartidaria },
+  { label: 'parlamentares.membro_comissao', ref: membroComissao },
+  { label: 'proposicoes.proposicao', ref: proposicao },
+  { label: 'proposicoes.proposicao_tema', ref: proposicaoTema },
+  { label: 'proposicoes.proposicao_autor', ref: proposicaoAutor },
+  { label: 'proposicoes.tramitacao', ref: tramitacao },
+  { label: 'votacoes.votacao', ref: votacao },
+  { label: 'votacoes.voto_nominal', ref: votoNominal },
+  { label: 'votacoes.orientacao_bancada', ref: orientacao },
+  { label: 'gastos.gasto', ref: gasto },
+] as const
+
+const LAST_INGESTION_TABLES = [
+  { label: 'parlamentar', ref: parlamentar },
+  { label: 'proposicao', ref: proposicao },
+  { label: 'votacao', ref: votacao },
+  { label: 'gasto', ref: gasto },
+] as const
 
 export async function getDbStats(): Promise<DbStats> {
   const [sizeBytes, rowCounts, lastIngestion] = await Promise.all([
@@ -37,24 +78,16 @@ async function getDatabaseSize(): Promise<number> {
   return Number(row.size)
 }
 
-// COUNT(*) em todas as tabelas via UNION ALL. Endpoint é chamado raramente
-// (admin manual + cron diário no máximo), então sequencial scan em tabelas
-// maiores (voto_nominal, gasto) é aceitável. Trocar para `pg_class.reltuples`
-// se virar gargalo no futuro.
+// COUNT(*) em todas as tabelas via UNION ALL de queries individuais por ref.
+// Endpoint é chamado raramente (admin manual + cron diário no máximo), então
+// sequencial scan em tabelas maiores (voto_nominal, gasto) é aceitável.
+// Trocar para `pg_class.reltuples` se virar gargalo.
 async function getRowCounts(): Promise<Record<string, number>> {
-  const result = await db.execute(sql`
-    SELECT 'parlamentares.parlamentar' AS table_name, COUNT(*)::bigint AS count FROM parlamentares.parlamentar
-    UNION ALL SELECT 'parlamentares.filiacao_partidaria', COUNT(*)::bigint FROM parlamentares.filiacao_partidaria
-    UNION ALL SELECT 'parlamentares.membro_comissao', COUNT(*)::bigint FROM parlamentares.membro_comissao
-    UNION ALL SELECT 'proposicoes.proposicao', COUNT(*)::bigint FROM proposicoes.proposicao
-    UNION ALL SELECT 'proposicoes.proposicao_tema', COUNT(*)::bigint FROM proposicoes.proposicao_tema
-    UNION ALL SELECT 'proposicoes.proposicao_autor', COUNT(*)::bigint FROM proposicoes.proposicao_autor
-    UNION ALL SELECT 'proposicoes.tramitacao', COUNT(*)::bigint FROM proposicoes.tramitacao
-    UNION ALL SELECT 'votacoes.votacao', COUNT(*)::bigint FROM votacoes.votacao
-    UNION ALL SELECT 'votacoes.voto_nominal', COUNT(*)::bigint FROM votacoes.voto_nominal
-    UNION ALL SELECT 'votacoes.orientacao', COUNT(*)::bigint FROM votacoes.orientacao
-    UNION ALL SELECT 'gastos.gasto', COUNT(*)::bigint FROM gastos.gasto
-  `)
+  const queries = ROW_COUNT_TABLES.map(
+    ({ label, ref }) =>
+      sql`SELECT ${label}::text AS table_name, COUNT(*)::bigint AS count FROM ${ref}`,
+  )
+  const result = await db.execute(sql.join(queries, sql` UNION ALL `))
 
   const counts: Record<string, number> = {}
   for (const row of result.rows) {
@@ -66,12 +99,11 @@ async function getRowCounts(): Promise<Record<string, number>> {
 }
 
 async function getLastIngestion(): Promise<Record<string, string | null>> {
-  const result = await db.execute(sql`
-    SELECT 'parlamentar' AS root, MAX(ingested_at) AS ts FROM parlamentares.parlamentar
-    UNION ALL SELECT 'proposicao', MAX(ingested_at) FROM proposicoes.proposicao
-    UNION ALL SELECT 'votacao', MAX(ingested_at) FROM votacoes.votacao
-    UNION ALL SELECT 'gasto', MAX(ingested_at) FROM gastos.gasto
-  `)
+  const queries = LAST_INGESTION_TABLES.map(
+    ({ label, ref }) =>
+      sql`SELECT ${label}::text AS root, MAX(ingested_at) AS ts FROM ${ref}`,
+  )
+  const result = await db.execute(sql.join(queries, sql` UNION ALL `))
 
   const lastIngestion: Record<string, string | null> = {}
   for (const row of result.rows) {
