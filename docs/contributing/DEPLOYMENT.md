@@ -90,6 +90,50 @@ Verificar funcionamento: forçar erro temporário (ex: remover um secret) e conf
 
 Para 1 alerta, setup via API é overkill. Se o número de alertas crescer (multi-worker, múltiplas métricas), revisitar com `cf-terraform-provider`.
 
+## Alertas de falha em jobs de ingestão
+
+Quando qualquer job de ingestão (`ingestion.yml`, `ingestion-votacoes.yml`, `ingestion-weekly.yml`) falha, a composite action `.github/actions/notify-failure` dispara dois canais em paralelo:
+
+1. **Discord** — alerta imediato (push no celular se app instalado)
+2. **Issue automática no GitHub** com label `incident` — rastro permanente auditável (`gh issue list --label incident`)
+
+### Idempotência da issue
+
+Enquanto existir uma issue aberta com label `incident` cujo título contém o `context` do job (ex: `ingestion-camara-deputados`), novas falhas viram **comentários** na issue existente — não duplicatas. Fechar a issue (= "resolvido") faz a próxima falha criar uma issue nova.
+
+Razão: cron de 4x/dia que quebra o dia todo gera 4 alertas Discord (você quer ser avisado de cada um) mas 1 issue com 4 comentários (você não quer 4 issues idênticas no inbox).
+
+### Setup one-time
+
+1. **Criar webhook no Discord**: servidor → canal → Configurações de canal → Integrações → Webhooks → Novo Webhook. Copiar URL.
+2. **Configurar secret no repo**:
+
+   ```bash
+   gh secret set DISCORD_INGESTION_WEBHOOK_URL --body "<URL_COPIADA>"
+   ```
+
+3. **Testar o webhook** antes de confiar no CI:
+
+   ```bash
+   curl -fsS -X POST -H "Content-Type: application/json" \
+     -d '{"content":"Test from local"}' \
+     "<URL_COPIADA>"
+   ```
+
+4. **Label `incident`** — criada uma vez via `gh label create incident --color B60205 --description "Incidente operacional detectado automaticamente"`. Já configurada neste repo.
+
+Se `DISCORD_INGESTION_WEBHOOK_URL` não estiver configurado, a action faz skip clean (sem erro). A issue do GitHub ainda é criada usando `secrets.GITHUB_TOKEN` (nativo).
+
+### Permissões necessárias no workflow
+
+Para que a action possa criar issues, cada workflow de ingestão tem:
+
+```yaml
+permissions:
+  contents: read
+  issues: write
+```
+
 ## Workflows de deploy referenciados
 
 - `.github/workflows/deploy.yml` — deploy de produção + smoke
