@@ -1,18 +1,37 @@
 # ADR-011: Escolha do Driver Drizzle para o Banco
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-11
-> Status: accepted
+> Última atualização: 2026-05-12
+> Status: accepted (amended by ADR-015 em 2026-05-12 — split por
+> runtime após validação empírica em Workers)
 
 ---
 
 ## Sumário
 
+- [Nota de amendamento (2026-05-12)](#nota-de-amendamento-2026-05-12)
 - [Contexto](#contexto)
 - [Decisão](#decisão)
 - [Alternativas Consideradas](#alternativas-consideradas)
 - [Consequências](#consequências)
 - [Referências](#referências)
+
+---
+
+## Nota de amendamento (2026-05-12)
+
+A decisão de "driver único" registrada neste ADR foi parcialmente
+amendada pelo ADR-015. O incidente do Pool singleton em Workers
+durante a Wave 1 demonstrou que neon-serverless com WebSocket Pool
+viola o contrato de I/O isolation do runtime. A configuração atual
+em produção usa neon-http no app Workers (read-only) e mantém
+neon-serverless + Pool na ingestão Node 22 (transactions). O
+restante deste ADR — escolha de Drizzle ORM, rejeição de
+postgres-js, exigência de driver compatível com Workers —
+permanece válido.
+
+Ver [ADR-015](015-split-driver-neon-runtime.md) para detalhes do
+split e razão empírica.
 
 ---
 
