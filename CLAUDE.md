@@ -61,6 +61,17 @@ Visão completa: [docs/product/PRODUCT-VISION.md](docs/product/PRODUCT-VISION.md
     Neon é regra, não exceção. Probes de monitoramento devem hit o `/api/health`
     (que não toca DB), não rotas que fazem SELECT.
 
+## Disciplina operacional
+
+13. Decisões de cache, performance ou runtime behavior exigem
+    validação empírica antes de implementação. Hipótese teórica
+    sobre comportamento de cache (cf-cache-status, x-nextjs-cache,
+    s-maxage consumption), latência ou semântica de runtime não
+    basta — confirmar com curl/script em ambiente real, registrar
+    output literal no plan/PR, e só então mergear. Lição registrada
+    após PR #57 (revert): hipótese sobre edge CDN nativo em URLs
+    *.workers.dev foi falsificada empiricamente após merge.
+
 ## Comandos
 
 ```bash
