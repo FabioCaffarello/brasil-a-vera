@@ -1,5 +1,6 @@
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 
+import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
 import {
   parlamentar,
@@ -30,38 +31,42 @@ export interface FiltrosVotacao {
 }
 
 export async function listVotacoes(filtros: FiltrosVotacao = {}, limit = 50) {
-  const where = []
-  if (filtros.casa) where.push(eq(votacao.casa, filtros.casa))
-  if (filtros.ano) {
-    where.push(sql`extract(year from ${votacao.dataHora}) = ${filtros.ano}`)
-  }
-  if (filtros.resultado === 'aprovadas') where.push(eq(votacao.aprovada, true))
-  if (filtros.resultado === 'rejeitadas')
-    where.push(eq(votacao.aprovada, false))
-  if (filtros.somenteNominais) {
-    where.push(
-      sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
-    )
-  }
+  const key = `votacoes:list:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}:limit=${limit}`
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const where = []
+    if (filtros.casa) where.push(eq(votacao.casa, filtros.casa))
+    if (filtros.ano) {
+      where.push(sql`extract(year from ${votacao.dataHora}) = ${filtros.ano}`)
+    }
+    if (filtros.resultado === 'aprovadas')
+      where.push(eq(votacao.aprovada, true))
+    if (filtros.resultado === 'rejeitadas')
+      where.push(eq(votacao.aprovada, false))
+    if (filtros.somenteNominais) {
+      where.push(
+        sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
+      )
+    }
 
-  return db
-    .select({
-      id: votacao.id,
-      sourceId: votacao.sourceId,
-      casa: votacao.casa,
-      dataHora: votacao.dataHora,
-      descricao: votacao.descricao,
-      orgao: votacao.orgao,
-      aprovada: votacao.aprovada,
-      votosSim: votacao.votosSim,
-      votosNao: votacao.votosNao,
-      abstencoes: votacao.abstencoes,
-      sourceUrl: votacao.sourceUrl,
-    })
-    .from(votacao)
-    .where(where.length > 0 ? and(...where) : undefined)
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+    return db
+      .select({
+        id: votacao.id,
+        sourceId: votacao.sourceId,
+        casa: votacao.casa,
+        dataHora: votacao.dataHora,
+        descricao: votacao.descricao,
+        orgao: votacao.orgao,
+        aprovada: votacao.aprovada,
+        votosSim: votacao.votosSim,
+        votosNao: votacao.votosNao,
+        abstencoes: votacao.abstencoes,
+        sourceUrl: votacao.sourceUrl,
+      })
+      .from(votacao)
+      .where(where.length > 0 ? and(...where) : undefined)
+      .orderBy(desc(votacao.dataHora))
+      .limit(limit)
+  })
 }
 
 export async function getVotacaoById(id: string) {
