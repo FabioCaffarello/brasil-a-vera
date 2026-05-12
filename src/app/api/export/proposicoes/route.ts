@@ -43,26 +43,33 @@ function normalizeAno(value: string | null): number | undefined {
 const LIMITE_EXPORT = 1000
 
 export async function GET(request: Request) {
-  const url = new URL(request.url)
-  const filtros = {
-    tipo: normalizeTipo(url.searchParams.get('tipo')),
-    ano: normalizeAno(url.searchParams.get('ano')),
-    situacao: normalizeSituacao(url.searchParams.get('situacao')),
+  try {
+    const url = new URL(request.url)
+    const filtros = {
+      tipo: normalizeTipo(url.searchParams.get('tipo')),
+      ano: normalizeAno(url.searchParams.get('ano')),
+      situacao: normalizeSituacao(url.searchParams.get('situacao')),
+    }
+
+    const rows = await listProposicoes(filtros, LIMITE_EXPORT)
+    const csv = toCsv(rows, [
+      { header: 'id', get: (r) => r.id },
+      { header: 'tipo', get: (r) => r.tipo },
+      { header: 'numero', get: (r) => r.numero },
+      { header: 'ano', get: (r) => r.ano },
+      { header: 'situacao', get: (r) => r.situacao },
+      { header: 'ementa', get: (r) => r.ementa },
+      { header: 'trust_level', get: () => 'L1' },
+      { header: 'source_url', get: (r) => r.sourceUrl },
+    ])
+
+    return new Response(csv, {
+      headers: csvResponseHeaders('proposicoes.csv'),
+    })
+  } catch {
+    return new Response('Erro ao gerar CSV. Tente novamente em instantes.', {
+      status: 500,
+      headers: { 'content-type': 'text/plain; charset=utf-8' },
+    })
   }
-
-  const rows = await listProposicoes(filtros, LIMITE_EXPORT)
-  const csv = toCsv(rows, [
-    { header: 'id', get: (r) => r.id },
-    { header: 'tipo', get: (r) => r.tipo },
-    { header: 'numero', get: (r) => r.numero },
-    { header: 'ano', get: (r) => r.ano },
-    { header: 'situacao', get: (r) => r.situacao },
-    { header: 'ementa', get: (r) => r.ementa },
-    { header: 'trust_level', get: () => 'L1' },
-    { header: 'source_url', get: (r) => r.sourceUrl },
-  ])
-
-  return new Response(csv, {
-    headers: csvResponseHeaders('proposicoes.csv'),
-  })
 }
