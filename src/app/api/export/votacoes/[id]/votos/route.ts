@@ -26,6 +26,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     { header: 'votacao_data', get: () => votacao.dataHora },
     { header: 'votacao_casa', get: () => votacao.casa },
     { header: 'trust_level', get: () => 'L1' },
+    { header: 'source_url', get: () => votacao.sourceUrl },
   ])
 
   return new Response(csv, {

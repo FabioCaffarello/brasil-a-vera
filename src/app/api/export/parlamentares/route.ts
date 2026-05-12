@@ -25,10 +25,8 @@ export async function GET(request: Request) {
     { header: 'uf', get: (r) => r.uf },
     { header: 'legislatura', get: (r) => r.legislatura },
     { header: 'url_foto', get: (r) => r.urlFoto },
-    {
-      header: 'trust_level',
-      get: () => 'L1',
-    },
+    { header: 'trust_level', get: () => 'L1' },
+    { header: 'source_url', get: (r) => r.sourceUrl },
   ])
 
   return new Response(csv, {

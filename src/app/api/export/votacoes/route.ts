@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     { header: 'votos_nao', get: (r) => r.votosNao },
     { header: 'abstencoes', get: (r) => r.abstencoes },
     { header: 'trust_level', get: () => 'L1' },
+    { header: 'source_url', get: (r) => r.sourceUrl },
   ])
 
   return new Response(csv, {

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 
+import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
@@ -8,6 +9,7 @@ import {
   getGastosResumo,
   getParlamentarById,
   getProposicoesAutoradas,
+  getTop5Afinidade,
   getVotosRecentes,
 } from '@/lib/queries/parlamentares'
 
@@ -58,10 +60,11 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
   if (!parlamentar) notFound()
 
   const anoCorrente = new Date().getFullYear()
-  const [votos, proposicoes, gastos] = await Promise.all([
+  const [votos, proposicoes, gastos, afinidades] = await Promise.all([
     getVotosRecentes(parlamentar.id, 10),
     getProposicoesAutoradas(parlamentar.id, 5),
     getGastosResumo(parlamentar.id, anoCorrente),
+    getTop5Afinidade(parlamentar.id),
   ])
 
   return (
@@ -87,6 +90,13 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         hint="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
       >
         <VotosRecentes votos={votos} />
+      </Section>
+
+      <Section
+        title="Top 5 maior afinidade de voto"
+        hint="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
+      >
+        <Top5Afinidade afinidades={afinidades} />
       </Section>
 
       <Section

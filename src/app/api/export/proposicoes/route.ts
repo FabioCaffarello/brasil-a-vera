@@ -59,6 +59,7 @@ export async function GET(request: Request) {
     { header: 'situacao', get: (r) => r.situacao },
     { header: 'ementa', get: (r) => r.ementa },
     { header: 'trust_level', get: () => 'L1' },
+    { header: 'source_url', get: (r) => r.sourceUrl },
   ])
 
   return new Response(csv, {

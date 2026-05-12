@@ -50,6 +50,7 @@ export async function listProposicoes(
       ano: proposicao.ano,
       ementa: proposicao.ementa,
       situacao: proposicao.situacao,
+      sourceUrl: proposicao.sourceUrl,
     })
     .from(proposicao)
     .where(where.length > 0 ? and(...where) : undefined)
