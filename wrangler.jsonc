@@ -8,7 +8,11 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   }
-  // TODO Wave 1+: avaliar adicionar incremental cache R2 + service binding
-  // self-reference quando ISR/Cache Components forem usados.
+  // Secrets esperados (configurar one-time via `wrangler secret put`):
+  //   DATABASE_URL   — Neon pooled connection (app em runtime)
+  //   DIRECT_URL     — Neon direct connection (migrations; opcional em runtime)
+  //
+  // Cache R2 (incremental cache do OpenNext) ainda não é necessário: todas as
+  // rotas são dinâmicas (ƒ). Revisitar quando entrar ISR/Cache Components.
   // Ver https://opennext.js.org/cloudflare/caching
 }

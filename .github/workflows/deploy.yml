@@ -9,6 +9,14 @@ on:
 # Cloudflare Workers Builds ↔ GitHub. Configure em:
 #   Cloudflare Dashboard → Workers & Pages → Create → Connect to Git
 # Esse workflow cobre apenas o deploy de produção em push para main.
+#
+# Pré-requisito de runtime (one-time, fora deste workflow):
+#   npx wrangler secret put DATABASE_URL
+#   npx wrangler secret put DIRECT_URL
+# Esses secrets vivem como Workers Secrets na Cloudflare (não em GitHub).
+# Com `nodejs_compat` em wrangler.jsonc, ficam acessíveis via process.env.X
+# em runtime. Sem isso a aplicação crasha em produção ao tentar conectar no
+# Neon. Ver docs/contributing/DEPLOYMENT.md para o procedimento completo.
 
 concurrency:
   group: deploy-${{ github.ref }}
