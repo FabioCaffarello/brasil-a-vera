@@ -1,0 +1,47 @@
+name: Budget poll Neon
+
+# Cron diário (09:00 UTC = 06:00 BRT) consulta a Neon API, estima custo
+# mensal via run-rate (lifetime / dias × 30) e dispara notificações
+# progressivas conforme thresholds do ADR-017.
+#
+# Secrets necessários no repositório:
+#   - NEON_API_KEY                  (Bearer token; console.neon.tech → API keys)
+#   - DISCORD_BUDGET_WEBHOOK_URL    (alerta; opcional — skip clean se ausente)
+#
+# Variables necessárias:
+#   - NEON_PROJECT_ID               (id do projeto Neon, ex: cool-name-12345678)
+#
+# Documentação completa em docs/contributing/DEPLOYMENT.md.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: budget-poll
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  poll:
+    name: Poll Neon usage and dispatch alerts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run budget poll
+        run: npm run budget:poll
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          DISCORD_BUDGET_WEBHOOK_URL: ${{ secrets.DISCORD_BUDGET_WEBHOOK_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
