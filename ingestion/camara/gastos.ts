@@ -1,7 +1,9 @@
 import { and, eq, sql } from 'drizzle-orm'
 
 import { gasto, parlamentar } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
+import { readIngestEnv } from '../shared/env'
 import { paginate } from './camara-client'
 import { mapCamaraGasto } from './gastos-mapper'
 import { camaraGastoSchema } from './gastos-schema'
@@ -84,22 +86,6 @@ async function processDeputado(
   stats.gastosUpserted += rows.length
 }
 
-async function runWithConcurrency<T>(
-  items: T[],
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function ingestGastosCamara(
   opts: { ano?: number } = {},
 ): Promise<IngestionStats> {
@@ -132,7 +118,8 @@ export async function ingestGastosCamara(
 }
 
 const started = Date.now()
-const anoArg = process.env.ANO ? Number(process.env.ANO) : undefined
+const env = readIngestEnv()
+const anoArg = env.ANO
 ingestGastosCamara({ ano: anoArg })
   .then((stats) => {
     const durationMs = Date.now() - started

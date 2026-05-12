@@ -1,7 +1,10 @@
 import { eq, sql } from 'drizzle-orm'
 
 import { proposicao, proposicaoAutor, proposicaoTema } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
+import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
+import { readIngestEnv } from '../shared/env'
 import {
   mapSiglaSenado,
   mapSituacaoFromTramitando,
@@ -20,12 +23,6 @@ interface IngestionStats {
   proposicoesSkippedError: number
   autoresUpserted: number
   errors: Array<{ context: string; reason: string }>
-}
-
-function defaultDataInicio(): string {
-  const inicio = new Date()
-  inicio.setDate(inicio.getDate() - DEFAULT_DAYS_BACK)
-  return inicio.toISOString().split('T')[0].replace(/-/g, '')
 }
 
 async function processProcesso(
@@ -109,26 +106,14 @@ async function processProcesso(
   stats.proposicoesUpserted++
 }
 
-async function runWithConcurrency<T>(
-  items: T[],
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function ingestProposicoesSenado(
   opts: { dataInicio?: string } = {},
 ): Promise<IngestionStats> {
-  const dataInicio = opts.dataInicio ?? defaultDataInicio()
+  // Senado /processo aceita `dataAtualizacaoInicio` no formato YYYYMMDD
+  // (sem hífens). Se vier `YYYY-MM-DD` no env, normaliza pra compacto.
+  const fromEnv = opts.dataInicio?.replace(/-/g, '')
+  const dataInicio =
+    fromEnv ?? defaultDateRange(DEFAULT_DAYS_BACK, true).dataInicio
 
   const stats: IngestionStats = {
     proposicoesFetched: 0,
@@ -176,7 +161,8 @@ export async function ingestProposicoesSenado(
 }
 
 const started = Date.now()
-ingestProposicoesSenado({ dataInicio: process.env.DATA_INICIO })
+const env = readIngestEnv()
+ingestProposicoesSenado({ dataInicio: env.DATA_INICIO })
   .then((stats) => {
     const durationMs = Date.now() - started
     const errorsSample = stats.errors.slice(0, 10)

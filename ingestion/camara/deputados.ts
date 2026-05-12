@@ -92,15 +92,22 @@ const started = Date.now()
 ingestDeputados()
   .then((stats) => {
     const durationMs = Date.now() - started
+    const errorsSample = stats.errors.slice(0, 10)
+    const errorsExtra = stats.errors.length - errorsSample.length
     console.log(
       JSON.stringify({
         event: 'ingest_deputados_done',
         durationMs,
-        ...stats,
+        fetched: stats.fetched,
+        upserted: stats.upserted,
+        rejected: stats.rejected,
+        errorsCount: stats.errors.length,
+        errorsSample,
+        ...(errorsExtra > 0 ? { errorsTruncated: errorsExtra } : {}),
       }),
     )
-    if (stats.rejected > 0) process.exit(1)
-    process.exit(0)
+    // Política unificada: só falha se houve erros E zero sucessos.
+    process.exit(stats.errors.length > 0 && stats.upserted === 0 ? 1 : 0)
   })
   .catch((err) => {
     console.error(
