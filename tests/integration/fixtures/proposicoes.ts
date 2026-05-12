@@ -4,10 +4,12 @@ import { uuidv7 } from 'uuidv7'
 import type {
   proposicao,
   proposicaoAutor,
+  proposicaoTema,
 } from '@/modules/proposicoes/domain/schema'
 
 export type ProposicaoInsert = InferInsertModel<typeof proposicao>
 export type ProposicaoAutorInsert = InferInsertModel<typeof proposicaoAutor>
+export type ProposicaoTemaInsert = InferInsertModel<typeof proposicaoTema>
 
 export function buildProposicao(
   overrides: Partial<ProposicaoInsert> = {},
@@ -38,6 +40,16 @@ export function buildProposicaoAutor(
   return {
     id,
     tipoAutoria: 'AUTOR',
+    ...args,
+  }
+}
+
+export function buildProposicaoTema(
+  args: { proposicaoId: string } & Partial<ProposicaoTemaInsert>,
+): ProposicaoTemaInsert {
+  return {
+    codigoTema: 1,
+    nomeTema: 'Tema Genérico',
     ...args,
   }
 }
