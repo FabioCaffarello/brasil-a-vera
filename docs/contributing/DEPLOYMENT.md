@@ -134,6 +134,72 @@ permissions:
   issues: write
 ```
 
+## Monitoramento de budget Neon
+
+Workflow `.github/workflows/budget-poll.yml` roda cron diário (09:00 UTC = 06:00 BRT) e:
+
+1. Consulta `GET /api/v2/projects/{NEON_PROJECT_ID}` na Neon API
+2. Computa **run-rate mensal** = (lifetime usage / dias_desde_criação × 30)
+3. Estima custo: `compute_hours × $0.16 + storage_gb × $0.35` (Launch tier pay-as-you-go, sem step de tier)
+4. Classifica conforme thresholds do ADR-017 e dispara alertas
+
+### Thresholds e ações
+
+| Estimativa mensal | Nível | Ação |
+|---|---|---|
+| $0 — $2.99 | normal | log apenas |
+| $3 — $6.99 | info | Discord |
+| $7 — $14.99 | alert | Discord + comentário em issue #39 (revisão trimestral) |
+| ≥ $15 | critical | Discord + cria issue com label `wave-2-blocker` (com dedupe — re-incidência vira comentário) |
+
+Thresholds são sinais intermediários **dentro** das zonas do ADR-017 (verde $0-$5 / amarela $5-$15 / vermelha >$15), entregando warning antes do limite superior de cada zona.
+
+### Limitações conhecidas
+
+- **Free tier sempre retorna $0 actual**, mesmo quando script estima >$0. A estimativa é forecast (running rate × Launch pricing), útil quando upgrade acontecer ou quando quota free for cruzada. O dia que Neon expor consumption por período em free tier (atualmente Scale+ apenas, deprecating jun/2026), trocar a fonte sem mudar a lógica.
+- **Forecast nos primeiros dias é instável**: pico inicial de atividade (deploy, smoke, primeira ingestão) inflaciona o run-rate. Esperar 1-2 semanas para forecast estabilizar.
+- **Daily comment** em #39 não tem dedupe — se ficar dias seguidos em alert, gera comment diário. Discord é o sinal de wake-up; #39 vira timeline auditável. Se virar ruído, adicionar dedupe (`<!-- budget-alert -->` marker, skip se último comment recente).
+
+### Setup one-time
+
+1. **Gerar `NEON_API_KEY`**: console.neon.tech → Profile → API keys → Create. Read-only é suficiente.
+2. **Encontrar `NEON_PROJECT_ID`**: console.neon.tech → projeto → Settings → General → Project ID.
+3. **Configurar no repo**:
+
+   ```bash
+   gh secret set NEON_API_KEY --body "<key>"
+   gh variable set NEON_PROJECT_ID --body "<id>"   # variable, não secret (não sensível)
+   ```
+
+4. **Webhook Discord opcional**:
+
+   ```bash
+   gh secret set DISCORD_BUDGET_WEBHOOK_URL --body "<url>"
+   ```
+
+   Pode ser mesma URL do canal `#ingestao-alertas` ou canal separado (`#budget`).
+
+### Validação local
+
+```bash
+# Dry-run (sem side-effects — não posta no Discord nem no GitHub)
+BUDGET_DRY_RUN=1 \
+  NEON_API_KEY="<key>" \
+  NEON_PROJECT_ID="<id>" \
+  npm run budget:poll
+```
+
+Sem `BUDGET_DRY_RUN`, qualquer level ≥ info dispara notificações reais. Use com cuidado em ambiente local.
+
+### Triggers manuais
+
+```bash
+gh workflow run budget-poll.yml
+gh run watch
+```
+
+Útil após mudanças no thresholds (`ingestion/ops/neon-budget-calc.ts`) ou para refazer baseline depois de uma escalada.
+
 ## Workflows de deploy referenciados
 
 - `.github/workflows/deploy.yml` — deploy de produção + smoke
