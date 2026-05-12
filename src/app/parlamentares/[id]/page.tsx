@@ -27,9 +27,13 @@ export async function generateMetadata({ params }: PageProps) {
   const parlamentar = await getParlamentarById(id)
   if (!parlamentar) return { title: 'Parlamentar — Brasil a Vera' }
   const cargo = parlamentar.casa === 'CAMARA' ? 'Deputado Federal' : 'Senador'
+  const title = `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — Brasil a Vera`
+  const description = `${cargo} pelo ${parlamentar.partidoSigla}/${parlamentar.uf}. O que vota, propõe e gasta.`
   return {
-    title: `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — Brasil a Vera`,
-    description: `${cargo} pelo ${parlamentar.partidoSigla}/${parlamentar.uf}. O que vota, propõe e gasta.`,
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
   }
 }
 
