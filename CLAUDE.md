@@ -40,6 +40,27 @@ Visão completa: [docs/product/PRODUCT-VISION.md](docs/product/PRODUCT-VISION.md
 7. Erros são valores quando possível. Funções que podem falhar retornam tipo
    explícito.
 
+## Disciplina de custo (Neon serverless)
+
+8. Toda nova query em `src/lib/queries/**` consumida por server component
+   tem cache de edge configurado (ver [ADR-018](docs/architecture/ADR/018-cache-edge-app.md)).
+   Sem cache = decisão intencional no PR, com justificativa.
+9. Páginas de detalhe (perfil de parlamentar, proposição específica,
+   votação histórica) usam SSG com `revalidate` periódico — não dynamic
+   rendering. Dynamic rendering somente em buscas e filtros customizados.
+10. Antes de criar índice novo em alguma tabela, anexar output de
+    `EXPLAIN ANALYZE` no PR provando que a query atual precisa dele. Índice
+    sem evidência empírica é overhead permanente de escrita sem benefício
+    proporcional de leitura. Ver [ADR-017](docs/architecture/ADR/017-budget-mensal-observabilidade.md).
+11. Antes de adicionar campo `text` com média estimada > 500 bytes, considerar
+    armazenar URL + fetch on-demand em vez do conteúdo inline. Texto longo
+    inflaciona linearmente o banco e o R2 é destino mais barato para conteúdo
+    estático. Ver [ADR-016](docs/architecture/ADR/016-cobertura-temporal-arquivamento.md).
+12. Crons de ingestão concentram trabalho em batches curtos. Não disparar
+    queries fora dos windows de ingestão planejados — banco scale-to-zero do
+    Neon é regra, não exceção. Probes de monitoramento devem hit o `/api/health`
+    (que não toca DB), não rotas que fazem SELECT.
+
 ## Comandos
 
 ```bash
