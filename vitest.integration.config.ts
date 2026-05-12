@@ -27,5 +27,12 @@ export default defineConfig({
     // pesado de fixture.
     testTimeout: 30_000,
     hookTimeout: 60_000,
+    // Test files rodam serialmente — todos compartilham um único Postgres
+    // container e fazem TRUNCATE entre testes. Sem serialização, arquivos
+    // paralelos causam deadlock no Postgres (TRUNCATE vs SELECT cross-file)
+    // e contagens incorretas (inserts de um arquivo aparecem em queries de
+    // outro). Trade-off aceitável: integration tests não precisam ser ultra
+    // rápidos; sequencialidade dá determinismo.
+    fileParallelism: false,
   },
 })
