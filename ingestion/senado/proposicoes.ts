@@ -5,6 +5,7 @@ import { runWithConcurrency } from '../shared/concurrency'
 import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
 import { readIngestEnv } from '../shared/env'
+import { warnIfAtLimit } from '../shared/warnings'
 import {
   mapSiglaSenado,
   mapSituacaoFromTramitando,
@@ -15,6 +16,7 @@ import { fetchSenadoJson } from './senado-client'
 
 const CONCURRENCY = 5
 const DEFAULT_DAYS_BACK = 30
+const LIMIT = 2000
 
 interface IngestionStats {
   proposicoesFetched: number
@@ -126,13 +128,18 @@ export async function ingestProposicoesSenado(
 
   // O endpoint /processo aceita filtros incluindo `dataAtualizacaoInicio`.
   // Não há paginação documentada — uso limit alto.
-  const path = `/processo?dataAtualizacaoInicio=${dataInicio}&limit=2000`
+  const path = `/processo?dataAtualizacaoInicio=${dataInicio}&limit=${LIMIT}`
   const raw = await fetchSenadoJson<unknown>(path)
   if (!Array.isArray(raw)) {
     throw new Error('Esperado array no top-level de /processo')
   }
 
   stats.proposicoesFetched = raw.length
+  await warnIfAtLimit({
+    label: 'senado_processo',
+    count: raw.length,
+    limit: LIMIT,
+  })
 
   const parsed = raw
     .map((item, i) => {

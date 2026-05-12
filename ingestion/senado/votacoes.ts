@@ -5,6 +5,7 @@ import { runWithConcurrency } from '../shared/concurrency'
 import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
 import { readIngestEnv } from '../shared/env'
+import { warnIfAtLimit } from '../shared/warnings'
 import { fetchSenadoJson } from './senado-client'
 import { type SenadoVotacao, senadoVotacaoSchema } from './votacoes-schema'
 import { mapTipoVotoSenado, type TipoVoto } from './votos-mapper'
@@ -12,6 +13,7 @@ import { mapTipoVotoSenado, type TipoVoto } from './votos-mapper'
 const CASA = 'SENADO' as const
 const CONCURRENCY = 5
 const DEFAULT_DAYS_BACK = 30
+const LIMIT = 1000
 
 interface IngestionStats {
   votacoesFetched: number
@@ -158,7 +160,7 @@ export async function ingestVotacoesSenado(
 
   // Endpoint /votacao não pagina; usa limite alto para cobrir até ~1 ano.
   // Volume típico: ~3-10 votações/dia em sessão.
-  const path = `/votacao?datainicio=${range.dataInicio}&datafim=${range.dataFim}&limit=1000`
+  const path = `/votacao?datainicio=${range.dataInicio}&datafim=${range.dataFim}&limit=${LIMIT}`
   const raw = await fetchSenadoJson<unknown>(path)
   if (!Array.isArray(raw)) {
     throw new Error('Esperado array no top-level de /votacao')
@@ -180,6 +182,11 @@ export async function ingestVotacoesSenado(
     .filter((x): x is NonNullable<typeof x> => x !== null)
 
   stats.votacoesFetched = raw.length
+  await warnIfAtLimit({
+    label: 'senado_votacao',
+    count: raw.length,
+    limit: LIMIT,
+  })
 
   await runWithConcurrency(
     parsed,
