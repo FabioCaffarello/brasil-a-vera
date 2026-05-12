@@ -32,6 +32,7 @@
     "backfill:camara:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-votacao-proposicao.ts",
     "ingest:camara:gastos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/gastos.ts",
     "smoke": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/smoke.ts",
+    "budget:poll": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/neon-budget.ts",
     "prepare": "husky"
   },
   "dependencies": {
