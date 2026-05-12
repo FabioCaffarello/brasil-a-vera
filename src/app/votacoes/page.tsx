@@ -1,4 +1,5 @@
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { TrustBanner } from '@/components/trust-banner'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import {
@@ -68,6 +69,11 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
           para ver só nominais.
         </p>
       </header>
+
+      <TrustBanner
+        level="L1"
+        message="Votações oficiais da Câmara e do Senado, sem transformação."
+      />
 
       <div className="mb-6">
         <FiltrosVotacao

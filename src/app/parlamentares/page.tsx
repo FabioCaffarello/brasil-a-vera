@@ -1,6 +1,7 @@
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
+import { TrustBanner } from '@/components/trust-banner'
 import {
   type Casa,
   getPartidosDistintos,
@@ -52,6 +53,11 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           legislatura atual.
         </p>
       </header>
+
+      <TrustBanner
+        level="L1"
+        message="Dados oficiais da Câmara e do Senado, sem transformação."
+      />
 
       <div className="mb-6">
         <Filtros partidos={partidos} ufs={ufs} selecionado={filtros} />

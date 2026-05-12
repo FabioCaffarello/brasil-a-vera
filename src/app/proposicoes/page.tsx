@@ -1,6 +1,7 @@
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
+import { TrustBanner } from '@/components/trust-banner'
 import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
@@ -80,6 +81,11 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
           mais recentes primeiro.
         </p>
       </header>
+
+      <TrustBanner
+        level="L1"
+        message="Proposições oficiais da Câmara e do Senado, sem transformação."
+      />
 
       <div className="mb-6">
         <FiltrosProposicao

@@ -56,6 +56,7 @@ export async function listVotacoes(filtros: FiltrosVotacao = {}, limit = 50) {
       votosSim: votacao.votosSim,
       votosNao: votacao.votosNao,
       abstencoes: votacao.abstencoes,
+      sourceUrl: votacao.sourceUrl,
     })
     .from(votacao)
     .where(where.length > 0 ? and(...where) : undefined)
