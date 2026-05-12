@@ -134,7 +134,8 @@ O CI executa automaticamente em cada PR:
 
 - Lint e formatação (Biome CI — `biome ci .`)
 - Pre-commit local (Husky — `biome check` nos arquivos staged)
-- Testes unitários (Vitest)
+- Testes unitários (Vitest — `npm run test:coverage`)
+- Testes integrados de queries (Vitest + testcontainers — `npm run test:integration`)
 - Build (Next.js)
 
 ## Padrões de Qualidade
@@ -154,8 +155,12 @@ O CI executa automaticamente em cada PR:
 ### Testes
 
 - Cobertura mínima: 70% no domínio, 50% nos repositories
-- Testes de domínio são unitários (sem I/O)
-- Testes de integração usam banco de teste local
+- Testes de domínio são unitários (sem I/O) — `npm test` ou `npm run test:coverage`
+- Testes integrados de queries usam **testcontainers** com Postgres real
+  (`npm run test:integration`). **Requer Docker daemon rodando localmente.**
+  GitHub Actions Linux runners têm Docker pré-instalado; em macOS/Windows,
+  iniciar Docker Desktop antes. Limitação reconhecida do driver de teste vs.
+  produção em [ADR-015](../architecture/ADR/015-split-driver-neon-runtime.md).
 - Testes de pipeline de ingestão usam fixtures (respostas gravadas das APIs)
 
 ### Dados
