@@ -64,3 +64,5 @@ next-env.d.ts
 
 # zip
 *.zip
+# temporary work files (gh issue bodies, drafts, etc.)
+.tmp/
