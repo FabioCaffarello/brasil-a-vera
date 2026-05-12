@@ -19,15 +19,20 @@ export function ParlamentarCard({ parlamentar }: Props) {
       className="flex items-center gap-4 rounded-lg border border-zinc-200 bg-white p-4 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-500"
     >
       {urlFoto ? (
-        // biome-ignore lint/performance/noImgElement: dynamic remote, sem domain config no Next 16 ainda
+        // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
         <img
           src={urlFoto}
           alt=""
           loading="lazy"
+          width={56}
+          height={56}
           className="size-14 shrink-0 rounded-full object-cover"
         />
       ) : (
-        <div className="size-14 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+        <div
+          aria-hidden="true"
+          className="size-14 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700"
+        />
       )}
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">
