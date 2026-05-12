@@ -42,6 +42,13 @@ jobs:
 
       - name: Build with OpenNext for Cloudflare
         run: npm run cf:build
+        env:
+          # Placeholder: build é estático, não conecta ao banco. Driver
+          # neon-http valida o formato da connection string eagerly no
+          # constructor, então precisa de uma string válida (mas falsa) no
+          # build. Em produção, o DATABASE_URL real vem dos Workers Secrets
+          # da Cloudflare em runtime.
+          DATABASE_URL: postgresql://placeholder:placeholder@placeholder.neon.tech/placeholder?sslmode=require
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
