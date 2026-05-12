@@ -132,32 +132,119 @@ gantt
 
 ## Wave 2 — Profundidade
 
-> **Pergunta validada**: "ONGs e desenvolvedores usam a plataforma como infraestrutura?"
+> **Pergunta validada**: "Cidadãos engajados e jornalistas usam a plataforma como ferramenta de análise, não só consulta?"
 
-### Escopo
+A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de release própria e pode ser parada com algo concreto entregue.
 
-- API pública REST com documentação OpenAPI (via Next.js Route Handlers)
-- Índice de coerência temática completo (ver [Motor de Coerência](../future/COHERENCE-ENGINE.md))
-- Alinhamento governo/oposição
-- Alertas por email/push (parlamentar, tema)
-- Comparativo entre parlamentares
-- Integração TSE (candidaturas, doações, bens)
-- Bulk download de datasets (Cloudflare R2)
-- Webhooks para desenvolvedores
-- Rate limiting e API keys
+### Wave 2.0 — Foundation Hardening
 
-> **Nota de infra**: dados TSE (CSV bulk) podem estourar o Neon free tier (3GB). Avaliar upgrade para Neon Launch ($19/mês) ou migração para PostgreSQL em VPS nesta wave.
+> **Tag de release**: `v0.2.0-foundation`
+> **Duração estimada**: 4-6 semanas
 
-### Critérios de Done
+**Por que primeiro**: a infraestrutura estabelecida na pré-Wave 2 (ADRs 016, 017, 018 + princípios 8-12 do CLAUDE.md) precisa ser implementada antes de qualquer feature nova. Sem cache, SSG e observabilidade, cada feature adicional ataca o budget direto. Esta sub-wave também consolida os safety nets que faltavam quando o incidente do Pool singleton aconteceu.
 
-- [ ] API pública com documentação OpenAPI publicada
-- [ ] Índice de coerência calculado para todos os parlamentares com dados suficientes
-- [ ] Alertas configuráveis por parlamentar e por tema
-- [ ] Dados TSE vinculados a parlamentares (CPF ou heurística nome+partido+UF)
-- [ ] Bulk download em CSV e Parquet
-- [ ] 10 desenvolvedores com API keys ativas
-- [ ] 50.000 usuários ativos mensais (target)
-- [ ] 5 citações em mídia (target)
+#### Escopo
+
+**Infra de cache e SSG (princípios 8 e 9):**
+
+- Módulo `src/lib/cache.ts` com TTLs do ADR-018 (issue #41)
+- Migração de páginas de detalhe para SSG + `revalidate` periódico (issue #42)
+- Webhook de revalidação pós-ingestão (issue #43)
+
+**Tríade de observabilidade:**
+
+- Endpoint `/api/stats` admin-only — visibilidade do banco (issue #38)
+- Script GitHub Actions de poll de billing Neon — visibilidade do custo (issue #40)
+- Monitoramento de jobs de ingestão GitHub Actions — visibilidade dos pipelines (issue #30)
+
+**Safety nets:**
+
+- Alerta quando endpoint do Senado atinge limit fixo (issue #21)
+- Smoke test pós-deploy contra Workers + Neon (issue #33)
+
+**Base de testes para a Wave 2.1:**
+
+- Testes integrados de queries com testcontainers (issue #22)
+
+**Débito documental:**
+
+- ADR-010 — UUID v7 como chave primária (issue #23)
+- ADR-013 — Schema por bounded context no Postgres (issue #24)
+- ADR-015 — Split de driver Neon por runtime (issue #34)
+
+**Recorrente:**
+
+- Revisão trimestral de custo (issue #39)
+
+#### Critérios de Done
+
+- [ ] 30 requests concorrentes em rotas de detalhe servem em < 100ms (média, com cache quente)
+- [ ] CU-hours mensal projetado < 50 (zona verde do [ADR-017](../architecture/ADR/017-budget-mensal-observabilidade.md))
+- [ ] `/api/stats` retornando contagens, tamanho do banco, última ingestão por tipo
+- [ ] Webhook de `revalidate` validado em produção (1 deploy de ingestão dispara `revalidatePath`)
+- [ ] Script de poll Neon rodando diariamente com alerta em zona amarela/vermelha
+- [ ] Monitoramento de jobs de ingestão notifica falhas em < 1h
+- [ ] Smoke test pós-deploy bloqueando rollout em caso de regressão
+- [ ] Suite de testes integrados com testcontainers cobrindo queries de domínio
+- [ ] Três ADRs de débito documental publicados (010, 013, 015)
+
+### Wave 2.1 — Domain Depth
+
+> **Tag de release**: `v0.2.1-depth`
+> **Duração estimada**: 4-6 semanas
+
+**Por que segundo**: com infra hardened, cada feature de domínio herda otimização automaticamente. Aqui o produto ganha narrativa cívica — não só mostra dados isolados, mas tece a história legislativa.
+
+#### Escopo
+
+- **Tramitação de proposições**: ingestão e UI da história completa de cada PL/PEC/MPV. Schema com `descricao_resumida` (≤ 200 chars) + `descricao_completa` opcional. Cobertura: legislaturas 56 e 57 ([ADR-016](../architecture/ADR/016-cobertura-temporal-arquivamento.md)).
+- **Alinhamento partidário**: % de fidelidade do parlamentar à bancada, visualizado em gráfico no perfil. Cálculo em batch noturno cacheado.
+- **Comparativo entre parlamentares**: nova rota `/comparar?ids=X,Y[,Z]` para 2-3 parlamentares lado a lado (votos coincidentes, gastos, presenças, proposições).
+- **Página de partido**: nova rota `/partidos/[sigla]` com bancada completa, fidelidade interna média, proposições por tema.
+
+#### Critérios de Done
+
+- [ ] Visitante consegue contar uma história completa de um parlamentar em 60 segundos (perfil → tramitação de proposição → comparativo com colega de bancada)
+- [ ] Tramitação cobre 100% das proposições das legislaturas 56 e 57
+- [ ] Alinhamento partidário calculado para todos os parlamentares com 50+ votações registradas
+- [ ] Página de comparativo funcional para qualquer combinação de 2-3 parlamentares
+- [ ] Página de partido funcional para todas as 20+ siglas ativas
+- [ ] Budget Neon segue em zona verde ou amarela controlada
+- [ ] Storage do banco < 1 GB
+
+### Wave 2.2 — Distribution & Polish
+
+> **Tag de release**: `v0.2.2-distribution`
+> **Duração estimada**: 2-3 semanas
+> **Caráter**: opcional — entra apenas se Waves 2.0 e 2.1 fecharam sem queimar o operador e o budget estiver em zona verde.
+
+**Por que último e opcional**: distribuição e refinamento são multiplicadores de alcance, mas não desbloqueiam funcionalidade nova. Melhor parar 2.1 entregue do que iniciar 2.2 cansado.
+
+#### Escopo
+
+- OpenGraph dinâmico em todas as páginas (compartilhamento social com prévia rica)
+- Newsletter/RSS de proposições e votações relevantes
+- Bulk export em Parquet via R2 (formato amigo de DuckDB, Pandas)
+- Página estática de documentação para desenvolvedores curiosos
+- Atualização do PRODUCT-VISION com aprendizados das Waves 1 e 2 (issue #32)
+
+#### Critérios de Done
+
+- [ ] Compartilhamento de qualquer URL em rede social gera prévia com OG dinâmico
+- [ ] RSS feed publicado e validado em pelo menos 2 leitores
+- [ ] Bulk export em Parquet disponível no R2
+- [ ] Página `/docs` pública com guia de uso
+- [ ] PRODUCT-VISION atualizado com aprendizados de Waves 1 e 2
+
+### Fora da Wave 2 — adiado para Wave 3 ou posterior
+
+Por decisão consciente, o escopo abaixo não entra na Wave 2. A razão é dupla: investimento de engenharia desproporcional ao orçamento solo e ao retorno em curto prazo, e dependência de infraestrutura adicional (auth, rate limiting, gestão de contas) que abre dimensão de produto significativa.
+
+- API pública REST com OpenAPI, rate limiting, API keys
+- Webhooks para desenvolvedores terceiros
+- Alertas push/email por parlamentar ou tema (exige gestão de contas de usuário, LGPD)
+- Integração TSE completa (financiamento eleitoral, doações, bens) — escopo grande o suficiente para wave dedicada
+- Targets de adoção (50k MAU, 10 API keys, 5 citações em mídia) — viram OKRs de Wave 3, não critérios de Done de Wave 2
 
 ---
 
@@ -165,7 +252,19 @@ gantt
 
 > **Pergunta validada**: "O grafo legislativo revela padrões não visíveis a olho nu?"
 
+A Wave 3 acumula dois eixos: o que migrou da Wave 2 original (plataforma para desenvolvedores e integrações externas) e o salto analítico (grafo legislativo, NLP, correlações de impacto).
+
 ### Escopo
+
+**Plataforma para desenvolvedores** (migrado da Wave 2 original):
+
+- API pública REST com documentação OpenAPI (via Next.js Route Handlers)
+- API keys e rate limiting (gestão de contas, LGPD-aware)
+- Webhooks para desenvolvedores terceiros
+- Alertas configuráveis por parlamentar e por tema (push/email)
+- Integração TSE inicial — candidaturas e doações vinculadas a parlamentares (TSE completo, incluindo bens, permanece em Wave 4)
+
+**Inteligência analítica**:
 
 - **Início da extração de módulos Go (Strangler Fig)** — ver [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)
 - **Introdução do NATS JetStream** para domain events entre serviços — ver [ADR-005](../future/adr/005-event-driven-communication.md)
@@ -181,12 +280,18 @@ gantt
 
 ### Critérios de Done
 
+- [ ] API pública com documentação OpenAPI publicada
+- [ ] 10 desenvolvedores com API keys ativas
+- [ ] Alertas configuráveis por parlamentar e por tema funcionando em produção
+- [ ] Dados TSE iniciais (candidaturas e doações) vinculados a parlamentares (CPF ou heurística nome+partido+UF)
 - [ ] Grafo interativo renderiza todos os parlamentares com filtros por tipo de aresta
 - [ ] Detecção de comunidades com parâmetros documentados e ajustáveis
 - [ ] Correlações L3 exibidas com disclaimer permanente
 - [ ] Performance: grafo interativo > 30fps no desktop
-- [ ] 50 matérias jornalísticas citando o Brasil a Vera (target)
-- [ ] 100 API keys ativas (target)
+- [ ] 50.000 usuários ativos mensais (target migrado de Wave 2)
+- [ ] 5 citações em mídia (target migrado de Wave 2)
+- [ ] 50 matérias jornalísticas citando o Brasil a Vera (target original Wave 3)
+- [ ] 100 API keys ativas (target original Wave 3)
 
 ---
 
