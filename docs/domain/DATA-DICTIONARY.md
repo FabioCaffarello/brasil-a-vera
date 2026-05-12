@@ -1,8 +1,12 @@
 # Dicionário de Dados
 
-> Brasil a Vera · Domínio · v0.1
-> Última atualização: 2026-04-14
-> Status: draft
+> Brasil a Vera · Domínio · v0.2
+> Última atualização: 2026-05-11
+> Status: accepted
+
+O schema do banco materializa este dicionário (Câmara + Senado nas 4 tabelas
+raiz: `parlamentar`, `proposicao`, `votacao`, `gasto`). Mudanças no domínio
+exigem atualização paralela aqui e em `src/shared/db/migrations/`.
 
 ---
 

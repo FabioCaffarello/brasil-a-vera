@@ -1,7 +1,10 @@
 import { eq, sql } from 'drizzle-orm'
 
 import { parlamentar, votacao, votoNominal } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
+import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
+import { readIngestEnv } from '../shared/env'
 import { paginate } from './camara-client'
 import { camaraVotacaoListagemSchema } from './votacoes-schema'
 import { mapTipoVoto, type TipoVoto } from './votos-mapper'
@@ -19,14 +22,6 @@ interface IngestionStats {
   votosUpserted: number
   votosSkipped: number
   errors: Array<{ context: string; reason: string }>
-}
-
-function defaultDateRange(): { dataInicio: string; dataFim: string } {
-  const hoje = new Date()
-  const inicio = new Date(hoje)
-  inicio.setDate(inicio.getDate() - DEFAULT_DAYS_BACK)
-  const fmt = (d: Date) => d.toISOString().split('T')[0]
-  return { dataInicio: fmt(inicio), dataFim: fmt(hoje) }
 }
 
 // Pré-carrega o mapeamento {source_id da Câmara → UUID interno} de todos os
@@ -147,6 +142,7 @@ async function processVotacao(
       .onConflictDoUpdate({
         target: [votacao.casa, votacao.sourceId],
         set: {
+          dataHora: new Date(v.dataHoraRegistro),
           descricao: v.descricao,
           orgao: v.siglaOrgao,
           votosSim: totais.votosSim,
@@ -171,7 +167,6 @@ async function processVotacao(
           votacaoId,
           parlamentarId: vt.parlamentarId,
           voto: vt.voto,
-          trustLevel: 'L1' as const,
         })),
       )
     }
@@ -181,31 +176,13 @@ async function processVotacao(
   stats.votosUpserted += votos.length
 }
 
-// Worker pool simples: mantém até `concurrency` promises ativas; cada item
-// novo só é processado quando uma vaga abre.
-async function runWithConcurrency<T>(
-  items: AsyncGenerator<T>,
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for await (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function ingestVotacoesCamara(
   opts: { dataInicio?: string; dataFim?: string } = {},
 ): Promise<IngestionStats> {
   const range =
     opts.dataInicio && opts.dataFim
       ? { dataInicio: opts.dataInicio, dataFim: opts.dataFim }
-      : defaultDateRange()
+      : defaultDateRange(DEFAULT_DAYS_BACK)
 
   const parlamentarLookup = await loadParlamentarLookup()
   if (parlamentarLookup.size === 0) {
@@ -242,9 +219,10 @@ export async function ingestVotacoesCamara(
 }
 
 const started = Date.now()
+const env = readIngestEnv()
 ingestVotacoesCamara({
-  dataInicio: process.env.DATA_INICIO,
-  dataFim: process.env.DATA_FIM,
+  dataInicio: env.DATA_INICIO,
+  dataFim: env.DATA_FIM,
 })
   .then((stats) => {
     const durationMs = Date.now() - started

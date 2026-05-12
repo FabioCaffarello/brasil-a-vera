@@ -1,7 +1,10 @@
 import { eq, sql } from 'drizzle-orm'
 
 import { parlamentar, votacao, votoNominal } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
+import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
+import { readIngestEnv } from '../shared/env'
 import { fetchSenadoJson } from './senado-client'
 import { type SenadoVotacao, senadoVotacaoSchema } from './votacoes-schema'
 import { mapTipoVotoSenado, type TipoVoto } from './votos-mapper'
@@ -17,14 +20,6 @@ interface IngestionStats {
   votosUpserted: number
   votosSkipped: number
   errors: Array<{ context: string; reason: string }>
-}
-
-function defaultDateRange(): { dataInicio: string; dataFim: string } {
-  const hoje = new Date()
-  const inicio = new Date(hoje)
-  inicio.setDate(inicio.getDate() - DEFAULT_DAYS_BACK)
-  const fmt = (d: Date) => d.toISOString().split('T')[0].replace(/-/g, '')
-  return { dataInicio: fmt(inicio), dataFim: fmt(hoje) }
 }
 
 async function loadParlamentarLookup(): Promise<Map<string, string>> {
@@ -103,6 +98,7 @@ async function processVotacao(
       .onConflictDoUpdate({
         target: [votacao.casa, votacao.sourceId],
         set: {
+          dataHora: new Date(v.dataSessao),
           descricao: v.descricaoVotacao,
           orgao,
           votosSim,
@@ -122,7 +118,6 @@ async function processVotacao(
           votacaoId,
           parlamentarId: vt.parlamentarId,
           voto: vt.voto,
-          trustLevel: 'L1' as const,
         })),
       )
     }
@@ -132,29 +127,18 @@ async function processVotacao(
   stats.votosUpserted += votos.length
 }
 
-async function runWithConcurrency<T>(
-  items: T[],
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function ingestVotacoesSenado(
   opts: { dataInicio?: string; dataFim?: string } = {},
 ): Promise<IngestionStats> {
+  // API do Senado /votacao espera datas no formato YYYYMMDD (sem hífens).
+  // Se vier YYYY-MM-DD do env, normaliza pra compacto.
   const range =
     opts.dataInicio && opts.dataFim
-      ? { dataInicio: opts.dataInicio, dataFim: opts.dataFim }
-      : defaultDateRange()
+      ? {
+          dataInicio: opts.dataInicio.replace(/-/g, ''),
+          dataFim: opts.dataFim.replace(/-/g, ''),
+        }
+      : defaultDateRange(DEFAULT_DAYS_BACK, true)
 
   const parlamentarLookup = await loadParlamentarLookup()
   if (parlamentarLookup.size === 0) {
@@ -209,9 +193,10 @@ export async function ingestVotacoesSenado(
 }
 
 const started = Date.now()
+const env = readIngestEnv()
 ingestVotacoesSenado({
-  dataInicio: process.env.DATA_INICIO,
-  dataFim: process.env.DATA_FIM,
+  dataInicio: env.DATA_INICIO,
+  dataFim: env.DATA_FIM,
 })
   .then((stats) => {
     const durationMs = Date.now() - started

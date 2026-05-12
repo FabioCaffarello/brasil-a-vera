@@ -6,7 +6,10 @@ import {
   proposicaoAutor,
   proposicaoTema,
 } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
+import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
+import { readIngestEnv } from '../shared/env'
 import { fetchWithRetry } from '../shared/http'
 import { paginate } from './camara-client'
 import {
@@ -37,14 +40,6 @@ interface IngestionStats {
   autoresUpserted: number
   autoresSemMatch: number
   errors: Array<{ context: string; reason: string }>
-}
-
-function defaultDateRange(): { dataInicio: string; dataFim: string } {
-  const hoje = new Date()
-  const inicio = new Date(hoje)
-  inicio.setDate(inicio.getDate() - DEFAULT_DAYS_BACK)
-  const fmt = (d: Date) => d.toISOString().split('T')[0]
-  return { dataInicio: fmt(inicio), dataFim: fmt(hoje) }
 }
 
 async function loadParlamentarLookup(): Promise<Map<string, string>> {
@@ -229,29 +224,13 @@ async function processProposicao(
   stats.proposicoesUpserted++
 }
 
-async function runWithConcurrency<T>(
-  items: AsyncGenerator<T>,
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for await (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function ingestProposicoesCamara(
   opts: { dataInicio?: string; dataFim?: string } = {},
 ): Promise<IngestionStats> {
   const range =
     opts.dataInicio && opts.dataFim
       ? { dataInicio: opts.dataInicio, dataFim: opts.dataFim }
-      : defaultDateRange()
+      : defaultDateRange(DEFAULT_DAYS_BACK)
 
   const parlamentarLookup = await loadParlamentarLookup()
   if (parlamentarLookup.size === 0) {
@@ -292,9 +271,10 @@ export async function ingestProposicoesCamara(
 }
 
 const started = Date.now()
+const env = readIngestEnv()
 ingestProposicoesCamara({
-  dataInicio: process.env.DATA_INICIO,
-  dataFim: process.env.DATA_FIM,
+  dataInicio: env.DATA_INICIO,
+  dataFim: env.DATA_FIM,
 })
   .then((stats) => {
     const durationMs = Date.now() - started

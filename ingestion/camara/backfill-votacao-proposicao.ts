@@ -1,6 +1,7 @@
 import { and, eq, isNull, sql } from 'drizzle-orm'
 
 import { proposicao, votacao } from '@/shared/db/schema'
+import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
 import { fetchWithRetry, HttpFetchError } from '../shared/http'
 import { camaraVotacaoDetalheSchema } from './votacao-detalhe-schema'
@@ -23,7 +24,7 @@ interface BackfillStats {
   votacoesElegiveis: number
   matched: number
   naoEncontradas: number
-  sem404: number
+  naoEncontradas404: number
   errors: Array<{ context: string; reason: string }>
 }
 
@@ -61,7 +62,7 @@ async function processVotacao(
     detalhe = await fetchDetalhe(row.sourceId)
   } catch (err) {
     if (err instanceof HttpFetchError && err.status === 404) {
-      stats.sem404++
+      stats.naoEncontradas404++
       return
     }
     stats.errors.push({
@@ -93,22 +94,6 @@ async function processVotacao(
   stats.matched++
 }
 
-async function runWithConcurrency<T>(
-  items: T[],
-  fn: (item: T) => Promise<void>,
-  concurrency: number,
-): Promise<void> {
-  const workers = new Set<Promise<unknown>>()
-  for (const item of items) {
-    const promise = fn(item).finally(() => workers.delete(promise))
-    workers.add(promise)
-    if (workers.size >= concurrency) {
-      await Promise.race(workers)
-    }
-  }
-  await Promise.all(workers)
-}
-
 export async function backfillVotacaoProposicao(): Promise<BackfillStats> {
   const proposicaoLookup = await loadProposicaoLookup()
   if (proposicaoLookup.size === 0) {
@@ -126,7 +111,7 @@ export async function backfillVotacaoProposicao(): Promise<BackfillStats> {
     votacoesElegiveis: elegiveis.length,
     matched: 0,
     naoEncontradas: 0,
-    sem404: 0,
+    naoEncontradas404: 0,
     errors: [],
   }
 
@@ -154,7 +139,7 @@ backfillVotacaoProposicao()
         votacoesElegiveis: stats.votacoesElegiveis,
         matched: stats.matched,
         naoEncontradas: stats.naoEncontradas,
-        sem404: stats.sem404,
+        naoEncontradas404: stats.naoEncontradas404,
         errorsCount: stats.errors.length,
         errorsSample,
         ...(errorsExtra > 0 ? { errorsTruncated: errorsExtra } : {}),

@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  index,
   integer,
   pgSchema,
   primaryKey,
@@ -70,32 +71,58 @@ export const proposicaoTema = proposicoesSchema.table(
   ],
 )
 
-export const proposicaoAutor = proposicoesSchema.table('proposicao_autor', {
-  id: uuid('id')
-    .primaryKey()
-    .$defaultFn(() => uuidv7()),
-  proposicaoId: uuid('proposicao_id')
-    .notNull()
-    .references(() => proposicao.id, { onDelete: 'cascade' }),
-  // Autor pode não ser parlamentar (ex.: Comissão, Mesa, Senado Federal).
-  // ON DELETE SET NULL para preservar o registro do autor caso o parlamentar
-  // seja removido por algum motivo.
-  parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
-    onDelete: 'set null',
-  }),
-  nome: text('nome').notNull(),
-  tipoAutoria: tipoAutoria('tipo_autoria').notNull(),
-})
+export const proposicaoAutor = proposicoesSchema.table(
+  'proposicao_autor',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    proposicaoId: uuid('proposicao_id')
+      .notNull()
+      .references(() => proposicao.id, { onDelete: 'cascade' }),
+    // Autor pode não ser parlamentar (ex.: Comissão, Mesa, Senado Federal).
+    // ON DELETE SET NULL para preservar o registro do autor caso o parlamentar
+    // seja removido por algum motivo.
+    parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
+      onDelete: 'set null',
+    }),
+    nome: text('nome').notNull(),
+    tipoAutoria: tipoAutoria('tipo_autoria').notNull(),
+  },
+  (table) => [
+    // Uniqueness em dois caminhos mutuamente exclusivos (partial indexes):
+    // - quando parlamentar_id está preenchido, ele é a chave natural.
+    // - quando autor é externo (parlamentar_id NULL), o nome é a chave.
+    uniqueIndex('proposicao_autor_proposicao_parlamentar_unique')
+      .on(table.proposicaoId, table.parlamentarId)
+      .where(sql`${table.parlamentarId} IS NOT NULL`),
+    uniqueIndex('proposicao_autor_proposicao_nome_unique')
+      .on(table.proposicaoId, table.nome)
+      .where(sql`${table.parlamentarId} IS NULL`),
+    // FKs explícitos para joins em listagens.
+    index('proposicao_autor_proposicao_id_idx').on(table.proposicaoId),
+    index('proposicao_autor_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
 
-export const tramitacao = proposicoesSchema.table('tramitacao', {
-  id: uuid('id')
-    .primaryKey()
-    .$defaultFn(() => uuidv7()),
-  proposicaoId: uuid('proposicao_id')
-    .notNull()
-    .references(() => proposicao.id, { onDelete: 'cascade' }),
-  data: timestamp('data', { withTimezone: true }).notNull(),
-  orgao: text('orgao').notNull(),
-  descricao: text('descricao').notNull(),
-  situacao: text('situacao'),
-})
+export const tramitacao = proposicoesSchema.table(
+  'tramitacao',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    proposicaoId: uuid('proposicao_id')
+      .notNull()
+      .references(() => proposicao.id, { onDelete: 'cascade' }),
+    data: timestamp('data', { withTimezone: true }).notNull(),
+    orgao: text('orgao').notNull(),
+    descricao: text('descricao').notNull(),
+    situacao: text('situacao'),
+  },
+  (table) => [
+    // Sem unique nesta tabela ainda — chave natural será definida quando
+    // a ingestão da tramitação for implementada na Wave 2 (decisão de
+    // não-especulação). Só o índice em FK por enquanto.
+    index('tramitacao_proposicao_id_idx').on(table.proposicaoId),
+  ],
+)

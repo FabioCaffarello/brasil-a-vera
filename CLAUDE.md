@@ -26,10 +26,16 @@ Visão completa: [docs/product/PRODUCT-VISION.md](docs/product/PRODUCT-VISION.md
 ## Princípios de código
 
 1. Funções puras na lógica de domínio. IO isolado.
-2. Zod no boundary. Todo dado externo passa por schema validation.
-3. Trust level em toda tabela. Coluna `trust_level` (L1/L2/L3/L4) + `source_url`.
+2. Zod no boundary. Todo dado externo (API pública, env vars) passa por schema
+   validation antes de tocar lógica de negócio.
+3. Trust level em aggregate roots. Coluna `trust_level` (L1/L2/L3/L4) +
+   `source_url` + `ingested_at` nas tabelas raiz (parlamentar, proposicao,
+   votacao, gasto). Tabelas filhas (tema, autor, tramitação, voto_nominal,
+   orientação) herdam a confiança da raiz — não duplicam.
 4. Migrations em SQL puro versionadas em `src/shared/db/migrations/`.
-5. Idempotência na ingestão. `INSERT ... ON CONFLICT DO UPDATE` sempre.
+5. Idempotência na ingestão. Use `INSERT ... ON CONFLICT DO UPDATE` quando há
+   chave natural única, ou `DELETE-by-key + INSERT` dentro de uma transação
+   quando a substituição é em massa (ex.: gastos do ano, votos de uma sessão).
 6. Sem `any`. Sem `as` cast exceto pra `unknown -> tipo validado por Zod`.
 7. Erros são valores quando possível. Funções que podem falhar retornam tipo
    explícito.
@@ -37,17 +43,36 @@ Visão completa: [docs/product/PRODUCT-VISION.md](docs/product/PRODUCT-VISION.md
 ## Comandos
 
 ```bash
+# Desenvolvimento
 npm run dev              # Next dev server
 npm run build            # Build produção
-npm run check            # Biome lint + format check
+npm run check            # Biome lint + format check (use antes do PR)
+npm run ci               # Biome ci (estrito, mesmo do CI)
 npm run test             # Vitest watch
-npm run test:coverage    # Vitest coverage
+npm run test:coverage    # Vitest com coverage + thresholds
+
+# Database (Drizzle Kit)
 npm run db:generate      # Gera migration do schema Drizzle
 npm run db:migrate       # Aplica migrations no banco
 npm run db:studio        # UI do Drizzle pra inspecionar dados
+
+# Cloudflare Workers
 npm run cf:build         # Build pro Cloudflare Workers via OpenNext
 npm run cf:preview       # Preview local com Wrangler
 npm run cf:deploy        # Deploy no Cloudflare Workers
+
+# Ingestão (rodados em GitHub Actions cron; também úteis localmente)
+npm run ingest:camara:deputados      # Sync deputados da Câmara
+npm run ingest:senado:senadores      # Sync senadores
+npm run ingest:camara:proposicoes    # Sync proposições da Câmara (janela default 30d)
+npm run ingest:senado:proposicoes    # Sync proposições do Senado
+npm run ingest:camara:votacoes       # Sync votações da Câmara
+npm run ingest:senado:votacoes       # Sync votações do Senado
+npm run ingest:camara:gastos         # Sync gastos CEAP (ano corrente)
+npm run backfill:camara:votacao-proposicao  # Vincula votação→proposição em rows com FK NULL
+
+# Envs aceitos pelos scripts de ingestão (validados por Zod):
+#   DATA_INICIO=YYYY-MM-DD  DATA_FIM=YYYY-MM-DD  ANO=YYYY
 ```
 
 ## Estrutura

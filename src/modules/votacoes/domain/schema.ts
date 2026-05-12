@@ -63,6 +63,9 @@ export const votacao = votacoesSchema.table(
   ],
 )
 
+// voto_nominal não tem `trust_level` próprio — herda da votação mãe
+// (princípio 3 do CLAUDE.md: trust_level vive em aggregate roots, não
+// em tabelas filhas).
 export const votoNominal = votacoesSchema.table(
   'voto_nominal',
   {
@@ -76,7 +79,6 @@ export const votoNominal = votacoesSchema.table(
       .notNull()
       .references(() => parlamentar.id, { onDelete: 'cascade' }),
     voto: tipoVoto('voto').notNull(),
-    trustLevel: trustLevel('trust_level').notNull(),
   },
   (table) => [
     // Um parlamentar vota uma única vez por votação.

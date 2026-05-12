@@ -1,8 +1,24 @@
 # Motor de Coerência
 
-> Brasil a Vera · Feature · v0.1
-> Última atualização: 2026-04-14
-> Status: draft
+> Brasil a Vera · Feature · v0.2
+> Última atualização: 2026-05-11
+> Status: draft (vision Wave 3+)
+
+> **Status na Wave 1 (entregue):** um subset deste documento já está em
+> produção. Especificamente:
+> - O classificador de direção por verbos inequívocos
+>   (`src/lib/coerencia/direcao-classifier.ts`) detecta `RESTRITIVA` /
+>   `PERMISSIVA` / `NAO_CLASSIFICADA` por palavras-chave na ementa.
+> - O detector de pares contraditórios (`src/lib/queries/coerencia.ts`)
+>   roda O(N²) sobre votos do parlamentar com proposição vinculada, exige
+>   tema em comum e direções opostas com voto idêntico.
+> - A UI em `/parlamentares/[id]` mostra os pares com TrustBadge L2.
+>
+> O que ainda é **vision (Wave 3+)** neste documento:
+> - Domain events via NATS JetStream (ADR-005 em `docs/future/adr/`).
+> - Índice de coerência numérico agregado por parlamentar.
+> - Bounded context Coerência dedicado (hoje vive em `src/lib/coerencia/`
+>   e `src/lib/queries/coerencia.ts` como módulo simples).
 
 ---
 

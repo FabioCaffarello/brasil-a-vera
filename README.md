@@ -2,7 +2,7 @@
 
 > **Você escolheu quem te representa. Agora veja o que ele faz.**
 
-![Status](https://img.shields.io/badge/status-Wave%200%20%E2%80%94%20Funda%C3%A7%C3%A3o%20em%20andamento-orange)
+![Status](https://img.shields.io/badge/status-Wave%201%20%E2%80%94%20MVP%20p%C3%BAblico-green)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Node](https://img.shields.io/badge/node-22-green)
 
@@ -73,9 +73,12 @@ abrir uma PR. Padrões adicionais em
 [CODE-STYLE.md](docs/contributing/CODE-STYLE.md) e
 [COMMIT-CONVENTION.md](docs/contributing/COMMIT-CONVENTION.md).
 
-O projeto está em Wave 0 (fundação). Contribuições nesta fase concentram-se em
-infraestrutura, ingestão da API da Câmara e modelagem do schema — não em
-features de UI ainda.
+A Wave 1 (MVP público) foi entregue: Parlamentar 360°, páginas de proposição
+e votação, busca unificada, export CSV, Top 5 afinidade, Motor de Coerência
+básico, cards OG dinâmicos e auditoria WCAG 2.1 AA. A Wave 2 está em
+planejamento — contribuições agora focam em refinamento de pipelines,
+testes integrados e features avançadas (índice de coerência, dashboards
+temáticos).
 
 ## Documentação
 

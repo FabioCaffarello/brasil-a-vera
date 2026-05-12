@@ -42,20 +42,31 @@ Adicionalmente, a decisão Monolith First (ver [ADR-007](007-monolith-first-stra
 
 **Adotamos Next.js (App Router) com TypeScript como monolito full-stack** — servindo frontend (SSR/SSG) e API (Route Handlers) no mesmo deploy.
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Framework | Next.js (App Router, React Server Components) |
-| Linguagem | TypeScript (strict mode) |
-| Estilização | Tailwind CSS |
-| Componentes UI | shadcn/ui (components copiados, não dependency) |
-| Acesso a banco | Drizzle ORM (queries type-safe; migrations em SQL puro) |
-| Validação | Zod |
-| Visualização de grafo | React Flow (Wave 3) |
-| Gráficos | Recharts ou Nivo (baseados em D3) |
-| Estado do cliente | React Server Components + `use` hook; Zustand para estado client-side complexo |
-| Testes | Vitest + React Testing Library |
-| Linting e formatação | Biome (lint + format unificados) |
-| Pre-commit | Husky |
+| Camada | Tecnologia | Status na Wave 1 |
+|--------|-----------|------------------|
+| Framework | Next.js 16 (App Router, React Server Components) | em uso |
+| Linguagem | TypeScript (strict mode) | em uso |
+| Estilização | Tailwind CSS 4 | em uso |
+| Componentes UI | Componentes próprios mínimos com Tailwind | em uso (ver nota) |
+| Acesso a banco | Drizzle ORM (queries type-safe; migrations em SQL puro) | em uso |
+| Validação | Zod | em uso |
+| Visualização de grafo | React Flow | planejado Wave 3 |
+| Gráficos | Recharts ou Nivo (baseados em D3) | quando necessário (sem uso atual) |
+| Estado do cliente | React Server Components puros | em uso (zero `use client` no projeto) |
+| Testes | Vitest + React Testing Library | em uso |
+| Linting e formatação | Biome (lint + format unificados) | em uso |
+| Pre-commit | Husky | em uso |
+
+> **Nota sobre UI components:** a versão original deste ADR previa shadcn/ui
+> (componentes copiados, não dependency). Durante a Wave 1 optamos por
+> componentes próprios mínimos diretamente em Tailwind — sem shadcn,
+> sem libs de UI. Vale rever quando o design system amadurecer; até lá, ver
+> regra em `CLAUDE.md` ("NÃO use shadcn/ui sem antes consultar").
+>
+> **Estado client-side:** a stack lista Zustand para estado complexo, mas
+> não foi necessário ainda (RSC + form GET resolvem busca, filtros e
+> navegação). Reintroduzir só se aparecer feature interativa que não cabe
+> em URL.
 
 ### Estrutura de diretórios
 
