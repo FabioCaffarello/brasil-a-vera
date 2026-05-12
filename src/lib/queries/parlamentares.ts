@@ -1,5 +1,6 @@
 import { and, count, desc, eq, sql, sum } from 'drizzle-orm'
 
+import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
 import {
   gasto,
@@ -19,35 +20,40 @@ export interface FiltrosParlamentar {
 }
 
 export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
-  const whereClauses = []
-  if (filtros.casa) whereClauses.push(eq(parlamentar.casa, filtros.casa))
-  if (filtros.partido)
-    whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
-  if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
+  const key = `parlamentares:list:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}`
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const whereClauses = []
+    if (filtros.casa) whereClauses.push(eq(parlamentar.casa, filtros.casa))
+    if (filtros.partido)
+      whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
+    if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
 
-  return db
-    .select({
-      id: parlamentar.id,
-      nome: parlamentar.nome,
-      casa: parlamentar.casa,
-      partidoSigla: parlamentar.partidoSigla,
-      uf: parlamentar.uf,
-      urlFoto: parlamentar.urlFoto,
-      legislatura: parlamentar.legislatura,
-      sourceUrl: parlamentar.sourceUrl,
-    })
-    .from(parlamentar)
-    .where(whereClauses.length > 0 ? and(...whereClauses) : undefined)
-    .orderBy(parlamentar.nome)
+    return db
+      .select({
+        id: parlamentar.id,
+        nome: parlamentar.nome,
+        casa: parlamentar.casa,
+        partidoSigla: parlamentar.partidoSigla,
+        uf: parlamentar.uf,
+        urlFoto: parlamentar.urlFoto,
+        legislatura: parlamentar.legislatura,
+        sourceUrl: parlamentar.sourceUrl,
+      })
+      .from(parlamentar)
+      .where(whereClauses.length > 0 ? and(...whereClauses) : undefined)
+      .orderBy(parlamentar.nome)
+  })
 }
 
 export async function getParlamentarById(id: string) {
-  const rows = await db
-    .select()
-    .from(parlamentar)
-    .where(eq(parlamentar.id, id))
-    .limit(1)
-  return rows[0] ?? null
+  return cached(`parlamentar:id:${id}`, TTL.parlamentarPerfil, async () => {
+    const rows = await db
+      .select()
+      .from(parlamentar)
+      .where(eq(parlamentar.id, id))
+      .limit(1)
+    return rows[0] ?? null
+  })
 }
 
 export async function getVotosRecentes(parlamentarId: string, limit = 10) {
