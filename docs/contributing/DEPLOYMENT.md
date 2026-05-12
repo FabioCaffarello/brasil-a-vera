@@ -33,9 +33,22 @@ Verificar quais estão configurados:
 npx wrangler secret list
 ```
 
-Se algum sumir após deploy (como aconteceu uma vez entre PR #44 e PR #50 — ver issue #52 para investigação da causa raiz), repor com `wrangler secret put`. O smoke test pós-deploy detecta isso automaticamente — qualquer rota DB-touching vira 500.
+### Resiliência ao incidente de #52
 
-Restaurar via pipe do `.env.local` (mantém o valor fora do histórico do shell):
+`DATABASE_URL` e `DIRECT_URL` são **bootstrappados idempotentemente a cada deploy** a partir dos GitHub Secrets (`secrets.DATABASE_URL` / `secrets.DIRECT_URL`, que já existem para uso da ingestão). Se algum sumir entre deploys — incidente investigado em #52 com causa raiz não-determinística — o próximo deploy restaura automaticamente. Sem intervenção manual necessária.
+
+`ADMIN_API_KEY` permanece **single-source no Cloudflare** (não está em GitHub Secrets por design). O workflow de deploy verifica que ela ainda está setada e falha rápido com mensagem clara caso tenha sumido. Restore manual:
+
+```bash
+# Gerar nova chave (ou usar a existente do .env.local)
+openssl rand -base64 48 | npx wrangler secret put ADMIN_API_KEY
+```
+
+Smoke test pós-deploy continua sendo a rede de segurança final — qualquer rota DB-touching vira 500 se o bootstrap falhar por motivo inesperado.
+
+### Recuperação manual (raro)
+
+Em caso de falha total (ex: API token Cloudflare revogado, dual-storage perdido):
 
 ```bash
 grep '^DATABASE_URL=' .env.local | cut -d= -f2- | npx wrangler secret put DATABASE_URL
