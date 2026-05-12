@@ -191,6 +191,7 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 ### Wave 2.1 — Domain Depth
 
 > **Tag de release**: `v0.2.1-depth`
+> **Status**: 🚧 Em andamento desde 2026-05-12
 > **Duração estimada**: 4-6 semanas
 
 **Por que segundo**: com infra hardened, cada feature de domínio herda otimização automaticamente. Aqui o produto ganha narrativa cívica — não só mostra dados isolados, mas tece a história legislativa.
