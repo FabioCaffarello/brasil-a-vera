@@ -1,0 +1,99 @@
+name: Notify ingestion failure
+description: Posts Discord webhook and creates/updates a GitHub incident issue when an ingestion job fails.
+
+inputs:
+  webhook-url:
+    description: Discord webhook URL. Skip cleanly if empty.
+    required: false
+    default: ''
+  github-token:
+    description: GitHub token (use secrets.GITHUB_TOKEN). Required for issue create/comment.
+    required: true
+  context:
+    description: Stable identifier for this job (e.g. "ingestion-camara-deputados"). Used as dedupe key for the incident issue.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Notify Discord
+      shell: bash
+      env:
+        WEBHOOK_URL: ${{ inputs.webhook-url }}
+        CONTEXT: ${{ inputs.context }}
+        WORKFLOW: ${{ github.workflow }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        REF: ${{ github.ref_name }}
+        ACTOR: ${{ github.actor }}
+      run: |
+        if [ -z "$WEBHOOK_URL" ]; then
+          echo "DISCORD_INGESTION_WEBHOOK_URL not set; skipping Discord notify" >&2
+          exit 0
+        fi
+        description=$(printf 'Run: %s\nRef: %s\nActor: %s' "$RUN_URL" "$REF" "$ACTOR")
+        payload=$(jq -n \
+          --arg content "FAILURE: ${WORKFLOW} / ${CONTEXT}" \
+          --arg title "$CONTEXT" \
+          --arg description "$description" \
+          '{content: $content, embeds: [{title: $title, description: $description, color: 15158332}]}')
+        curl -fsS -X POST -H "Content-Type: application/json" -d "$payload" "$WEBHOOK_URL" \
+          || echo "Discord notification failed (non-fatal)" >&2
+
+    - name: Create or update incident issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        CONTEXT: ${{ inputs.context }}
+        WORKFLOW: ${{ github.workflow }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        REF: ${{ github.ref_name }}
+        ACTOR: ${{ github.actor }}
+      run: |
+        TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        # Filtro client-side com jq evita semânticas frágeis de full-text search
+        # do GitHub. Dedupe: enquanto existir 1 issue aberta com label `incident`
+        # cujo título contém este context, novas falhas viram comentários.
+        # Usuário fechar a issue = sinal de "resolvido" → próxima falha cria nova.
+        existing=$(gh issue list \
+          --label incident \
+          --state open \
+          --limit 100 \
+          --json number,title \
+          | jq -r --arg ctx "$CONTEXT" '.[] | select(.title | contains($ctx)) | .number' \
+          | head -n 1)
+
+        if [ -n "$existing" ]; then
+          comment_body=$(printf 'Nova falha detectada em %s.\n\n- Run: %s\n- Ref: %s\n- Actor: %s' \
+            "$TIMESTAMP" "$RUN_URL" "$REF" "$ACTOR")
+          gh issue comment "$existing" --body "$comment_body" \
+            || echo "GitHub issue comment failed (non-fatal)" >&2
+        else
+          issue_body=$(cat <<EOF
+        Job de ingestão falhou.
+
+        - **Workflow**: ${WORKFLOW}
+        - **Job**: ${CONTEXT}
+        - **Run**: ${RUN_URL}
+        - **Ref**: ${REF}
+        - **Actor**: ${ACTOR}
+        - **Detectado em**: ${TIMESTAMP}
+
+        ## Investigação
+
+        1. Abrir logs do run acima
+        2. Identificar step que falhou
+        3. Avaliar se é causa transitória (API externa instável) ou persistente
+        4. Re-trigger manual se transitória; PR fix se persistente
+        5. Fechar esta issue quando resolvido
+
+        ## Re-incidências
+
+        Novas falhas para o mesmo job enquanto esta issue estiver aberta serão registradas como comentários, não duplicatas.
+        EOF
+        )
+          gh issue create \
+            --title "incident: ${CONTEXT} failed at ${TIMESTAMP}" \
+            --label "incident,ingestion,wave-2.0" \
+            --body "$issue_body" \
+            || echo "GitHub issue create failed (non-fatal)" >&2
+        fi
