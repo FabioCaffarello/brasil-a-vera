@@ -2,9 +2,14 @@ import { notFound } from 'next/navigation'
 
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
+import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
+import {
+  getCoerenciaStats,
+  getParesContraditorios,
+} from '@/lib/queries/coerencia'
 import {
   getGastosResumo,
   getParlamentarById,
@@ -60,11 +65,20 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
   if (!parlamentar) notFound()
 
   const anoCorrente = new Date().getFullYear()
-  const [votos, proposicoes, gastos, afinidades] = await Promise.all([
+  const [
+    votos,
+    proposicoes,
+    gastos,
+    afinidades,
+    paresContraditorios,
+    coerenciaStats,
+  ] = await Promise.all([
     getVotosRecentes(parlamentar.id, 10),
     getProposicoesAutoradas(parlamentar.id, 5),
     getGastosResumo(parlamentar.id, anoCorrente),
     getTop5Afinidade(parlamentar.id),
+    getParesContraditorios(parlamentar.id, 10),
+    getCoerenciaStats(parlamentar.id),
   ])
 
   return (
@@ -97,6 +111,16 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         hint="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
       >
         <Top5Afinidade afinidades={afinidades} />
+      </Section>
+
+      <Section
+        title="Pares de votos em direções opostas"
+        hint="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
+      >
+        <ParesContraditorios
+          pares={paresContraditorios}
+          stats={coerenciaStats}
+        />
       </Section>
 
       <Section
