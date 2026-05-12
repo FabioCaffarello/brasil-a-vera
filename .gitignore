@@ -52,9 +52,15 @@ Thumbs.db
 /.open-next/
 /.wrangler/
 
+# vercel (não usamos, mas guarda contra `vercel link` acidental)
+/.vercel/
+
 # claude code (local state)
 /.claude/
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# zip
+*.zip
