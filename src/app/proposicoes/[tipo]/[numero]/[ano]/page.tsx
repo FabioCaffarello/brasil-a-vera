@@ -14,29 +14,6 @@ import {
   type TipoProposicao,
 } from '@/lib/queries/proposicoes'
 
-// SSG on-demand (Caminho C). Rota fica registrada como estática para o
-// Next; primeiro request a cada (tipo,numero,ano) gera, cacheia
-// (per-instance ISR + edge CDN via header s-maxage emitido com revalidate);
-// requests subsequentes dentro do TTL servem do cache. Após revalidate,
-// stale-while-revalidate.
-//
-// generateStaticParams retorna [] propositalmente para não tocar o banco
-// no build (decisão registrada no Batch A: build CI usa placeholder
-// DATABASE_URL por causa da regressão eager-validation do neon-http).
-// Quando cold-start virar problema visível, migrar para Caminho B
-// (workflow separado pre-gera chaves em JSON commitado, build consome
-// sem precisar de DATABASE_URL real).
-//
-// Refs: ADR-018 (TTL.proposicaoEmTramitacao = 6h), #42.
-export const revalidate = 21600
-export const dynamicParams = true
-
-export async function generateStaticParams(): Promise<
-  { tipo: string; numero: string; ano: string }[]
-> {
-  return []
-}
-
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
 }
