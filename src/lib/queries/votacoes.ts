@@ -182,3 +182,29 @@ export async function getAnosVotacaoDistintos(): Promise<number[]> {
   `)
   return rows.rows.map((r) => Number(r.ano))
 }
+
+/**
+ * Lista IDs das votações mais recentes (limit default 500).
+ *
+ * Não consumido hoje. As páginas de detalhe usam generateStaticParams=[]
+ * (Caminho C, SSG on-demand) para preservar isolation do build CI da
+ * decisão registrada no Batch A (regressão neon-http: build com
+ * placeholder DATABASE_URL).
+ *
+ * Esta função fica disponível como slot para o Caminho B futuro:
+ * pipeline de pre-geração via workflow separado (com secret real) que
+ * produz JSON de IDs commitado no repo, consumido pelo build sem
+ * precisar de DATABASE_URL no step de Next build.
+ *
+ * Migrar para Caminho B se cold-start de primeira request virar
+ * problema visível em produção. Tracking: issue a criar quando
+ * aplicável.
+ */
+export async function getRecentVotacaoIds(limit = 500): Promise<string[]> {
+  const rows = await db
+    .select({ id: votacao.id })
+    .from(votacao)
+    .orderBy(desc(votacao.dataHora))
+    .limit(limit)
+  return rows.map((r) => r.id)
+}

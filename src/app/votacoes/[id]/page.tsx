@@ -15,6 +15,26 @@ import {
   type TipoVoto,
 } from '@/lib/queries/votacoes'
 
+// SSG on-demand (Caminho C). Rota fica registrada como estática para o
+// Next; primeiro request a cada id gera, cacheia (per-instance ISR + edge
+// CDN via header s-maxage emitido com revalidate); requests subsequentes
+// dentro do TTL servem do cache. Após revalidate, stale-while-revalidate.
+//
+// generateStaticParams retorna [] propositalmente para não tocar o banco
+// no build (decisão registrada no Batch A: build CI usa placeholder
+// DATABASE_URL por causa da regressão eager-validation do neon-http).
+// Quando cold-start virar problema visível, migrar para Caminho B
+// (workflow separado pre-gera IDs em JSON commitado, build consome
+// sem precisar de DATABASE_URL real).
+//
+// Refs: ADR-018 (TTL.votacaoRecente = 1h), #42.
+export const revalidate = 3600
+export const dynamicParams = true
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return []
+}
+
 interface PageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{ voto?: string }>
