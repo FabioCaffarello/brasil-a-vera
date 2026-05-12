@@ -101,17 +101,12 @@ async function loadVotosComProposicao(
   }))
 }
 
-/**
- * Encontra pares contraditórios do parlamentar — mesmo tema, direções
- * opostas, voto idêntico. Implementação O(N²) sobre os votos válidos do
- * parlamentar. Para a Wave 1 com poucas votações classificadas isso é
- * trivialmente rápido; refinar se virar problema.
- */
-export async function getParesContraditorios(
-  parlamentarId: string,
+// Função pura: dado um conjunto de votos já carregados, computa os pares
+// contraditórios. Extraído para evitar recarregar votos em getCoerenciaStats.
+function computePares(
+  votos: VotoComProposicao[],
   limit = 10,
-): Promise<ParContraditorio[]> {
-  const votos = await loadVotosComProposicao(parlamentarId)
+): ParContraditorio[] {
   if (votos.length < 2) return []
 
   // Filtra apenas votos com direção decidida — pares sempre exigem ambos
@@ -160,6 +155,20 @@ export async function getParesContraditorios(
   return pares.slice(0, limit)
 }
 
+/**
+ * Encontra pares contraditórios do parlamentar — mesmo tema, direções
+ * opostas, voto idêntico. Implementação O(N²) sobre os votos válidos do
+ * parlamentar. Para a Wave 1 com poucas votações classificadas isso é
+ * trivialmente rápido; refinar se virar problema.
+ */
+export async function getParesContraditorios(
+  parlamentarId: string,
+  limit = 10,
+): Promise<ParContraditorio[]> {
+  const votos = await loadVotosComProposicao(parlamentarId)
+  return computePares(votos, limit)
+}
+
 export interface CoerenciaStats {
   votosClassificados: number
   votosTotaisComProposicao: number
@@ -179,9 +188,7 @@ export async function getCoerenciaStats(
   return {
     votosClassificados: classificados.length,
     votosTotaisComProposicao: votos.length,
-    // Recalcula só pra contagem — duplicação aceita pra empty state honesto.
-    paresContraditoriosDetectados: (
-      await getParesContraditorios(parlamentarId, Number.MAX_SAFE_INTEGER)
-    ).length,
+    paresContraditoriosDetectados: computePares(votos, Number.MAX_SAFE_INTEGER)
+      .length,
   }
 }
