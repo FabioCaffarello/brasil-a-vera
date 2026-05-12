@@ -157,21 +157,31 @@ entre os dois drivers; só o módulo de conexão diverge.
 
 ## Limitações reconhecidas
 
-**Testcontainers (issue #22, próximo do roadmap Wave 2.0) executa
-contra Postgres real via driver `neon-serverless`.** Isso valida
-a camada de queries Drizzle e o schema SQL, mas **não exercita o
-caminho `neon-http` do Worker no nível de driver**. Diferenças
-semânticas sutis entre os dois drivers (comportamento de pool,
-retry, timeout, parsing de erros) ficam fora da cobertura de
-testes integrados.
+**Testcontainers (issue #22, implementado no PR que registra esta
+correção) executa contra Postgres real via driver `pg` +
+`drizzle-orm/node-postgres`.** Isso valida a camada de queries
+Drizzle e o schema SQL, mas **não exercita nem o caminho
+`neon-http` do Worker nem o `neon-serverless` da ingestão no
+nível de driver**. Diferenças semânticas sutis entre os três
+drivers (comportamento de pool, retry, timeout, parsing de
+erros) ficam fora da cobertura de testes integrados.
 
-Contribuidores que mexerem em `src/shared/db/index.ts` precisam
-**validar empiricamente em Worker preview/produção, não apenas em
-testes locais**. Princípio 13 do CLAUDE.md (validação empírica
-para decisões de cache/performance/runtime behavior) aplica-se
-diretamente aqui: o próprio ADR-015 nasce de uma hipótese teórica
-de ADR-011 que só foi falsificada quando exercitada em runtime
-real.
+> **Correção empírica (2026-05-12)**: a versão original deste ADR
+> afirmava que testcontainers usaria `neon-serverless`. A
+> tentativa concreta de fazê-lo no PR de #22 mostrou que o driver
+> Neon WebSocket espera o proxy Neon (ou um WS proxy custom) e
+> não conecta direto em vanilla Postgres. Driver real de teste é
+> `pg` (TCP). Mais uma aplicação do princípio 13: hipótese
+> teórica falsificada por tentativa empírica.
+
+Contribuidores que mexerem em `src/shared/db/index.ts` ou em
+`ingestion/shared/db.ts` precisam **validar empiricamente em
+Worker preview/produção (para o app) ou em GitHub Actions com o
+banco real Neon (para a ingestão), não apenas em testes locais**.
+Princípio 13 do CLAUDE.md aplica-se diretamente aqui: o próprio
+ADR-015 nasce de uma hipótese teórica de ADR-011 falsificada em
+runtime real, e foi corrigido por uma segunda hipótese (sobre
+o driver de testes) também falsificada pelo mesmo método.
 
 ## Referências
 

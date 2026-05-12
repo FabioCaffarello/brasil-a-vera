@@ -55,3 +55,26 @@ jobs:
 
       - run: npm ci
       - run: npm run test:coverage
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-modules-
+
+      - run: npm ci
+      # Linux runners têm Docker pré-instalado e daemon rodando;
+      # testcontainers sobe postgres:17-alpine e aplica migrations.
+      # Limitação reconhecida no ADR-015: driver `pg` ≠ driver de
+      # produção (neon-http no app, neon-serverless na ingestão).
+      - run: npm run test:integration
