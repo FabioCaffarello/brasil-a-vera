@@ -139,7 +139,7 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 ### Wave 2.0 — Foundation Hardening
 
 > **Tag de release**: `v0.2.0-foundation`
-> **Duração estimada**: 4-6 semanas
+> **Status**: ✅ Concluída em 2026-05-12 com 2 ressalvas registradas (ver Critérios de Done abaixo)
 
 **Por que primeiro**: a infraestrutura estabelecida na pré-Wave 2 (ADRs 016, 017, 018 + princípios 8-12 do CLAUDE.md) precisa ser implementada antes de qualquer feature nova. Sem cache, SSG e observabilidade, cada feature adicional ataca o budget direto. Esta sub-wave também consolida os safety nets que faltavam quando o incidente do Pool singleton aconteceu.
 
@@ -178,15 +178,15 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 
 #### Critérios de Done
 
-- [ ] 30 requests concorrentes em rotas de detalhe servem em < 100ms (média, com cache quente)
-- [ ] CU-hours mensal projetado < 50 (zona verde do [ADR-017](../architecture/ADR/017-budget-mensal-observabilidade.md))
-- [ ] `/api/stats` retornando contagens, tamanho do banco, última ingestão por tipo
-- [ ] Webhook de `revalidate` validado em produção (1 deploy de ingestão dispara `revalidatePath`)
-- [ ] Script de poll Neon rodando diariamente com alerta em zona amarela/vermelha
-- [ ] Monitoramento de jobs de ingestão notifica falhas em < 1h
-- [ ] Smoke test pós-deploy bloqueando rollout em caso de regressão
-- [ ] Suite de testes integrados com testcontainers cobrindo queries de domínio
-- [ ] Três ADRs de débito documental publicados (010, 013, 015)
+- [ ] 30 requests concorrentes em rotas de detalhe servem em < 100ms (média, com cache quente) — **ressalva**: nunca medido formalmente. Cache de edge implementado ([ADR-018](../architecture/ADR/018-cache-edge-app.md)), arquitetura suporta. Falta benchmark empírico — fica como item de operação contínua, não bloqueia entrega.
+- [ ] CU-hours mensal projetado < 50 (zona verde do [ADR-017](../architecture/ADR/017-budget-mensal-observabilidade.md)) — **parcial**: 46.98 h/mês observado (< 50 ✓), mas custo projetado entrou em zona AMARELA ($7.52, threshold $5-15) por compute em testes/dev. Acompanhamento contínuo em #39.
+- [x] `/api/stats` retornando contagens, tamanho do banco, última ingestão por tipo (issue #38)
+- [ ] Webhook de `revalidate` validado em produção (1 deploy de ingestão dispara `revalidatePath`) — **ressalva**: bloqueado por #58 (R2 incremental cache) que migra para Wave 3+. Issue #43 fica aberta para Wave 3. Revalidação manual via redeploy é alternativa viável até lá.
+- [x] Script de poll Neon rodando diariamente com alerta em zona amarela/vermelha (issue #40, PR #55)
+- [x] Monitoramento de jobs de ingestão notifica falhas em < 1h (issue #30)
+- [x] Smoke test pós-deploy bloqueando rollout em caso de regressão (issue #33)
+- [x] Suite de testes integrados com testcontainers cobrindo queries de domínio (issue #22, PR #63) — **parcial**: cobre módulo `parlamentares` (8 funções, 11 testes). Issues #64-#67 estendem para `proposicoes`, `votacoes`, `stats+busca`, `coerencia` em Wave 2.1.
+- [x] Três ADRs de débito documental publicados (010, 013, 015) — issues #23, #24, #34 fechadas no Batch D
 
 ### Wave 2.1 — Domain Depth
 

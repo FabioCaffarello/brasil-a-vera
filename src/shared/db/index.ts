@@ -23,7 +23,8 @@ import * as schema from './schema'
 // Referências:
 // - https://developers.cloudflare.com/workers/observability/errors/
 // - https://neon.tech/docs/serverless/serverless-driver
-// - Incidente original documentado em ADR (TODO pós-Wave 1)
+// - ADR-015 (split de driver Neon por runtime; documenta o incidente do
+//   Pool singleton e o caminho de correção).
 
 const sql = neon(process.env.DATABASE_URL as string)
 export const db = drizzle(sql, { schema })
