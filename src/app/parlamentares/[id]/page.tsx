@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation'
 
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
+import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
+import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
 import {
   getCoerenciaStats,
   getParesContraditorios,
@@ -76,6 +78,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     afinidades,
     paresContraditorios,
     coerenciaStats,
+    alinhamento,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, 10),
     getProposicoesAutoradas(parlamentar.id, 5),
@@ -83,6 +86,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     getTop5Afinidade(parlamentar.id),
     getParesContraditorios(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
+    getAlinhamentoParlamentar(parlamentar.id),
   ])
 
   return (
@@ -108,6 +112,13 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         hint="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
       >
         <VotosRecentes votos={votos} />
+      </Section>
+
+      <Section
+        title="Alinhamento à bancada"
+        hint="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
+      >
+        <AlinhamentoBancada alinhamento={alinhamento} />
       </Section>
 
       <Section
