@@ -1,15 +1,25 @@
 # ADR-007: Estratégia Monolith First
 
-> Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-05-11
-> Status: accepted
+> Brasil a Vera · Arquitetura · v0.3
+> Última atualização: 2026-05-13
+> Status: superseded em parte por [ADR-020](020-permanencia-monolito-typescript.md)
 
 ---
 
-> **Atualização (2026-05):** a parte deste ADR sobre deploy na Vercel foi
-> superseded pelo [ADR-009](009-cloudflare-pages.md) (Cloudflare Workers). A
-> estratégia de monolith first permanece válida. A extração futura para Go é
-> `proposed` (ver [ADR-002](002-backend-language-and-framework.md)).
+> **Atualização (2026-05-13):** a parte deste ADR sobre **extração futura
+> para Go via Strangler Fig** foi superseded pelo
+> [ADR-020](020-permanencia-monolito-typescript.md). A stack
+> TypeScript/Next.js/Neon/Cloudflare Workers é permanente até evidência
+> empírica em contrário, conforme
+> [ADR-019](019-disciplina-arquitetural-sem-gargalo.md).
+>
+> A **parte "monolith first" permanece válida** — o princípio de começar
+> monolito e extrair só se necessário continua orientando o projeto.
+> Apenas o alvo "Go via Strangler Fig" como inevitabilidade futura foi
+> descartado.
+>
+> A parte sobre deploy na Vercel foi superseded pelo
+> [ADR-009](009-cloudflare-pages.md) (Cloudflare Workers) em 2026-05.
 
 ---
 
