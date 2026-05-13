@@ -17,9 +17,26 @@ import {
 // TTL de edge cache; páginas regeneram em background quando expira.
 export const revalidate = 21_600
 
+// Em CI (e em qualquer build que rode com DATABASE_URL placeholder), a query
+// falha. Retorna `[]` nesse caso — Next continua SSG mas pré-geração some;
+// primeira request gera on-demand e populá o cache via `revalidate`. Build
+// local com .env.local apontando ao DB real pré-gera todas as siglas.
+// Princípio 13 herdado do Wave 2.0: hipótese "build local = build CI" foi
+// falsificada por essa exata divergência de ambiente.
 export async function generateStaticParams() {
-  const siglas = await getPartidosDistintos()
-  return siglas.map((sigla) => ({ sigla }))
+  try {
+    const siglas = await getPartidosDistintos()
+    return siglas.map((sigla) => ({ sigla }))
+  } catch (err) {
+    console.warn(
+      JSON.stringify({
+        event: 'generate_static_params_failed',
+        route: '/partidos/[sigla]',
+        message: err instanceof Error ? err.message : String(err),
+      }),
+    )
+    return []
+  }
 }
 
 interface PageProps {
