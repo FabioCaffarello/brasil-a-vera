@@ -47,10 +47,14 @@ export function AlinhamentoBancada({ alinhamento, casa }: Props) {
     }
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Sem orientação partidária registrada para as votações deste deputado até
-        o momento. A cobertura cresce a cada execução do cron de ingestão
-        (4×/dia) — refletindo apenas as votações em que a liderança da bancada
-        publicou orientação.
+        Orientação partidária só é registrada em{' '}
+        <strong>votações nominais</strong> (com voto individual de cada
+        deputado) — e somente quando a liderança da bancada formaliza posição na
+        API da Câmara. A liderança deste partido ainda não publicou orientação
+        em nenhuma das votações nominais ingeridas. Nem todos os partidos
+        formalizam orientação em toda votação; a cobertura cresce a cada
+        execução do cron (4×/dia) conforme novas votações nominais e novas
+        orientações entrarem.
       </p>
     )
   }
