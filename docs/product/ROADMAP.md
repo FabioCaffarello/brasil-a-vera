@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.2
-> Última atualização: 2026-04-14
+> Brasil a Vera · Produto · v0.3
+> Última atualização: 2026-05-13
 > Status: accepted
 
 ---
@@ -49,7 +49,7 @@ gantt
 | 0 | Fundação | Nenhuma (infraestrutura) | 6-8 semanas |
 | 1 | MVP Público | Cidadão, Jornalista | 8-10 semanas |
 | 2 | Profundidade | Todos | 10-12 semanas |
-| 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador | 7-10 semanas (3 sub-waves) |
+| 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador, Desenvolvedor | 14-20 semanas (5 sprints + 1 micro-wave) |
 | 4 | Open Ground | (definido após Wave 3) | Backlog sem plano contratual |
 
 ---
@@ -258,95 +258,168 @@ Por decisão consciente, o escopo abaixo não entra na Wave 2. A razão é dupla
 
 > **Pergunta validada**: "Cidadão e jornalista conseguem responder perguntas cívicas concretas (coerência por tema, financiamento eleitoral) usando a plataforma sem expedição arqueológica?"
 
-A Wave 3 transforma os dados estruturados acumulados nas Waves 1 e 2 em narrativa cívica acessível. Três eixos: índice de coerência tornando o padrão de voto legível por padrão, dashboards temáticos agrupando proposições por área (saúde, educação, etc.), e doações do TSE 2022 vinculando financiamento eleitoral ao mandato em exercício. Segue o padrão validado de sub-waves curtas com tag de release própria.
+A Wave 3 transforma os dados estruturados acumulados nas Waves 1 e 2 em narrativa cívica acessível. Reescrita em 2026-05-13 (Sprint 3.0 / `v0.3.0-stable`) em 5 sprints incrementais — ordem: estabilização e honestidade → narrativa cívica → quick wins de distribuição → plataforma para devs → inteligência analítica. Cada sprint tem tag de release própria.
 
-A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legislativo, NLP avançado, extração de módulos Go, NATS JetStream e integração TSE completa migram para a Wave 4 (open ground). Razão: nenhum deles atende a pergunta validada acima, e cada um dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão. Ver [Fora da Wave 3](#fora-da-wave-3--adiado-para-wave-4) abaixo.
+A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legislativo, NLP avançado, extração de módulos Go, NATS JetStream e integração TSE completa migram para a Wave 4 (open ground). Stack permanente reafirmada em [ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md): TypeScript/Next.js/Neon/Cloudflare Workers, sem multi-runtime. Razão: nenhuma das peças propostas teve justificativa empírica, e cada uma dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão. Ver [Fora da Wave 3](#fora-da-wave-3--adiado-para-wave-4) abaixo.
 
-### Wave 3.0 — Realignment
+### Wave 3.0 — Estabilização & Honestidade
 
-> **Tag de release**: `v0.3.0-realignment`
+> **Tag de release**: `v0.3.0-stable`
+> **Status**: ✅ Concluída em 2026-05-13
+> **Duração**: 1 dia (escopo cirúrgico)
+
+**Por que primeiro**: o produto pós-Wave 2 tinha 3 seções "honestas mas vazias" em todos os 721 perfis (pares contraditórios, top 5 afinidade, alinhamento à bancada), OG image vazando `localhost:3000` em todas as URLs sociais, e ressalvas operacionais não-fechadas. Antes de adicionar feature nova, o produto precisava estar em estado "sem vergonha de mostrar a um jornalista".
+
+#### Escopo entregue
+
+- **Bugs visíveis em produção** (Bloco 1): OG `localhost:3000` corrigido via `metadataBase`; auditoria do `db:migrate` automático + guarda em vitest; `/votacoes/[id]` ratificada como dynamic intencional (fechou #59); audit de triggers + concurrency dos 6 workflows + `WORKFLOWS.md` (fechou #69)
+- **Auditoria de exports** (Tarefa 2): 4 endpoints CSV + `/api/stats` + busca empíricamente validados em prod; suite de regressão integration (12 + 4 testes); **truncagem honesta** via headers `X-Total-Count` / `X-Returned-Count` / `X-Truncated`
+- **Diagnóstico de cobertura `orientacao_bancada`** (Tarefa 3): caminho (c) com nuance confirmado — 94.74% sobre nominais Câmara (denominador correto), não 1.21% sobre total. Senado bloqueado por #83. Script `ingestion/ops/diagnose-orientacoes.ts` permanece para revalidação periódica
+- **Copy honesto em empty states** (Tarefa 4 + 3 finalização): zero ocorrências de "Pode ser que faltem dados…" em rotas públicas; copy refinado em ParesContraditorios, Top5Afinidade (disclaimer visível), AlinhamentoBancada (diferenciado por casa), FidelidadeMediaBlock, TramitacaoTimeline
+- **Tooltip L1-L4** (Tarefa 5.1): acessível (hover/tap/focus, Esc, click fora), link âncora `/#piramide-confianca`
+- **QA mobile** (Tarefa 5.2/5.3): Lighthouse mobile nas 6 rotas (Perf 94-99, A11y 93-100, CLS=0); tap targets ≥44px em filtros e busca
+
+#### Critérios de Done — atendidos
+
+- [x] Bugs OG/migrate/votacoes/workflows fechados; PRs #108-#110 mergeados
+- [x] Auditoria de exports completa com tabela markdown + suite de regressão CI (PR #111)
+- [x] Truncagem honesta implementada e validada em prod (X-Truncated emitido corretamente)
+- [x] Diagnóstico orientação fechado com caminho técnico documentado (PR #113)
+- [x] Grep `[pP]ode ser que` em src/ retorna 0 ocorrências
+- [x] Lighthouse mobile rodado nas 6 rotas; sem regressão a11y
+- [x] Tag `v0.3.0-stable` publicada
+- [x] Budget Neon: zona AMARELA controlada (51.28 MB storage; estimativa $7.52 — abaixo do limiar vermelho $15)
+
+#### Issues abertas pelo sprint (carregadas adiante)
+
+- [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) — LCP > 2.5s em `/`, `/parlamentares`, `/partidos/[sigla]` (perf, wave-3+ → Sprint 3.1)
+
+### Wave 3.0.5 — Refinamento NLP & Recalibragem Top 5
+
+> **Tag de release**: `v0.3.0.5-honest`
 > **Status**: planejada
-> **Duração estimada**: 1-2 semanas
+> **Duração estimada**: 2-3 semanas
 
-**Por que primeiro**: estabelece base conceitual e arquitetural antes de qualquer feature de domínio nova. Os ADRs cristalizam disciplina arquitetural (princípio 13 aplicado a um ano de operação) e o escopo Profundidade Cívica fica registrado antes da implementação começar.
+**Por que aqui**: dois empty states do Sprint 3.0 ficaram com copy honesto mas a feature continua "anêmica" — pares contraditórios cobre só verbos inequívocos (poucas ementas qualificam) e top 5 afinidade exibe 100% com 5 votações em comum (estatisticamente frágil). Esta micro-wave entrega o refinamento, sem ainda adicionar narrativa nova.
 
 #### Escopo
 
-- ADR-019 — Disciplina arquitetural: não introduzir infra sem gargalo empírico (Go, NATS, Apache AGE etc só entram com evidência real, não inferência teórica)
-- ADR-020 — Wave 3: escopo Profundidade Cívica Acessível (registro formal do recorte e do que migrou para Wave 4+)
-- Índice de Coerência Completo (extende Motor de Coerência básico da Wave 1; depende de Wave 2.1.1 + #77 — orientação Câmara em produção)
-- Página `/coerencia` com ranking nacional
-- Página `/sobre/metodologia` (transparência sobre como cada dado é coletado, calculado e classificado)
+- **NLP refinado de classificação de direção** para pares contraditórios: além de verbos inequívocos (`proíbe`, `autoriza`, `revoga`), expandir para padrões de transformação (`amplia`, `restringe`, `reduz` + objetos do verbo). Avaliar via cobertura sobre proposições classificadas hoje (`stats.votosClassificados`)
+- **Recalibragem do top 5 afinidade**: quórum mínimo de votações em comum subiria de 5 → 20-30 (a definir empiricamente); janela temporal: últimos 12 meses. Disclaimer visível continua, mas raramente atinge 100%
+- **Revalidação empírica** com script `diagnose-orientacoes.ts` antes e depois — registrar deltas
 
 #### Critérios de Done
 
-- [ ] ADR-019 e ADR-020 publicados em `docs/architecture/ADR/` com status `accepted`
-- [ ] Rota `/coerencia` acessível e indexável, ranking funcional para parlamentares com dados suficientes (threshold de votações documentado)
-- [ ] Rota `/sobre/metodologia` cobre L1/L2/L3, fontes oficiais, cadência de ingestão, e política da pirâmide de confiança
-- [ ] Princípio 13 (validação empírica) referenciado em `/sobre/metodologia` — auditabilidade da plataforma
-- [ ] Sem regressão em rotas existentes (curl pós-deploy, smoke test verde)
-- [ ] Budget Neon mantido em zona amarela controlada ou abaixo
+- [ ] Cobertura de pares contraditórios cresce N% (definir delta empírico no início do sprint)
+- [ ] Top 5 afinidade em prod não exibe 100% para parlamentares com `totalVotosEmComum < 20` (nova regra)
+- [ ] Tests integration cobrindo nova classificação + nova regra de quórum
+- [ ] Diagnose script atualizado para refletir deltas pós-fix
 
-### Wave 3.1 — Dashboards Temáticos
+### Wave 3.1 — Narrativa Cívica & Frontend
 
-> **Tag de release**: `v0.3.1-themes`
+> **Tag de release**: `v0.3.1-narrative`
 > **Status**: planejada
 > **Duração estimada**: 3-4 semanas
 
-**Por que segundo**: com índice de coerência publicado, o dashboard temático ganha utilidade — agrupar proposições por área permite ver coerência por tema, não só global. Cidadão consegue perguntar "como meu deputado votou em saúde?" e ver resposta factual.
+**Por que segundo**: o cidadão que chega à plataforma sem nome em mente não sabe por onde começar. Esta sub-wave adiciona portas de entrada narrativas (não só "buscar X") e ajusta tipografia/espaçamento para destravar legibilidade.
 
 #### Escopo
 
-- Schema `temas` com categorias predefinidas (Saúde, Educação, Segurança, Meio Ambiente, Economia, Direitos Humanos — 6 inicialmente)
-- Pipeline de classificação por palavras-chave em ementas (L2, fórmula aberta, sem ML)
-- Rotas `/temas` e `/temas/[slug]`
-- Componente "Como [Parlamentar] votou em [Tema]" integrado em `/parlamentares/[id]`
-- Trust badge L2 em todas as métricas temáticas (cálculo derivado de classificação de ementa)
-- Export CSV temático (filtro por tema nas rotas de export existentes)
+- Cards narrativos na home: "veja o que aconteceu esta semana", "deputado em maior divergência partidária", "proposição mais comentada"
+- Rota `/o-meu-parlamentar` — entrada por CEP/cidade → propõe parlamentares relevantes
+- Tipografia consistente entre títulos/corpo, espaçamento revisado
+- Lighthouse: fechar [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) (LCP > 2.5s em `/`, `/parlamentares`, `/partidos/[sigla]`)
+- QA mobile completo (375 / 414 / 360px) com regressões abertas como issues
 
 #### Critérios de Done
 
-- [ ] 6 temas cobertos, com pelo menos 50 proposições classificadas por tema (amostra mínima)
-- [ ] `/temas/[slug]` funcional com listagem de proposições + parlamentares atuantes naquele tema
-- [ ] Componente "Como votou em X" integrado em todos os perfis de parlamentar
-- [ ] Export CSV com filtro de tema testado por curl
-- [ ] Trust level L2 documentado em `/sobre/metodologia` para o cálculo de classificação
+- [ ] Home tem ≥ 3 cards de entrada narrativa, cada um linkando para fluxo cívico concreto
+- [ ] `/o-meu-parlamentar` funcional para 1 método de entrada (CEP ou estado/cidade)
+- [ ] LCP < 2.5s nas 3 rotas afetadas em [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114)
+- [ ] Sem regressão CLS / A11y vs baseline Sprint 3.0
+- [ ] Tabela QA mobile no PR de fechamento com screenshots ou descrição textual
 
-### Wave 3.2 — TSE Doações Eleitorais
+### Wave 3.2 — Quick wins de distribuição
 
-> **Tag de release**: `v0.3.2-tse-financing`
+> **Tag de release**: `v0.3.2-distribution`
+> **Status**: planejada
+> **Duração estimada**: 2-3 semanas
+
+**Por que terceiro**: feature de produto consolidada (3.0 + 3.0.5 + 3.1), agora dá pra distribuir. Itens leves de descoberta orgânica que multiplicam alcance sem demandar infra nova.
+
+#### Escopo
+
+- OG dinâmico expandido (mais variantes além das atuais — perfil parlamentar com gráfico de afinidade, proposição com badge de tema)
+- `/docs` pública mínima (estática, sem API ainda — explica o produto, fontes, frequência de ingestão)
+- RSS de votações relevantes (rota `/feed/votacoes.xml`)
+- Sem bulk Parquet por ora (espera Wave 4+)
+
+#### Critérios de Done
+
+- [ ] OG dinâmico cobre ≥ 5 cenários (home, parlamentar, proposição, votação, partido) — extensão da entrega da Tarefa 1.1 (Sprint 3.0)
+- [ ] `/docs` pública indexável, com explicação L1/L2/L3, fontes, cadência
+- [ ] RSS validado em 2 leitores (Feedly, NetNewsWire)
+
+### Wave 3.3 — Plataforma para devs
+
+> **Tag de release**: `v0.3.3-platform`
 > **Status**: planejada
 > **Duração estimada**: 3-4 semanas
 
-**Por que último**: TSE é integração externa nova com schema novo — maior risco de delay. Coloca ao final pra não bloquear sub-waves anteriores. Escopo deliberadamente recortado (só 2022, só doações vinculáveis a parlamentares em exercício) reduz ambição de produto e evita "TSE completo" virar Wave inteira.
+**Por que quarto**: estabiliza API antes de adicionar análise pesada. Inclui TSE inicial (subset 2022) para devs/jornalistas começarem a usar a plataforma como base de pesquisa.
 
 #### Escopo
 
-- Schema novo `eleicoes` com tabelas `candidatura` e `doacao`
-- Ingestão TSE 2022 — subset de doações vinculáveis a parlamentares atuais em exercício (não TSE completo; bens, gastos de campanha completos e anos anteriores permanecem em Wave 4+)
-- Página `/parlamentares/[id]/financiamento` com listagem de doações + agregados (total, top doadores, distribuição por origem PF/PJ)
-- ADR-021 — Modelagem TSE: escopo recortado para Wave 3 (documenta o que entra e o que fica fora)
-- Auditoria L2 de matching parlamentar↔candidatura (heurística nome+CPF+UF, review manual de ambiguidades)
-- 3 posts técnicos de showcase ativo da plataforma após entrega (canais: blog próprio, mídia parceira ou fórum)
+- API pública REST documentada via OpenAPI (rotas públicas atuais formalizadas — `/parlamentares`, `/proposicoes`, `/votacoes` etc — sem auth/rate-limit ainda)
+- Alertas configuráveis por parlamentar/tema (rota `/alertas` com inscrição via e-mail — exige fluxo mínimo de auth; aceitar trade-off de complexidade aqui)
+- TSE inicial: schema `eleicoes` + ingestão TSE 2022 (subset doações para parlamentares em exercício)
+- Rota `/parlamentares/[id]/financiamento` com agregados PF/PJ
+- ADR-021 — Modelagem TSE (escopo recortado para Wave 3)
 
 #### Critérios de Done
 
-- [ ] Schema `eleicoes` aplicado em produção sem regressão em outras tabelas (migration verde via auto-migrate do deploy)
-- [ ] ADR-021 publicado e referenciado pelo código de ingestão TSE
-- [ ] `/parlamentares/[id]/financiamento` renderiza para parlamentares com matching confirmado, com empty state explícito para não-matched
-- [ ] Auditoria de matching exposta em `/api/stats` ou similar (taxa de matching agregada + lista de parlamentares não-matched)
-- [ ] 3 posts técnicos publicados em canais distintos
+- [ ] OpenAPI.json publicado em `/api/openapi.json`, valida via Swagger Editor
+- [ ] Alertas: usuário cria inscrição via e-mail, recebe notificação quando parlamentar X vota Y
+- [ ] Schema `eleicoes` aplicado via auto-migrate sem regressão
+- [ ] Matching parlamentar↔candidatura com taxa ≥ 80% (heurística nome+CPF+UF)
+- [ ] `/parlamentares/[id]/financiamento` renderiza com empty state explícito para não-matched
+
+### Wave 3.4 — Inteligência analítica
+
+> **Tag de release**: `v0.3.4-insight`
+> **Status**: planejada
+> **Duração estimada**: 4-6 semanas
+
+**Por que último**: o item mais ambicioso da Wave 3. Implementado em TypeScript ([ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md)) eventualmente com Workers AI para NLP pesado. Análises de grafo grandes rodam em batch via GitHub Actions e materializam resultado no banco.
+
+#### Escopo
+
+- **Índice de coerência completo** (extende Motor da Wave 1; depende do refinamento NLP do 3.0.5)
+- **Página `/coerencia`** com ranking nacional + filtro por casa/partido/tema
+- **Página `/sobre/metodologia`** (transparência sobre coleta, cálculo, classificação por L1/L2/L3 + princípio 13)
+- **Dashboards temáticos**: schema `temas` + classificação automática de ementa, rotas `/temas` e `/temas/[slug]`, componente "Como X votou em [Tema]" nos perfis
+- **Grafo legislativo**: detecção de comunidades em batch (Louvain/Leiden em JS), métricas de centralidade. Renderização frontend com `reactflow` (issue #96)
+- **Workers AI** (opcional, com gargalo medido): se NLP local for insuficiente, mover classificação pesada para Workers AI
+
+#### Critérios de Done
+
+- [ ] Rota `/coerencia` acessível com ranking funcional para parlamentares com dados suficientes
+- [ ] 6 temas cobertos, ≥ 50 proposições classificadas por tema (amostra mínima)
+- [ ] Grafo legislativo renderiza em produção para top 50 parlamentares (depois expansão)
+- [ ] `/sobre/metodologia` cobre L1/L2/L3, fontes oficiais, cadência, política da pirâmide
+- [ ] Budget Neon mantido em zona amarela controlada (storage cresce com batches materializados)
+- [ ] Princípio 13 referenciado em `/sobre/metodologia` — auditabilidade
 
 ### Fora da Wave 3 — adiado para Wave 4+
 
-Por decisão consciente, o escopo abaixo **não entra** na Wave 3. Foi originalmente migrado da Wave 2 (decisão de 2026-05-12) e da definição "Wave 3 — Inteligência" anterior. Cada item dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão.
+Por decisão consciente, o escopo abaixo **não entra** na Wave 3. Cada item dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão; alguns foram descartados por princípio empírico (ver [ADR-019](../architecture/ADR/019-disciplina-arquitetural-sem-gargalo.md)) e por permanência do monolito ([ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md)).
 
-- **API pública REST** com OpenAPI, API keys, rate limiting, webhooks, alertas push/email (gestão de contas + LGPD ampla)
-- **Plataforma analítica avançada**: grafo legislativo interativo, NLP avançado de classificação de direção, detecção de comunidades (Louvain/Leiden), métricas de centralidade
-- **Migração para arquitetura distribuída**: extração de módulos Go (Strangler Fig, [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)), NATS JetStream, Apache AGE, VPS Hostinger
+- **API pública REST avançada**: rate limiting com API keys, webhooks para terceiros, push notifications (gestão de contas + LGPD ampla)
+- **Migração para arquitetura distribuída**: extração de módulos Go (~~[ADR-007](../architecture/ADR/007-monolith-first-strategy.md)~~ superseded por ADR-020), NATS JetStream, Apache AGE, VPS Hostinger
 - **Integração TSE completa**: bens declarados, gastos de campanha completos, anos anteriores além de 2022
 - **Expansão de produto**: mobile nativa, integração Telegram/WhatsApp, i18n, assembleias legislativas estaduais
 - **Brasil a Vera Labs (L4)**: análises de impacto com curadoria especializada
+- **Bulk Parquet via R2**: formato amigável a DuckDB/Pandas — adiado pela Wave 2.2
 
 Cada bloco vira issue mestre rotulada `wave-4+` no rastreamento de issues. Buscar com `gh issue list --label wave-4+`.
 
