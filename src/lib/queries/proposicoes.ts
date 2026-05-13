@@ -1,11 +1,13 @@
 import { and, asc, desc, eq } from 'drizzle-orm'
 
+import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
 import {
   parlamentar,
   proposicao,
   proposicaoAutor,
   proposicaoTema,
+  tramitacao,
   votacao,
 } from '@/shared/db/schema'
 
@@ -137,6 +139,40 @@ export async function getVotacoesByProposicao(proposicaoId: string) {
     .from(votacao)
     .where(eq(votacao.proposicaoId, proposicaoId))
     .orderBy(desc(votacao.dataHora))
+}
+
+export interface TramitacaoEvento {
+  id: string
+  data: Date
+  orgao: string
+  descricaoResumida: string
+  descricaoCompleta: string | null
+  situacaoResultante: string | null
+}
+
+// Timeline da proposição: eventos ordenados do mais recente pro mais antigo,
+// que é a ordem natural pra exibir num feed. Cacheado com TTL longo (ADR-018)
+// — tramitação muda no máximo algumas vezes por semana, dominado pelo cron.
+export async function getTramitacaoByProposicao(
+  proposicaoId: string,
+): Promise<TramitacaoEvento[]> {
+  return cached(
+    `proposicao:tramitacao:${proposicaoId}`,
+    TTL.proposicaoEmTramitacao,
+    async () =>
+      db
+        .select({
+          id: tramitacao.id,
+          data: tramitacao.data,
+          orgao: tramitacao.orgao,
+          descricaoResumida: tramitacao.descricaoResumida,
+          descricaoCompleta: tramitacao.descricaoCompleta,
+          situacaoResultante: tramitacao.situacaoResultante,
+        })
+        .from(tramitacao)
+        .where(eq(tramitacao.proposicaoId, proposicaoId))
+        .orderBy(desc(tramitacao.data)),
+  )
 }
 
 export async function getAnosDistintos(): Promise<number[]> {

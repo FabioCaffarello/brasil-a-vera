@@ -5,11 +5,13 @@ import type {
   proposicao,
   proposicaoAutor,
   proposicaoTema,
+  tramitacao,
 } from '@/modules/proposicoes/domain/schema'
 
 export type ProposicaoInsert = InferInsertModel<typeof proposicao>
 export type ProposicaoAutorInsert = InferInsertModel<typeof proposicaoAutor>
 export type ProposicaoTemaInsert = InferInsertModel<typeof proposicaoTema>
+export type TramitacaoInsert = InferInsertModel<typeof tramitacao>
 
 export function buildProposicao(
   overrides: Partial<ProposicaoInsert> = {},
@@ -50,6 +52,20 @@ export function buildProposicaoTema(
   return {
     codigoTema: 1,
     nomeTema: 'Tema Genérico',
+    ...args,
+  }
+}
+
+export function buildTramitacao(
+  args: { proposicaoId: string } & Partial<TramitacaoInsert>,
+): TramitacaoInsert {
+  const id = uuidv7()
+  return {
+    id,
+    data: new Date('2026-04-10T10:00:00Z'),
+    orgao: 'PLEN',
+    descricaoResumida: 'Apresentação de Proposição',
+    sourceId: id.slice(-6),
     ...args,
   }
 }
