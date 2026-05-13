@@ -32,7 +32,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           <select
             name="casa"
             defaultValue={selecionado.casa ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             {CASAS.map((c) => (
               <option key={c.value} value={c.value}>
@@ -49,7 +49,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           <select
             name="partido"
             defaultValue={selecionado.partido ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             <option value="">Todos</option>
             {partidos.map((p) => (
@@ -67,7 +67,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           <select
             name="uf"
             defaultValue={selecionado.uf ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             <option value="">Todas</option>
             {ufs.map((u) => (
@@ -82,13 +82,13 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
       <div className="mt-3 flex justify-end gap-2">
         <a
           href="/parlamentares"
-          className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           Limpar
         </a>
         <button
           type="submit"
-          className="rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="min-h-[44px] rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
           Filtrar
         </button>
