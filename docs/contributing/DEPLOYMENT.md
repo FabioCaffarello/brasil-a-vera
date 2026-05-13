@@ -6,13 +6,48 @@
 
 O app é deployed em Cloudflare Workers via OpenNext. Push em `main` dispara o workflow `.github/workflows/deploy.yml`, que:
 
-1. Faz build via `npm run cf:build` (OpenNext converte Next.js para Workers)
-2. Faz deploy via `npx wrangler deploy`
-3. Roda smoke test pós-deploy (`npm run smoke`)
+1. Aplica migrations Drizzle via `npm run db:migrate` (ver [Migrations automáticas no deploy](#migrations-automaticas-no-deploy))
+2. Faz build via `npm run cf:build` (OpenNext converte Next.js para Workers)
+3. Faz deploy via `npx wrangler deploy`
+4. Roda smoke test pós-deploy (`npm run smoke`)
 
 Falha em qualquer step deixa o workflow vermelho. **Smoke vermelho não auto-rollback**; é sinal para humano avaliar e reagir.
 
 URL de produção: <https://brasil-a-vera.fabio-caffarello.workers.dev>
+
+## Migrations automáticas no deploy
+
+`deploy.yml` aplica migrations Drizzle automaticamente antes do build/deploy via step `Apply Drizzle migrations` (`npm run db:migrate`). Fecha janela de schema/code drift que causou 5xx por ~10min após o merge do PR #73 — worker novo referenciava colunas que ainda não existiam no banco.
+
+### Comportamento
+
+- Roda **antes** do build OpenNext e do `wrangler deploy`. Se falhar, aborta o deploy inteiro — preferível a worker-novo-com-schema-antigo.
+- Usa `DIRECT_URL` (GitHub Secrets) porque Drizzle Kit emite DDL e a pooled connection do Neon não suporta DDL transactions confiavelmente.
+- Idempotente: Drizzle Kit registra migrations já aplicadas via tabela interna — migrations existentes viram no-op em runs subsequentes.
+
+### Migrations destrutivas — padrão expand-then-contract
+
+Migrations que **dropam** colunas têm janela de inconsistência entre `db:migrate` rodando e `wrangler deploy` substituindo o worker (~30-90s dependendo do build):
+
+- DB já tem schema novo (sem colunas antigas)
+- Worker ainda é o antigo, queryando colunas dropadas → 5xx temporário
+
+Mitigação: aplicar **expand-then-contract** em 2 PRs:
+
+1. **PR1 (expand)**: migration adiciona colunas/tabelas novas. Código passa a usar as novas, mas as antigas continuam vivas no banco.
+2. **PR2 (contract)**: depois de algumas semanas estável (sem rollback necessário), migration dropa as colunas/tabelas antigas. Como o código já não as usa, drop é seguro.
+
+Migrations puramente aditivas (`ADD COLUMN NULL`, novos índices, tabelas novas inteiras) não precisam de expand-then-contract — janela de inconsistência é benigna.
+
+### Rollback
+
+Drizzle Kit não tem `down` migration built-in. Para reverter:
+
+1. `git revert` do commit que adicionou a migration
+2. SQL manual de DROP/ALTER reverso aplicado via `DIRECT_URL`
+3. Re-deploy do código antigo
+
+Em práxis, expand-then-contract evita a maioria dos casos onde rollback seria estritamente necessário.
 
 ## Secrets do Worker (one-time setup)
 
