@@ -7,6 +7,7 @@ import {
   getAutoresByProposicao,
   getProposicaoByChave,
   getTemasByProposicao,
+  getTramitacaoByProposicao,
   getVotacoesByProposicao,
   listProposicoes,
 } from '@/lib/queries/proposicoes'
@@ -15,6 +16,7 @@ import {
   proposicao,
   proposicaoAutor,
   proposicaoTema,
+  tramitacao,
 } from '@/modules/proposicoes/domain/schema'
 import { votacao } from '@/modules/votacoes/domain/schema'
 import { buildParlamentar } from '../fixtures/parlamentares'
@@ -22,6 +24,7 @@ import {
   buildProposicao,
   buildProposicaoAutor,
   buildProposicaoTema,
+  buildTramitacao,
 } from '../fixtures/proposicoes'
 import { buildVotacao } from '../fixtures/votacoes'
 import { db } from '../setup/db'
@@ -161,6 +164,39 @@ describe('queries/proposicoes (integration)', () => {
       expect(result).toHaveLength(2)
       expect(result[0]?.descricao).toBe('V recente')
       expect(result[1]?.descricao).toBe('V antiga')
+    })
+  })
+
+  describe('getTramitacaoByProposicao', () => {
+    it('retorna eventos ordenados por desc(data)', async () => {
+      const p = buildProposicao()
+      await db.insert(proposicao).values(p)
+      await db.insert(tramitacao).values([
+        buildTramitacao({
+          proposicaoId: p.id as string,
+          sourceId: '1',
+          descricaoResumida: 'antiga',
+          data: new Date('2026-01-01T10:00:00Z'),
+        }),
+        buildTramitacao({
+          proposicaoId: p.id as string,
+          sourceId: '2',
+          descricaoResumida: 'recente',
+          data: new Date('2026-05-01T10:00:00Z'),
+        }),
+      ])
+
+      const result = await getTramitacaoByProposicao(p.id as string)
+      expect(result).toHaveLength(2)
+      expect(result[0]?.descricaoResumida).toBe('recente')
+      expect(result[1]?.descricaoResumida).toBe('antiga')
+    })
+
+    it('retorna array vazio quando proposição não tem eventos', async () => {
+      const p = buildProposicao()
+      await db.insert(proposicao).values(p)
+      const result = await getTramitacaoByProposicao(p.id as string)
+      expect(result).toEqual([])
     })
   })
 

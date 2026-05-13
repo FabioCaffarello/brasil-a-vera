@@ -116,13 +116,28 @@ export const tramitacao = proposicoesSchema.table(
       .references(() => proposicao.id, { onDelete: 'cascade' }),
     data: timestamp('data', { withTimezone: true }).notNull(),
     orgao: text('orgao').notNull(),
-    descricao: text('descricao').notNull(),
-    situacao: text('situacao'),
+    // Primeira frase/parágrafo, truncado para ≤200 chars no mapper.
+    descricaoResumida: text('descricao_resumida').notNull(),
+    // Apenas quando agrega valor sobre `descricao_resumida` (despacho longo
+    // da Câmara ou descrição detalhada do Senado). NULL quando a fonte tem
+    // só uma descrição curta.
+    descricaoCompleta: text('descricao_completa'),
+    // Situação após o evento (`descricaoSituacao` Câmara / situação Senado).
+    situacaoResultante: text('situacao_resultante'),
+    // Chave natural por evento na fonte:
+    //   - Câmara: `sequencia` (int estável por proposição)
+    //   - Senado: `informeLegislativo.id` (int globalmente único)
+    // Combinado com proposicao_id, dá unicidade suficiente.
+    sourceId: text('source_id').notNull(),
   },
   (table) => [
-    // Sem unique nesta tabela ainda — chave natural será definida quando
-    // a ingestão da tramitação for implementada na Wave 2 (decisão de
-    // não-especulação). Só o índice em FK por enquanto.
+    // Chave natural: garante idempotência via INSERT ... ON CONFLICT
+    // DO UPDATE (princípio 5 do CLAUDE.md).
+    uniqueIndex('tramitacao_proposicao_source_unique').on(
+      table.proposicaoId,
+      table.sourceId,
+    ),
+    // Index em FK para queries "timeline da proposição X ORDER BY data".
     index('tramitacao_proposicao_id_idx').on(table.proposicaoId),
   ],
 )

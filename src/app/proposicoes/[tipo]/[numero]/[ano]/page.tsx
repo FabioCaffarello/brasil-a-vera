@@ -3,12 +3,14 @@ import { notFound } from 'next/navigation'
 import { AutoresList } from '@/components/proposicao/autores-list'
 import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
+import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
 import { formatProposicaoRef } from '@/lib/format'
 import {
   getAutoresByProposicao,
   getProposicaoByChave,
   getTemasByProposicao,
+  getTramitacaoByProposicao,
   getVotacoesByProposicao,
   TIPOS_PROPOSICAO,
   type TipoProposicao,
@@ -85,10 +87,11 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
   )
   if (!proposicao) notFound()
 
-  const [temas, autores, votacoes] = await Promise.all([
+  const [temas, autores, votacoes, tramitacao] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
     getVotacoesByProposicao(proposicao.id),
+    getTramitacaoByProposicao(proposicao.id),
   ])
 
   return (
@@ -123,6 +126,13 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
         hint="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente — virá em PR seguinte."
       >
         <VotacoesVinculadas votacoes={votacoes} />
+      </Section>
+
+      <Section
+        title="Tramitação"
+        hint="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
+      >
+        <TramitacaoTimeline eventos={tramitacao} />
       </Section>
     </div>
   )
