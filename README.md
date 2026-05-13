@@ -2,7 +2,7 @@
 
 > **Você escolheu quem te representa. Agora veja o que ele faz.**
 
-![Status](https://img.shields.io/badge/status-Wave%201%20%E2%80%94%20MVP%20p%C3%BAblico-green)
+![Status](https://img.shields.io/badge/status-Wave%202%20%E2%80%94%20Plataforma%20operacional-green)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Node](https://img.shields.io/badge/node-22-green)
 
@@ -73,12 +73,16 @@ abrir uma PR. Padrões adicionais em
 [CODE-STYLE.md](docs/contributing/CODE-STYLE.md) e
 [COMMIT-CONVENTION.md](docs/contributing/COMMIT-CONVENTION.md).
 
-A Wave 1 (MVP público) foi entregue: Parlamentar 360°, páginas de proposição
-e votação, busca unificada, export CSV, Top 5 afinidade, Motor de Coerência
-básico, cards OG dinâmicos e auditoria WCAG 2.1 AA. A Wave 2 está em
-planejamento — contribuições agora focam em refinamento de pipelines,
-testes integrados e features avançadas (índice de coerência, dashboards
-temáticos).
+A plataforma está operacional desde a Wave 1 (MVP público) e concluiu a
+Wave 2 — Profundidade em 2026-05-13 (tag `v0.2-final`), entregando
+tramitação de proposições, alinhamento partidário, comparativo entre
+parlamentares, página de partido, infraestrutura de cache/SSG, tríade de
+observabilidade (`/api/stats`, smoke pós-deploy, poll de budget Neon) e
+testes integrados com testcontainers. A Wave 3 — Profundidade Cívica
+Acessível está em planejamento (dashboards temáticos, integração TSE,
+índice de coerência completo) — contribuições atuais focam em refinamento
+de pipelines e estabilização. Veja o [Roadmap](docs/product/ROADMAP.md)
+para detalhe das sub-waves entregues.
 
 ## Documentação
 
