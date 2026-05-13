@@ -12,9 +12,9 @@ import {
 
 const CONCURRENCY = 5
 
-// Filtro de casa via sourceUrl. Mesma limitação documentada em
-// ingestion/camara/tramitacao.ts.
-const SENADO_URL_PATTERN = '%senado.leg.br%'
+// Filtro de casa via presença de source_id_senado — coluna populada pelo
+// ingestor do Senado, preservada em UPDATE pelos demais (issue #74).
+// Cobre proposições compartilhadas Câmara↔Senado.
 
 interface IngestionStats {
   proposicoesProcessadas: number
@@ -26,12 +26,13 @@ interface IngestionStats {
 }
 
 async function loadProposicoesSenado(): Promise<
-  Array<{ id: string; sourceId: string }>
+  Array<{ id: string; sourceIdSenado: string }>
 > {
-  return db
-    .select({ id: proposicao.id, sourceId: proposicao.sourceId })
+  const rows = await db
+    .select({ id: proposicao.id, sourceIdSenado: proposicao.sourceIdSenado })
     .from(proposicao)
-    .where(sql`${proposicao.sourceUrl} LIKE ${SENADO_URL_PATTERN}`)
+    .where(sql`${proposicao.sourceIdSenado} IS NOT NULL`)
+  return rows as Array<{ id: string; sourceIdSenado: string }>
 }
 
 // codigoMateria → idProcesso. Senado API antiga (`/materia/movimentacoes`)
@@ -63,16 +64,16 @@ async function fetchInformes(idProcesso: number): Promise<unknown[]> {
 }
 
 async function processProposicao(
-  prop: { id: string; sourceId: string },
+  prop: { id: string; sourceIdSenado: string },
   stats: IngestionStats,
 ): Promise<void> {
   let idProcesso: number | null
   try {
-    idProcesso = await resolveIdProcesso(prop.sourceId)
+    idProcesso = await resolveIdProcesso(prop.sourceIdSenado)
   } catch (err) {
     stats.eventosSkippedError++
     stats.errors.push({
-      context: `resolve:${prop.sourceId}`,
+      context: `resolve:${prop.sourceIdSenado}`,
       reason: err instanceof Error ? err.message : String(err),
     })
     return
@@ -89,7 +90,7 @@ async function processProposicao(
   } catch (err) {
     stats.eventosSkippedError++
     stats.errors.push({
-      context: `fetch:${prop.sourceId}:${idProcesso}`,
+      context: `fetch:${prop.sourceIdSenado}:${idProcesso}`,
       reason: err instanceof Error ? err.message : String(err),
     })
     return
