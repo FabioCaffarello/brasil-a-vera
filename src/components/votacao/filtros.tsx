@@ -35,7 +35,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           <select
             name="casa"
             defaultValue={selecionado.casa ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             {CASAS.map((c) => (
               <option key={c.value} value={c.value}>
@@ -52,7 +52,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           <select
             name="ano"
             defaultValue={selecionado.ano ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             <option value="">Todos</option>
             {anos.map((a) => (
@@ -70,7 +70,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           <select
             name="resultado"
             defaultValue={selecionado.resultado ?? ''}
-            className="rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             {RESULTADOS.map((r) => (
               <option key={r.value} value={r.value}>
@@ -87,7 +87,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           name="somenteNominais"
           value="1"
           defaultChecked={Boolean(selecionado.somenteNominais)}
-          className="rounded border-zinc-300 dark:border-zinc-600"
+          className="size-5 rounded border-zinc-300 dark:border-zinc-600"
         />
         Só votações nominais (com voto individual registrado)
       </label>
@@ -95,13 +95,13 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
       <div className="mt-3 flex justify-end gap-2">
         <a
           href="/votacoes"
-          className="rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
         >
           Limpar
         </a>
         <button
           type="submit"
-          className="rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="min-h-[44px] rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
           Filtrar
         </button>
