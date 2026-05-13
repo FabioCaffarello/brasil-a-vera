@@ -85,6 +85,14 @@ export default function RootLayout({
                     Votações
                   </Link>
                 </li>
+                <li>
+                  <Link
+                    href="/docs"
+                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                  >
+                    Docs
+                  </Link>
+                </li>
               </ul>
               <SearchForm variant="header" />
             </div>
