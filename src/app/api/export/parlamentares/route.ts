@@ -37,7 +37,10 @@ export async function GET(request: Request) {
     ])
 
     return new Response(csv, {
-      headers: csvResponseHeaders('parlamentares.csv'),
+      headers: csvResponseHeaders('parlamentares.csv', {
+        total: all.length,
+        returned: rows.length,
+      }),
     })
   } catch {
     return new Response('Erro ao gerar CSV. Tente novamente em instantes.', {

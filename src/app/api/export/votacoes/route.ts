@@ -1,5 +1,5 @@
 import { csvResponseHeaders, toCsv } from '@/lib/csv'
-import { type Casa, listVotacoes } from '@/lib/queries/votacoes'
+import { type Casa, countVotacoes, listVotacoes } from '@/lib/queries/votacoes'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +33,10 @@ export async function GET(request: Request) {
       somenteNominais: url.searchParams.get('somenteNominais') === '1',
     }
 
-    const rows = await listVotacoes(filtros, LIMITE_EXPORT)
+    const [rows, total] = await Promise.all([
+      listVotacoes(filtros, LIMITE_EXPORT),
+      countVotacoes(filtros),
+    ])
     const csv = toCsv(rows, [
       { header: 'id', get: (r) => r.id },
       { header: 'casa', get: (r) => r.casa },
@@ -49,7 +52,10 @@ export async function GET(request: Request) {
     ])
 
     return new Response(csv, {
-      headers: csvResponseHeaders('votacoes.csv'),
+      headers: csvResponseHeaders('votacoes.csv', {
+        total,
+        returned: rows.length,
+      }),
     })
   } catch {
     return new Response('Erro ao gerar CSV. Tente novamente em instantes.', {

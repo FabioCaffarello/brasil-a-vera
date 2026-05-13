@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
@@ -173,6 +173,24 @@ export async function getTramitacaoByProposicao(
         .where(eq(tramitacao.proposicaoId, proposicaoId))
         .orderBy(desc(tramitacao.data)),
   )
+}
+
+// Counter para honestidade de truncagem no export CSV (Sprint 3.0). Mesmas
+// cláusulas WHERE de `listProposicoes` — manter sincronizado quando filtros
+// mudarem.
+export async function countProposicoes(
+  filtros: FiltrosProposicao = {},
+): Promise<number> {
+  const where = []
+  if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
+  if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
+  if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
+
+  const rows = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(proposicao)
+    .where(where.length > 0 ? and(...where) : undefined)
+  return rows[0]?.total ?? 0
 }
 
 export async function getAnosDistintos(): Promise<number[]> {

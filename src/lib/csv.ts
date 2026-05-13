@@ -48,15 +48,37 @@ export function toCsv<T>(rows: Iterable<T>, columns: CsvColumn<T>[]): string {
   return UTF8_BOM + lines.join(ROW_SEPARATOR) + ROW_SEPARATOR
 }
 
+export interface CsvCountInfo {
+  /** Total de linhas disponíveis para os filtros aplicados (sem limite). */
+  total: number
+  /** Linhas efetivamente retornadas no CSV (após limite/truncamento). */
+  returned: number
+}
+
 /**
  * Headers padrão para resposta HTTP de arquivo CSV. `filename` é apenas
  * informativo no Content-Disposition — o navegador usa para o "Salvar como".
+ *
+ * Quando `counts` é informado, adiciona headers de truncagem honesta:
+ * `X-Total-Count`, `X-Returned-Count`, `X-Truncated`. Permite ao consumidor
+ * (curl, scripts, devtools) detectar quando o CSV é subset — refinar filtros
+ * para baixar tudo. Headers customizados não interferem em quem só consome o
+ * payload CSV (Excel, LibreOffice, pandas).
  */
-export function csvResponseHeaders(filename: string): HeadersInit {
-  return {
+export function csvResponseHeaders(
+  filename: string,
+  counts?: CsvCountInfo,
+): HeadersInit {
+  const base: Record<string, string> = {
     'content-type': 'text/csv; charset=utf-8',
     'content-disposition': `attachment; filename="${filename}"`,
     // CSVs gerados são dinâmicos (filtrados por params); evita CDN agressivo.
     'cache-control': 'private, max-age=0, no-store',
   }
+  if (counts) {
+    base['x-total-count'] = String(counts.total)
+    base['x-returned-count'] = String(counts.returned)
+    base['x-truncated'] = String(counts.total > counts.returned)
+  }
+  return base
 }

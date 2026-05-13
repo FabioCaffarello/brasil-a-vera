@@ -1,5 +1,6 @@
 import { csvResponseHeaders, toCsv } from '@/lib/csv'
 import {
+  countProposicoes,
   listProposicoes,
   type SituacaoProposicao,
   TIPOS_PROPOSICAO,
@@ -51,7 +52,10 @@ export async function GET(request: Request) {
       situacao: normalizeSituacao(url.searchParams.get('situacao')),
     }
 
-    const rows = await listProposicoes(filtros, LIMITE_EXPORT)
+    const [rows, total] = await Promise.all([
+      listProposicoes(filtros, LIMITE_EXPORT),
+      countProposicoes(filtros),
+    ])
     const csv = toCsv(rows, [
       { header: 'id', get: (r) => r.id },
       { header: 'tipo', get: (r) => r.tipo },
@@ -64,7 +68,10 @@ export async function GET(request: Request) {
     ])
 
     return new Response(csv, {
-      headers: csvResponseHeaders('proposicoes.csv'),
+      headers: csvResponseHeaders('proposicoes.csv', {
+        total,
+        returned: rows.length,
+      }),
     })
   } catch {
     return new Response('Erro ao gerar CSV. Tente novamente em instantes.', {
