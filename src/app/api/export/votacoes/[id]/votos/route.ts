@@ -31,7 +31,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
     ])
 
     return new Response(csv, {
-      headers: csvResponseHeaders(`votacao-${id}-votos.csv`),
+      // Sem limite — total = returned, x-truncated false. Mantém shape
+      // consistente com os outros exports para consumidor automatizado.
+      headers: csvResponseHeaders(`votacao-${id}-votos.csv`, {
+        total: votos.length,
+        returned: votos.length,
+      }),
     })
   } catch {
     return new Response('Erro ao gerar CSV. Tente novamente em instantes.', {

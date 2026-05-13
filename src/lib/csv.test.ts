@@ -75,4 +75,31 @@ describe('csvResponseHeaders', () => {
     expect(h['content-disposition']).toContain('attachment')
     expect(h['content-disposition']).toContain('parlamentares.csv')
   })
+
+  it('omite headers de truncagem quando counts ausente', () => {
+    const h = csvResponseHeaders('x.csv') as Record<string, string>
+    expect(h['x-total-count']).toBeUndefined()
+    expect(h['x-returned-count']).toBeUndefined()
+    expect(h['x-truncated']).toBeUndefined()
+  })
+
+  it('sinaliza truncado quando total > returned', () => {
+    const h = csvResponseHeaders('x.csv', {
+      total: 1432,
+      returned: 1000,
+    }) as Record<string, string>
+    expect(h['x-total-count']).toBe('1432')
+    expect(h['x-returned-count']).toBe('1000')
+    expect(h['x-truncated']).toBe('true')
+  })
+
+  it('sinaliza não-truncado quando total = returned', () => {
+    const h = csvResponseHeaders('x.csv', {
+      total: 42,
+      returned: 42,
+    }) as Record<string, string>
+    expect(h['x-total-count']).toBe('42')
+    expect(h['x-returned-count']).toBe('42')
+    expect(h['x-truncated']).toBe('false')
+  })
 })

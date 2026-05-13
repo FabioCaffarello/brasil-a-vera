@@ -332,14 +332,43 @@ describe('api/export/votacoes/[id]/votos (integration)', () => {
   })
 })
 
-// Truncagem honesta: aguarda decisão de produto sobre como sinalizar
-// que o CSV pode ter atingido o limite máximo (1000 para proposições e
-// votações, 5000 para parlamentares). Opções avaliadas em Sprint 3.0:
-// X-Total-Count/X-Returned-Count headers vs. 206 Partial Content.
-// Reabrir este test.skip quando a decisão estiver no código.
-describe.skip('truncagem honesta (pendente — escolha de produto)', () => {
-  it.todo('quando subset < limite: X-Truncated header ausente / status 200')
-  it.todo(
-    'quando subset = limite: X-Truncated true + X-Total-Count refletindo total real',
-  )
+// Truncagem honesta — Opção A (custom headers) escolhida no Sprint 3.0.
+// X-Total-Count: total disponível para os filtros (sem limite)
+// X-Returned-Count: linhas no CSV
+// X-Truncated: "true" quando total > returned, "false" caso contrário
+describe('truncagem honesta (proposições)', () => {
+  beforeEach(async () => {
+    await truncateAll()
+  })
+
+  it('quando count < limite: x-truncated false, total = returned', async () => {
+    await db
+      .insert(proposicao)
+      .values([
+        buildProposicao({ numero: 9201 }),
+        buildProposicao({ numero: 9202 }),
+      ])
+
+    const res = await exportProposicoes(reqFor('/api/export/proposicoes'))
+    expect(res.headers.get('x-total-count')).toBe('2')
+    expect(res.headers.get('x-returned-count')).toBe('2')
+    expect(res.headers.get('x-truncated')).toBe('false')
+  })
+
+  it('com filtro aplicado, x-total-count reflete subset filtrado (não tabela inteira)', async () => {
+    await db
+      .insert(proposicao)
+      .values([
+        buildProposicao({ tipo: 'PEC', ano: 2024, numero: 9301 }),
+        buildProposicao({ tipo: 'PEC', ano: 2024, numero: 9302 }),
+        buildProposicao({ tipo: 'PL', ano: 2024, numero: 9303 }),
+      ])
+
+    const res = await exportProposicoes(
+      reqFor('/api/export/proposicoes?tipo=PEC&ano=2024'),
+    )
+    expect(res.headers.get('x-total-count')).toBe('2')
+    expect(res.headers.get('x-returned-count')).toBe('2')
+    expect(res.headers.get('x-truncated')).toBe('false')
+  })
 })

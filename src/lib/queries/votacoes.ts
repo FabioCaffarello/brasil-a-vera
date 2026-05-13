@@ -174,6 +174,37 @@ export async function getVotosResumoPorPartido(
   return Array.from(mapa.values()).sort((a, b) => b.total - a.total)
 }
 
+// Counter para honestidade de truncagem no export CSV (Sprint 3.0). Mesmas
+// cláusulas WHERE de `listVotacoes` — manter sincronizado quando filtros
+// mudarem. Cacheado com o mesmo TTL da listagem para alinhar invalidação.
+export async function countVotacoes(
+  filtros: FiltrosVotacao = {},
+): Promise<number> {
+  const key = `votacoes:count:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}`
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const where = []
+    if (filtros.casa) where.push(eq(votacao.casa, filtros.casa))
+    if (filtros.ano) {
+      where.push(sql`extract(year from ${votacao.dataHora}) = ${filtros.ano}`)
+    }
+    if (filtros.resultado === 'aprovadas')
+      where.push(eq(votacao.aprovada, true))
+    if (filtros.resultado === 'rejeitadas')
+      where.push(eq(votacao.aprovada, false))
+    if (filtros.somenteNominais) {
+      where.push(
+        sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
+      )
+    }
+
+    const rows = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(votacao)
+      .where(where.length > 0 ? and(...where) : undefined)
+    return rows[0]?.total ?? 0
+  })
+}
+
 export async function getAnosVotacaoDistintos(): Promise<number[]> {
   const rows = await db.execute(sql`
     SELECT DISTINCT extract(year from ${votacao.dataHora})::int AS ano
