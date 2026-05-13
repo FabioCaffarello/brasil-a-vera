@@ -1,7 +1,11 @@
 import Link from 'next/link'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
-import type { AfinidadeVoto as AfinidadeRow } from '@/lib/queries/parlamentares'
+import {
+  type AfinidadeVoto as AfinidadeRow,
+  TOP5_JANELA_MESES,
+  TOP5_QUORUM_MINIMO,
+} from '@/lib/queries/parlamentares'
 
 interface Props {
   afinidades: AfinidadeRow[]
@@ -12,9 +16,11 @@ export function Top5Afinidade({ afinidades }: Props) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
         Sem votos nominais em quantidade suficiente para calcular afinidade. São
-        necessárias ao menos 5 votações em comum com outros parlamentares — pode
-        acontecer com parlamentares recém-empossados ou em casas diferentes
-        (cruzamento entre Câmara e Senado não é possível).
+        necessárias ao menos {TOP5_QUORUM_MINIMO} votações em comum com outros
+        parlamentares nos últimos {TOP5_JANELA_MESES} meses — pode acontecer com
+        parlamentares recém-empossados, em casas diferentes (cruzamento entre
+        Câmara e Senado não é possível) ou com histórico majoritariamente fora
+        da janela.
       </p>
     )
   }
@@ -87,22 +93,25 @@ export function Top5Afinidade({ afinidades }: Props) {
         ))}
       </ul>
 
-      <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-        Cálculo considera <strong>mínimo de 5 votações em comum</strong>. Quando
-        o pareamento tem poucas votações coincidentes, o percentual pode atingir
-        100% sem refletir afinidade política real — apenas amostra pequena. A
-        recalibragem com quórum mínimo maior e janela temporal entra no{' '}
-        <strong>Sprint 3.0.5</strong>.
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        Cálculo considera{' '}
+        <strong>mínimo de {TOP5_QUORUM_MINIMO} votações em comum</strong> nos
+        últimos <strong>{TOP5_JANELA_MESES} meses</strong>. Pares ordenados por
+        percentual de afinidade; empates desempatam pela base maior.
       </p>
 
       <details className="text-xs text-zinc-500 dark:text-zinc-400">
         <summary className="cursor-pointer">Como é calculado</summary>
         <p className="mt-2 max-w-prose">
           Para cada outro parlamentar que votou nas mesmas votações nominais que
-          este, contamos quantos votos coincidiram (mesmo SIM/NÃO/Abstenção).
-          Votos AUSENTE em qualquer lado são excluídos — &quot;ambos
-          ausentes&quot; não é concordância política, é apenas não-presença.
-          Mínimo de 5 votações em comum para incluir um par.
+          este nos últimos {TOP5_JANELA_MESES} meses, contamos quantos votos
+          coincidiram (mesmo SIM/NÃO/Abstenção). Votos AUSENTE em qualquer lado
+          são excluídos — &quot;ambos ausentes&quot; não é concordância
+          política, é apenas não-presença. Mínimo de {TOP5_QUORUM_MINIMO}{' '}
+          votações em comum para incluir um par (recalibrado no Sprint 3.0.5 a
+          partir do mínimo anterior de 5 — distribuição empírica mostrou que
+          18,4% dos pares atingiam 100% com quórum 5, indicador de amostra
+          pequena, não de afinidade real).
         </p>
       </details>
     </div>
