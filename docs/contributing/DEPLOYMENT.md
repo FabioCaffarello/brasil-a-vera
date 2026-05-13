@@ -254,4 +254,6 @@ gh run watch
 - `.github/workflows/ci.yml` — checks pré-merge (lint, build, test)
 - `.github/workflows/ingestion-*.yml` — crons de ingestão
 
+Para mapa completo de todos os workflows (triggers, crons, concurrency groups, permissões), ver [WORKFLOWS.md](WORKFLOWS.md).
+
 Preview deploys de PRs vêm da integração nativa Cloudflare Workers Builds (configurada no dashboard, não no repo).

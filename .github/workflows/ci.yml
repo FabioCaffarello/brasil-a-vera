@@ -1,5 +1,14 @@
 name: CI
 
+# Lint + build + tests + tests de integração com testcontainers.
+# Dispara em push em main (smoke pós-merge) e em todo pull_request
+# (gate de merge — required check em main). Concurrency cancela runs
+# anteriores no mesmo ref quando há push novo, economizando minutos.
+#
+# Não roda em outras branches por push direto — discipline de PR-only.
+# Workflow_dispatch ausente por design (CI roda em código, não em
+# botão). Ver docs/contributing/WORKFLOWS.md.
+
 on:
   push:
     branches: [main]
@@ -8,6 +17,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   quality:

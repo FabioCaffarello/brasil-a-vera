@@ -15,7 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+// URL canônica do site, usada como `metadataBase` para resolver URLs absolutas
+// de OpenGraph/Twitter (`opengraph-image.tsx` por rota). Sem isso, Next.js usa
+// `http://localhost:3000` como fallback — vaza em prod e quebra previews sociais.
+// Override via `SITE_URL` cobre preview deploys do Cloudflare Workers Builds.
+const SITE_URL =
+  process.env.SITE_URL ??
+  (process.env.NODE_ENV === 'production'
+    ? 'https://brasil-a-vera.fabio-caffarello.workers.dev'
+    : 'http://localhost:3000')
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Brasil a Vera — Transparência Legislativa',
   description: 'Plataforma open-source de transparência legislativa brasileira',
   openGraph: {
