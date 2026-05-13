@@ -101,8 +101,13 @@ export function ParesContraditorios({ pares, stats }: Props) {
           </li>
         </ul>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          A cobertura melhora à medida que mais proposições históricas forem
-          ingeridas e que o pipeline ganhar refinamento (Wave 2+).
+          Esta seção ainda não tem cobertura ampla. O critério atual exige
+          verbos inequívocos como <strong>&quot;proíbe&quot;</strong>,{' '}
+          <strong>&quot;autoriza&quot;</strong> e{' '}
+          <strong>&quot;revoga&quot;</strong> — ementas vagas ficam de fora. O
+          refinamento da classificação está previsto para o{' '}
+          <strong>Sprint 3.0.5</strong> (próximas semanas), com retorno empírico
+          de cobertura no fechamento.
         </p>
       </div>
     )

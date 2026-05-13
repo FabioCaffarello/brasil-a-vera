@@ -6,6 +6,7 @@ import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinh
 
 interface Props {
   alinhamento: AlinhamentoResult
+  casa: 'CAMARA' | 'SENADO'
 }
 
 function VotacaoLink({
@@ -25,13 +26,31 @@ function VotacaoLink({
   )
 }
 
-export function AlinhamentoBancada({ alinhamento }: Props) {
+export function AlinhamentoBancada({ alinhamento, casa }: Props) {
   if (alinhamento.total === 0) {
+    if (casa === 'SENADO') {
+      return (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          O Senado não publica orientações de bancada em endpoint público (
+          <a
+            href="https://github.com/FabioCaffarello/brasil-a-vera/issues/83"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-dotted underline-offset-2"
+          >
+            #83
+          </a>
+          ). O alinhamento partidário não é calculável para senadores nesta
+          versão.
+        </p>
+      )
+    }
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Sem votações comparáveis — a bancada não orientou (orientação LIBERADO)
-        ou o parlamentar não compareceu às votações com orientação registrada.
-        Pode ser que ainda faltem votações ou orientações ingeridas.
+        Sem orientação partidária registrada para as votações deste deputado até
+        o momento. A cobertura cresce a cada execução do cron de ingestão
+        (4×/dia) — refletindo apenas as votações em que a liderança da bancada
+        publicou orientação.
       </p>
     )
   }
