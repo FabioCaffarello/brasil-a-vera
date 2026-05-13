@@ -25,7 +25,7 @@ export default function Home() {
           Você escolheu quem te representa. Agora veja o que ele faz.
         </p>
         <p className="mt-4 inline-block rounded bg-zinc-100 px-3 py-1 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-          Wave 1 — MVP Público
+          Wave 2 entregue · v0.2-final
         </p>
       </header>
 
