@@ -87,6 +87,14 @@ export function Top5Afinidade({ afinidades }: Props) {
         ))}
       </ul>
 
+      <p className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        Cálculo considera <strong>mínimo de 5 votações em comum</strong>. Quando
+        o pareamento tem poucas votações coincidentes, o percentual pode atingir
+        100% sem refletir afinidade política real — apenas amostra pequena. A
+        recalibragem com quórum mínimo maior e janela temporal entra no{' '}
+        <strong>Sprint 3.0.5</strong>.
+      </p>
+
       <details className="text-xs text-zinc-500 dark:text-zinc-400">
         <summary className="cursor-pointer">Como é calculado</summary>
         <p className="mt-2 max-w-prose">

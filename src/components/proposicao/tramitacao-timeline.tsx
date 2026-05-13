@@ -17,9 +17,9 @@ export function TramitacaoTimeline({ eventos }: Props) {
   if (eventos.length === 0) {
     return (
       <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Nenhum evento de tramitação ingerido para esta proposição. Pode ser que
-        a tramitação ainda não tenha sido coletada (cron semanal) ou que a
-        proposição não tenha movimentação registrada na fonte.
+        Nenhum evento de tramitação ingerido para esta proposição. A coleta de
+        tramitação é semanal (domingo 03:00 UTC) e cobre apenas proposições com
+        movimentação registrada na fonte oficial.
       </p>
     )
   }

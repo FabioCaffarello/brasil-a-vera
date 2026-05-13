@@ -118,7 +118,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         title="Alinhamento à bancada"
         hint="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
       >
-        <AlinhamentoBancada alinhamento={alinhamento} />
+        <AlinhamentoBancada alinhamento={alinhamento} casa={parlamentar.casa} />
       </Section>
 
       <Section

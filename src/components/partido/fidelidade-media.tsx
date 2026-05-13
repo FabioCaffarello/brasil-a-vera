@@ -13,7 +13,7 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
       <div className="space-y-2">
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
           {parlamentaresTotal === 0
-            ? 'Sem dados de votação para os membros desta bancada — pode ser que falte ingestão de votações nominais ou orientações da bancada (ver issue #77).'
+            ? 'Sem orientações partidárias registradas para as votações desta bancada até o momento. A cobertura cresce a cada execução do cron de ingestão (4×/dia). Senado não publica orientações em endpoint público (#83) — fidelidade só é calculável para parlamentares da Câmara.'
             : `Nenhum membro tem 50+ votos comparáveis (orientação não-LIBERADO + voto não-AUSENTE). ${parlamentaresTotal} ${parlamentaresTotal === 1 ? 'membro tem' : 'membros têm'} algum dado, mas amostra é insuficiente.`}
         </p>
       </div>
