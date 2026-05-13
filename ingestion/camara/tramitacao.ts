@@ -10,16 +10,11 @@ import { camaraTramitacaoSchema } from './tramitacao-schema'
 const CONCURRENCY = 5
 const BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
 
-// Filtro de casa via padrão na sourceUrl. proposicao não tem coluna `casa`
-// porque a chave natural (tipo, numero, ano) é globalmente única — uma PL
-// 1234/2024 é a mesma proposição independente de origem. Identificamos
-// "esta linha foi ingerida pela API da Câmara" pelo prefixo da sourceUrl
-// (`dadosabertos.camara.leg.br` vs `www25.senado.leg.br`). Limitação
-// conhecida: proposições compartilhadas entre Câmara e Senado (PL → revisão
-// no Senado) têm sourceUrl/sourceId do último ingestor; coverage de
-// tramitação flip-flopa entre as duas casas conforme cadência. Follow-up
-// natural: separar source_id por casa em proposicao (issue separada).
-const CAMARA_URL_PATTERN = '%camara.leg.br%'
+// Filtro de casa via presença de source_id_camara — coluna populada pelo
+// ingestor da Câmara, preservada em UPDATE pelos demais (issue #74).
+// Cobre proposições compartilhadas Câmara↔Senado (PL Câmara → revisão
+// Senado), que antes ficavam fora do filtro `source_url LIKE` quando
+// Senado ingeria por último.
 
 interface IngestionStats {
   proposicoesProcessadas: number
@@ -30,12 +25,15 @@ interface IngestionStats {
 }
 
 async function loadProposicoesCamara(): Promise<
-  Array<{ id: string; sourceId: string }>
+  Array<{ id: string; sourceIdCamara: string }>
 > {
-  return db
-    .select({ id: proposicao.id, sourceId: proposicao.sourceId })
+  const rows = await db
+    .select({ id: proposicao.id, sourceIdCamara: proposicao.sourceIdCamara })
     .from(proposicao)
-    .where(sql`${proposicao.sourceUrl} LIKE ${CAMARA_URL_PATTERN}`)
+    .where(sql`${proposicao.sourceIdCamara} IS NOT NULL`)
+  // sourceIdCamara é não-nulo pela cláusula WHERE; o tipo da coluna é
+  // text NULL no schema, então o select retorna `string | null`. Refinamos.
+  return rows as Array<{ id: string; sourceIdCamara: string }>
 }
 
 async function fetchTramitacoes(
@@ -56,16 +54,16 @@ async function fetchTramitacoes(
 }
 
 async function processProposicao(
-  prop: { id: string; sourceId: string },
+  prop: { id: string; sourceIdCamara: string },
   stats: IngestionStats,
 ): Promise<void> {
   let rawList: unknown[]
   try {
-    rawList = await fetchTramitacoes(prop.sourceId)
+    rawList = await fetchTramitacoes(prop.sourceIdCamara)
   } catch (err) {
     stats.eventosSkippedError++
     stats.errors.push({
-      context: `fetch:${prop.sourceId}`,
+      context: `fetch:${prop.sourceIdCamara}`,
       reason: err instanceof Error ? err.message : String(err),
     })
     return
@@ -85,7 +83,7 @@ async function processProposicao(
     if (!parsed.success) {
       stats.eventosSkippedError++
       stats.errors.push({
-        context: `parse:${prop.sourceId}`,
+        context: `parse:${prop.sourceIdCamara}`,
         reason: parsed.error.issues.map((i) => i.message).join('; '),
       })
       continue

@@ -153,6 +153,7 @@ async function processProposicao(
       .insert(proposicao)
       .values({
         sourceId: id,
+        sourceIdCamara: id,
         tipo,
         numero: p.numero,
         ano: p.ano,
@@ -162,16 +163,21 @@ async function processProposicao(
         regime,
         trustLevel: 'L1',
         sourceUrl: p.uri,
+        sourceUrlCamara: p.uri,
       })
       .onConflictDoUpdate({
         target: [proposicao.tipo, proposicao.numero, proposicao.ano],
+        // sourceIdCamara/sourceUrlCamara setados; *_senado preservados
+        // (issue #74 — não sobrescrever rastros da outra casa).
         set: {
           sourceId: id,
+          sourceIdCamara: id,
           ementa: p.ementa,
           ementaDetalhada,
           situacao,
           regime,
           sourceUrl: p.uri,
+          sourceUrlCamara: p.uri,
           ingestedAt: sql`now()`,
         },
       })
