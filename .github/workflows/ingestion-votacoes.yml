@@ -92,3 +92,29 @@ jobs:
           webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           context: ingestion-backfill-votacao-proposicao
+
+  orientacoes-camara:
+    name: Orientações partidárias Câmara
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Depende de votações Câmara existirem (FK + filtro). Senado fora do
+    # escopo — API não publica orientações (ver issue #83).
+    needs: [votacoes-camara]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ingest:camara:orientacoes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          context: ingestion-camara-orientacoes
