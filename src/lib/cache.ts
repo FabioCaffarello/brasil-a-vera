@@ -12,6 +12,7 @@ export const TTL = {
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
+  partidoOverview: 21_600,
   listagemFiltrada: 300,
 } as const
 
