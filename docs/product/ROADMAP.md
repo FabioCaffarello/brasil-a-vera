@@ -215,27 +215,28 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 
 ### Wave 2.2 — Distribution & Polish
 
-> **Tag de release**: `v0.2.2-distribution`
-> **Duração estimada**: 2-3 semanas
-> **Caráter**: opcional — entra apenas se Waves 2.0 e 2.1 fecharam sem queimar o operador e o budget estiver em zona verde.
+> **Tag de release**: `v0.2.2-distribution` (sub-escopo mínimo entregue em 2026-05-13)
+> **Status**: ✅ **Mínima concluída** (3/5 critérios). RSS e Parquet/R2 ficam para uma Wave 2.2 completa, se valer o esforço.
+> **Duração estimada original**: 2-3 semanas
+> **Caráter**: opcional — entra apenas se Waves 2.0 e 2.1 fecharam sem queimar o operador e o budget estiver em zona verde. Em 2026-05-13 o budget estava em zona amarela controlada ($7.52, threshold $5-15 do ADR-017) — operador escolheu entregar o subset mínimo de distribuição (OG + /docs + PRODUCT-VISION) sem inflar escopo.
 
 **Por que último e opcional**: distribuição e refinamento são multiplicadores de alcance, mas não desbloqueiam funcionalidade nova. Melhor parar 2.1 entregue do que iniciar 2.2 cansado.
 
 #### Escopo
 
-- OpenGraph dinâmico em todas as páginas (compartilhamento social com prévia rica)
-- Newsletter/RSS de proposições e votações relevantes
-- Bulk export em Parquet via R2 (formato amigo de DuckDB, Pandas)
-- Página estática de documentação para desenvolvedores curiosos
-- Atualização do PRODUCT-VISION com aprendizados das Waves 1 e 2 (issue #32)
+- OpenGraph dinâmico em todas as páginas (compartilhamento social com prévia rica) — **entregue**
+- Newsletter/RSS de proposições e votações relevantes — adiado
+- Bulk export em Parquet via R2 (formato amigo de DuckDB, Pandas) — adiado
+- Página estática de documentação para desenvolvedores curiosos — **entregue**
+- Atualização do PRODUCT-VISION com aprendizados das Waves 1 e 2 (issue #32) — **entregue**
 
 #### Critérios de Done
 
-- [ ] Compartilhamento de qualquer URL em rede social gera prévia com OG dinâmico
-- [ ] RSS feed publicado e validado em pelo menos 2 leitores
-- [ ] Bulk export em Parquet disponível no R2
-- [ ] Página `/docs` pública com guia de uso
-- [ ] PRODUCT-VISION atualizado com aprendizados de Waves 1 e 2
+- [x] Compartilhamento de qualquer URL em rede social gera prévia com OG dinâmico — PR #86 (fallback global + dinâmicos próprios em parlamentar / proposição / votação / partido)
+- [ ] RSS feed publicado e validado em pelo menos 2 leitores — **adiado** para Wave 2.2 completa
+- [ ] Bulk export em Parquet disponível no R2 — **adiado** para Wave 2.2 completa
+- [x] Página `/docs` pública com guia de uso — PR #87 (SSG, sem touch DB)
+- [x] PRODUCT-VISION atualizado com aprendizados de Waves 1 e 2 — PR #88 / issue #32
 
 ### Fora da Wave 2 — adiado para Wave 3 ou posterior
 
