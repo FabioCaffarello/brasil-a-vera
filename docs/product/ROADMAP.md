@@ -191,7 +191,7 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 ### Wave 2.1 — Domain Depth
 
 > **Tag de release**: `v0.2.1-depth`
-> **Status**: ✅ Concluída em 2026-05-13 com 3 ressalvas registradas (ver Critérios de Done abaixo)
+> **Status**: ✅ Concluída em 2026-05-13. Ressalvas operacionais e de domínio fechadas pela micro-wave 2.1.1 (PRs #81 / #74 → #82 / #77 → #84). Senado de alinhamento permanece bloqueado por falta de API pública — tracking em #83.
 > **Duração estimada**: 4-6 semanas
 
 **Por que segundo**: com infra hardened, cada feature de domínio herda otimização automaticamente. Aqui o produto ganha narrativa cívica — não só mostra dados isolados, mas tece a história legislativa.
@@ -206,8 +206,8 @@ A Wave 2 é dividida em três sub-waves entregáveis. Cada sub-wave tem tag de r
 #### Critérios de Done
 
 - [x] Visitante consegue contar uma história completa de um parlamentar em 60 segundos (perfil → tramitação de proposição → comparativo com colega de bancada) — stack completa entregue; validado por curl manual em prod pós-merge de cada ciclo
-- [x] Tramitação cobre 100% das proposições das legislaturas 56 e 57 — **parcial**: ingestão Câmara + Senado deploy ✓ (PR #73); primeiro batch do cron semanal roda domingo após o merge. Cobertura real é verificada após o primeiro run em `ingestion-weekly.yml`.
-- [ ] Alinhamento partidário calculado para todos os parlamentares com 50+ votações registradas — **ressalva**: código deploy ✓ (PR #76) mas tabela `orientacao_bancada` está vazia em produção. UI mostra empty state em todos os perfis até que [#77](https://github.com/FabioCaffarello/brasil-a-vera/issues/77) (ingestão de orientação_bancada) seja implementado.
+- [x] Tramitação cobre 100% das proposições das legislaturas 56 e 57 — ingestão Câmara + Senado em produção (PR #73). Filtro por casa corrigido em #74 / PR #82 para cobrir proposições compartilhadas Câmara↔Senado (antes filtro `source_url LIKE` ficava com último ingestor). Cobertura real cresce a cada run do cron semanal `ingestion-weekly.yml`.
+- [x] Alinhamento partidário calculado para parlamentares com 50+ votações registradas — **parcial para Câmara**: código (PR #76) + ingestão de `orientacao_bancada` (#77 / PR #84) em produção. 56 rows × 18 votações × 8 partidos × 100% match com `parlamentar.partido_sigla`. UI renderiza percentual real (validado em 3 perfis amostrais). Cobertura cresce com cron de votações (4x/dia). **Senado bloqueado**: API não publica orientações — tracking em [#83](https://github.com/FabioCaffarello/brasil-a-vera/issues/83).
 - [x] Página de comparativo funcional para qualquer combinação de 2-3 parlamentares (issue #47, PR #79) — validado em prod com 2 IDs, 3 IDs, 1 ID (erro inline), `bogus` (erro inline)
 - [x] Página de partido funcional para todas as 20+ siglas ativas (issue #48, PR #78) — SSG pré-gera todas as siglas no build; validado em prod
 - [x] Budget Neon segue em zona verde ou amarela controlada — **parcial**: zona AMARELA observada ($7.52, threshold $5-15 do ADR-017). Abaixo do limiar vermelho ($15) — "amarela controlada" cabe. Acompanhamento contínuo em #39.
