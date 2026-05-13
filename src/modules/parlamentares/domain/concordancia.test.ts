@@ -74,9 +74,9 @@ describe('calcularConcordancias', () => {
 
   it('5 votações divergentes → 0%', () => {
     const votacoes = ['v1', 'v2', 'v3', 'v4', 'v5']
-    const m = new Map([
-      ['a', votacoes.map((v) => ({ votacaoId: v, voto: 'SIM' as const }))],
-      ['b', votacoes.map((v) => ({ votacaoId: v, voto: 'NAO' as const }))],
+    const m = new Map<string, VotoParlamentar[]>([
+      ['a', votacoes.map((v) => ({ votacaoId: v, voto: 'SIM' }))],
+      ['b', votacoes.map((v) => ({ votacaoId: v, voto: 'NAO' }))],
     ])
     const [par] = calcularConcordancias(m)
     expect(par.percentual).toBe(0)
