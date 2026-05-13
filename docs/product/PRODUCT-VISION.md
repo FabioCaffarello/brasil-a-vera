@@ -1,7 +1,7 @@
 # Product Vision
 
-> Brasil a Vera · Produto · v0.1
-> Última atualização: 2026-04-14
+> Brasil a Vera · Produto · v0.2
+> Última atualização: 2026-05-13 (aprendizados Waves 1 e 2 incorporados)
 > Status: accepted
 
 ---
@@ -17,6 +17,7 @@
 - [Escopo Federativo](#escopo-federativo)
 - [Sustentabilidade](#sustentabilidade)
 - [Riscos e Mitigações](#riscos-e-mitigações)
+- [Aprendizados das Waves 1 e 2](#aprendizados-das-waves-1-e-2)
 
 ---
 
@@ -143,6 +144,84 @@ O MVP é gratuito e open-source. A camada premium (se houver) financia a infraes
 | Baixa retenção do cidadão | Alta | Médio | Notificações, conteúdo compartilhável, linguagem acessível |
 | Sustentabilidade financeira | Alta | Crítico | Modelo freemium, grants, patrocínio institucional |
 | Pressão política para remoção de dados | Baixa | Crítico | Dados 100% públicos; Lei de Acesso à Informação como fundamento |
+
+## Aprendizados das Waves 1 e 2
+
+Esta seção registra ajustes ao posicionamento original derivados de contato com dados reais e operação em produção. Substituem hipóteses por evidências empíricas.
+
+### Volume real (2026-05-13)
+
+| Recurso | Total | Notas |
+|---|---|---|
+| Parlamentares | 721 | 513 deputados + 81 senadores + suplentes/ex |
+| Proposições | 8.852 | Legs. 56 e 57 cobertas; ~85% origem Senado, ~15% Câmara como último ingestor |
+| Votações nominais | 1.635 | Câmara: 1.366; Senado: 269 |
+| Votos individuais | 17.743 | Average ~10 votos por parlamentar — cobertura recente, cresce com cron |
+| Orientações de bancada | 56 | **Apenas Câmara** — Senado não publica orientação via API (issue #83) |
+| Gastos CEAP | 57.193 | Cobertura completa Câmara; Senado não tem equivalente |
+| Tamanho do banco | 51 MB | Folga de ~20× contra o limite operacional de 1 GB |
+
+### Custo operacional real
+
+- **Cloudflare Workers (deploy)**: R$0/mês — dentro do tier gratuito (100k req/dia)
+- **Neon (banco)**: ~$7.52/mês estimado em zona amarela controlada do ADR-017 (threshold $5-15). Free tier reporta $0 actual; estimativa é forecast.
+- **GitHub Actions (ingestão)**: R$0/mês — repositório público
+- **R2 (arquivamento futuro)**: ainda não em uso. ADR-016 prevê uso quando cobertura temporal for ampliada.
+
+O posicionamento original "custo operacional próximo de zero" se confirma na ordem de grandeza correta — quase tudo grátis, único custo Neon na zona dezenas de dólares/mês quando legislaturas anteriores entrarem.
+
+### Limitações de API descobertas em produção
+
+Hipóteses do PRODUCT-VISION foram refinadas por contato com as APIs reais:
+
+| Hipótese original | Realidade empírica |
+|---|---|
+| "APIs da Câmara e Senado são equivalentes" | **Falsa** — Senado não publica orientação partidária (#83) nem possui equivalente CEAP de gastos |
+| "Idempotência via UNIQUE(parlamentar, source_id) cobre CEAP" | **Falsa** — `codDocumento` da Câmara identifica documento de origem, não lançamento. Parcelas/estornos geram múltiplas rows legítimas. ADR-014 documenta padrão DELETE+INSERT por janela |
+| "Source_id como chave única em proposições basta" | **Falsa** — proposições compartilhadas Câmara↔Senado (PL revisado pelo Senado) precisam rastros separados por casa (#74) |
+| "APIs públicas brasileiras são confiáveis" | **Parcial** — funcionais mas instáveis. Retry com backoff é regra, não exceção. Detalhes em `ingestion/shared/http.ts` |
+
+### Decisões arquiteturais validadas
+
+- **Cloudflare Workers + Neon serverless** (ADR-003, ADR-009): scale-to-zero real, sem manutenção, custo proporcional ao uso. Validado em ~4 meses de operação contínua.
+- **Cache de edge em todas as queries server** (ADR-018): primeira vez em prod confirmou ~25× redução de hits ao banco vs sem cache. Princípio 8 do CLAUDE.md tornou-se gate de PR.
+- **Schema por bounded context** (ADR-013): `\dt parlamentares.*` em psql vs busca por prefixo em schema único — diferença prática real conforme número de tabelas cresce.
+- **Trust level em aggregate roots** (princípio 3 do CLAUDE.md): coluna `trust_level` + `source_url` + `ingested_at` permitem responder "de onde veio este número?" sem expedição arqueológica.
+
+### Tempo de ingestão por workflow (observado, 2026-05-13)
+
+| Workflow | Trigger | Duração típica | Notas |
+|---|---|---|---|
+| `deploy.yml` | push em `main` | ~1m30s | inclui auto-migrate via #75 |
+| `ingestion-votacoes.yml` | cron 4×/dia | ~12 min | 4 jobs paralelos (Câmara/Senado/orientações/backfill) |
+| `ingestion-weekly.yml` | cron 1×/sem | sem dados ainda (primeira run domingo pós-#73) | proposições + tramitação |
+| `budget-poll.yml` | cron diário | ~30s | poll Neon API, sem touch DB |
+
+Probes adicionais em `/api/health` (não toca DB) servem como heartbeat — observabilidade ativa sem queimar Neon scale-to-zero.
+
+### Cuidados específicos do runtime Workers
+
+- **Driver `pg` (HTTP) em vez de `pg-native`** — Workers não suporta sockets longos; conexão por request via `@neondatabase/serverless` resolve.
+- **`ImageResponse` de `next/og`** usa satori, subset de CSS — sem `calc()`, sem CSS vars, todo `<div>` com múltiplos filhos exige `display: 'flex'`.
+- **OpenNext converte Next.js → Workers** (ADR-009) — bundle final ~30 MB, dentro do limite. Build leva ~5-7s em CI.
+- **Migrations rodam via `DIRECT_URL`** (não pooled) — Drizzle Kit emite DDL incompatível com pooled connection. Auto-migrate no `deploy.yml` desde #75.
+
+### Princípio 13 (validação empírica) cristalizado
+
+O CLAUDE.md ganhou em 2026-05-12 o princípio 13: *"Decisões de cache, performance ou runtime behavior exigem validação empírica antes de implementação"*. Falsificou hipóteses em 3 ocasiões durante Wave 2.1.1:
+
+1. **#75**: Hipótese "edge CDN nativo em URLs `*.workers.dev` cacheia automaticamente" → falsificada após merge inicial; revert + cache explícito.
+2. **#74**: Diagnóstico empírico confirmou 86% dos `source_url` apontando para Senado — não apenas hipótese, mas medida.
+3. **#77**: Hipótese "Senado tem endpoint análogo de orientação" → falsificada com 6 endpoints 404; escopo dividido em #77 (Câmara) + #83 (Senado bloqueado).
+
+### Cobertura temporal — ressalva ao posicionamento
+
+PRODUCT-VISION fala em "visão 360° do parlamentar", mas a cobertura atual é parcial:
+
+- **Cobertura horizontal**: 100% dos parlamentares ativos das legislaturas 56 e 57.
+- **Cobertura vertical (eventos por parlamentar)**: cresce a cada cron — ~10 votos médios por deputado em 2026-05-13 vs threshold de 50 para alinhamento estatisticamente robusto.
+
+A plataforma é honesta sobre a parcialidade — warnings de "amostra pequena" e empty states explícitos onde dados faltam. O posicionamento mantém-se: o sistema é o espelho. O espelho ainda tem partes embaçadas, mas anuncia onde estão.
 
 ---
 
