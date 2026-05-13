@@ -187,20 +187,21 @@ describe('queries/parlamentares (integration)', () => {
   })
 
   describe('getTop5Afinidade', () => {
-    it('retorna outros parlamentares com count de votos coincidentes', async () => {
+    it('com amostraMinima customizado de 5, retorna pares e ordena por percentual desc', async () => {
       const p1 = buildParlamentar({ nome: 'P1', partidoSigla: 'PT' })
       const p2 = buildParlamentar({ nome: 'P2', partidoSigla: 'PL' })
       const p3 = buildParlamentar({ nome: 'P3', partidoSigla: 'PSDB' })
       const p4 = buildParlamentar({ nome: 'P4', partidoSigla: 'MDB' })
       await db.insert(parlamentar).values([p1, p2, p3, p4])
 
-      // 5 votações em comum para passar amostraMinima (default 5)
+      // 5 votações em comum — amostraMinima passada como 5 para testar
+      // o cenário de quórum baixo (default agora é 20).
       const votacoes = Array.from({ length: 5 }, () => buildVotacao())
       await db.insert(votacao).values(votacoes)
 
       // P1 vota SIM em todas as 5
-      // P2 vota SIM em 4, NAO em 1 → 4/5 coincidentes
-      // P3 vota SIM em 3, NAO em 2 → 3/5 coincidentes
+      // P2 vota SIM em 4, NAO em 1 → 4/5 coincidentes = 80%
+      // P3 vota SIM em 3, NAO em 2 → 3/5 coincidentes = 60%
       // P4 participa de apenas 4 votações → não passa amostraMinima
       const votosP1 = votacoes.map((v) =>
         buildVotoNominal({
@@ -235,16 +236,130 @@ describe('queries/parlamentares (integration)', () => {
         .insert(votoNominal)
         .values([...votosP1, ...votosP2, ...votosP3, ...votosP4])
 
-      const result = await getTop5Afinidade(p1.id as string)
+      const result = await getTop5Afinidade(p1.id as string, 5)
       expect(result).toHaveLength(2)
-      // Order by coincidentes DESC: P2 (4) primeiro, P3 (3) depois
+      // Order by percentual DESC: P2 (80%) primeiro, P3 (60%) depois
       expect(result[0]?.nome).toBe('P2')
-      expect(result[0]?.votosCoincidentes).toBe(4)
-      expect(result[0]?.totalVotosEmComum).toBe(5)
       expect(result[0]?.percentualAfinidade).toBe(80)
       expect(result[1]?.nome).toBe('P3')
-      expect(result[1]?.votosCoincidentes).toBe(3)
       expect(result[1]?.percentualAfinidade).toBe(60)
+    })
+
+    it('default quórum 20 filtra pares com base pequena (regra recalibrada Sprint 3.0.5)', async () => {
+      const p1 = buildParlamentar({ nome: 'P1' })
+      const p2 = buildParlamentar({ nome: 'P2' })
+      await db.insert(parlamentar).values([p1, p2])
+
+      // 10 votações em comum — abaixo do default 20
+      const votacoes = Array.from({ length: 10 }, () => buildVotacao())
+      await db.insert(votacao).values(votacoes)
+
+      const votosP1 = votacoes.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p1.id as string,
+          voto: 'SIM',
+        }),
+      )
+      const votosP2 = votacoes.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p2.id as string,
+          voto: 'SIM',
+        }),
+      )
+      await db.insert(votoNominal).values([...votosP1, ...votosP2])
+
+      // Quórum default (20) — P2 tem só 10 votos em comum, fica de fora
+      const result = await getTop5Afinidade(p1.id as string)
+      expect(result).toHaveLength(0)
+    })
+
+    it('janela temporal 12 meses descarta votações antigas', async () => {
+      const p1 = buildParlamentar({ nome: 'P1' })
+      const p2 = buildParlamentar({ nome: 'P2' })
+      await db.insert(parlamentar).values([p1, p2])
+
+      // 25 votações recentes (dentro de 12 meses) + 25 antigas (>12 meses).
+      // P1 e P2 votam idênticos em todas. Espera-se que apenas as 25
+      // recentes contem; com 25 ≥ 20 (default), P2 entra no top.
+      const dataRecente = new Date('2026-04-10T14:00:00Z')
+      const dataAntiga = new Date('2024-01-01T14:00:00Z')
+      const votacoesRecentes = Array.from({ length: 25 }, () =>
+        buildVotacao({ dataHora: dataRecente }),
+      )
+      const votacoesAntigas = Array.from({ length: 25 }, () =>
+        buildVotacao({ dataHora: dataAntiga }),
+      )
+      await db.insert(votacao).values([...votacoesRecentes, ...votacoesAntigas])
+
+      const todasVotacoes = [...votacoesRecentes, ...votacoesAntigas]
+      const votosP1 = todasVotacoes.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p1.id as string,
+          voto: 'SIM',
+        }),
+      )
+      const votosP2 = todasVotacoes.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p2.id as string,
+          voto: 'SIM',
+        }),
+      )
+      await db.insert(votoNominal).values([...votosP1, ...votosP2])
+
+      const result = await getTop5Afinidade(p1.id as string)
+      expect(result).toHaveLength(1)
+      expect(result[0]?.nome).toBe('P2')
+      // total_em_comum só inclui votações da janela: 25 recentes
+      expect(result[0]?.totalVotosEmComum).toBe(25)
+      expect(result[0]?.percentualAfinidade).toBe(100)
+    })
+
+    it('desempate por total_em_comum quando percentual empata', async () => {
+      const p1 = buildParlamentar({ nome: 'P1' })
+      const p2 = buildParlamentar({ nome: 'P2-base-grande' })
+      const p3 = buildParlamentar({ nome: 'P3-base-pequena' })
+      await db.insert(parlamentar).values([p1, p2, p3])
+
+      // 30 votações para P2 (todas idênticas a P1) + 20 só com P1+P3
+      // (também todas idênticas). Ambos têm 100%, mas P2 com base 30
+      // deve vir antes (desempate por total_em_comum desc).
+      const v30 = Array.from({ length: 30 }, () => buildVotacao())
+      const v20 = Array.from({ length: 20 }, () => buildVotacao())
+      await db.insert(votacao).values([...v30, ...v20])
+
+      const votosP1 = [...v30, ...v20].map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p1.id as string,
+          voto: 'SIM',
+        }),
+      )
+      const votosP2 = v30.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p2.id as string,
+          voto: 'SIM',
+        }),
+      )
+      const votosP3 = v20.map((v) =>
+        buildVotoNominal({
+          votacaoId: v.id as string,
+          parlamentarId: p3.id as string,
+          voto: 'SIM',
+        }),
+      )
+      await db.insert(votoNominal).values([...votosP1, ...votosP2, ...votosP3])
+
+      const result = await getTop5Afinidade(p1.id as string)
+      expect(result).toHaveLength(2)
+      expect(result[0]?.nome).toBe('P2-base-grande')
+      expect(result[0]?.totalVotosEmComum).toBe(30)
+      expect(result[1]?.nome).toBe('P3-base-pequena')
+      expect(result[1]?.totalVotosEmComum).toBe(20)
     })
   })
 

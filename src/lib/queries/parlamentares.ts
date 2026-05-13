@@ -162,19 +162,34 @@ export interface AfinidadeVoto {
   percentualAfinidade: number
 }
 
+// Constantes públicas — referenciadas no copy do componente para manter
+// o disclaimer sincronizado com o cálculo.
+export const TOP5_QUORUM_MINIMO = 20
+export const TOP5_JANELA_MESES = 12
+
 // Top N parlamentares com maior afinidade de voto. Métrica L2 (agregação
 // determinística com fórmula publicada): para cada outro parlamentar que
-// votou nas mesmas votações nominais que X, conta quantos votos
-// coincidem com X. Ordena por count absoluto.
+// votou nas mesmas votações nominais que X dentro da janela temporal,
+// conta quantos votos coincidem com X. Ordena por percentual desc, com
+// total_em_comum como desempate (mais votos coincidentes em base maior
+// vence empate). Top 5 final.
 //
 // Exclui votos AUSENTE em ambos os lados — "ambos ausentes" não é
 // concordância política, é apenas não-presença.
 //
-// Requer amostra mínima de votações em comum (default 5) para evitar
-// ruído de pares com pouquíssimas votações em conjunto.
+// Requer quórum mínimo de votações em comum (default 20, recalibrado
+// no Sprint 3.0.5 a partir do antigo default de 5) para evitar ruído
+// estatístico de pares com pouquíssimas votações em conjunto que
+// inflavam percentuais artificialmente para 100%. Distribuição empírica
+// (2026-05-13): com quórum 5, 18.4% dos pares atingiam 100%; com 20,
+// cai para 5.3%.
+//
+// Janela temporal (default 12 meses) descarta votações antigas que não
+// refletem a configuração atual de bancadas, alianças e contexto.
 export async function getTop5Afinidade(
   parlamentarId: string,
-  amostraMinima = 5,
+  amostraMinima = TOP5_QUORUM_MINIMO,
+  janelaMeses = TOP5_JANELA_MESES,
 ): Promise<AfinidadeVoto[]> {
   const rows = await db.execute(sql`
     WITH votos_em_comum AS (
@@ -186,9 +201,11 @@ export async function getTop5Afinidade(
       JOIN votacoes.voto_nominal vn2
         ON vn2.votacao_id = vn1.votacao_id
         AND vn2.parlamentar_id <> vn1.parlamentar_id
+      INNER JOIN votacoes.votacao v ON v.id = vn1.votacao_id
       WHERE vn1.parlamentar_id = ${parlamentarId}
         AND vn1.voto <> 'AUSENTE'
         AND vn2.voto <> 'AUSENTE'
+        AND v.data_hora >= now() - make_interval(months => ${janelaMeses})
       GROUP BY vn2.parlamentar_id
       HAVING COUNT(*) >= ${amostraMinima}
     )
@@ -203,7 +220,9 @@ export async function getTop5Afinidade(
       vec.total_em_comum
     FROM votos_em_comum vec
     JOIN parlamentares.parlamentar p ON p.id = vec.parlamentar_id
-    ORDER BY vec.coincidentes DESC
+    ORDER BY
+      (vec.coincidentes::float / vec.total_em_comum) DESC,
+      vec.total_em_comum DESC
     LIMIT 5
   `)
 
