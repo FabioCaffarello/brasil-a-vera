@@ -31,6 +31,13 @@ export const proposicao = proposicoesSchema.table(
       .primaryKey()
       .$defaultFn(() => uuidv7()),
     sourceId: text('source_id').notNull(),
+    // Source ids por casa: preservam o rastro independente que cada
+    // ingestor (Câmara/Senado) registra. `source_id`/`source_url` ainda
+    // refletem o "último ingestor" — útil em diagnóstico, mas insuficiente
+    // para tramitação de proposições compartilhadas (PL Câmara → Senado).
+    // Issue #74 detalha o motivo.
+    sourceIdCamara: text('source_id_camara'),
+    sourceIdSenado: text('source_id_senado'),
     tipo: tipoProposicao('tipo').notNull(),
     numero: integer('numero').notNull(),
     ano: integer('ano').notNull(),
@@ -40,6 +47,8 @@ export const proposicao = proposicoesSchema.table(
     regime: text('regime'),
     trustLevel: trustLevel('trust_level').notNull(),
     sourceUrl: text('source_url').notNull(),
+    sourceUrlCamara: text('source_url_camara'),
+    sourceUrlSenado: text('source_url_senado'),
     ingestedAt: timestamp('ingested_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
