@@ -13,6 +13,7 @@ export const TTL = {
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
   partidoOverview: 21_600,
+  compararParlamentares: 3_600,
   listagemFiltrada: 300,
 } as const
 
