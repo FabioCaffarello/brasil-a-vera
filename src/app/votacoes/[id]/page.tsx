@@ -15,6 +15,11 @@ import {
   type TipoVoto,
 } from '@/lib/queries/votacoes'
 
+// Rota intencionalmente dynamic. Ler `searchParams` (filtro ?voto=) faz Next 16
+// opt-out de SSG mesmo com generateStaticParams. Trade-off aceito até a Wave 3+
+// entregar R2 incremental cache (#58) — sem cache cross-isolate em Workers, SSG
+// não tem ganho real e refactor para client-side filtering só inflaria payload.
+// Ver #59 para histórico empírico.
 interface PageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{ voto?: string }>
