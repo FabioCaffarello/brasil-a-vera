@@ -1,10 +1,15 @@
 import type { InferInsertModel } from 'drizzle-orm'
 import { uuidv7 } from 'uuidv7'
 
-import type { votacao, votoNominal } from '@/modules/votacoes/domain/schema'
+import type {
+  orientacao,
+  votacao,
+  votoNominal,
+} from '@/modules/votacoes/domain/schema'
 
 export type VotacaoInsert = InferInsertModel<typeof votacao>
 export type VotoNominalInsert = InferInsertModel<typeof votoNominal>
+export type OrientacaoInsert = InferInsertModel<typeof orientacao>
 
 export function buildVotacao(
   overrides: Partial<VotacaoInsert> = {},
@@ -37,6 +42,18 @@ export function buildVotoNominal(
   return {
     id,
     voto: 'SIM',
+    ...args,
+  }
+}
+
+export function buildOrientacao(
+  args: {
+    votacaoId: string
+    partidoSigla: string
+  } & Partial<OrientacaoInsert>,
+): OrientacaoInsert {
+  return {
+    orientacao: 'SIM',
     ...args,
   }
 }
