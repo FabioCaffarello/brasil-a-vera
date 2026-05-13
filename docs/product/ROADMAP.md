@@ -12,8 +12,8 @@
 - [Wave 0 — Fundação](#wave-0--fundação)
 - [Wave 1 — MVP Público](#wave-1--mvp-público)
 - [Wave 2 — Profundidade](#wave-2--profundidade)
-- [Wave 3 — Inteligência](#wave-3--inteligência)
-- [Wave 4 — Escala](#wave-4--escala)
+- [Wave 3 — Profundidade Cívica Acessível](#wave-3--profundidade-cívica-acessível)
+- [Wave 4 — Open Ground](#wave-4--open-ground)
 - [Dependências entre Waves](#dependências-entre-waves)
 
 ---
@@ -38,10 +38,10 @@ gantt
     Profundidade       :w2, after w1, 12w
 
     section Wave 3
-    Inteligência       :w3, after w2, 16w
+    Profundidade Cívica Acessível :w3, after w2, 8w
 
     section Wave 4
-    Escala             :w4, after w3, 2027-12-31
+    Open Ground        :w4, after w3, 2027-12-31
 ```
 
 | Wave | Nome | Personas Atendidas | Duração Estimada |
@@ -49,8 +49,8 @@ gantt
 | 0 | Fundação | Nenhuma (infraestrutura) | 6-8 semanas |
 | 1 | MVP Público | Cidadão, Jornalista | 8-10 semanas |
 | 2 | Profundidade | Todos | 10-12 semanas |
-| 3 | Inteligência | Jornalista, Ativista, Pesquisador | 12-16 semanas |
-| 4 | Escala | Cidadão (mobile), Todos | Contínuo |
+| 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador | 7-10 semanas (3 sub-waves) |
+| 4 | Open Ground | (definido após Wave 3) | Backlog sem plano contratual |
 
 ---
 
@@ -254,68 +254,130 @@ Por decisão consciente, o escopo abaixo não entra na Wave 2. A razão é dupla
 
 ---
 
-## Wave 3 — Inteligência
+## Wave 3 — Profundidade Cívica Acessível
 
-> **Pergunta validada**: "O grafo legislativo revela padrões não visíveis a olho nu?"
+> **Pergunta validada**: "Cidadão e jornalista conseguem responder perguntas cívicas concretas (coerência por tema, financiamento eleitoral) usando a plataforma sem expedição arqueológica?"
 
-A Wave 3 acumula dois eixos: o que migrou da Wave 2 original (plataforma para desenvolvedores e integrações externas) e o salto analítico (grafo legislativo, NLP, correlações de impacto).
+A Wave 3 transforma os dados estruturados acumulados nas Waves 1 e 2 em narrativa cívica acessível. Três eixos: índice de coerência tornando o padrão de voto legível por padrão, dashboards temáticos agrupando proposições por área (saúde, educação, etc.), e doações do TSE 2022 vinculando financiamento eleitoral ao mandato em exercício. Segue o padrão validado de sub-waves curtas com tag de release própria.
 
-### Escopo
+A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legislativo, NLP avançado, extração de módulos Go, NATS JetStream e integração TSE completa migram para a Wave 4 (open ground). Razão: nenhum deles atende a pergunta validada acima, e cada um dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão. Ver [Fora da Wave 3](#fora-da-wave-3--adiado-para-wave-4) abaixo.
 
-**Plataforma para desenvolvedores** (migrado da Wave 2 original):
+### Wave 3.0 — Realignment
 
-- API pública REST com documentação OpenAPI (via Next.js Route Handlers)
-- API keys e rate limiting (gestão de contas, LGPD-aware)
-- Webhooks para desenvolvedores terceiros
-- Alertas configuráveis por parlamentar e por tema (push/email)
-- Integração TSE inicial — candidaturas e doações vinculadas a parlamentares (TSE completo, incluindo bens, permanece em Wave 4)
+> **Tag de release**: `v0.3.0-realignment`
+> **Status**: planejada
+> **Duração estimada**: 1-2 semanas
 
-**Inteligência analítica**:
+**Por que primeiro**: estabelece base conceitual e arquitetural antes de qualquer feature de domínio nova. Os ADRs cristalizam disciplina arquitetural (princípio 13 aplicado a um ano de operação) e o escopo Profundidade Cívica fica registrado antes da implementação começar.
 
-- **Início da extração de módulos Go (Strangler Fig)** — ver [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)
-- **Introdução do NATS JetStream** para domain events entre serviços — ver [ADR-005](../future/adr/005-event-driven-communication.md)
-- Grafo legislativo interativo (ver [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md))
-- **NetworkX + Apache AGE** para análise de grafo (sem Neo4j) — ver [ADR-003](../architecture/ADR/003-database-neon.md)
-- Detecção de comunidades (Louvain/Leiden) via NetworkX (Python, batch)
-- Métricas de centralidade (betweenness, closeness, degree)
-- Correlação doações × votos (L3, seção isolada com disclaimer)
-- Timeline de impacto (L3/L4)
-- NLP avançado para classificação de direção de proposições
-- Evolução temporal do grafo
-- VPS Hostinger KVM 2 (R$59/mês) para serviços Go + Caddy como API Gateway
+#### Escopo
 
-### Critérios de Done
+- ADR-019 — Disciplina arquitetural: não introduzir infra sem gargalo empírico (Go, NATS, Apache AGE etc só entram com evidência real, não inferência teórica)
+- ADR-020 — Wave 3: escopo Profundidade Cívica Acessível (registro formal do recorte e do que migrou para Wave 4+)
+- Índice de Coerência Completo (extende Motor de Coerência básico da Wave 1; depende de Wave 2.1.1 + #77 — orientação Câmara em produção)
+- Página `/coerencia` com ranking nacional
+- Página `/sobre/metodologia` (transparência sobre como cada dado é coletado, calculado e classificado)
 
-- [ ] API pública com documentação OpenAPI publicada
-- [ ] 10 desenvolvedores com API keys ativas
-- [ ] Alertas configuráveis por parlamentar e por tema funcionando em produção
-- [ ] Dados TSE iniciais (candidaturas e doações) vinculados a parlamentares (CPF ou heurística nome+partido+UF)
-- [ ] Grafo interativo renderiza todos os parlamentares com filtros por tipo de aresta
-- [ ] Detecção de comunidades com parâmetros documentados e ajustáveis
-- [ ] Correlações L3 exibidas com disclaimer permanente
-- [ ] Performance: grafo interativo > 30fps no desktop
-- [ ] 50.000 usuários ativos mensais (target migrado de Wave 2)
-- [ ] 5 citações em mídia (target migrado de Wave 2)
-- [ ] 50 matérias jornalísticas citando o Brasil a Vera (target original Wave 3)
-- [ ] 100 API keys ativas (target original Wave 3)
+#### Critérios de Done
+
+- [ ] ADR-019 e ADR-020 publicados em `docs/architecture/ADR/` com status `accepted`
+- [ ] Rota `/coerencia` acessível e indexável, ranking funcional para parlamentares com dados suficientes (threshold de votações documentado)
+- [ ] Rota `/sobre/metodologia` cobre L1/L2/L3, fontes oficiais, cadência de ingestão, e política da pirâmide de confiança
+- [ ] Princípio 13 (validação empírica) referenciado em `/sobre/metodologia` — auditabilidade da plataforma
+- [ ] Sem regressão em rotas existentes (curl pós-deploy, smoke test verde)
+- [ ] Budget Neon mantido em zona amarela controlada ou abaixo
+
+### Wave 3.1 — Dashboards Temáticos
+
+> **Tag de release**: `v0.3.1-themes`
+> **Status**: planejada
+> **Duração estimada**: 3-4 semanas
+
+**Por que segundo**: com índice de coerência publicado, o dashboard temático ganha utilidade — agrupar proposições por área permite ver coerência por tema, não só global. Cidadão consegue perguntar "como meu deputado votou em saúde?" e ver resposta factual.
+
+#### Escopo
+
+- Schema `temas` com categorias predefinidas (Saúde, Educação, Segurança, Meio Ambiente, Economia, Direitos Humanos — 6 inicialmente)
+- Pipeline de classificação por palavras-chave em ementas (L2, fórmula aberta, sem ML)
+- Rotas `/temas` e `/temas/[slug]`
+- Componente "Como [Parlamentar] votou em [Tema]" integrado em `/parlamentares/[id]`
+- Trust badge L2 em todas as métricas temáticas (cálculo derivado de classificação de ementa)
+- Export CSV temático (filtro por tema nas rotas de export existentes)
+
+#### Critérios de Done
+
+- [ ] 6 temas cobertos, com pelo menos 50 proposições classificadas por tema (amostra mínima)
+- [ ] `/temas/[slug]` funcional com listagem de proposições + parlamentares atuantes naquele tema
+- [ ] Componente "Como votou em X" integrado em todos os perfis de parlamentar
+- [ ] Export CSV com filtro de tema testado por curl
+- [ ] Trust level L2 documentado em `/sobre/metodologia` para o cálculo de classificação
+
+### Wave 3.2 — TSE Doações Eleitorais
+
+> **Tag de release**: `v0.3.2-tse-financing`
+> **Status**: planejada
+> **Duração estimada**: 3-4 semanas
+
+**Por que último**: TSE é integração externa nova com schema novo — maior risco de delay. Coloca ao final pra não bloquear sub-waves anteriores. Escopo deliberadamente recortado (só 2022, só doações vinculáveis a parlamentares em exercício) reduz ambição de produto e evita "TSE completo" virar Wave inteira.
+
+#### Escopo
+
+- Schema novo `eleicoes` com tabelas `candidatura` e `doacao`
+- Ingestão TSE 2022 — subset de doações vinculáveis a parlamentares atuais em exercício (não TSE completo; bens, gastos de campanha completos e anos anteriores permanecem em Wave 4+)
+- Página `/parlamentares/[id]/financiamento` com listagem de doações + agregados (total, top doadores, distribuição por origem PF/PJ)
+- ADR-021 — Modelagem TSE: escopo recortado para Wave 3 (documenta o que entra e o que fica fora)
+- Auditoria L2 de matching parlamentar↔candidatura (heurística nome+CPF+UF, review manual de ambiguidades)
+- 3 posts técnicos de showcase ativo da plataforma após entrega (canais: blog próprio, mídia parceira ou fórum)
+
+#### Critérios de Done
+
+- [ ] Schema `eleicoes` aplicado em produção sem regressão em outras tabelas (migration verde via auto-migrate do deploy)
+- [ ] ADR-021 publicado e referenciado pelo código de ingestão TSE
+- [ ] `/parlamentares/[id]/financiamento` renderiza para parlamentares com matching confirmado, com empty state explícito para não-matched
+- [ ] Auditoria de matching exposta em `/api/stats` ou similar (taxa de matching agregada + lista de parlamentares não-matched)
+- [ ] 3 posts técnicos publicados em canais distintos
+
+### Fora da Wave 3 — adiado para Wave 4+
+
+Por decisão consciente, o escopo abaixo **não entra** na Wave 3. Foi originalmente migrado da Wave 2 (decisão de 2026-05-12) e da definição "Wave 3 — Inteligência" anterior. Cada item dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão.
+
+- **API pública REST** com OpenAPI, API keys, rate limiting, webhooks, alertas push/email (gestão de contas + LGPD ampla)
+- **Plataforma analítica avançada**: grafo legislativo interativo, NLP avançado de classificação de direção, detecção de comunidades (Louvain/Leiden), métricas de centralidade
+- **Migração para arquitetura distribuída**: extração de módulos Go (Strangler Fig, [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)), NATS JetStream, Apache AGE, VPS Hostinger
+- **Integração TSE completa**: bens declarados, gastos de campanha completos, anos anteriores além de 2022
+- **Expansão de produto**: mobile nativa, integração Telegram/WhatsApp, i18n, assembleias legislativas estaduais
+- **Brasil a Vera Labs (L4)**: análises de impacto com curadoria especializada
+
+Cada bloco vira issue mestre rotulada `wave-4+` no rastreamento de issues. Buscar com `gh issue list --label wave-4+`.
 
 ---
 
-## Wave 4 — Escala
+## Wave 4 — Open Ground
 
-> **Pergunta validada**: "A plataforma escala para além do Congresso Nacional?"
+> **Status**: plano contratual pendente — será reavaliado após a Wave 3 fechar com base em evidência empírica de uso (cidadão, jornalista, contribuidor) e custo operacional.
 
-### Escopo
+A Wave 4 é deliberadamente **open ground** — sem critérios de Done atribuídos antecipadamente. As decisões adiadas das Waves 2 e 3 (e da definição "Wave 3 — Inteligência" anterior) ficam aqui como backlog explícito, rotuladas `wave-4+` no rastreamento de issues.
 
-- Mobile app nativa (React Native ou similar)
-- Integração com redes sociais (notificações via Telegram/WhatsApp)
-- Expansão para assembleias legislativas estaduais
-- Brasil a Vera Labs (L4) — correlações de impacto com especialistas
-- Internacionalização da plataforma (interface multilíngue para pesquisadores internacionais)
+### Backlog (cada bullet é uma issue mestre com label `wave-4+`)
 
-### Critérios de Done
+- **API pública e ecossistema externo** — REST + OpenAPI, API keys, rate limiting, webhooks, alertas push/email com gestão de contas LGPD-aware
+- **Plataforma analítica avançada** — grafo legislativo interativo, NLP de classificação de direção, detecção de comunidades, métricas de centralidade
+- **Migração para arquitetura distribuída** — Go Strangler Fig, NATS JetStream, Apache AGE, VPS Hostinger
+- **Integração TSE completa** — bens declarados, gastos de campanha completos, anos anteriores além de 2022
+- **Expansão de produto** — mobile nativa, integração com redes sociais (Telegram/WhatsApp), i18n, assembleias legislativas estaduais
+- **Brasil a Vera Labs (L4)** — análises de impacto com curadoria especializada e disclaimers permanentes
 
-- Definidos conforme Waves 0-3 validem hipóteses
+Listar: `gh issue list --label wave-4+`.
+
+### Quando reavaliar Wave 4
+
+Reavaliação acontece **após a Wave 3 fechar** (estimativa: Q3 2026) com 3 perguntas:
+
+1. Existe demanda concreta de cidadão, jornalista ou desenvolvedor pelo backlog acima?
+2. O custo operacional manteve-se em zona amarela controlada (ADR-017) durante a Wave 3?
+3. Qual o ROI estimado por item do backlog frente ao esforço solo?
+
+Sem essas respostas calibradas em evidência empírica, a Wave 4 permanece em modo backlog. Princípio 13 do CLAUDE.md em ação: planejamento espera dados, não inferência.
 
 ---
 
@@ -325,12 +387,12 @@ A Wave 3 acumula dois eixos: o que migrou da Wave 2 original (plataforma para de
 graph LR
     W0["Wave 0<br/>Fundação"] --> W1["Wave 1<br/>MVP"]
     W1 --> W2["Wave 2<br/>Profundidade"]
-    W2 --> W3["Wave 3<br/>Inteligência"]
-    W3 --> W4["Wave 4<br/>Escala"]
+    W2 --> W3["Wave 3<br/>Profundidade Cívica<br/>Acessível"]
+    W3 --> W4["Wave 4<br/>Open Ground"]
 
     W0 -->|"PostgreSQL + Ingestão<br/>obrigatórios"| W1
     W1 -->|"Next.js monolito + busca<br/>obrigatórios"| W2
-    W2 -->|"TSE + API pública<br/>recomendados"| W3
+    W2 -->|"Motor de Coerência básico +<br/>Cache + SSG + Tramitação<br/>obrigatórios"| W3
 ```
 
 | Dependência | De | Para | Tipo |
@@ -340,7 +402,8 @@ graph LR
 | Biome import boundaries + Husky pre-commit | Wave 0 | Wave 1 | Obrigatória |
 | Next.js monolito (frontend + API) | Wave 1 | Wave 2 | Obrigatória |
 | Busca unificada | Wave 1 | Wave 2 | Obrigatória |
-| API pública | Wave 2 | Wave 3 | Recomendada |
-| TSE integration | Wave 2 | Wave 3 | Recomendada (para correlação doações × votos) |
-| Extração de módulos Go (Strangler Fig) | Wave 2 | Wave 3 | Obrigatória para microserviços |
-| NATS JetStream | Wave 2 | Wave 3 | Obrigatória para event-driven |
+| Motor de Coerência básico | Wave 1 | Wave 3.0 (Índice de Coerência Completo) | Obrigatória |
+| Cache de edge + SSG | Wave 2.0 | Wave 3 | Obrigatória |
+| Tramitação + alinhamento | Wave 2.1 | Wave 3.1 (dashboards temáticos) | Obrigatória |
+| Orientação Câmara (`orientacao_bancada`) | Wave 2.1.1 | Wave 3.0 (Índice de Coerência) | Obrigatória |
+| API pública REST, arquitetura distribuída (Go/NATS), TSE completo | Wave 3 anterior | Wave 4+ | Migrados — fora da Wave 3 atual |

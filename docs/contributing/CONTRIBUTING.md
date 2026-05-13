@@ -1,8 +1,8 @@
 # Guia de Contribuição
 
 > Brasil a Vera · Contribuição · v0.2
-> Última atualização: 2026-04-14
-> Status: draft
+> Última atualização: 2026-05-13
+> Status: accepted
 
 ---
 
@@ -59,23 +59,24 @@ O Brasil a Vera é um projeto open-source de transparência legislativa. Toda co
 
 ## Ambiente de Desenvolvimento
 
-### Pré-requisitos (Waves 0–2)
+### Pré-requisitos (Waves 0-3)
 
 | Ferramenta | Versão mínima | Finalidade |
 |-----------|---------------|-----------|
-| Node.js | 20 LTS+ | Monolito Next.js + scripts de ingestão |
+| Node.js | 22+ | Monolito Next.js + scripts de ingestão |
 | Git | 2.40+ | Controle de versão |
 | PostgreSQL | 16+ | Banco de dados local (ou conta Neon free) |
+| Docker | 24+ | Necessário para `npm run test:integration` (testcontainers — ver [ADR-015](../architecture/ADR/015-split-driver-neon-runtime.md)) |
 
-> **Docker é opcional**: pode ser usado para rodar PostgreSQL localmente (`docker run -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16`), mas não é obrigatório se você tiver PostgreSQL instalado ou usar Neon free.
+> **Docker para testes integrados**: a suite `npm run test:integration` sobe Postgres real via testcontainers. GitHub Actions Linux runners têm Docker pré-instalado; em macOS/Windows, iniciar Docker Desktop antes. Para rodar apenas o app local (sem `test:integration`), Docker é opcional — pode usar Neon free ou Postgres local nativo.
 
-> **Go não é necessário** para contribuições nas Waves 0–2. Go será necessário a partir da Wave 3 quando módulos forem extraídos para microserviços. Ver [ADR-002](../architecture/ADR/002-backend-language-and-framework.md).
+> **Go não é necessário** para contribuições nas Waves 0-3 atuais. O monólito Next.js cobre todo o stack. Go pode entrar em Wave 4+ se a extração de módulos via Strangler Fig (ver [ADR-007](../architecture/ADR/007-monolith-first-strategy.md)) se justificar com gargalo empírico real — não como inferência teórica (princípio 13 do CLAUDE.md).
 
 ### Setup local
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/brasil-a-vera/brasil-a-vera.git
+git clone https://github.com/FabioCaffarello/brasil-a-vera.git
 cd brasil-a-vera
 
 # 2. Instale dependências
