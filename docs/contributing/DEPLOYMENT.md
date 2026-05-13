@@ -24,6 +24,7 @@ URL de produção: <https://brasil-a-vera.fabio-caffarello.workers.dev>
 - Roda **antes** do build OpenNext e do `wrangler deploy`. Se falhar, aborta o deploy inteiro — preferível a worker-novo-com-schema-antigo.
 - Usa `DIRECT_URL` (GitHub Secrets) porque Drizzle Kit emite DDL e a pooled connection do Neon não suporta DDL transactions confiavelmente.
 - Idempotente: Drizzle Kit registra migrations já aplicadas via tabela interna — migrations existentes viram no-op em runs subsequentes.
+- Guarda em CI: `ingestion/ops/deploy-workflow.test.ts` falha se o step for removido, renomeado, ou reordenado para depois do build/deploy.
 
 ### Migrations destrutivas — padrão expand-then-contract
 
