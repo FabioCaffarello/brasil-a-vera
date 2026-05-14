@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Brasil a Vera API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: parlamentares
+    description: Parlamentar operations
+  - name: votacoes
+    description: Votacao operations
+  - name: proposicoes
+    description: Proposicao operations
+  - name: busca
+    description: Search operations
+  - name: partidos
+    description: Partido operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,369 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /parlamentares:
+    get:
+      operationId: listParlamentares
+      tags: [parlamentares]
+      summary: List parliamentarians with optional filters
+      parameters:
+        - name: casa
+          in: query
+          schema:
+            type: string
+        - name: partido
+          in: query
+          schema:
+            type: string
+        - name: uf
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of parlamentares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Parlamentar"
+
+  /parlamentares/filtros:
+    get:
+      operationId: getParlamentaresFiltros
+      tags: [parlamentares]
+      summary: Get distinct partidos and UFs for filter UI
+      responses:
+        "200":
+          description: Filter options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParlamentaresFiltros"
+
+  /parlamentares/{id}:
+    get:
+      operationId: getParlamentar
+      tags: [parlamentares]
+      summary: Get a single parliamentarian by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Parlamentar detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParlamentarDetalhe"
+        "404":
+          description: Not found
+
+  /parlamentares/{id}/votos-recentes:
+    get:
+      operationId: getVotosRecentes
+      tags: [parlamentares]
+      summary: Get recent votes for a parliamentarian
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Recent votes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VotoRecente"
+
+  /parlamentares/{id}/proposicoes-autoradas:
+    get:
+      operationId: getProposicoesAutoradas
+      tags: [parlamentares]
+      summary: Get bills authored by a parliamentarian
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Authored proposicoes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProposicaoResumo"
+
+  /parlamentares/{id}/gastos-resumo:
+    get:
+      operationId: getGastosResumo
+      tags: [parlamentares]
+      summary: Get expense summary for a parliamentarian
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Expense summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GastosResumo"
+
+  /parlamentares/{id}/alinhamento:
+    get:
+      operationId: getAlinhamento
+      tags: [parlamentares]
+      summary: Get party alignment stats for a parliamentarian
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alignment data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlinhamentoResult"
+
+  /parlamentares/{id}/afinidade-voto:
+    get:
+      operationId: getAfinidadeVoto
+      tags: [parlamentares]
+      summary: Get top vote affinity partners for a parliamentarian
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Vote affinity partners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AfinidadeVoto"
+
+  /votacoes:
+    get:
+      operationId: listVotacoes
+      tags: [votacoes]
+      summary: List votacoes with optional filters
+      parameters:
+        - name: casa
+          in: query
+          schema:
+            type: string
+        - name: ano
+          in: query
+          schema:
+            type: string
+        - name: resultado
+          in: query
+          schema:
+            type: string
+        - name: somenteNominais
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of votacoes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Votacao"
+
+  /votacoes/filtros:
+    get:
+      operationId: getVotacoesFiltros
+      tags: [votacoes]
+      summary: Get distinct anos for filter UI
+      responses:
+        "200":
+          description: Filter options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VotacoesFiltros"
+
+  /votacoes/{id}:
+    get:
+      operationId: getVotacao
+      tags: [votacoes]
+      summary: Get a single votacao by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Votacao detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VotacaoDetalhe"
+        "404":
+          description: Not found
+
+  /proposicoes:
+    get:
+      operationId: listProposicoes
+      tags: [proposicoes]
+      summary: List proposicoes with optional filters
+      parameters:
+        - name: tipo
+          in: query
+          schema:
+            type: string
+        - name: ano
+          in: query
+          schema:
+            type: string
+        - name: situacao
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of proposicoes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proposicao"
+
+  /proposicoes/filtros:
+    get:
+      operationId: getProposicoesFiltros
+      tags: [proposicoes]
+      summary: Get distinct anos for filter UI
+      responses:
+        "200":
+          description: Filter options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposicoesFiltros"
+
+  /proposicoes/{tipo}/{numero}/{ano}:
+    get:
+      operationId: getProposicao
+      tags: [proposicoes]
+      summary: Get a single proposicao by tipo/numero/ano
+      parameters:
+        - name: tipo
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: numero
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: ano
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proposicao detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProposicaoDetalhe"
+        "404":
+          description: Not found
+
+  /busca:
+    get:
+      operationId: buscar
+      tags: [busca]
+      summary: Full-text search across parlamentares, proposicoes, and votacoes
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadosBusca"
+
+  /partidos/{sigla}:
+    get:
+      operationId: getPartido
+      tags: [partidos]
+      summary: Get partido overview
+      parameters:
+        - name: sigla
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Partido detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartidoDetalhe"
+        "404":
+          description: Not found
+
+  /comparar:
+    get:
+      operationId: comparar
+      tags: [parlamentares]
+      summary: Compare 2-3 parlamentares
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comparison result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompararResult"
+        "400":
+          description: Bad request
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +405,528 @@ components:
       required:
         - status
 
+    Parlamentar:
+      type: object
+      required: [id, nome, casa, partidoSigla, uf, legislatura, trustLevel, sourceUrl]
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        casa:
+          type: string
+        partidoSigla:
+          type: string
+        partidoNome:
+          type: string
+        uf:
+          type: string
+        urlFoto:
+          type: ["string", "null"]
+        legislatura:
+          type: integer
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+
+    ParlamentarDetalhe:
+      type: object
+      required: [id, nome, casa, partidoSigla, uf, legislatura, trustLevel, sourceUrl]
+      properties:
+        id:
+          type: string
+        sourceId:
+          type: string
+        nome:
+          type: string
+        nomeCivil:
+          type: ["string", "null"]
+        casa:
+          type: string
+        partidoSigla:
+          type: string
+        partidoNome:
+          type: string
+        uf:
+          type: string
+        urlFoto:
+          type: ["string", "null"]
+        situacaoMandato:
+          type: string
+        legislatura:
+          type: integer
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+
+    ParlamentaresFiltros:
+      type: object
+      required: [partidos, ufs]
+      properties:
+        partidos:
+          type: array
+          items:
+            type: string
+        ufs:
+          type: array
+          items:
+            type: string
+
+    VotoRecente:
+      type: object
+      required: [voto, votacaoId, dataHora, descricao, orgao, casa, aprovada]
+      properties:
+        voto:
+          type: string
+        votacaoId:
+          type: string
+        votacaoSourceId:
+          type: ["string", "null"]
+        dataHora:
+          type: string
+        descricao:
+          type: string
+        orgao:
+          type: string
+        casa:
+          type: string
+        aprovada:
+          type: boolean
+
+    ProposicaoResumo:
+      type: object
+      required: [id, tipo, numero, ano, ementa, situacao]
+      properties:
+        id:
+          type: string
+        tipo:
+          type: string
+        numero:
+          type: integer
+        ano:
+          type: integer
+        ementa:
+          type: string
+        situacao:
+          type: string
+
+    GastosResumo:
+      type: object
+      required: [totalGeral, totalRegistros, topCategorias, ano]
+      properties:
+        totalGeral:
+          type: string
+        totalRegistros:
+          type: integer
+        topCategorias:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoriaGasto"
+        ano:
+          type: integer
+
+    CategoriaGasto:
+      type: object
+      required: [categoriaDescricao, total, n]
+      properties:
+        categoriaDescricao:
+          type: string
+        total:
+          type: string
+        n:
+          type: integer
+
+    AlinhamentoResult:
+      type: object
+      required: [total, alinhados, divergentes, amostraInsuficiente, topDivergencias, topConvergencias]
+      properties:
+        partidoSigla:
+          type: ["string", "null"]
+        percentual:
+          type: ["number", "null"]
+        total:
+          type: integer
+        alinhados:
+          type: integer
+        divergentes:
+          type: integer
+        amostraInsuficiente:
+          type: boolean
+        topDivergencias:
+          type: array
+          items:
+            $ref: "#/components/schemas/VotacaoAlinhamento"
+        topConvergencias:
+          type: array
+          items:
+            $ref: "#/components/schemas/VotacaoAlinhamento"
+
+    VotacaoAlinhamento:
+      type: object
+      required: [votacaoId, dataHora, descricao, voto, orientacao]
+      properties:
+        votacaoId:
+          type: string
+        dataHora:
+          type: string
+        descricao:
+          type: string
+        voto:
+          type: string
+        orientacao:
+          type: string
+
+    AfinidadeVoto:
+      type: object
+      required: [parlamentarId, nome, partidoSigla, uf, casa, votosCoincidentes, totalVotosEmComum, percentualAfinidade]
+      properties:
+        parlamentarId:
+          type: string
+        nome:
+          type: string
+        partidoSigla:
+          type: string
+        uf:
+          type: string
+        casa:
+          type: string
+        urlFoto:
+          type: ["string", "null"]
+        votosCoincidentes:
+          type: integer
+        totalVotosEmComum:
+          type: integer
+        percentualAfinidade:
+          type: integer
+
+    Votacao:
+      type: object
+      required: [id, sourceId, casa, dataHora, descricao, orgao, aprovada, votosSim, votosNao, abstencoes, trustLevel, sourceUrl]
+      properties:
+        id:
+          type: string
+        sourceId:
+          type: string
+        casa:
+          type: string
+        proposicaoId:
+          type: ["string", "null"]
+        dataHora:
+          type: string
+        descricao:
+          type: string
+        orgao:
+          type: string
+        aprovada:
+          type: boolean
+        votosSim:
+          type: integer
+        votosNao:
+          type: integer
+        abstencoes:
+          type: integer
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+
+    VotacaoDetalhe:
+      type: object
+      required: [id, sourceId, casa, dataHora, descricao, orgao, aprovada, votosSim, votosNao, abstencoes, trustLevel, sourceUrl, votos]
+      properties:
+        id:
+          type: string
+        sourceId:
+          type: string
+        casa:
+          type: string
+        proposicaoId:
+          type: ["string", "null"]
+        dataHora:
+          type: string
+        descricao:
+          type: string
+        orgao:
+          type: string
+        aprovada:
+          type: boolean
+        votosSim:
+          type: integer
+        votosNao:
+          type: integer
+        abstencoes:
+          type: integer
+        ausentes:
+          type: ["integer", "null"]
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+        votos:
+          type: array
+          items:
+            $ref: "#/components/schemas/VotoNominal"
+        orientacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrientacaoBancada"
+
+    VotacoesFiltros:
+      type: object
+      required: [anos]
+      properties:
+        anos:
+          type: array
+          items:
+            type: integer
+
+    VotoNominal:
+      type: object
+      required: [parlamentarId, nome, partidoSigla, uf, casa, voto]
+      properties:
+        parlamentarId:
+          type: string
+        nome:
+          type: string
+        partidoSigla:
+          type: string
+        uf:
+          type: string
+        casa:
+          type: string
+        urlFoto:
+          type: ["string", "null"]
+        voto:
+          type: string
+
+    OrientacaoBancada:
+      type: object
+      required: [partidoSigla, orientacao]
+      properties:
+        partidoSigla:
+          type: string
+        orientacao:
+          type: string
+
+    Proposicao:
+      type: object
+      required: [id, tipo, numero, ano, ementa, situacao, trustLevel, sourceUrl]
+      properties:
+        id:
+          type: string
+        tipo:
+          type: string
+        numero:
+          type: integer
+        ano:
+          type: integer
+        ementa:
+          type: string
+        ementaDetalhada:
+          type: ["string", "null"]
+        situacao:
+          type: string
+        regime:
+          type: ["string", "null"]
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+
+    ProposicaoDetalhe:
+      type: object
+      required: [id, tipo, numero, ano, ementa, situacao, trustLevel, sourceUrl, autores, tramitacao]
+      properties:
+        id:
+          type: string
+        tipo:
+          type: string
+        numero:
+          type: integer
+        ano:
+          type: integer
+        ementa:
+          type: string
+        ementaDetalhada:
+          type: ["string", "null"]
+        situacao:
+          type: string
+        regime:
+          type: ["string", "null"]
+        trustLevel:
+          type: string
+        sourceUrl:
+          type: string
+        sourceUrlCamara:
+          type: ["string", "null"]
+        sourceUrlSenado:
+          type: ["string", "null"]
+        temas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tema"
+        autores:
+          type: array
+          items:
+            $ref: "#/components/schemas/Autor"
+        tramitacao:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tramitacao"
+        votacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Votacao"
+
+    ProposicoesFiltros:
+      type: object
+      required: [anos]
+      properties:
+        anos:
+          type: array
+          items:
+            type: integer
+
+    Tema:
+      type: object
+      required: [codigoTema, nomeTema]
+      properties:
+        codigoTema:
+          type: integer
+        nomeTema:
+          type: string
+
+    Autor:
+      type: object
+      required: [nome, tipoAutoria]
+      properties:
+        parlamentarId:
+          type: ["string", "null"]
+        nome:
+          type: string
+        tipoAutoria:
+          type: string
+
+    Tramitacao:
+      type: object
+      required: [id, data, orgao, descricaoResumida]
+      properties:
+        id:
+          type: string
+        data:
+          type: string
+        orgao:
+          type: string
+        descricaoResumida:
+          type: string
+        descricaoCompleta:
+          type: ["string", "null"]
+        situacaoResultante:
+          type: ["string", "null"]
+
+    ResultadosBusca:
+      type: object
+      required: [parlamentares, proposicoes, votacoes]
+      properties:
+        parlamentares:
+          type: array
+          items:
+            $ref: "#/components/schemas/Parlamentar"
+        proposicoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProposicaoResumo"
+        votacoes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Votacao"
+        proposicaoMatchExato:
+          type: ["object", "null"]
+          properties:
+            tipo:
+              type: string
+            numero:
+              type: integer
+            ano:
+              type: integer
+
+    PartidoDetalhe:
+      type: object
+      required: [sigla, totalParlamentares, parlamentares]
+      properties:
+        sigla:
+          type: string
+        nomeOficial:
+          type: ["string", "null"]
+        totalParlamentares:
+          type: integer
+        parlamentares:
+          type: array
+          items:
+            $ref: "#/components/schemas/Parlamentar"
+        fidelidadeMedia:
+          type: ["number", "null"]
+        parlamentaresElegiveis:
+          type: integer
+
+    CompararResult:
+      type: object
+      required: [parlamentares, metricas, concordancia, ano]
+      properties:
+        parlamentares:
+          type: array
+          items:
+            $ref: "#/components/schemas/Parlamentar"
+        metricas:
+          type: array
+          items:
+            $ref: "#/components/schemas/MetricasParlamentar"
+        concordancia:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConcordanciaPar"
+        ano:
+          type: integer
+
+    MetricasParlamentar:
+      type: object
+      required: [parlamentarId, presenca, gastosTotalGeral, gastosTotalRegistros, gastosTopCategorias, proposicoesAutoriaPrimaria]
+      properties:
+        parlamentarId:
+          type: string
+        presenca:
+          type: object
+          properties:
+            presente:
+              type: integer
+            total:
+              type: integer
+            percentual:
+              type: ["number", "null"]
+        gastosTotalGeral:
+          type: string
+        gastosTotalRegistros:
+          type: integer
+        gastosTopCategorias:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoriaGasto"
+        proposicoesAutoriaPrimaria:
+          type: integer
+
+    ConcordanciaPar:
+      type: object
+      required: [a, b, votosEmComum, coincidentes, percentual]
+      properties:
+        a:
+          type: string
+        b:
+          type: string
+        votosEmComum:
+          type: integer
+        coincidentes:
+          type: integer
+        percentual:
+          type: ["number", "null"]

@@ -1,0 +1,183 @@
+import { z } from 'zod'
+
+import journalRaw from '@/shared/db/migrations/meta/_journal.json'
+
+// TTLs em segundos espelhando a tabela do ADR-018.
+export const TTL = {
+  parlamentarPerfil: 3600,
+  votacaoRecente: 3600,
+  votacaoHistorica: 604_800,
+  proposicaoEmTramitacao: 21_600,
+  proposicaoArquivada: 604_800,
+  gastoAnoCorrente: 21_600,
+  filiacaoHistorica: 86_400,
+  alinhamentoPartidario: 86_400,
+  partidoOverview: 21_600,
+  compararParlamentares: 3_600,
+  listagemFiltrada: 300,
+} as const
+
+export type TtlKey = keyof typeof TTL
+
+export interface CacheStats {
+  hits: number
+  misses: number
+  errors: number
+  bypass: number
+}
+
+const journalSchema = z.object({
+  version: z.string(),
+  dialect: z.string(),
+  entries: z
+    .array(
+      z.object({
+        idx: z.number(),
+        tag: z.string(),
+        when: z.number().optional(),
+      }),
+    )
+    .min(1),
+})
+
+function resolveSchemaVersion(): string {
+  try {
+    const journal = journalSchema.parse(journalRaw)
+    const last = journal.entries[journal.entries.length - 1]
+    if (!last) return 'v0000'
+    // tag tem formato "0004_curly_forge" — extraímos só "0004" e prefixamos
+    // com 'v' para a key ficar visualmente óbvia em logs.
+    const idx = last.tag.split('_')[0] ?? '0000'
+    return `v${idx}`
+  } catch (err) {
+    console.warn(
+      JSON.stringify({
+        event: 'cache_journal_parse_failed',
+        message: err instanceof Error ? err.message : String(err),
+      }),
+    )
+    return 'v0000'
+  }
+}
+
+// CF_VERSION_METADATA é binding (objeto) em Cloudflare Workers, não env var.
+// Algumas pipelines expõem como env string; caímos para GITHUB_SHA do CI.
+// 'dev' garante que cache local não colida com o de outros ambientes.
+function resolveBuildVersion(): string {
+  const env = process.env as Record<string, string | undefined>
+  const candidate = env.CF_VERSION_METADATA ?? env.GITHUB_SHA
+  if (!candidate) return 'dev'
+  return candidate.slice(0, 7)
+}
+
+const SCHEMA_VERSION = resolveSchemaVersion()
+const BUILD_VERSION = resolveBuildVersion()
+
+// Counter in-process por isolate. Reseta a cada cold start;
+// suficiente para validar que cache está hittando. Em Wave 3+,
+// quando volume justificar, migrar para Cloudflare Analytics
+// Engine para hit rate agregado cross-isolate.
+const stats: CacheStats = { hits: 0, misses: 0, errors: 0, bypass: 0 }
+
+// Não usamos o tipo global `Cache` do lib.dom porque CacheStorage de browser
+// tem shape diferente do Workers (open(), keys() etc.). Aqui modelamos só o
+// subconjunto que de fato usamos.
+interface CfCache {
+  match(req: Request): Promise<Response | undefined>
+  put(req: Request, res: Response): Promise<void>
+  delete(req: Request): Promise<boolean>
+}
+
+function getDefaultCache(): CfCache | null {
+  const c = (
+    globalThis as unknown as {
+      caches?: { default?: CfCache }
+    }
+  ).caches
+  return c?.default ?? null
+}
+
+function buildCacheRequest(key: string): Request {
+  const url = `https://cache.local/${SCHEMA_VERSION}/${BUILD_VERSION}/${encodeURIComponent(key)}`
+  return new Request(url)
+}
+
+function logCacheError(event: string, key: string, err: unknown): void {
+  console.warn(
+    JSON.stringify({
+      event,
+      key,
+      message: err instanceof Error ? err.message : String(err),
+    }),
+  )
+}
+
+// Wrapper de cache. Garantias:
+//   1. Em cache hit, `loader` NÃO é chamado.
+//   2. Em cache miss/erro de leitura, `loader` é chamado e o resultado é
+//      cacheado por `ttl` segundos via header Cache-Control.
+//   3. Se `caches.default` não existe (Node/dev/CI), chama loader direto.
+//   4. Valor cacheado é JSON-roundtripped: `Date` vira string ISO no
+//      consumo. Caller é responsável pela conversão se precisar de Date.
+//   5. Erro do `loader` propaga; nada é cacheado.
+export async function cached<T>(
+  key: string,
+  ttl: number,
+  loader: () => Promise<T>,
+): Promise<T> {
+  const cache = getDefaultCache()
+  if (!cache) {
+    stats.bypass++
+    return loader()
+  }
+
+  const req = buildCacheRequest(key)
+
+  try {
+    const hit = await cache.match(req)
+    if (hit) {
+      stats.hits++
+      return (await hit.json()) as T
+    }
+  } catch (err) {
+    stats.errors++
+    logCacheError('cache_read_failed', key, err)
+  }
+
+  stats.misses++
+  const fresh = await loader()
+
+  try {
+    const res = new Response(JSON.stringify(fresh), {
+      headers: {
+        'cache-control': `max-age=${ttl}`,
+        'content-type': 'application/json',
+      },
+    })
+    await cache.put(req, res)
+  } catch (err) {
+    stats.errors++
+    logCacheError('cache_write_failed', key, err)
+  }
+
+  return fresh
+}
+
+// Invalida uma chave específica. Usado pelo webhook de revalidação
+// pós-ingestão (Ciclo 3 do Batch B). No-op silencioso quando
+// `caches.default` não existe.
+export async function invalidate(key: string): Promise<void> {
+  const cache = getDefaultCache()
+  if (!cache) return
+  const req = buildCacheRequest(key)
+  try {
+    await cache.delete(req)
+  } catch (err) {
+    stats.errors++
+    logCacheError('cache_invalidate_failed', key, err)
+  }
+}
+
+export function readCacheStats(): CacheStats {
+  return { ...stats }
+}

@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1778522308284,
+      "tag": "0000_open_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778523625542,
+      "tag": "0001_strange_imperial_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778523724812,
+      "tag": "0002_clear_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778523763427,
+      "tag": "0003_bouncy_cassandra_nova",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778551961630,
+      "tag": "0004_curly_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778629803171,
+      "tag": "0005_tramitacao_natural_key",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778644478425,
+      "tag": "0006_source_id_por_casa",
+      "breakpoints": true
+    }
+  ]
+}

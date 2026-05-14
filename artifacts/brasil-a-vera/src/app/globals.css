@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* WCAG 2.3.3 — respeitar a preferência do sistema operacional por movimento
+   reduzido. `!important` é intencional aqui: precisa sobrescrever classes
+   utilitárias do Tailwind (transition-*, animate-*) que vencem por especificidade
+   em outras condições. Padrão recomendado pelo The A11y Project. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: padrão recomendado para prefers-reduced-motion (ver comentário acima) */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: padrão recomendado para prefers-reduced-motion (ver comentário acima) */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: padrão recomendado para prefers-reduced-motion (ver comentário acima) */
+    transition-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: padrão recomendado para prefers-reduced-motion (ver comentário acima) */
+    scroll-behavior: auto !important;
+  }
+}

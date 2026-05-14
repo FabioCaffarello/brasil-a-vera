@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Brasil a Vera"
+version = "1.0.0"
+id = "artifacts/brasil-a-vera"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19795
+
+[services.development]
+run = "pnpm --filter @workspace/brasil-a-vera run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/brasil-a-vera", "run", "build" ]
+publicDir = "artifacts/brasil-a-vera/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19795"
+BASE_PATH = "/"

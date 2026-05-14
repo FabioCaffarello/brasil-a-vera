@@ -1,0 +1,298 @@
+{
+  "id": "d74e2018-484e-499e-b8f2-4d51ae80c88b",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "parlamentares.filiacao_partidaria": {
+      "name": "filiacao_partidaria",
+      "schema": "parlamentares",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parlamentar_id": {
+          "name": "parlamentar_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partido_sigla": {
+          "name": "partido_sigla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_inicio": {
+          "name": "data_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_fim": {
+          "name": "data_fim",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "filiacao_partidaria_parlamentar_id_parlamentar_id_fk": {
+          "name": "filiacao_partidaria_parlamentar_id_parlamentar_id_fk",
+          "tableFrom": "filiacao_partidaria",
+          "tableTo": "parlamentar",
+          "schemaTo": "parlamentares",
+          "columnsFrom": ["parlamentar_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "parlamentares.membro_comissao": {
+      "name": "membro_comissao",
+      "schema": "parlamentares",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parlamentar_id": {
+          "name": "parlamentar_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comissao_source_id": {
+          "name": "comissao_source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comissao_nome": {
+          "name": "comissao_nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_participacao": {
+          "name": "tipo_participacao",
+          "type": "tipo_participacao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_inicio": {
+          "name": "data_inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_fim": {
+          "name": "data_fim",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "membro_comissao_parlamentar_id_parlamentar_id_fk": {
+          "name": "membro_comissao_parlamentar_id_parlamentar_id_fk",
+          "tableFrom": "membro_comissao",
+          "tableTo": "parlamentar",
+          "schemaTo": "parlamentares",
+          "columnsFrom": ["parlamentar_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "parlamentares.parlamentar": {
+      "name": "parlamentar",
+      "schema": "parlamentares",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "source_id": {
+          "name": "source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome_civil": {
+          "name": "nome_civil",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cpf": {
+          "name": "cpf",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "casa": {
+          "name": "casa",
+          "type": "casa",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partido_sigla": {
+          "name": "partido_sigla",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partido_nome": {
+          "name": "partido_nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uf": {
+          "name": "uf",
+          "type": "char(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url_foto": {
+          "name": "url_foto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "situacao_mandato": {
+          "name": "situacao_mandato",
+          "type": "situacao_mandato",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legislatura": {
+          "name": "legislatura",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trust_level": {
+          "name": "trust_level",
+          "type": "trust_level",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ingested_at": {
+          "name": "ingested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "source_updated_at": {
+          "name": "source_updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "parlamentar_casa_source_id_unique": {
+          "name": "parlamentar_casa_source_id_unique",
+          "columns": [
+            {
+              "expression": "casa",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "source_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.casa": {
+      "name": "casa",
+      "schema": "public",
+      "values": ["CAMARA", "SENADO"]
+    },
+    "public.situacao_mandato": {
+      "name": "situacao_mandato",
+      "schema": "public",
+      "values": ["EXERCICIO", "AFASTADO", "SUPLENCIA", "LICENCA"]
+    },
+    "public.tipo_participacao": {
+      "name": "tipo_participacao",
+      "schema": "public",
+      "values": ["TITULAR", "SUPLENTE"]
+    },
+    "public.trust_level": {
+      "name": "trust_level",
+      "schema": "public",
+      "values": ["L1", "L2", "L3", "L4"]
+    }
+  },
+  "schemas": {
+    "parlamentares": "parlamentares"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
