@@ -8,7 +8,7 @@ export default defineConfig({
   schema: './src/shared/db/schema.ts',
   out: './src/shared/db/migrations',
   dbCredentials: {
-    url: process.env.DIRECT_URL as string,
+    url: process.env.NEON_DIRECT_URL as string,
   },
   verbose: true,
   strict: true,
