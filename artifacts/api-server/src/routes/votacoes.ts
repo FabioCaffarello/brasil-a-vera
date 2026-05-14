@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@workspace/db";
-import { parlamentar, votacao, votoNominal, orientacao } from "@workspace/db";
+import { parlamentar, votacao, votoNominal, orientacao, proposicao } from "@workspace/db";
 
 const router = Router();
 
@@ -72,7 +72,7 @@ router.get("/:id", async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: "not found" });
     const v = rows[0];
 
-    const [votosRows, orientacoesRows] = await Promise.all([
+    const [votosRows, orientacoesRows, proposicaoRows] = await Promise.all([
       db
         .select({
           parlamentarId: parlamentar.id,
@@ -91,9 +91,27 @@ router.get("/:id", async (req, res) => {
         .select({ partidoSigla: orientacao.partidoSigla, orientacao: orientacao.orientacao })
         .from(orientacao)
         .where(eq(orientacao.votacaoId, id)),
+      v.proposicaoId
+        ? db
+            .select({
+              tipo: proposicao.tipo,
+              numero: proposicao.numero,
+              ano: proposicao.ano,
+              ementa: proposicao.ementa,
+              situacao: proposicao.situacao,
+            })
+            .from(proposicao)
+            .where(eq(proposicao.id, v.proposicaoId))
+            .limit(1)
+        : Promise.resolve([]),
     ]);
 
-    res.json({ ...v, votos: votosRows, orientacoes: orientacoesRows });
+    res.json({
+      ...v,
+      votos: votosRows,
+      orientacoes: orientacoesRows,
+      proposicao: proposicaoRows[0] ?? null,
+    });
   } catch (err) {
     req.log.error({ err }, "getVotacao failed");
     res.status(500).json({ error: "internal" });

@@ -5,7 +5,6 @@ import { VotosResumo } from '@/components/votacao/votos-resumo'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
-import { ExportCsvLink } from '@/components/export-csv-link'
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -43,7 +42,6 @@ export default function VotacaoPage() {
 
   const v = data as Record<string, unknown>
   const votos = (v.votos as Array<Record<string, unknown>>) ?? []
-  const orientacoes = (v.orientacoes as Array<Record<string, unknown>>) ?? []
 
   const filteredVotos = filtroVoto ? votos.filter((vt) => vt.voto === filtroVoto) : votos
 
@@ -73,9 +71,18 @@ export default function VotacaoPage() {
     .map(([partidoSigla, counts]) => ({ partidoSigla, ...counts }))
     .sort((a, b) => b.total - a.total)
 
-  const proposicaoVinculada = v.proposicaoId ? {
-    tipo: 'PL', numero: 0, ano: 0, ementa: '', situacao: 'TRAMITANDO',
-  } : null
+  // proposicao comes from the API join — only show if we have real tipo/numero/ano
+  const proposicaoData = v.proposicao as Record<string, unknown> | null | undefined
+  const proposicaoVinculada =
+    proposicaoData && proposicaoData.tipo && proposicaoData.numero && proposicaoData.ano
+      ? {
+          tipo: String(proposicaoData.tipo),
+          numero: Number(proposicaoData.numero),
+          ano: Number(proposicaoData.ano),
+          ementa: String(proposicaoData.ementa ?? ''),
+          situacao: String(proposicaoData.situacao ?? 'TRAMITANDO'),
+        }
+      : null
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
@@ -120,9 +127,6 @@ export default function VotacaoPage() {
 
       {votosIndividuais.length > 0 && (
         <Section title="Votos individuais" hint="Clique no nome para ver o perfil do parlamentar.">
-          <div className="mb-3 flex justify-end">
-            <ExportCsvLink href={`/api/export/votacoes/${id}/votos`} label="Exportar (CSV)" />
-          </div>
           <VotosIndividuais votos={votosIndividuais} filtroAtual={filtroVoto} totalSemFiltro={filtroVoto ? votos.length : undefined} votacaoId={id} />
         </Section>
       )}

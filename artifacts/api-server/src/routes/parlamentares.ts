@@ -308,6 +308,8 @@ router.get("/:id/afinidade-voto", async (req, res) => {
   }
 });
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // GET /api/comparar?ids=id1,id2,id3
 router.get("/comparar/resultado", async (req, res) => {
   try {
@@ -316,6 +318,9 @@ router.get("/comparar/resultado", async (req, res) => {
     const ids = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
     if (ids.length < 2 || ids.length > 3) {
       return res.status(400).json({ error: "2-3 ids required" });
+    }
+    if (ids.some((id) => !UUID_RE.test(id))) {
+      return res.status(400).json({ error: "invalid id format" });
     }
 
     const parlamentares = await db
