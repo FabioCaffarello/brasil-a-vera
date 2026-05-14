@@ -53,9 +53,10 @@ router.get("/", async (req, res) => {
 router.get("/filtros", async (req, res) => {
   try {
     const rows = await db
-      .selectDistinct({ ano: sql<number>`extract(year from ${votacao.dataHora})::int` })
+      .select({ ano: sql<number>`extract(year from ${votacao.dataHora})::int` })
       .from(votacao)
-      .orderBy(desc(sql`extract(year from ${votacao.dataHora})`));
+      .groupBy(sql`extract(year from ${votacao.dataHora})::int`)
+      .orderBy(desc(sql`extract(year from ${votacao.dataHora})::int`));
     res.json({ anos: rows.map((r) => r.ano) });
   } catch (err) {
     req.log.error({ err }, "getVotacoesFiltros failed");
