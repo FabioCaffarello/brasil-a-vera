@@ -1,5 +1,3 @@
-'use client'
-
 import { Link } from 'wouter'
 import { useEffect, useId, useRef, useState } from 'react'
 

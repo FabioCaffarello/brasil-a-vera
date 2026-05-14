@@ -1,6 +1,3 @@
-// Server Component — `<form action="...">` submete via GET, RSC re-renderiza
-// com os novos searchParams. Sem JS de client necessário.
-
 interface Props {
   partidos: string[]
   ufs: string[]

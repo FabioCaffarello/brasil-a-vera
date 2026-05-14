@@ -3,11 +3,6 @@ interface Props {
   variant?: 'header' | 'page'
 }
 
-// Server Component — `<form>` GET submete pra /busca, RSC re-renderiza.
-// Sem JS de client.
-//
-// `<search>` é landmark HTML5 nativo para regiões de busca — substitui o
-// `role="search"` no <form>.
 export function SearchForm({ defaultValue, variant = 'header' }: Props) {
   if (variant === 'header') {
     return (
