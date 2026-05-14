@@ -35,9 +35,9 @@ export default function ProposicoesPage() {
   const situacao = params.get('situacao') ?? undefined
 
   const { data: proposicoes = [], isLoading } = useListProposicoes({
-    tipo: tipo as 'PL' | undefined,
-    ano: ano ? Number(ano) : undefined,
-    situacao: situacao as 'TRAMITANDO' | undefined,
+    tipo,
+    ano,
+    situacao,
   })
   const { data: filtrosData } = useGetProposicoesFiltros()
   const anos = filtrosData?.anos ?? []

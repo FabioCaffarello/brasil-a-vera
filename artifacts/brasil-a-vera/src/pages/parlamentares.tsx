@@ -87,7 +87,7 @@ export default function ParlamentaresPage() {
           <p className="mb-3 text-sm text-zinc-600 dark:text-zinc-400">{parlamentares.length} {parlamentares.length === 1 ? 'resultado' : 'resultados'}</p>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {parlamentares.map((p) => (
-              <li key={p.id}><ParlamentarCard parlamentar={p} /></li>
+              <li key={p.id}><ParlamentarCard parlamentar={{ ...p, urlFoto: p.urlFoto ?? null }} /></li>
             ))}
           </ul>
         </>

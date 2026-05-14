@@ -6,7 +6,7 @@ interface Props {
     nomeCivil: string | null
     casa: string
     partidoSigla: string
-    partidoNome: string
+    partidoNome: string | null
     uf: string
     urlFoto: string | null
     legislatura: number

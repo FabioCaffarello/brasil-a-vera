@@ -1,5 +1,5 @@
 import { useLocation } from 'wouter'
-import { useComparar } from '@workspace/api-client-react'
+import { useComparar, getCompararQueryKey } from '@workspace/api-client-react'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 
@@ -25,9 +25,10 @@ export default function CompararPage() {
   const idsParam = params.get('ids') ?? ''
   const ids = idsParam.split(',').map((s) => s.trim()).filter(Boolean)
 
+  const compararParams = { ids: idsParam }
   const { data, isLoading, error } = useComparar(
-    { ids: idsParam },
-    { query: { enabled: ids.length >= 2 } }
+    compararParams,
+    { query: { enabled: ids.length >= 2, queryKey: getCompararQueryKey(compararParams) } }
   )
 
   if (ids.length < 2) {
@@ -60,7 +61,7 @@ export default function CompararPage() {
     )
   }
 
-  const d = data as Record<string, unknown>
+  const d = data as unknown as Record<string, unknown>
   const parlamentares = (d.parlamentares as Array<Record<string, unknown>>) ?? []
   const metricas = (d.metricas as Array<Record<string, unknown>>) ?? []
   const concordancia = (d.concordancia as Array<Record<string, unknown>>) ?? []

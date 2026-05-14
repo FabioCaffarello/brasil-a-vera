@@ -17,10 +17,10 @@ export default function VotacoesPage() {
   const somenteNominais = params.get('somenteNominais') === '1'
 
   const { data: votacoes = [], isLoading } = useListVotacoes({
-    casa: casa as 'CAMARA' | 'SENADO' | undefined,
-    ano: ano ? Number(ano) : undefined,
-    resultado: resultado as 'aprovadas' | 'rejeitadas' | undefined,
-    somenteNominais: somenteNominais || undefined,
+    casa,
+    ano,
+    resultado,
+    somenteNominais: somenteNominais ? '1' : undefined,
   })
   const { data: filtrosData } = useGetVotacoesFiltros()
   const anos = filtrosData?.anos ?? []

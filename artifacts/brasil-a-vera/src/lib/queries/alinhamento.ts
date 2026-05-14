@@ -1,5 +1,5 @@
-export type Voto = 'SIM' | 'NAO' | 'ABSTENCAO' | 'AUSENTE' | 'OBSTRUCAO'
-export type Orientacao = 'SIM' | 'NAO' | 'LIBERADO' | 'OBSTRUCAO'
+export type Voto = string
+export type Orientacao = string
 
 export interface VotacaoAlinhamento {
   votacaoId: string

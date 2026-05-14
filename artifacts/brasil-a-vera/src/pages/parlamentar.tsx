@@ -54,24 +54,34 @@ export default function ParlamentarPage() {
     ano: gastos.ano ?? anoCorrente,
   } : null
 
-  const alinhamentoData = alinhamento ?? {
+  const pd = parlamentar as unknown as Record<string, unknown>
+  const alinhamentoData = alinhamento ? {
+    ...alinhamento,
+    partidoSigla: alinhamento.partidoSigla ?? null,
+    percentual: alinhamento.percentual ?? null,
+  } : {
     partidoSigla: null, percentual: null, total: 0, alinhados: 0,
     divergentes: 0, amostraInsuficiente: true, topDivergencias: [], topConvergencias: [],
   }
+  const afinidadesMapped = afinidades.map((a) => ({
+    ...a,
+    urlFoto: a.urlFoto ?? null,
+    partidoSigla: a.partidoSigla ?? '',
+  }))
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
       <PerfilHeader
         parlamentar={{
           nome: parlamentar.nome,
-          nomeCivil: (parlamentar as Record<string, unknown>).nomeCivil as string | null ?? null,
+          nomeCivil: pd.nomeCivil as string | null ?? null,
           casa: parlamentar.casa,
           partidoSigla: parlamentar.partidoSigla,
-          partidoNome: parlamentar.partidoNome,
+          partidoNome: parlamentar.partidoNome ?? null,
           uf: parlamentar.uf,
           urlFoto: parlamentar.urlFoto ?? null,
           legislatura: parlamentar.legislatura,
-          situacaoMandato: (parlamentar as Record<string, unknown>).situacaoMandato as string ?? '',
+          situacaoMandato: pd.situacaoMandato as string ?? '',
           sourceUrl: parlamentar.sourceUrl ?? '',
           trustLevel: (parlamentar.trustLevel as 'L1') ?? 'L1',
         }}
@@ -86,11 +96,19 @@ export default function ParlamentarPage() {
       </Section>
 
       <Section title="Top 5 maior afinidade de voto" hint="Outros parlamentares que mais coincidem no voto.">
-        <Top5Afinidade afinidades={afinidades} />
+        <Top5Afinidade afinidades={afinidadesMapped} />
       </Section>
 
       <Section title="Proposições onde é autor ou coautor">
-        <ProposicoesAutor proposicoes={proposicoes as Parameters<typeof ProposicoesAutor>[0]['proposicoes']} />
+        <ProposicoesAutor proposicoes={proposicoes.map((p) => ({
+          proposicaoId: p.id,
+          tipo: p.tipo,
+          numero: p.numero,
+          ano: p.ano,
+          ementa: p.ementa,
+          situacao: p.situacao,
+          tipoAutoria: 'AUTOR',
+        }))} />
       </Section>
 
       {gastosResumo && (

@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'wouter'
-import { useBuscar } from '@workspace/api-client-react'
+import { useBuscar, getBuscarQueryKey } from '@workspace/api-client-react'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
@@ -50,9 +50,10 @@ export default function BuscaPage() {
   const params = useQueryParams()
   const query = params.get('q')?.trim() ?? ''
 
+  const buscarParams = { q: query || ' ' }
   const { data: resultados, isLoading } = useBuscar(
-    { q: query },
-    { query: { enabled: query.length >= 2 } }
+    buscarParams,
+    { query: { enabled: query.length >= 2, queryKey: getBuscarQueryKey(buscarParams) } }
   )
 
   if (!query) {
@@ -100,9 +101,9 @@ export default function BuscaPage() {
               className="font-mono font-semibold underline decoration-dotted"
             >
               {formatProposicaoRef(
-                resultados.proposicaoMatchExato.tipo,
-                resultados.proposicaoMatchExato.numero,
-                resultados.proposicaoMatchExato.ano,
+                resultados.proposicaoMatchExato.tipo ?? '',
+                resultados.proposicaoMatchExato.numero ?? 0,
+                resultados.proposicaoMatchExato.ano ?? 0,
               )}
             </Link>
             ?
@@ -121,7 +122,7 @@ export default function BuscaPage() {
           {parl.length > 0 && (
             <Section title={`Parlamentares (${parl.length})`}>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {parl.map((p) => <li key={p.id}><ParlamentarCard parlamentar={p} /></li>)}
+                {parl.map((p) => <li key={p.id}><ParlamentarCard parlamentar={{ ...p, urlFoto: p.urlFoto ?? null }} /></li>)}
               </ul>
             </Section>
           )}

@@ -29,7 +29,7 @@ export default function PartidoPage() {
     )
   }
 
-  const d = data as Record<string, unknown>
+  const d = data as unknown as Record<string, unknown>
   const membros = (d.parlamentares as Array<Record<string, unknown>>) ?? []
 
   return (
@@ -46,10 +46,10 @@ export default function PartidoPage() {
             Fidelidade interna média
           </h2>
           <p className="text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-            {d.fidelidadeMedia}%
+            {String(d.fidelidadeMedia)}%
           </p>
           <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Média de {d.parlamentaresElegiveis} parlamentar(es) com ≥50 votos comparáveis.
+            Média de {String(d.parlamentaresElegiveis)} parlamentar(es) com ≥50 votos comparáveis.
           </p>
         </section>
       )}

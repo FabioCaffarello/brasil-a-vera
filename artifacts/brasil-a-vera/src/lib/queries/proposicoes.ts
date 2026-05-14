@@ -10,3 +10,12 @@ export interface FiltrosProposicao {
   ano?: number
   situacao?: SituacaoProposicao
 }
+
+export interface AutorDeProposicao {
+  id: string
+  parlamentarId: string | null
+  nome: string
+  tipoAutoria: string
+  parlamentarPartidoSigla?: string | null
+  parlamentarUf?: string | null
+}

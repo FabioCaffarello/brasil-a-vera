@@ -33,7 +33,7 @@ export default function ProposicaoPage() {
     )
   }
 
-  const p = data as Record<string, unknown>
+  const p = data as unknown as Record<string, unknown>
   const autores = (p.autores as Array<Record<string, unknown>>) ?? []
   const temas = (p.temas as Array<Record<string, unknown>>) ?? []
   const tramitacao = (p.tramitacao as Array<Record<string, unknown>>) ?? []
@@ -57,10 +57,13 @@ export default function ProposicaoPage() {
 
       {autores.length > 0 && (
         <Section title="Autores">
-          <AutoresList autores={autores.map((a) => ({
+          <AutoresList autores={autores.map((a, i) => ({
+            id: String(a.id ?? i),
             parlamentarId: a.parlamentarId ? String(a.parlamentarId) : null,
             nome: String(a.nome ?? ''),
             tipoAutoria: String(a.tipoAutoria ?? 'AUTOR'),
+            parlamentarPartidoSigla: a.parlamentarPartidoSigla ? String(a.parlamentarPartidoSigla) : null,
+            parlamentarUf: a.parlamentarUf ? String(a.parlamentarUf) : null,
           }))} />
         </Section>
       )}
@@ -68,7 +71,7 @@ export default function ProposicaoPage() {
       {temas.length > 0 && (
         <Section title="Temas">
           <TemasList temas={temas.map((t) => ({
-            codigoTema: String(t.codigoTema ?? ''),
+            codigoTema: Number(t.codigoTema ?? 0),
             nomeTema: String(t.nomeTema ?? ''),
           }))} />
         </Section>
@@ -76,7 +79,7 @@ export default function ProposicaoPage() {
 
       {tramitacao.length > 0 && (
         <Section title="Tramitação">
-          <TramitacaoTimeline tramitacao={tramitacao.map((t) => ({
+          <TramitacaoTimeline eventos={tramitacao.map((t) => ({
             id: String(t.id ?? ''),
             data: t.data as string,
             orgao: String(t.orgao ?? ''),

@@ -40,7 +40,7 @@ export default function VotacaoPage() {
     )
   }
 
-  const v = data as Record<string, unknown>
+  const v = data as unknown as Record<string, unknown>
   const votos = (v.votos as Array<Record<string, unknown>>) ?? []
 
   const filteredVotos = filtroVoto ? votos.filter((vt) => vt.voto === filtroVoto) : votos
