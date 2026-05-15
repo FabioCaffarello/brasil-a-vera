@@ -16,14 +16,24 @@ interface Props {
   }
 }
 
+/**
+ * Card de listagem de votação — Sprint 4.2 PR 2 (refatorado).
+ * Migra de zinc/emerald/rose HEX para tokens semânticos OKLCH.
+ *
+ * Badges aprovada/rejeitada:
+ * - Aprovada → bg-success/20 + text-success
+ * - Rejeitada → bg-destructive/20 + text-destructive
+ *
+ * Mesmo padrão usado em card-votacoes-semana (home, Sprint 4.1 PR 4).
+ */
 export function VotacaoCard({ votacao: v }: Props) {
   const totalNominais = v.votosSim + v.votosNao + v.abstencoes
   return (
     <Link
+      className="block rounded-lg border border-border bg-surface p-4 transition hover:border-border-strong hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       href={`/votacoes/${v.id}`}
-      className="block rounded-lg border border-zinc-200 bg-white p-4 transition hover:border-zinc-400 hover:shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-500"
     >
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-xs">
         <span className="flex items-center gap-2">
           <span>{formatDataBR(v.dataHora)}</span>
           <span aria-hidden>·</span>
@@ -34,18 +44,16 @@ export function VotacaoCard({ votacao: v }: Props) {
         <span
           className={
             v.aprovada
-              ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
-              : 'rounded bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800 dark:bg-rose-900/40 dark:text-rose-200'
+              ? 'rounded bg-success/20 px-2 py-0.5 font-medium text-success text-xs'
+              : 'rounded bg-destructive/20 px-2 py-0.5 font-medium text-destructive text-xs'
           }
         >
           {v.aprovada ? 'Aprovada' : 'Rejeitada'}
         </span>
       </div>
-      <p className="line-clamp-3 text-sm text-zinc-800 dark:text-zinc-200">
-        {v.descricao}
-      </p>
+      <p className="line-clamp-3 text-foreground text-sm">{v.descricao}</p>
       {totalNominais > 0 && (
-        <p className="mt-2 text-xs tabular-nums text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 tabular-nums text-foreground-muted text-xs">
           Sim: {v.votosSim} · Não: {v.votosNao} · Abstenção: {v.abstencoes}
         </p>
       )}
