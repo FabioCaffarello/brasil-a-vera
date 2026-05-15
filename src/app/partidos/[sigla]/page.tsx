@@ -45,9 +45,14 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { sigla } = await params
-  const overview = await getPartidoOverview(sigla.toUpperCase())
+  const siglaUpper = sigla.toUpperCase()
+  const overview = await getPartidoOverview(siglaUpper)
+  const feedHref = `/feed/votacoes/partido/${encodeURIComponent(siglaUpper)}`
   if (overview.totalParlamentares === 0) {
-    return { title: `${sigla.toUpperCase()} — Brasil a Vera` }
+    return {
+      title: `${siglaUpper} — Brasil a Vera`,
+      alternates: { types: { 'application/rss+xml': feedHref } },
+    }
   }
   const title = `${overview.sigla} — Brasil a Vera`
   const description = overview.nomeOficial
@@ -58,6 +63,7 @@ export async function generateMetadata({ params }: PageProps) {
     description,
     openGraph: { title, description },
     twitter: { title, description },
+    alternates: { types: { 'application/rss+xml': feedHref } },
   }
 }
 

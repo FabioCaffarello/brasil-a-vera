@@ -17,6 +17,11 @@ export const metadata = {
   title: 'Votações — Brasil a Vera',
   description:
     'Votações em plenário e comissões na Câmara e no Senado. Filtros por casa, ano e resultado.',
+  alternates: {
+    types: {
+      'application/rss+xml': '/feed/votacoes',
+    },
+  },
 }
 
 function normalizeCasa(value: string | undefined): Casa | undefined {
