@@ -80,7 +80,16 @@ export default function RootLayout({
       lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      {/* suppressHydrationWarning no <body> — extensões de browser
+          (ColorZilla, Grammarly, LastPass, etc.) frequentemente injetam
+          atributos (`cz-shortcut-listen`, `data-gramm`, etc.) no <body>
+          ANTES do React hidratar, causando warning de mismatch que NÃO
+          é bug nosso. Padrão React 19 recomendado para isolar a injeção
+          ao nível em que ocorre (não cobre descendentes). */}
+      <body
+        className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+        suppressHydrationWarning
+      >
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-zinc-300 focus:bg-white focus:px-3 focus:py-2 focus:font-medium focus:text-sm focus:text-zinc-900 focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:border-zinc-600 dark:focus:bg-zinc-900 dark:focus:text-zinc-100"
