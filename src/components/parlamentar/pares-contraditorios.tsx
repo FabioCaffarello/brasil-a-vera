@@ -75,13 +75,15 @@ export function ParesContraditorios({ pares, stats }: Props) {
         <ul className="space-y-1 pl-5 text-sm text-zinc-500 dark:text-zinc-400 [list-style-type:disc]">
           <li>
             <strong className="font-medium">
-              Votação não vinculada a proposição:
+              Votação vinculada a proposição:
             </strong>{' '}
             {stats.votosTotaisComProposicao === 1
               ? '1 voto deste parlamentar está vinculado'
               : `${stats.votosTotaisComProposicao} votos deste parlamentar estão vinculados`}{' '}
-            a uma proposição já ingerida — o backfill de Wave 0 cobriu apenas a
-            Câmara, e proposições antigas ainda não foram ingeridas.
+            a uma proposição ingerida. O backfill cobre todas as votações
+            nominais Câmara automaticamente (auto-fetch reverso, Sprint 3.0.5);
+            Senado não retorna referência de proposição vinculada na API
+            pública.
           </li>
           <li>
             <strong className="font-medium">Ementa não classificada:</strong>{' '}
@@ -101,13 +103,20 @@ export function ParesContraditorios({ pares, stats }: Props) {
           </li>
         </ul>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          Esta seção ainda não tem cobertura ampla. O critério atual exige
-          verbos inequívocos como <strong>&quot;proíbe&quot;</strong>,{' '}
-          <strong>&quot;autoriza&quot;</strong> e{' '}
-          <strong>&quot;revoga&quot;</strong> — ementas vagas ficam de fora. O
-          refinamento da classificação está previsto para o{' '}
-          <strong>Sprint 3.0.5</strong> (próximas semanas), com retorno empírico
-          de cobertura no fechamento.
+          A classificação de direção usa apenas verbos inequívocos — falso
+          negativo é preferível a falso positivo. Expansão do vocabulário
+          (verbos secundários, regex, NLP) entra apenas com evidência de gargalo
+          concreto (princípio do{' '}
+          <a
+            href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/ADR/019-disciplina-arquitetural-sem-gargalo.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-dotted underline-offset-2"
+          >
+            ADR-019
+          </a>
+          ). A cobertura cresce naturalmente conforme novas votações nominais
+          são ingeridas.
         </p>
       </div>
     )
