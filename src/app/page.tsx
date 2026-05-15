@@ -1,6 +1,11 @@
 import Link from 'next/link'
 
+import { CardMeuParlamentar } from '@/components/home/card-meu-parlamentar'
+import { CardStats } from '@/components/home/card-stats'
+import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { TrustBadge } from '@/components/trust/trust-badge'
+import { getPublicStats } from '@/lib/queries/stats-public'
+import { getVotacoesRecentes } from '@/lib/queries/votacoes'
 import type { TrustLevel } from '@/shared/trust'
 import { TRUST_LEVEL_DESCRIPTIONS } from '@/shared/trust'
 
@@ -14,7 +19,36 @@ const trustExamples: { level: TrustLevel; example: string }[] = [
   { level: 'L4', example: 'Estimativa de alinhamento ideológico (modelo)' },
 ]
 
-export default function Home() {
+// Dynamic por necessidade do build: cards consomem queries (getPublicStats +
+// getVotacoesRecentes) e o build do Cloudflare Workers usa placeholder
+// DATABASE_URL — ISR (`revalidate`) tentaria pré-renderizar e falharia.
+// Quando R2 incremental cache (#58, Wave 3+) entrar, mudar para
+// `export const revalidate = 3600` — alinhado com cron de votações 4×/dia.
+// Sprint 3.1 Tarefa 2.
+export const dynamic = 'force-dynamic'
+
+const VOTACOES_JANELA_PADRAO = 7
+const VOTACOES_JANELA_FALLBACK = 30
+const VOTACOES_LIMIT = 5
+
+export default async function Home() {
+  const [stats, recentes7d] = await Promise.all([
+    getPublicStats(),
+    getVotacoesRecentes(VOTACOES_JANELA_PADRAO, VOTACOES_LIMIT),
+  ])
+
+  // Fallback honesto: se 0 votações em 7 dias, busca em 30 com copy adaptado.
+  const { votacoes, diasJanela } =
+    recentes7d.length === 0
+      ? {
+          votacoes: await getVotacoesRecentes(
+            VOTACOES_JANELA_FALLBACK,
+            VOTACOES_LIMIT,
+          ),
+          diasJanela: VOTACOES_JANELA_FALLBACK,
+        }
+      : { votacoes: recentes7d, diasJanela: VOTACOES_JANELA_PADRAO }
+
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
       <header className="mb-10">
@@ -37,6 +71,19 @@ export default function Home() {
           Explorar parlamentares
           <span aria-hidden>→</span>
         </Link>
+      </section>
+
+      {/* Cards narrativos — Sprint 3.1 Tarefa 2. Portas de entrada cívicas
+          para cidadão que chega sem nome em mente. */}
+      <section aria-labelledby="cards-narrativos-titulo" className="mb-12">
+        <h2 id="cards-narrativos-titulo" className="sr-only">
+          Portas de entrada
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <CardMeuParlamentar />
+          <CardVotacoesSemana votacoes={votacoes} diasJanela={diasJanela} />
+          <CardStats stats={stats} />
+        </div>
       </section>
 
       <section
