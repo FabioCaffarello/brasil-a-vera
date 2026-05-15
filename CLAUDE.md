@@ -142,8 +142,10 @@ docs/
 - NÃO escreva código especulativo. Não crie interfaces "para o caso de".
   Reaja a necessidade real, não a possibilidade futura.
 - NÃO use ESLint nem Prettier. Use Biome (`npm run check`).
-- NÃO use shadcn/ui sem antes consultar. Componentes próprios mínimos por
-  enquanto, até design system definido.
+- shadcn/ui curado autorizado conforme [ADR-021](docs/architecture/ADR/021-design-system-shadcn-curado.md):
+  componentes copiados via CLI para `src/design-system/primitives/`, um PR
+  isolado por componente, adaptação aos tokens. Bibliotecas de UI seguem
+  critério leve (justificativa no PR), não exigem ADR específico por dep.
 - Erros da API da Câmara são esperados. APIs públicas brasileiras são instáveis.
   Sempre retry com backoff, sempre log estruturado de falha, nunca crash silencioso.
 - Plan mode antes de mudanças amplas. Para qualquer task que toque mais de 3
