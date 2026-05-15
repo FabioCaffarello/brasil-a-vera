@@ -213,3 +213,34 @@ export async function getAnosVotacaoDistintos(): Promise<number[]> {
   `)
   return rows.rows.map((r) => Number(r.ano))
 }
+
+export interface VotacaoRecente {
+  id: string
+  casa: Casa
+  dataHora: Date | string
+  descricao: string
+  aprovada: boolean
+}
+
+// Votações mais recentes para o card narrativo da home (Sprint 3.1 Tarefa 2).
+// Filtra por janela temporal — caller decide quantos dias e quantos itens.
+// Sem cache aqui — página da home tem `revalidate = 3600` que cobre.
+export async function getVotacoesRecentes(
+  diasJanela: number,
+  limit: number,
+): Promise<VotacaoRecente[]> {
+  return db
+    .select({
+      id: votacao.id,
+      casa: votacao.casa,
+      dataHora: votacao.dataHora,
+      descricao: votacao.descricao,
+      aprovada: votacao.aprovada,
+    })
+    .from(votacao)
+    .where(
+      sql`${votacao.dataHora} >= now() - make_interval(days => ${diasJanela})`,
+    )
+    .orderBy(desc(votacao.dataHora))
+    .limit(limit)
+}
