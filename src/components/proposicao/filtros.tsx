@@ -96,7 +96,7 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
         </a>
         <button
           type="submit"
-          className="min-h-[44px] rounded bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="min-h-[44px] rounded bg-primary-700 px-3 py-1.5 font-medium text-white text-xs transition-colors duration-150 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-500"
         >
           Filtrar
         </button>

@@ -1,7 +1,11 @@
+import { SearchX } from 'lucide-react'
+import Link from 'next/link'
+
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { TrustBanner } from '@/components/trust-banner'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
@@ -118,9 +122,19 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
       </div>
 
       {proposicoes.length === 0 ? (
-        <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-          Nenhuma proposição corresponde aos filtros.
-        </p>
+        <EmptyState
+          icon={SearchX}
+          title="Nenhuma proposição corresponde aos filtros"
+          description="Tente ajustar tipo, ano ou situação para resultados diferentes."
+          action={
+            <Link
+              href="/proposicoes"
+              className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 font-medium text-sm text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Limpar filtros
+            </Link>
+          }
+        />
       ) : (
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {proposicoes.map((p) => (
