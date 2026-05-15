@@ -1,24 +1,61 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import {
+  DocsHeader,
+  docsLinkClass,
+  ExternalLink,
+  Li,
+  P,
+  Section,
+  Ul,
+} from './_components/typography'
+
 export const metadata: Metadata = {
   title: 'Documentação — Brasil a Vera',
   description:
-    'Guia rápido do Brasil a Vera: o que é, como usar, fontes de dados e limitações conhecidas.',
+    'Guia do Brasil a Vera: pirâmide de confiança, como ler um perfil, glossário do processo legislativo e fontes de dados.',
 }
 
-export default function DocsPage() {
+// Hub /docs — entrada da seção de documentação. Sub-páginas em rotas
+// explícitas (não dynamic segment) conforme decisão C do plano Sprint 3.2.
+// Conteúdo derivado de docs/architecture/TRUST-PYRAMID.md,
+// docs/domain/LEGISLATIVE-PROCESS.md e docs/architecture/DATA-SOURCES.md.
+
+const SUBPAGES = [
+  {
+    href: '/docs/piramide-de-confianca',
+    title: 'Pirâmide de Confiança',
+    description:
+      'Os quatro níveis (L1, L2, L3, L4) que classificam todo dado da plataforma.',
+  },
+  {
+    href: '/docs/como-ler-um-perfil',
+    title: 'Como ler um perfil',
+    description:
+      'O que cada seção do perfil parlamentar mostra, o que ainda não cobre, e como interpretar os números.',
+  },
+  {
+    href: '/docs/glossario',
+    title: 'Glossário',
+    description:
+      'Termos do processo legislativo brasileiro com linguagem acessível ao lado da definição técnica.',
+  },
+  {
+    href: '/docs/fontes',
+    title: 'Fontes e cadência',
+    description:
+      'Quais APIs alimentam a plataforma, com que frequência ingerem dados, e quais limitações são conhecidas.',
+  },
+] as const
+
+export default function DocsHub() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-      <header className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
-          Documentação
-        </h1>
-        <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">
-          Guia rápido para visitantes, contribuidores e desenvolvedores
-          curiosos.
-        </p>
-      </header>
+    <>
+      <DocsHeader
+        title="Documentação"
+        subtitle="Guia para visitantes, contribuidores e desenvolvedores curiosos."
+      />
 
       <Section title="O que é o Brasil a Vera">
         <P>
@@ -34,149 +71,24 @@ export default function DocsPage() {
         </P>
       </Section>
 
-      <Section title="Como navegar">
-        <Ul>
-          <Li>
-            <Link href="/parlamentares" className={linkClass}>
-              /parlamentares
-            </Link>{' '}
-            — listagem de deputados e senadores com filtros por casa, partido e
-            UF.
-          </Li>
-          <Li>
-            <Link href="/parlamentares" className={linkClass}>
-              /parlamentares/[id]
-            </Link>{' '}
-            — perfil completo: votos, proposições, gastos, alinhamento
-            partidário e top afinidades de voto.
-          </Li>
-          <Li>
-            <Link href="/proposicoes" className={linkClass}>
-              /proposicoes
-            </Link>{' '}
-            — proposições legislativas (PL, PEC, PLP, MPV, PDC, PRC) com
-            tramitação detalhada.
-          </Li>
-          <Li>
-            <Link href="/votacoes" className={linkClass}>
-              /votacoes
-            </Link>{' '}
-            — votações nominais com voto individual por parlamentar e orientação
-            partidária (Câmara).
-          </Li>
-          <Li>
-            <Link href="/partidos/PT" className={linkClass}>
-              /partidos/[sigla]
-            </Link>{' '}
-            — bancada, fidelidade interna média, temas de proposições e gastos
-            agregados por partido.
-          </Li>
-          <Li>
-            <Link href="/comparar" className={linkClass}>
-              /comparar
-            </Link>{' '}
-            — comparativo lado a lado de 2 a 3 parlamentares (concordância par a
-            par, gastos, presenças).
-          </Li>
-          <Li>
-            <Link href="/busca" className={linkClass}>
-              /busca
-            </Link>{' '}
-            — busca livre por nome, número de proposição ou sigla.
-          </Li>
-        </Ul>
-      </Section>
-
-      <Section title="Fontes de dados">
-        <Ul>
-          <Li>
-            <strong>Câmara dos Deputados</strong> —{' '}
-            <ExternalLink href="https://dadosabertos.camara.leg.br/swagger/api.html">
-              dadosabertos.camara.leg.br
-            </ExternalLink>{' '}
-            (proposições, votações, votos nominais, orientação partidária,
-            CEAP).
-          </Li>
-          <Li>
-            <strong>Senado Federal</strong> —{' '}
-            <ExternalLink href="https://legis.senado.leg.br/dadosabertos/docs/">
-              legis.senado.leg.br/dadosabertos
-            </ExternalLink>{' '}
-            (senadores, proposições, votações, votos nominais).
-          </Li>
-          <Li>
-            Cobertura temporal atual: <strong>legislaturas 56 e 57</strong>{' '}
-            (2019–2026). Vide{' '}
-            <ExternalLink href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/ADR/016-cobertura-temporal-arquivamento.md">
-              ADR-016
-            </ExternalLink>
-            .
-          </Li>
-        </Ul>
-      </Section>
-
-      <Section title="Pirâmide de Confiança">
-        <P>
-          Todo dado exibido carrega um nível de confiança explícito. Detalhes
-          completos em{' '}
-          <ExternalLink href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/TRUST-PYRAMID.md">
-            TRUST-PYRAMID.md
-          </ExternalLink>
-          .
-        </P>
-        <Ul>
-          <Li>
-            <strong>L1</strong> — dado bruto da fonte oficial (nome, partido,
-            voto registrado).
-          </Li>
-          <Li>
-            <strong>L2</strong> — agregação determinística (total de votos, soma
-            de gastos, contagem de proposições).
-          </Li>
-          <Li>
-            <strong>L3</strong> — métrica derivada com fórmula aberta
-            (concordância par a par, alinhamento à bancada, índice de
-            coerência).
-          </Li>
-          <Li>
-            <strong>L4</strong> — estimativa modelada (reservado para Wave 3+,
-            ainda não em produção).
-          </Li>
-        </Ul>
-      </Section>
-
-      <Section title="Limitações conhecidas">
-        <Ul>
-          <Li>
-            <strong>Alinhamento partidário — Senado</strong>: a API do Senado
-            não publica orientações partidárias de bancada. Senadores permanecem
-            em empty state na seção de alinhamento. Tracking em{' '}
-            <ExternalLink href="https://github.com/FabioCaffarello/brasil-a-vera/issues/83">
-              issue #83
-            </ExternalLink>
-            .
-          </Li>
-          <Li>
-            <strong>Amostra mínima do alinhamento</strong>: o cálculo de
-            alinhamento partidário exige ≥ 50 votos comparáveis (não AUSENTE,
-            não LIBERADO). Conforme o cron de votações acumula histórico, mais
-            parlamentares atingem o threshold.
-          </Li>
-          <Li>
-            <strong>Senado — limitação CEAP</strong>: o Senado não possui
-            equivalente direto da Cota para Exercício da Atividade Parlamentar;
-            gastos não cobrem senadores.
-          </Li>
-          <Li>
-            <strong>Cobertura de tramitação</strong>: cresce a cada execução do
-            cron semanal de ingestão. Proposições compartilhadas Câmara↔Senado
-            têm rastros separados por casa (
-            <ExternalLink href="https://github.com/FabioCaffarello/brasil-a-vera/issues/74">
-              #74
-            </ExternalLink>
-            ).
-          </Li>
-        </Ul>
+      <Section title="Por onde começar">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {SUBPAGES.map((page) => (
+            <li key={page.href}>
+              <Link
+                href={page.href}
+                className="block h-full rounded-lg border border-zinc-200 bg-white p-4 transition-colors duration-150 hover:border-primary-300 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-primary-700 dark:hover:bg-primary-950"
+              >
+                <h3 className="mb-1 font-medium text-zinc-900 dark:text-zinc-100">
+                  {page.title}
+                </h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {page.description}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </Section>
 
       <Section title="Como contribuir">
@@ -211,59 +123,19 @@ export default function DocsPage() {
           </Li>
         </Ul>
       </Section>
-    </div>
-  )
-}
 
-const linkClass =
-  'text-zinc-900 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-300'
-
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="mb-12">
-      <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        {title}
-      </h2>
-      <div className="space-y-4 text-base text-zinc-700 dark:text-zinc-300">
-        {children}
-      </div>
-    </section>
-  )
-}
-
-function P({ children }: { children: React.ReactNode }) {
-  return <p className="leading-relaxed">{children}</p>
-}
-
-function Ul({ children }: { children: React.ReactNode }) {
-  return <ul className="space-y-2 leading-relaxed">{children}</ul>
-}
-
-function Li({ children }: { children: React.ReactNode }) {
-  return <li className="pl-1">— {children}</li>
-}
-
-function ExternalLink({
-  href,
-  children,
-}: {
-  href: string
-  children: React.ReactNode
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={linkClass}
-    >
-      {children}
-    </a>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Toda a documentação completa vive no repositório no GitHub —{' '}
+        <a
+          href="https://github.com/FabioCaffarello/brasil-a-vera/tree/main/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={docsLinkClass}
+        >
+          docs/
+        </a>
+        .
+      </p>
+    </>
   )
 }
