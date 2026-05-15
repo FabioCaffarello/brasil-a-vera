@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/nextjs'
+import { dark } from '@clerk/themes'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Link from 'next/link'
@@ -50,100 +52,122 @@ export const metadata: Metadata = {
   },
 }
 
+// ClerkProvider — Sprint 4.1 PR 1.
+//
+// Por que envolver <html> (não só <header>):
+//   queremos auth() server-side disponível em qualquer RSC (perfil de
+//   usuário, prefs, alertas — Sprint 4.5+). Quickstart Clerk mostra
+//   ambos os padrões; envolvendo <html> garante o caso geral.
+//
+// Custo: Provider injeta @clerk/clerk-js no client em TODAS as rotas,
+//   mesmo anônimas. Medição empírica no PR 1 valida se o impacto é
+//   aceitável. Se ClerkProvider sozinho > 50kb gzip por rota pública,
+//   reavaliamos: ou (a) mover Provider para route group (authenticated)/
+//   só no 4.5, ou (b) `dynamic={false}` opcional do Provider.
+//
+// `afterSignOutUrl="/"`: logout do <UserButton> retorna à home do
+//   Brasil a Vera, não ao Account Portal hosted do Clerk.
+//
+// `appearance={{ baseTheme: dark }}`: nosso shell é dark-first; sem
+//   isso o <UserButton> e <SignIn> hosted vêm tema claro e brigam
+//   com a paleta. @clerk/themes (~2kb gzip) só fornece a constante
+//   `dark`. Justificativa em ADR-022.
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-        <a
-          href="#conteudo"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-zinc-300 focus:bg-white focus:px-3 focus:py-2 focus:font-medium focus:text-sm focus:text-zinc-900 focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:border-zinc-600 dark:focus:bg-zinc-900 dark:focus:text-zinc-100"
-        >
-          Pular para o conteúdo
-        </a>
-        <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <nav
-            aria-label="Principal"
-            className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3"
+    <ClerkProvider afterSignOutUrl="/" appearance={{ baseTheme: dark }}>
+      <html
+        lang="pt-BR"
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      >
+        <body className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+          <a
+            href="#conteudo"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-zinc-300 focus:bg-white focus:px-3 focus:py-2 focus:font-medium focus:text-sm focus:text-zinc-900 focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:border-zinc-600 dark:focus:bg-zinc-900 dark:focus:text-zinc-100"
           >
-            <Link
-              href="/"
-              className="font-semibold tracking-tight hover:text-zinc-700 dark:hover:text-zinc-300"
+            Pular para o conteúdo
+          </a>
+          <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <nav
+              aria-label="Principal"
+              className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3"
             >
-              Brasil a Vera
-            </Link>
-            <div className="flex items-center gap-4">
-              <ul className="hidden items-center gap-4 text-sm sm:flex">
-                <li>
-                  <Link
-                    href="/o-meu-parlamentar"
-                    className="font-medium text-primary-700 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100"
-                  >
-                    Meu parlamentar
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/parlamentares"
-                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                  >
-                    Parlamentares
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/proposicoes"
-                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                  >
-                    Proposições
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/votacoes"
-                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                  >
-                    Votações
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/docs"
-                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                  >
-                    Docs
-                  </Link>
-                </li>
-              </ul>
-              <SearchForm variant="header" />
+              <Link
+                href="/"
+                className="font-semibold tracking-tight hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                Brasil a Vera
+              </Link>
+              <div className="flex items-center gap-4">
+                <ul className="hidden items-center gap-4 text-sm sm:flex">
+                  <li>
+                    <Link
+                      href="/o-meu-parlamentar"
+                      className="font-medium text-primary-700 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100"
+                    >
+                      Meu parlamentar
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/parlamentares"
+                      className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    >
+                      Parlamentares
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/proposicoes"
+                      className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    >
+                      Proposições
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/votacoes"
+                      className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    >
+                      Votações
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/docs"
+                      className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    >
+                      Docs
+                    </Link>
+                  </li>
+                </ul>
+                <SearchForm variant="header" />
+              </div>
+            </nav>
+          </header>
+          <main id="conteudo" className="min-h-[calc(100vh-3rem)]">
+            {children}
+          </main>
+          <footer className="border-t border-zinc-200 bg-white py-4 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4">
+              <span>
+                Dados oficiais da Câmara dos Deputados e do Senado Federal.
+              </span>
+              <a
+                href="https://github.com/FabioCaffarello/brasil-a-vera"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-zinc-900 dark:hover:text-zinc-100"
+              >
+                Código no GitHub ↗
+              </a>
             </div>
-          </nav>
-        </header>
-        <main id="conteudo" className="min-h-[calc(100vh-3rem)]">
-          {children}
-        </main>
-        <footer className="border-t border-zinc-200 bg-white py-4 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4">
-            <span>
-              Dados oficiais da Câmara dos Deputados e do Senado Federal.
-            </span>
-            <a
-              href="https://github.com/FabioCaffarello/brasil-a-vera"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-900 dark:hover:text-zinc-100"
-            >
-              Código no GitHub ↗
-            </a>
-          </div>
-        </footer>
-      </body>
-    </html>
+          </footer>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }
