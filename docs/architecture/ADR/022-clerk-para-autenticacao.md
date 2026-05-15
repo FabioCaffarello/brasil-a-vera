@@ -90,35 +90,80 @@ Aplicar codemod Next 16 (`npx @next/codemod next/middleware-to-proxy`) em PR
 de migração quando issue #962 fechar. Princípio 13 + ADR-019: não preemptar
 suporte que ainda não existe.
 
-### 2. API: `<SignedIn>` / `<SignedOut>` (NÃO `<Show>`)
+### 2. API: `<Show when="...">` (correção empírica — `<SignedIn>` foi REMOVIDO em Core 3)
 
-Clerk Core 3 introduziu `<Show when="signed-in">` como açúcar sintático. A
-API antiga `<SignedIn>` / `<SignedOut>` continua documentada, funcional e
-**não está deprecada**.
+**Plano original** (refletindo research do owner pré-implementação): usar
+`<SignedIn>` / `<SignedOut>` em vez de `<Show>`, argumento de que ambos
+estavam funcionais e a API antiga tinha mais issues resolvidas.
 
-**Decisão**: usar `<SignedIn>` / `<SignedOut>` no 4.1.
-- Mais issues resolvidas no Stack Overflow / GitHub
-- Exemplos consolidados em projetos reais
-- Comportamento idêntico
+**Descoberta empírica no PR 2** da Sprint 4.1: `@clerk/nextjs@7.3.4`
+(Core 3, instalado no PR 1) **não exporta** `<SignedIn>` / `<SignedOut>`.
+Inspeção de `node_modules/@clerk/nextjs/dist/types/components.client.d.ts`:
 
-Quando Sprint 4.5+ introduzir Permissions/Roles (RBAC), aí avaliamos `<Show>`
-pelo açúcar `when={{ permission: 'foo' }}`. Adotar agora é over-engineering
-por novidade.
+```ts
+export { ClerkProvider } from './client-boundary/ClerkProvider';
+export { Show } from './client-boundary/controlComponents';
+```
 
-### 3. Matcher restrito: `/minha-area/(.*)`
+`@clerk/nextjs/legacy` também NÃO inclui `<SignedIn>`/`<SignedOut>` — só
+hooks `useSignIn`/`useSignUp`.
 
-O quickstart Clerk sugere matcher genérico
-(`/((?!_next|...).*)+/(api|trpc)(.*)`). **Não copiamos**:
+Build do Next falha com:
+> Export SignedIn doesn't exist in target module
+> Did you mean to import SignIn?
 
-- Rotas públicas (~80% do tráfego em Brasil a Vera) não invocam Clerk
-- Custo CPU em toda request seria desperdício
-- Edge cache (ADR-018) poderia conflitar com cookies/headers de Clerk em rotas que não os usam
-- Princípio do budget (ADR-017)
+**Decisão corrigida**: usar `<Show when="signed-in">` / `<Show when="signed-out">`
+no Core 3+. Princípio 13 aplicado — hipótese sobre disponibilidade da API
+falsificada empiricamente; pivotar para o que existe.
 
-**Decisão**: matcher = `['/minha-area/(.*)']`. Como nenhuma rota privada
-existe ainda no 4.1, `clerkMiddleware()` fica em modo "registrado mas
-dormente" (sem `auth.protect()`). No 4.5, quando `/minha-area/*` for
-criada, adiciona `auth.protect()` dentro do handler.
+`<Show>` foi a API nova em Core 3 e é hoje a ÚNICA exportada. Comportamento
+equivalente. Quando RBAC/Permissions chegarem (Sprint 4.5+), `<Show>` já
+tem o açúcar `when={{ permission: '...' }}`.
+
+Alternativa de downgrade para `@clerk/nextjs@6.x` (que tinha `<SignedIn>`)
+foi descartada — perderíamos features Core 3 (sem benefício compensador
+para Brasil a Vera).
+
+### 3. Matcher do middleware — REVISADO no PR 2 (foi `/minha-area/(.*)`, virou genérico)
+
+**PR 1 (original)**: matcher = `['/minha-area/(.*)']` para evitar custo CPU
+em rotas públicas e potencial conflito com edge cache (ADR-018).
+
+**PR 2 (revisado)**: matcher genérico cobrindo todas as rotas não-asset:
+```
+'/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+'/(api|trpc)(.*)'
+```
+
+**Razão da revisão**: o `<AuthSlot />` (RSC server-side introduzido no
+PR 2 para Opção B) chama `auth()` no header de todas as páginas — para
+decidir entre link estático "Entrar" (anônimos, zero JS de Clerk) vs
+`<AuthIsland />` lazy (autenticados, carrega Clerk client).
+
+`auth()` exige que `clerkMiddleware()` tenha rodado, senão:
+```
+Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware()
+```
+
+Sem expandir o matcher, AuthSlot quebraria em rotas públicas. A arquitetura
+Opção B (zero JS anônimo) depende de matcher amplo.
+
+**Trade-offs aceitos da revisão**:
+
+| Aspecto | Antes (matcher restrito) | Depois (matcher genérico) |
+|---|---|---|
+| CPU por request pública | 0ms (middleware skip) | ~1-2ms (Clerk session parse) |
+| Bundle JS rota anônima | bloqueado por Provider em `<html>` (+50kb gzip) | zero (link estático) |
+| SSG / static prerender | preservado | quebrado — pages viram dynamic (ƒ) |
+| Edge cache (ADR-018) | natural via SSG | requer `Cache-Control: s-maxage` |
+
+A perda de SSG e o custo de CPU são compensados pela economia de bundle
+em **todas** as visitas anônimas (~80% do tráfego). Cache-Control no edge
+(ADR-018 já cobre os TTLs) preserva a performance percebida.
+
+`clerkMiddleware()` continua em modo "dormente" (sem `auth.protect()`).
+No Sprint 4.5, quando `/minha-area/*` for criada, adiciona
+`auth.protect()` no handler para o subset de rotas privadas.
 
 ### 4. `<ClerkProvider>` envolve `<html>`
 
@@ -130,17 +175,50 @@ Quickstart Clerk mostra ambos os padrões (envolver `<html>` ou apenas
 - Custo: Provider injeta `@clerk/clerk-js` no client em TODAS as rotas,
   mesmo anônimas. Medição empírica obrigatória no PR 1 do 4.1.
 
-**ATUALIZAÇÃO (Opção B aplicada)**: plano original previa Provider em `<html>`. Após
-medição empírica no PR 1 mostrar gate de 50kb tripado em 815B (1.6% além — ver §5),
-owner escolheu **Opção B**: Provider NÃO entra em `<html>`. Em vez disso:
+**ATUALIZAÇÃO PR 1 (Opção B aplicada)**: plano original previa Provider em `<html>`.
+Após medição empírica no PR 1 mostrar gate de 50kb tripado em 815B (1.6% além —
+ver §5), owner escolheu **Opção B**: Provider NÃO entra em `<html>`. Layout root sem
+Provider; delta em rotas anônimas volta a praticamente zero.
 
-- **Sprint 4.1 PR 1** (este): apenas middleware. Layout root SEM Provider. Bundle delta
-  em rotas anônimas volta a praticamente zero.
-- **Sprint 4.1 PR 2**: `<AuthIsland>` (client component lazy via `next/dynamic`)
-  embrulha localmente um `<ClerkProvider>` em torno de `<UserButton>` / `<SignedIn>` /
-  `<SignedOut>`. Provider hidrata apenas quando o JS do navbar carrega.
-- **Sprint 4.5**: layout do route group `(authenticated)/` pode adicionar seu próprio
-  Provider para client hooks em rotas privadas.
+**ATUALIZAÇÃO PR 2 (refinamento do split-point após validação empírica)**:
+
+A tentativa inicial do PR 2 foi colocar o `<AuthIsland>` (com `ClerkProvider` +
+`Show` + `SignInButton` + `dark` statically imported) dentro do `<Navbar>`. Medição
+empírica mostrou que o Next bundla todas as dependências estaticamente reachable da
+árvore de layout, INDEPENDENTE de render condicional server-side. Resultado: +78kb
+gzipped por rota anônima — PIOR que Opção A (+50kb).
+
+**Topologia final (3 componentes)**:
+
+| Arquivo | Tipo | Papel |
+|---|---|---|
+| `auth-slot.tsx` | RSC | `auth()` server-side; decide branch (anônimo/autenticado) |
+| `auth-island-loader.tsx` | Client | Thin wrapper que faz `dynamic(() => import('./auth-island'), { ssr: false })`. **Cria o split-point assíncrono** |
+| `auth-island.tsx` | Client | Implementação real: `<ClerkProvider>` + `<Show when>` + `<UserButton>` |
+
+**Fluxo**:
+
+- **Anônimo** (sem session cookie): AuthSlot renderiza `<a href="/sign-in">Entrar</a>`
+  estático (HTML puro). AuthIslandLoader **não é renderizado** → split-point
+  assíncrono **não é referenciado no HTML** → browser **não baixa chunk Clerk**
+- **Autenticado** (session válida): AuthSlot renderiza `<AuthIslandLoader />`.
+  Wrapper monta no client, `dynamic()` carrega `auth-island.tsx` chunk
+  assincronamente. Skeleton mostra durante load. Após load: ClerkProvider hidrata
+  + UserButton renderiza
+- **`/sign-in`**: rota RSC `force-dynamic` que chama `redirectToSignIn()`. Anônimo
+  clica "Entrar" → navega para `/sign-in` → server redirect para Account Portal hosted
+
+**Medição empírica final do PR 2** (curl real, anonymous /docs):
+- main pré-Wave-4.1: 10 chunks, 190,428 gz bytes
+- branch sem AuthIslandLoader: 15 chunks, 269,155 gz bytes (+78kb)
+- branch com AuthIslandLoader (final): 14 chunks, 201,821 gz bytes (**+11kb**)
+
+A diferença residual de +11kb gzipped vem de Next runtime adicional para middleware
+edge + AuthIslandLoader chunk em si (pequeno; necessário para criar o split-point).
+**Dentro do gate de 50kb** (ADR-022 §5).
+
+**Sprint 4.5**: layout do route group `(authenticated)/` pode adicionar seu próprio
+Provider para client hooks em rotas privadas.
 
 `auth()` server-side em RSCs continua funcionando — lê de cookies via middleware,
 não depende do Provider client.
