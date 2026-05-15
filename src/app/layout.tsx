@@ -50,6 +50,27 @@ export const metadata: Metadata = {
   },
 }
 
+// ClerkProvider escopo — decisão registrada em ADR-022 §4 (Opção B).
+//
+// Após medição empírica no PR 1 da Sprint 4.1 mostrou que envolver <html>
+// com <ClerkProvider> adicionava ~50.8kb gzipped em TODAS as rotas
+// públicas (gate de 50kb tripado em 815 bytes — 1.6% além).
+//
+// Decisão do owner: Opção B — Provider NÃO entra em <html>. Em vez
+// disso, o <AuthIsland> (Sprint 4.1 PR 2, client component lazy via
+// next/dynamic) embrulha localmente um <ClerkProvider> em volta dos
+// componentes que precisam (<UserButton>, hooks Clerk client).
+//
+// Implicações:
+// - Rotas anônimas (~80% do tráfego) NÃO pagam o bundle do Clerk SDK
+//   no client — Provider só hidrata quando AuthIsland mounta
+// - auth() server-side em RSCs continua funcionando (lê de cookies via
+//   middleware; não exige Provider client)
+// - clerkMiddleware (src/middleware.ts) é INDEPENDENTE do Provider;
+//   roda server-side em /minha-area/(.*) only
+// - Sprint 4.5 quando criar /minha-area/* — pode adicionar Provider
+//   no layout daquele route group para client hooks dentro de rotas
+//   privadas (custo limitado a usuários autenticados)
 export default function RootLayout({
   children,
 }: Readonly<{

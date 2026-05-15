@@ -1,7 +1,7 @@
 # ADR-022: Clerk para autenticação na Sprint 4.5+
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-15
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-05-15 (Sprint 4.1 PR 1 — decisões de implementação)
 > Status: accepted
 
 ---
@@ -10,6 +10,7 @@
 
 - [Contexto](#contexto)
 - [Decisão](#decisão)
+- [Decisões de implementação (Sprint 4.1)](#decisões-de-implementação-sprint-41)
 - [Validação empírica do free tier](#validação-empírica-do-free-tier)
 - [Tratamento de dados pessoais (LGPD)](#tratamento-de-dados-pessoais-lgpd)
 - [Bundle e performance](#bundle-e-performance)
@@ -68,6 +69,122 @@ as rotas privadas da Wave 4+. Setup divide-se em três momentos:
    tabela `usuario_acompanhamento` no schema (se confirmada nesta sprint).
    ADR específico sobre persistência de dados de usuário em multi-tenant
    cívico se entrar (LGPD prática, não só teórica).
+
+## Decisões de implementação (Sprint 4.1)
+
+Calibradas após inspeção do quickstart Clerk Core 3 (mar/2026) e do estado
+upstream do `@opennextjs/cloudflare` em 2026-05-15.
+
+### 1. `middleware.ts` (NÃO `proxy.ts`) — dívida conhecida
+
+Next 16 (out/2025) renomeou `middleware.ts` → `proxy.ts`. O arquivo legacy
+`middleware.ts` continua funcionando, só emite deprecation warning.
+
+**MAS** `@opennextjs/cloudflare` ainda NÃO suporta `proxy.ts`:
+
+- Issue [opennextjs/opennextjs-cloudflare#962](https://github.com/opennextjs/opennextjs-cloudflare/issues/962) aberta out/2025
+- Relato adicional [vercel/next.js#86122](https://github.com/vercel/next.js/issues/86122): `proxy.ts` não executa atrás de Cloudflare orange-cloud mesmo fora do OpenNext
+
+**Decisão**: ficar em `middleware.ts` até suporte upstream chegar.
+Aplicar codemod Next 16 (`npx @next/codemod next/middleware-to-proxy`) em PR
+de migração quando issue #962 fechar. Princípio 13 + ADR-019: não preemptar
+suporte que ainda não existe.
+
+### 2. API: `<SignedIn>` / `<SignedOut>` (NÃO `<Show>`)
+
+Clerk Core 3 introduziu `<Show when="signed-in">` como açúcar sintático. A
+API antiga `<SignedIn>` / `<SignedOut>` continua documentada, funcional e
+**não está deprecada**.
+
+**Decisão**: usar `<SignedIn>` / `<SignedOut>` no 4.1.
+- Mais issues resolvidas no Stack Overflow / GitHub
+- Exemplos consolidados em projetos reais
+- Comportamento idêntico
+
+Quando Sprint 4.5+ introduzir Permissions/Roles (RBAC), aí avaliamos `<Show>`
+pelo açúcar `when={{ permission: 'foo' }}`. Adotar agora é over-engineering
+por novidade.
+
+### 3. Matcher restrito: `/minha-area/(.*)`
+
+O quickstart Clerk sugere matcher genérico
+(`/((?!_next|...).*)+/(api|trpc)(.*)`). **Não copiamos**:
+
+- Rotas públicas (~80% do tráfego em Brasil a Vera) não invocam Clerk
+- Custo CPU em toda request seria desperdício
+- Edge cache (ADR-018) poderia conflitar com cookies/headers de Clerk em rotas que não os usam
+- Princípio do budget (ADR-017)
+
+**Decisão**: matcher = `['/minha-area/(.*)']`. Como nenhuma rota privada
+existe ainda no 4.1, `clerkMiddleware()` fica em modo "registrado mas
+dormente" (sem `auth.protect()`). No 4.5, quando `/minha-area/*` for
+criada, adiciona `auth.protect()` dentro do handler.
+
+### 4. `<ClerkProvider>` envolve `<html>`
+
+Quickstart Clerk mostra ambos os padrões (envolver `<html>` ou apenas
+`<header>`). Para Brasil a Vera:
+
+- **Sim, envolve `<html>`** — queremos `auth()` server-side em qualquer
+  RSC (perfil de usuário, prefs, alertas — Sprint 4.5+)
+- Custo: Provider injeta `@clerk/clerk-js` no client em TODAS as rotas,
+  mesmo anônimas. Medição empírica obrigatória no PR 1 do 4.1.
+
+**ATUALIZAÇÃO (Opção B aplicada)**: plano original previa Provider em `<html>`. Após
+medição empírica no PR 1 mostrar gate de 50kb tripado em 815B (1.6% além — ver §5),
+owner escolheu **Opção B**: Provider NÃO entra em `<html>`. Em vez disso:
+
+- **Sprint 4.1 PR 1** (este): apenas middleware. Layout root SEM Provider. Bundle delta
+  em rotas anônimas volta a praticamente zero.
+- **Sprint 4.1 PR 2**: `<AuthIsland>` (client component lazy via `next/dynamic`)
+  embrulha localmente um `<ClerkProvider>` em torno de `<UserButton>` / `<SignedIn>` /
+  `<SignedOut>`. Provider hidrata apenas quando o JS do navbar carrega.
+- **Sprint 4.5**: layout do route group `(authenticated)/` pode adicionar seu próprio
+  Provider para client hooks em rotas privadas.
+
+`auth()` server-side em RSCs continua funcionando — lê de cookies via middleware,
+não depende do Provider client.
+
+Props do Provider quando entrar (na AuthIsland do PR 2):
+
+- `afterSignOutUrl="/"` — logout do `<UserButton>` volta à home, não
+  ao Account Portal hosted do Clerk
+- `appearance={{ baseTheme: dark }}` — alinha com nosso shell dark-first
+  (sem isso, componentes Clerk vêm tema claro). Requer `@clerk/themes`
+  (~2kb gzip), dep mínima sem risco
+- **Sem** `signInUrl` / `signUpUrl` custom — Account Portal hosted
+  (`accounts.<app>.clerk.accounts.dev`) cobre Sprint 4.1. Quando
+  Sprint 4.5 criar `/minha-area/sign-in`, aí configura
+
+### 5. Gate empírico: ClerkProvider > 50kb gzip por rota pública
+
+**Histórico**: gate foi proposto e empiricamente tripado.
+
+Medição no PR 1 (com Provider em `<html>` antes da Opção B ser aplicada):
+- JS gzipped main: 231,580 bytes
+- JS gzipped branch: 282,395 bytes
+- **delta: +50,815 bytes** (gate de 50kb tripado em 815 bytes / 1.6%)
+
+Owner escolheu **Opção B** (§4 acima — Provider em AuthIsland scoped, não em
+`<html>`). Decisão arquivada. Princípio 13 aplicado — confirmação empírica
+antes de mergear evitou shipping de bundle inflado em rotas anônimas.
+
+Re-medição após aplicar Opção B no PR 1 (Provider removido do layout):
+- JS gzipped branch (Opção B): a ser medido empiricamente; esperado igual ao main
+- delta esperado em rotas anônimas: 0 bytes (ClerkProvider só hidrata via AuthIsland no PR 2)
+
+### 6. Account Portal hosted no Sprint 4.1
+
+Login real no 4.1 acontece via Account Portal hosted Clerk:
+
+- Usuário anônimo clica "Entrar" no header
+- Browser vai para `https://accounts.<app>.clerk.accounts.dev/sign-in`
+- Após login, volta para Brasil a Vera com cookie de session
+- Header renderiza `<UserButton>` (avatar + dropdown)
+
+Sem rota custom `/sign-in` em Brasil a Vera no 4.1 — não precisa. Sprint
+4.5 introduz `/minha-area/sign-in` se quisermos sign-in dentro do site
+(decisão diferida).
 
 ### Plano de migração caso o free tier mude
 
