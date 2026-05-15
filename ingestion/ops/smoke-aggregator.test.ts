@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   aggregateProbeResults,
   extractOgImage,
+  findMissingAnchors,
   validateOgImageCanonical,
 } from './smoke-aggregator'
 
@@ -121,5 +122,30 @@ describe('validateOgImageCanonical', () => {
     const html = `<meta property="og:image" content="${PROD}/opengraph-image?abc"/>`
     const r = validateOgImageCanonical(html, `${PROD}/`)
     expect(r.ok).toBe(true)
+  })
+})
+
+describe('findMissingAnchors', () => {
+  it('retorna vazio quando todas as âncoras estão presentes', () => {
+    const html = '<div>foo bar baz</div>'
+    expect(findMissingAnchors(html, ['foo', 'bar'])).toEqual([])
+  })
+
+  it('retorna as âncoras ausentes', () => {
+    const html = '<div>foo baz</div>'
+    expect(findMissingAnchors(html, ['foo', 'bar', 'baz', 'qux'])).toEqual([
+      'bar',
+      'qux',
+    ])
+  })
+
+  it('retorna lista vazia para array de âncoras vazio', () => {
+    expect(findMissingAnchors('qualquer html', [])).toEqual([])
+  })
+
+  it('é case-sensitive (presença literal)', () => {
+    const html = '<div>Foo</div>'
+    expect(findMissingAnchors(html, ['foo'])).toEqual(['foo'])
+    expect(findMissingAnchors(html, ['Foo'])).toEqual([])
   })
 })

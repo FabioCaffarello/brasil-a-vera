@@ -82,8 +82,16 @@ export default function RootLayout({
               <ul className="hidden items-center gap-4 text-sm sm:flex">
                 <li>
                   <Link
+                    href="/o-meu-parlamentar"
+                    className="font-medium text-primary-700 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100"
+                  >
+                    Meu parlamentar
+                  </Link>
+                </li>
+                <li>
+                  <Link
                     href="/parlamentares"
-                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
                   >
                     Parlamentares
                   </Link>
@@ -91,7 +99,7 @@ export default function RootLayout({
                 <li>
                   <Link
                     href="/proposicoes"
-                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
                   >
                     Proposições
                   </Link>
@@ -99,7 +107,7 @@ export default function RootLayout({
                 <li>
                   <Link
                     href="/votacoes"
-                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
                   >
                     Votações
                   </Link>
@@ -107,7 +115,7 @@ export default function RootLayout({
                 <li>
                   <Link
                     href="/docs"
-                    className="text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100"
+                    className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
                   >
                     Docs
                   </Link>
