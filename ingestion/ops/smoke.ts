@@ -54,6 +54,19 @@ const PROBES: readonly Probe[] = [
     concurrency: 5,
     expectedStatuses: [401, 503],
   },
+  {
+    name: 'meu-parlamentar-root',
+    path: '/o-meu-parlamentar',
+    concurrency: 5,
+    expectedStatuses: [200],
+  },
+  {
+    name: 'meu-parlamentar-uf-municipio',
+    // Sprint 3.1 Tarefa 1 — DF tem só Brasília, valida fluxo end-to-end.
+    path: '/o-meu-parlamentar?uf=DF&municipio=Bras%C3%ADlia',
+    concurrency: 5,
+    expectedStatuses: [200],
+  },
 ] as const
 
 // Rotas verificadas para OG canônico no smoke. Cobertura: home, listas e
@@ -67,6 +80,7 @@ const OG_ROUTES = [
   '/votacoes',
   '/comparar',
   '/docs',
+  '/o-meu-parlamentar',
 ] as const
 
 const SUCCESS_THRESHOLD_PERCENT = 99

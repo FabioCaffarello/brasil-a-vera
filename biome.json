@@ -16,7 +16,8 @@
       "!dist",
       "!.cache",
       "!coverage",
-      "!src/shared/db/migrations/meta"
+      "!src/shared/db/migrations/meta",
+      "!src/lib/municipios-ibge.json"
     ]
   },
   "formatter": {
