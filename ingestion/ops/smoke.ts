@@ -1,10 +1,15 @@
+import { createHash } from 'node:crypto'
+
 import { z } from 'zod'
 
 import {
   aggregateProbeResults,
+  findDuplicateHashes,
   findMissingAnchors,
+  hasRssDiscovery,
   type ProbeResult,
   validateOgImageCanonical,
+  validateRssXml,
 } from './smoke-aggregator'
 
 const envSchema = z.object({
@@ -93,6 +98,47 @@ const HOME_CARDS_ANCHORS = [
   'A plataforma em números',
 ] as const
 
+// Rotas OG fixas (listagens + global). Entidades amostrais são descobertas
+// em runtime via DISCOVER_* (extração de IDs do HTML/RSS). Sprint 3.2 Tarefa 4.
+const OG_LISTING_PATHS = [
+  '/opengraph-image',
+  '/parlamentares/opengraph-image',
+  '/proposicoes/opengraph-image',
+  '/votacoes/opengraph-image',
+  '/o-meu-parlamentar/opengraph-image',
+  '/partidos/PT/opengraph-image',
+] as const
+
+// Feeds RSS amostrais que precisam validar contra estrutura RSS 2.0.
+// Subset deliberadamente pequeno (3) — testar 84 feeds inflaria o smoke
+// sem ganho proporcional. Cobre global + segmentação por casa + por UF.
+const RSS_VALID_PATHS = [
+  '/feed/votacoes',
+  '/feed/votacoes/casa/CAMARA',
+  '/feed/votacoes/uf/SP',
+] as const
+
+// Páginas que devem expor `<link rel="alternate" type="application/rss+xml">`
+// no head — discovery via metadata.alternates.types do Next. Sprint 3.2 Tarefa 4.
+const RSS_DISCOVERY_PATHS = ['/votacoes', '/partidos/PT'] as const
+
+// Conteúdo-âncora por sub-página de /docs. Cada string deve aparecer no HTML
+// da página correspondente, senão é regressão silenciosa de conteúdo
+// pedagógico removido (mesma classe do `home-anchors`). Sprint 3.2 Tarefa 4.
+const DOCS_ANCHORS_BY_PATH: Record<string, readonly string[]> = {
+  '/docs': ['Por onde começar', 'Como contribuir'],
+  '/docs/piramide-de-confianca': [
+    'Os quatro níveis',
+    'Por que essa separação importa',
+  ],
+  '/docs/como-ler-um-perfil': [
+    'Top afinidade de voto',
+    'Alinhamento partidário',
+  ],
+  '/docs/glossario': ['Tipos de proposição', 'Tramitação'],
+  '/docs/fontes': ['Princípio de rastreabilidade', 'Cobertura temporal'],
+}
+
 const SUCCESS_THRESHOLD_PERCENT = 99
 const WARMUP_DELAY_MS = 5_000
 
@@ -118,6 +164,30 @@ async function fetchHtml(url: string): Promise<string | null> {
     const res = await fetch(url, { redirect: 'manual' })
     if (res.status !== 200) return null
     return await res.text()
+  } catch {
+    return null
+  }
+}
+
+async function fetchTextWithType(
+  url: string,
+): Promise<{ body: string; contentType: string } | null> {
+  try {
+    const res = await fetch(url, { redirect: 'manual' })
+    if (res.status !== 200) return null
+    const body = await res.text()
+    return { body, contentType: res.headers.get('content-type') ?? '' }
+  } catch {
+    return null
+  }
+}
+
+async function fetchPngHash(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { redirect: 'manual' })
+    if (res.status !== 200) return null
+    const buf = new Uint8Array(await res.arrayBuffer())
+    return createHash('sha256').update(buf).digest('hex')
   } catch {
     return null
   }
@@ -210,6 +280,224 @@ async function runOgCanonicalProbe(
   }
 }
 
+/**
+ * Probe Sprint 3.2 Tarefa 4 — uniqueness binária de OGs. Descobre 2
+ * entidades amostrais (parlamentar do HTML de /parlamentares + votação
+ * do RSS global) e fetch-hash 8 endpoints OG. Hash duplicado entre eles
+ * indica que uma rota está caindo no fallback global (regressão pré-3.2).
+ *
+ * Falha rígida se houver duplicata OU se ≥1 fetch falhar.
+ */
+async function runOgHashUniquenessProbe(
+  baseUrl: string,
+): Promise<
+  ProbeResult & { failures: Array<{ label: string; reason: string }> }
+> {
+  // Descobre IDs amostrais — extrai 1 UUID v7 do HTML/RSS já em produção.
+  const parlamentaresHtml = await fetchHtml(`${baseUrl}/parlamentares`)
+  const parlamentarId =
+    parlamentaresHtml?.match(/href="\/parlamentares\/([0-9a-f-]{36})"/i)?.[1] ??
+    null
+  const votacoesXml = await fetchHtml(`${baseUrl}/feed/votacoes`)
+  const votacaoId =
+    votacoesXml?.match(/\/votacoes\/([0-9a-f-]{36})/i)?.[1] ?? null
+
+  type Target = { label: string; url: string }
+  const targets: Target[] = OG_LISTING_PATHS.map((p) => ({
+    label: p,
+    url: `${baseUrl}${p}`,
+  }))
+  if (parlamentarId) {
+    targets.push({
+      label: `/parlamentares/${parlamentarId}/opengraph-image`,
+      url: `${baseUrl}/parlamentares/${parlamentarId}/opengraph-image`,
+    })
+  }
+  if (votacaoId) {
+    targets.push({
+      label: `/votacoes/${votacaoId}/opengraph-image`,
+      url: `${baseUrl}/votacoes/${votacaoId}/opengraph-image`,
+    })
+  }
+
+  const hashes = await Promise.all(targets.map((t) => fetchPngHash(t.url)))
+  const failures: Array<{ label: string; reason: string }> = []
+  const validHashes: string[] = []
+  for (let i = 0; i < targets.length; i++) {
+    const h = hashes[i]
+    if (h === null) {
+      failures.push({ label: targets[i].label, reason: 'fetch falhou' })
+    } else {
+      validHashes.push(h)
+    }
+  }
+  if (!parlamentarId) {
+    failures.push({
+      label: 'discovery',
+      reason: 'não extraiu parlamentarId do HTML de /parlamentares',
+    })
+  }
+  if (!votacaoId) {
+    failures.push({
+      label: 'discovery',
+      reason: 'não extraiu votacaoId do RSS /feed/votacoes',
+    })
+  }
+
+  for (const dupe of findDuplicateHashes(validHashes)) {
+    const dupedLabels = targets
+      .filter((_, i) => hashes[i] === dupe)
+      .map((t) => t.label)
+      .join(' = ')
+    failures.push({
+      label: dupedLabels,
+      reason: `hash binário duplicado (${dupe.slice(0, 12)}…) — provável fallback OG global vazando`,
+    })
+  }
+
+  const total = targets.length
+  const expected = total - failures.length
+  const ok = failures.length === 0
+  return {
+    name: 'og-hash-uniqueness',
+    total,
+    expected: Math.max(0, expected),
+    unexpected: ok ? 0 : 1,
+    errors: 0,
+    successRate: ok ? 100 : 0,
+    statuses: ok ? { unique: total } : { duplicate_or_fail: failures.length },
+    failures,
+  }
+}
+
+/** Probe Sprint 3.2 Tarefa 4 — validação de estrutura RSS 2.0 em N feeds amostrais. */
+async function runRssXmlValidProbe(
+  baseUrl: string,
+  paths: readonly string[],
+): Promise<
+  ProbeResult & { failures: Array<{ path: string; reason: string }> }
+> {
+  const failures: Array<{ path: string; reason: string }> = []
+  let expected = 0
+  let errors = 0
+
+  for (const path of paths) {
+    const result = await fetchTextWithType(`${baseUrl}${path}`)
+    if (!result) {
+      errors++
+      failures.push({ path, reason: 'fetch falhou ou status != 200' })
+      continue
+    }
+    const validation = validateRssXml(result.body, result.contentType)
+    if (validation.ok) {
+      expected++
+    } else {
+      failures.push({ path, reason: validation.reason })
+    }
+  }
+
+  const total = paths.length
+  const unexpected = total - expected - errors
+  const successRate = total === 0 ? 0 : (expected / total) * 100
+  return {
+    name: 'rss-xml-valid',
+    total,
+    expected,
+    unexpected,
+    errors,
+    successRate: Math.round(successRate * 100) / 100,
+    statuses: {
+      ok: expected,
+      ...(unexpected > 0 ? { invalid: unexpected } : {}),
+      ...(errors > 0 ? { error: errors } : {}),
+    },
+    failures,
+  }
+}
+
+/** Probe Sprint 3.2 Tarefa 4 — discovery `<link rel=alternate type=application/rss+xml>`. */
+async function runRssDiscoveryProbe(
+  baseUrl: string,
+  paths: readonly string[],
+): Promise<ProbeResult & { failures: string[] }> {
+  const failures: string[] = []
+  let expected = 0
+  let errors = 0
+
+  for (const path of paths) {
+    const html = await fetchHtml(`${baseUrl}${path}`)
+    if (html === null) {
+      errors++
+      failures.push(`${path} (fetch falhou)`)
+      continue
+    }
+    if (hasRssDiscovery(html)) expected++
+    else failures.push(path)
+  }
+
+  const total = paths.length
+  const unexpected = total - expected - errors
+  const successRate = total === 0 ? 0 : (expected / total) * 100
+  return {
+    name: 'rss-discovery',
+    total,
+    expected,
+    unexpected,
+    errors,
+    successRate: Math.round(successRate * 100) / 100,
+    statuses: {
+      ok: expected,
+      ...(unexpected > 0 ? { missing: unexpected } : {}),
+      ...(errors > 0 ? { error: errors } : {}),
+    },
+    failures,
+  }
+}
+
+/** Probe Sprint 3.2 Tarefa 4 — âncoras textuais em cada sub-página de /docs. */
+async function runDocsAnchorsProbe(
+  baseUrl: string,
+  anchorsByPath: Record<string, readonly string[]>,
+): Promise<
+  ProbeResult & {
+    failures: Array<{ path: string; missing: string[] }>
+  }
+> {
+  const failures: Array<{ path: string; missing: string[] }> = []
+  let expected = 0
+  let errors = 0
+
+  for (const [path, anchors] of Object.entries(anchorsByPath)) {
+    const html = await fetchHtml(`${baseUrl}${path}`)
+    if (html === null) {
+      errors++
+      failures.push({ path, missing: [...anchors] })
+      continue
+    }
+    const missing = findMissingAnchors(html, anchors)
+    if (missing.length === 0) expected++
+    else failures.push({ path, missing })
+  }
+
+  const total = Object.keys(anchorsByPath).length
+  const unexpected = total - expected - errors
+  const successRate = total === 0 ? 0 : (expected / total) * 100
+  return {
+    name: 'docs-anchors',
+    total,
+    expected,
+    unexpected,
+    errors,
+    successRate: Math.round(successRate * 100) / 100,
+    statuses: {
+      ok: expected,
+      ...(unexpected > 0 ? { missing_anchors: unexpected } : {}),
+      ...(errors > 0 ? { error: errors } : {}),
+    },
+    failures,
+  }
+}
+
 async function main() {
   const envResult = envSchema.safeParse(process.env)
   if (!envResult.success) {
@@ -225,7 +513,9 @@ async function main() {
     JSON.stringify({
       event: 'smoke_start',
       baseUrl,
-      probes: PROBES.length + 2, // +2 = og-canonical + home-anchors
+      // status-HTTP + og-canonical + home-anchors + 4 da Tarefa 4 do Sprint 3.2:
+      // og-hash-uniqueness, rss-xml-valid, rss-discovery, docs-anchors.
+      probes: PROBES.length + 6,
     }),
   )
 
@@ -261,12 +551,55 @@ async function main() {
   // silenciosamente do JSX é regressão crítica de produto.
   const anchorsFailed = anchorsResult.missing.length > 0
 
+  // Sprint 3.2 Tarefa 4 — quatro probes adicionais para regressões que
+  // status HTTP não pega (fallback OG vazando, RSS deformado, conteúdo
+  // pedagógico removido, discovery ausente).
+  const ogHashResult = await runOgHashUniquenessProbe(baseUrl)
+  console.log(JSON.stringify({ event: 'smoke_probe_result', ...ogHashResult }))
+  totalRequests += ogHashResult.total
+  totalExpected += ogHashResult.expected
+  const ogHashFailed = ogHashResult.failures.length > 0
+
+  const rssValidResult = await runRssXmlValidProbe(baseUrl, RSS_VALID_PATHS)
+  console.log(
+    JSON.stringify({ event: 'smoke_probe_result', ...rssValidResult }),
+  )
+  totalRequests += rssValidResult.total
+  totalExpected += rssValidResult.expected
+  const rssValidFailed = rssValidResult.failures.length > 0
+
+  const rssDiscoveryResult = await runRssDiscoveryProbe(
+    baseUrl,
+    RSS_DISCOVERY_PATHS,
+  )
+  console.log(
+    JSON.stringify({ event: 'smoke_probe_result', ...rssDiscoveryResult }),
+  )
+  totalRequests += rssDiscoveryResult.total
+  totalExpected += rssDiscoveryResult.expected
+  const rssDiscoveryFailed = rssDiscoveryResult.failures.length > 0
+
+  const docsAnchorsResult = await runDocsAnchorsProbe(
+    baseUrl,
+    DOCS_ANCHORS_BY_PATH,
+  )
+  console.log(
+    JSON.stringify({ event: 'smoke_probe_result', ...docsAnchorsResult }),
+  )
+  totalRequests += docsAnchorsResult.total
+  totalExpected += docsAnchorsResult.expected
+  const docsAnchorsFailed = docsAnchorsResult.failures.length > 0
+
   const overallSuccessRate =
     totalRequests === 0 ? 0 : (totalExpected / totalRequests) * 100
   const passed =
     overallSuccessRate >= SUCCESS_THRESHOLD_PERCENT &&
     !ogFailed &&
-    !anchorsFailed
+    !anchorsFailed &&
+    !ogHashFailed &&
+    !rssValidFailed &&
+    !rssDiscoveryFailed &&
+    !docsAnchorsFailed
 
   console.log(
     JSON.stringify({
@@ -277,8 +610,20 @@ async function main() {
       threshold: SUCCESS_THRESHOLD_PERCENT,
       ogCanonicalFailed: ogFailed,
       homeAnchorsFailed: anchorsFailed,
+      ogHashUniquenessFailed: ogHashFailed,
+      rssXmlValidFailed: rssValidFailed,
+      rssDiscoveryFailed,
+      docsAnchorsFailed,
       ...(ogFailed ? { ogFailures: ogResult.failures } : {}),
       ...(anchorsFailed ? { missingAnchors: anchorsResult.missing } : {}),
+      ...(ogHashFailed ? { ogHashFailures: ogHashResult.failures } : {}),
+      ...(rssValidFailed ? { rssValidFailures: rssValidResult.failures } : {}),
+      ...(rssDiscoveryFailed
+        ? { rssDiscoveryMissing: rssDiscoveryResult.failures }
+        : {}),
+      ...(docsAnchorsFailed
+        ? { docsAnchorsFailures: docsAnchorsResult.failures }
+        : {}),
     }),
   )
 

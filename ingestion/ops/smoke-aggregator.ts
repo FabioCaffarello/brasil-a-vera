@@ -67,6 +67,75 @@ export function findMissingAnchors(
   return anchors.filter((a) => !html.includes(a))
 }
 
+/**
+ * Confirma que cada hash binário aparece no máximo uma vez. Usado pelo probe
+ * de OG uniqueness — duplicidade significa que uma rota está caindo no
+ * fallback global em vez de renderizar seu próprio OG (regressão silenciosa
+ * pré-Sprint 3.2: 5 listagens compartilhavam o fallback do global).
+ *
+ * Retorna lista das duplicatas (hashes que aparecem ≥2 vezes). Vazio = OK.
+ */
+export function findDuplicateHashes(hashes: readonly string[]): string[] {
+  const counts = new Map<string, number>()
+  for (const h of hashes) counts.set(h, (counts.get(h) ?? 0) + 1)
+  const dupes: string[] = []
+  for (const [h, n] of counts) if (n > 1) dupes.push(h)
+  return dupes
+}
+
+/**
+ * Validação textual de RSS 2.0 — sem parser XML completo (evita dep nova).
+ * Checa elementos obrigatórios do canal + presença de ≥1 item, conformidade
+ * com `atom:link rel="self"` (recomendado pelo RSS Best Practices Profile)
+ * e content-type esperado.
+ *
+ * Não substitui validador estrito (W3C Feed Validator) mas detecta regressão
+ * que mude o shape do feed sem mudar o status HTTP.
+ */
+export function validateRssXml(
+  body: string,
+  contentType: string,
+): { ok: true } | { ok: false; reason: string } {
+  if (!contentType.toLowerCase().startsWith('application/rss+xml')) {
+    return {
+      ok: false,
+      reason: `content-type não é application/rss+xml: ${contentType}`,
+    }
+  }
+  if (!body.includes('<?xml')) {
+    return { ok: false, reason: 'sem declaração `<?xml`' }
+  }
+  if (!body.includes('<rss version="2.0"')) {
+    return { ok: false, reason: 'sem `<rss version="2.0"`' }
+  }
+  if (!body.includes('<channel>')) {
+    return { ok: false, reason: 'sem `<channel>`' }
+  }
+  if (!body.includes('</channel>')) {
+    return { ok: false, reason: 'sem `</channel>` (XML truncado?)' }
+  }
+  if (!/atom:link[^>]*rel="self"/.test(body)) {
+    return { ok: false, reason: 'sem `<atom:link rel="self">`' }
+  }
+  if (!body.includes('<item>')) {
+    return { ok: false, reason: 'feed sem items' }
+  }
+  return { ok: true }
+}
+
+/**
+ * Detecta presença do `<link rel="alternate" type="application/rss+xml">` —
+ * mecanismo de descoberta de feeds usado por extensões e leitores (NetNewsWire,
+ * Feedly Subscribe). Aceita ordem variável de atributos.
+ *
+ * Sprint 3.2 Tarefa 4 — guarda contra remoção silenciosa da discovery.
+ */
+export function hasRssDiscovery(html: string): boolean {
+  const patternA = /<link[^>]+rel="alternate"[^>]+type="application\/rss\+xml"/i
+  const patternB = /<link[^>]+type="application\/rss\+xml"[^>]+rel="alternate"/i
+  return patternA.test(html) || patternB.test(html)
+}
+
 export function aggregateProbeResults(
   name: string,
   statuses: number[],

@@ -3,8 +3,11 @@ import { describe, expect, it } from 'vitest'
 import {
   aggregateProbeResults,
   extractOgImage,
+  findDuplicateHashes,
   findMissingAnchors,
+  hasRssDiscovery,
   validateOgImageCanonical,
+  validateRssXml,
 } from './smoke-aggregator'
 
 describe('aggregateProbeResults', () => {
@@ -122,6 +125,145 @@ describe('validateOgImageCanonical', () => {
     const html = `<meta property="og:image" content="${PROD}/opengraph-image?abc"/>`
     const r = validateOgImageCanonical(html, `${PROD}/`)
     expect(r.ok).toBe(true)
+  })
+})
+
+describe('findDuplicateHashes', () => {
+  it('retorna vazio para todos hashes únicos', () => {
+    expect(findDuplicateHashes(['a', 'b', 'c'])).toEqual([])
+  })
+
+  it('retorna o hash duplicado quando aparece duas vezes', () => {
+    expect(findDuplicateHashes(['a', 'b', 'a'])).toEqual(['a'])
+  })
+
+  it('cada duplicado aparece apenas uma vez na saída', () => {
+    expect(findDuplicateHashes(['a', 'b', 'a', 'a', 'c']).sort()).toEqual(['a'])
+  })
+
+  it('detecta múltiplos hashes duplicados independentes', () => {
+    expect(findDuplicateHashes(['a', 'b', 'a', 'b', 'c']).sort()).toEqual([
+      'a',
+      'b',
+    ])
+  })
+
+  it('lista vazia retorna vazio', () => {
+    expect(findDuplicateHashes([])).toEqual([])
+  })
+})
+
+describe('validateRssXml', () => {
+  const VALID_RSS = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>x</title>
+    <atom:link href="http://x/feed" rel="self" type="application/rss+xml"/>
+    <item><title>i</title></item>
+  </channel>
+</rss>`
+
+  it('aceita feed válido com content-type correto', () => {
+    expect(
+      validateRssXml(VALID_RSS, 'application/rss+xml; charset=utf-8'),
+    ).toEqual({ ok: true })
+  })
+
+  it('aceita content-type sem charset', () => {
+    expect(validateRssXml(VALID_RSS, 'application/rss+xml')).toEqual({
+      ok: true,
+    })
+  })
+
+  it('rejeita content-type errado (text/xml)', () => {
+    const r = validateRssXml(VALID_RSS, 'text/xml')
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('content-type')
+  })
+
+  it('rejeita sem `<?xml`', () => {
+    const r = validateRssXml(
+      VALID_RSS.replace('<?xml version="1.0" encoding="UTF-8"?>\n', ''),
+      'application/rss+xml',
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('<?xml')
+  })
+
+  it('rejeita sem `<rss version="2.0"`', () => {
+    const r = validateRssXml(
+      '<?xml version="1.0"?><foo/>',
+      'application/rss+xml',
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('rss version="2.0"')
+  })
+
+  it('rejeita sem `<channel>`', () => {
+    const r = validateRssXml(
+      '<?xml version="1.0"?><rss version="2.0"></rss>',
+      'application/rss+xml',
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('<channel>')
+  })
+
+  it('rejeita sem atom:link rel=self', () => {
+    const r = validateRssXml(
+      `<?xml version="1.0"?>
+<rss version="2.0">
+  <channel><title>x</title><item><title>i</title></item></channel>
+</rss>`,
+      'application/rss+xml',
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('atom:link')
+  })
+
+  it('rejeita feed sem items', () => {
+    const r = validateRssXml(
+      `<?xml version="1.0"?>
+<rss version="2.0"><channel><title>x</title><atom:link href="x" rel="self" type="application/rss+xml"/></channel></rss>`,
+      'application/rss+xml',
+    )
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('items')
+  })
+})
+
+describe('hasRssDiscovery', () => {
+  it('detecta link com rel antes de type', () => {
+    const html =
+      '<head><link rel="alternate" type="application/rss+xml" href="/feed"/></head>'
+    expect(hasRssDiscovery(html)).toBe(true)
+  })
+
+  it('detecta link com type antes de rel', () => {
+    const html =
+      '<head><link type="application/rss+xml" rel="alternate" href="/feed"/></head>'
+    expect(hasRssDiscovery(html)).toBe(true)
+  })
+
+  it('é case-insensitive no atributo', () => {
+    const html =
+      '<HEAD><LINK REL="alternate" TYPE="application/rss+xml" HREF="/feed"/></HEAD>'
+    expect(hasRssDiscovery(html)).toBe(true)
+  })
+
+  it('retorna false para link com rel diferente', () => {
+    const html =
+      '<head><link rel="stylesheet" type="application/rss+xml" href="/feed"/></head>'
+    expect(hasRssDiscovery(html)).toBe(false)
+  })
+
+  it('retorna false para link com type diferente', () => {
+    const html =
+      '<head><link rel="alternate" type="application/atom+xml" href="/feed"/></head>'
+    expect(hasRssDiscovery(html)).toBe(false)
+  })
+
+  it('retorna false quando link ausente', () => {
+    expect(hasRssDiscovery('<head></head>')).toBe(false)
   })
 })
 
