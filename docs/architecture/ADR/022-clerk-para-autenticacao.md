@@ -130,7 +130,22 @@ Quickstart Clerk mostra ambos os padrões (envolver `<html>` ou apenas
 - Custo: Provider injeta `@clerk/clerk-js` no client em TODAS as rotas,
   mesmo anônimas. Medição empírica obrigatória no PR 1 do 4.1.
 
-Props do Provider no 4.1:
+**ATUALIZAÇÃO (Opção B aplicada)**: plano original previa Provider em `<html>`. Após
+medição empírica no PR 1 mostrar gate de 50kb tripado em 815B (1.6% além — ver §5),
+owner escolheu **Opção B**: Provider NÃO entra em `<html>`. Em vez disso:
+
+- **Sprint 4.1 PR 1** (este): apenas middleware. Layout root SEM Provider. Bundle delta
+  em rotas anônimas volta a praticamente zero.
+- **Sprint 4.1 PR 2**: `<AuthIsland>` (client component lazy via `next/dynamic`)
+  embrulha localmente um `<ClerkProvider>` em torno de `<UserButton>` / `<SignedIn>` /
+  `<SignedOut>`. Provider hidrata apenas quando o JS do navbar carrega.
+- **Sprint 4.5**: layout do route group `(authenticated)/` pode adicionar seu próprio
+  Provider para client hooks em rotas privadas.
+
+`auth()` server-side em RSCs continua funcionando — lê de cookies via middleware,
+não depende do Provider client.
+
+Props do Provider quando entrar (na AuthIsland do PR 2):
 
 - `afterSignOutUrl="/"` — logout do `<UserButton>` volta à home, não
   ao Account Portal hosted do Clerk
@@ -143,20 +158,20 @@ Props do Provider no 4.1:
 
 ### 5. Gate empírico: ClerkProvider > 50kb gzip por rota pública
 
-Risco: o `<ClerkProvider>` envolvendo `<html>` injeta JS em todas as rotas.
-Mesmo com `<UserButton>` lazy via `next/dynamic` (D5 do plano), o Provider
-em si carrega cliente Clerk.
+**Histórico**: gate foi proposto e empiricamente tripado.
 
-**Métrica de gate**: medir no PR 1 da Sprint 4.1:
-- ClerkProvider sem UserButton: tamanho gzip por rota pública
-- ClerkProvider + UserButton: tamanho gzip por rota pública
+Medição no PR 1 (com Provider em `<html>` antes da Opção B ser aplicada):
+- JS gzipped main: 231,580 bytes
+- JS gzipped branch: 282,395 bytes
+- **delta: +50,815 bytes** (gate de 50kb tripado em 815 bytes / 1.6%)
 
-Se o Provider sozinho > 50kb gzip por rota pública, reavaliar:
-- (a) Mover Provider para route group `(authenticated)/` só no 4.5
-- (b) `dynamic={false}` se uso server-side não exigir client hooks
+Owner escolheu **Opção B** (§4 acima — Provider em AuthIsland scoped, não em
+`<html>`). Decisão arquivada. Princípio 13 aplicado — confirmação empírica
+antes de mergear evitou shipping de bundle inflado em rotas anônimas.
 
-Princípio 13 aplicado: hipóteses sobre comportamento do bundle exigem
-confirmação empírica antes de mergear.
+Re-medição após aplicar Opção B no PR 1 (Provider removido do layout):
+- JS gzipped branch (Opção B): a ser medido empiricamente; esperado igual ao main
+- delta esperado em rotas anônimas: 0 bytes (ClerkProvider só hidrata via AuthIsland no PR 2)
 
 ### 6. Account Portal hosted no Sprint 4.1
 
