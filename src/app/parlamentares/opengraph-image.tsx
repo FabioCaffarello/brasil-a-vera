@@ -1,30 +1,29 @@
 import { ImageResponse } from 'next/og'
+
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { BrandFooter, OG_CONTENT_TYPE, OG_SIZE } from '@/lib/og/chrome'
 import { getPublicStats } from '@/lib/queries/stats-public'
 
 export const alt =
-  'Brasil a Vera — plataforma open-source de transparência política brasileira'
+  'Parlamentares — Brasil a Vera, deputados federais e senadores em exercício'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
-// OG da home + fallback global. Rotas com `opengraph-image.tsx` próprio
-// (listagens em /parlamentares, /proposicoes, /votacoes, /o-meu-parlamentar
-// e entidades em /parlamentares/[id], /proposicoes/[tipo]/..., /votacoes/[id],
-// /partidos/[sigla], /comparar) sobrescrevem este.
-//
-// Render dinâmico para incluir contagens L2 (total de parlamentares, votações,
-// proposições). Cache-Control no header instrui scrapers sociais e CDN a
-// armazenar por 1h — alinhado com cadência mais alta de ingestão (votações
-// 4×/dia). Sprint 3.2 Tarefa 1.
+// Sprint 3.2 Tarefa 1 — OG dinâmico de listagem. Cache 1h no header da
+// resposta + force-dynamic (build no Cloudflare Workers usa placeholder
+// DATABASE_URL e não consegue pré-renderizar). CF Workers + scraper social
+// honram max-age=3600.
 export const dynamic = 'force-dynamic'
 
 const CACHE_HEADERS = {
   'cache-control': 'public, max-age=3600, s-maxage=3600',
 }
 
-export default async function OgRoot() {
+export default async function OgParlamentaresList() {
   const stats = await getPublicStats().catch(() => null)
+  const camara = stats?.parlamentaresPorCasa.camara ?? 0
+  const senado = stats?.parlamentaresPorCasa.senado ?? 0
+  const total = camara + senado
 
   return new ImageResponse(
     <div
@@ -33,8 +32,7 @@ export default async function OgRoot() {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#18181b',
-        color: '#fafafa',
+        backgroundColor: '#fafafa',
         fontFamily: 'sans-serif',
       }}
     >
@@ -47,61 +45,56 @@ export default async function OgRoot() {
           justifyContent: 'space-between',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            fontSize: '22px',
-            color: '#a1a1aa',
-            textTransform: 'uppercase',
-            letterSpacing: '0.12em',
-          }}
-        >
-          Transparência política brasileira
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
+              display: 'flex',
+              fontSize: '22px',
+              color: '#71717a',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: '20px',
+            }}
+          >
+            Brasil a Vera · Listagem
+          </div>
+          <div
+            style={{
+              display: 'flex',
               fontSize: '108px',
               fontWeight: 700,
+              color: '#18181b',
               lineHeight: 1,
               letterSpacing: '-0.02em',
             }}
           >
-            Brasil a Vera
+            Parlamentares
           </div>
           <div
             style={{
-              fontSize: '32px',
-              color: '#d4d4d8',
+              display: 'flex',
+              fontSize: '30px',
+              color: '#52525b',
+              marginTop: '20px',
               lineHeight: 1.3,
             }}
           >
-            Você escolheu quem te representa. Agora veja o que ele faz.
+            Deputados federais e senadores em exercício, filtráveis por casa,
+            partido e UF.
           </div>
         </div>
-        {stats ? (
+
+        {total > 0 ? (
           <div style={{ display: 'flex', gap: '64px' }}>
-            <Stat label="Parlamentares" value={stats.totalParlamentares} />
-            <Stat
-              label="Proposições"
-              value={formatNumeroAbreviado(stats.totalProposicoes)}
-            />
-            <Stat
-              label="Votações"
-              value={formatNumeroAbreviado(stats.totalVotacoes)}
-            />
+            <Stat label="Total" value={total} />
+            <Stat label="Câmara" value={camara} />
+            <Stat label="Senado" value={senado} />
           </div>
         ) : (
           <div
             style={{
               display: 'flex',
-              fontSize: '20px',
+              fontSize: '24px',
               color: '#71717a',
             }}
           >
@@ -115,7 +108,7 @@ export default async function OgRoot() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div
       style={{
@@ -127,7 +120,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
       <span
         style={{
           fontSize: '18px',
-          color: '#a1a1aa',
+          color: '#71717a',
           textTransform: 'uppercase',
           letterSpacing: '0.08em',
           marginBottom: '4px',
@@ -137,14 +130,14 @@ function Stat({ label, value }: { label: string; value: number | string }) {
       </span>
       <span
         style={{
-          fontSize: '64px',
+          fontSize: '72px',
           fontWeight: 700,
-          color: '#fafafa',
+          color: '#18181b',
           lineHeight: 1,
           fontFamily: 'monospace',
         }}
       >
-        {value}
+        {formatNumeroAbreviado(value)}
       </span>
     </div>
   )
