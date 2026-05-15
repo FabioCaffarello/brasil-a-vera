@@ -18,12 +18,20 @@ const geistMono = Geist_Mono({
 // URL canônica do site, usada como `metadataBase` para resolver URLs absolutas
 // de OpenGraph/Twitter (`opengraph-image.tsx` por rota). Sem isso, Next.js usa
 // `http://localhost:3000` como fallback — vaza em prod e quebra previews sociais.
-// Override via `SITE_URL` cobre preview deploys do Cloudflare Workers Builds.
+//
+// Prioridade (defense in depth, hygiene pre-3.1 — guarda contra regressão
+// transitória observada em 2026-05-15):
+//   1. SITE_URL explícita (preview deploys do Cloudflare Workers Builds)
+//   2. http://localhost:3000 SÓ se NODE_ENV === 'development' (next dev)
+//   3. Domínio canônico de produção como default — qualquer outro caso
+//      (NODE_ENV undefined, 'production', 'test', valores inesperados)
+//      cai aqui em vez de localhost. Inversão proposital vs. lógica
+//      anterior (depender de NODE_ENV='production' explicitamente).
 const SITE_URL =
   process.env.SITE_URL ??
-  (process.env.NODE_ENV === 'production'
-    ? 'https://brasil-a-vera.fabio-caffarello.workers.dev'
-    : 'http://localhost:3000')
+  (process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3000'
+    : 'https://brasil-a-vera.fabio-caffarello.workers.dev')
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
