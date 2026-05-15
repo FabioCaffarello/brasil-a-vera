@@ -1,0 +1,324 @@
+# ADR-022: Clerk para autenticação na Sprint 4.5+
+
+> Brasil a Vera · Arquitetura · v0.1
+> Última atualização: 2026-05-15
+> Status: accepted
+
+---
+
+## Sumário
+
+- [Contexto](#contexto)
+- [Decisão](#decisão)
+- [Validação empírica do free tier](#validação-empírica-do-free-tier)
+- [Tratamento de dados pessoais (LGPD)](#tratamento-de-dados-pessoais-lgpd)
+- [Bundle e performance](#bundle-e-performance)
+- [Alternativas Consideradas](#alternativas-consideradas)
+- [Consequências](#consequências)
+- [Referências](#referências)
+
+---
+
+## Contexto
+
+A Wave 4 (Design System & Frontend de Excelência) inclui na Sprint 4.5 a
+"Minha área" autenticada — rotas privadas para acompanhamento de parlamentares,
+alertas personalizados, configurações. O protótipo do designer parceiro usa
+um mock via `localStorage` (anti-pattern de Lovable que precisa ser substituído
+antes de qualquer feature real).
+
+A Wave 3.3 originalmente previa alertas configuráveis por e-mail — também
+exigem um fluxo mínimo de auth. Aquela wave migrou para o backlog Wave 5
+após a re-priorização pós-Sprint 3.2, mas a necessidade de auth permanece
+ancorada na Sprint 4.5.
+
+Requisitos práticos:
+
+1. **Login social (Google, GitHub)** — usuário cívico raramente quer criar
+   senha; Google domina entre eleitores brasileiros.
+2. **Email + senha como fallback** — para quem não usa Google/GitHub
+   (acessibilidade de público).
+3. **Session persistente entre Workers isolates** — Cloudflare Workers
+   não tem RAM persistente; sessions precisam viver em cookie + storage
+   externo.
+4. **Free tier compatível com Wave 4 e além** — projeto solo mantido por
+   doação; auth não pode introduzir custo recorrente significativo.
+5. **LGPD-aware** — dados de usuário brasileiro (e-mail, IP) ficam fora da
+   nossa responsabilidade direta sempre que possível, com data processor
+   contratual claro.
+6. **Bundle mínimo no client** — a maior parte do site é pública (RSC, zero
+   hidratação). Auth UI fica em ilhas isoladas.
+
+A peça crítica: a Sprint 4.5 ainda está distante (depois de 4.0-4.4). Decidir
+agora reduz incerteza arquitetural — o componente `<UserButton />` precisa
+existir no header da Sprint 4.1, ainda que sem rotas privadas ativas.
+
+## Decisão
+
+**Adotamos Clerk** (`@clerk/nextjs`) como provedor de autenticação para todas
+as rotas privadas da Wave 4+. Setup divide-se em três momentos:
+
+1. **Sprint 4.0 (este ADR)**: decisão registrada. Nenhuma dep instalada
+   ainda.
+2. **Sprint 4.1 (refatoração do shell)**: `@clerk/nextjs` adicionado.
+   `<ClerkProvider>` envolve `<html>`. Header tem `<SignedIn>` /
+   `<SignedOut>` / `<UserButton>` em uma ilha cliente isolada. Middleware
+   protege `/minha-area/*` mesmo sem rotas concretas dentro ainda.
+3. **Sprint 4.5 (Minha área)**: rotas concretas em `/minha-area/*`. Nova
+   tabela `usuario_acompanhamento` no schema (se confirmada nesta sprint).
+   ADR específico sobre persistência de dados de usuário em multi-tenant
+   cívico se entrar (LGPD prática, não só teórica).
+
+### Plano de migração caso o free tier mude
+
+Se Clerk mudar o free tier (50k MAU hoje) ou se métricas em produção
+mostrarem que ultrapassamos o limite, dois caminhos:
+
+- Avaliar Lucia / Better Auth com migração documentada (sessões portáveis,
+  dados de usuário em Postgres). Cluster de dados de auth fica no nosso
+  banco — então migração não perde state.
+- Pagar Pro ($20/mo annual, hoje) se ROI cívico justificar — entra em ADR
+  específico no momento da decisão.
+
+Princípio: vendor lock-in mitigado mantendo dados sensíveis (acompanhamentos,
+preferências) no **nosso** banco Postgres, com `clerk_user_id` apenas como
+foreign key opaca. Se trocarmos Clerk por X, re-mapeamos o ID e seguimos.
+
+## Validação empírica do free tier
+
+Pricing oficial consultado em 2026-05-15 (`https://clerk.com/pricing`).
+Output literal da consulta (princípio 13 do CLAUDE.md):
+
+```
+| Tier       | Base Price          | MAU Limit | Included MAU | Overage Cost                                          |
+|------------|---------------------|-----------|--------------|-------------------------------------------------------|
+| Hobby      | $0                  | 50,000    | 50,000       | N/A                                                   |
+| Pro        | $20/mo (annual)     | Unlimited | 50,000       | $0.02/MAU (50K-100K); scales to $0.012/MAU (10M+)     |
+| Business   | $250/mo (annual)    | Unlimited | 50,000       | Same tiered overage as Pro                            |
+| Enterprise | Custom              | Unlimited | Custom       | Custom                                                |
+
+Hobby inclui:
+- Unlimited applications
+- Up to 3 dashboard seats
+- APIs e prebuilt UIs para core authentication
+- Custom domain
+- Fixed, 7-day session lifetime
+- Basic security features (bot protection, account lockout)
+
+Pro adiciona:
+- Remove Clerk branding
+- MFA
+- Passkeys
+- Custom email templates
+- Enterprise connections ($75/mo each)
+- Extended session customization
+
+Nota: "Monthly retained user" (MAU para billing) = usuário retornando 24h+
+post-signup. First-day access é grátis.
+```
+
+**Leitura para o nosso caso**: o Hobby tier (50k MAU) cobre confortavelmente
+o cenário realista do Brasil a Vera nos próximos 12-24 meses. Para
+comparação, o ROADMAP cita "50k MAU em Wave 3 como OKR aspiracional, não
+critério de Done". Estamos uma ordem de grandeza abaixo de qualquer limite.
+
+A regra de "MAU = retorno 24h+ post-signup" é favorável: visitas anônimas
+(maior parte do tráfego cívico) não contam.
+
+**Restrição aceita do Hobby**: branding "powered by Clerk" no `<UserButton />`
+e session lifetime fixa em 7 dias. Aceitáveis para fase de validação.
+Reavaliar se cidadão pedir "manter logado por mais tempo" como feedback real.
+
+## Tratamento de dados pessoais (LGPD)
+
+### O que o Clerk armazena (data processor)
+
+- E-mail
+- Nome (se fornecido pelo provedor OAuth)
+- Provider ID (Google sub, GitHub ID, etc.)
+- Senha hash (se cadastro email/senha)
+- IP de últimas N sessions (rotação ~30 dias)
+- User agent das sessions
+
+Servidores Clerk são US-based. Para LGPD, isso configura **transferência
+internacional de dados pessoais** — exige base legal (consentimento
+explícito do titular no momento do cadastro, art. 7º LGPD, com finalidade
+clara) e cláusulas contratuais padrão entre Clerk (operador) e Brasil a
+Vera (controlador).
+
+### O que NÃO vai para o Clerk
+
+- Histórico de acompanhamentos (parlamentar X seguido pelo usuário Y)
+- Configurações de alerta
+- Preferências de tema (se houver)
+- Qualquer dado de uso cívico
+
+Tudo isso vive no nosso Postgres (Neon), em tabelas com `clerk_user_id`
+como foreign key opaca. Razão dupla:
+
+1. **Soberania dos dados**: o que define o usuário cívico (quem ele acompanha,
+   o que pediu alerta) é nosso, não do auth provider.
+2. **Reduzir blast radius de mudança de provider**: se trocarmos Clerk por
+   Lucia ou outro, basta re-mapear o `external_id`.
+
+### Política de privacidade
+
+Sprint 4.5 inclui:
+
+- Página `/privacidade` documentando coleta, finalidade, base legal,
+  retenção, direitos do titular (acesso, correção, exclusão).
+- Fluxo de exclusão de conta: deleta do Clerk + cascata `usuario_*` no
+  Postgres. Operação manual via dashboard admin no início; automatizar se
+  volume justificar.
+- Cookie consent: Clerk usa cookies funcionais; banner mínimo na primeira
+  visita anônima informando + opt-out via não-login.
+
+## Bundle e performance
+
+Bundle do `@clerk/nextjs` no client **não medido neste ADR** — a dependência
+ainda não foi instalada. Medição empírica acontece no PR da Sprint 4.1
+(`feat(shell): integrate Clerk in header`) via:
+
+1. `npm run build` antes/depois — diff no `chunks/` registrado no PR.
+2. Cloudflare Workers bundle (`npm run cf:build`) antes/depois — Worker
+   tem limite de 1 MB no free tier; medir margem.
+3. `npx bundle-phobia @clerk/nextjs` como referência cruzada
+   (no momento desta redação retornou erro de scraping; tentar de novo
+   com `bun x bundle-phobia` ou consulta manual ao site).
+
+Estimativa preliminar baseada em docs públicos do Clerk em 2025:
+~80-100 kB gzip para o client SDK. Mitigação se ficar alto:
+
+- `<UserButton />` carregado dinamicamente (`next/dynamic`) — usuário
+  anônimo (maioria) não baixa nada.
+- `<ClerkProvider>` no layout root é peer dep necessária, mas o JS de
+  features (MFA, sessões, etc.) carrega lazy.
+- Rotas públicas (`/`, `/parlamentares`, etc.) continuam zero hidratação
+  além do mínimo do `<UserButton />` ilha.
+
+Se a medição empírica no PR da Sprint 4.1 mostrar > 150 kB gzip no client
+de uma página pública, abrir issue de otimização **antes** do merge. Ver
+princípio 13 (validação empírica) no CLAUDE.md.
+
+## Alternativas Consideradas
+
+### A. Lucia Auth (self-hosted, código aberto)
+
+- **Prós**: zero vendor lock-in. Sessions em Postgres (nosso banco). Zero
+  custo recorrente. Sem dados em US.
+- **Contras**: **autor anunciou descontinuação em 2025** — projeto entra
+  em modo "código congelado, sem novos features". Forks comunitários
+  existem mas sem governance clara. Implementar OAuth (Google, GitHub),
+  reset de senha, MFA, rate limiting, brute force protection, etc. tudo
+  manual. Em projeto solo, escrever auth corretamente é arriscado
+  (bugs de segurança em auth são caros). Tempo de implementação:
+  estimado 1-2 sprints inteiras — Sprint 4.5 vira Sprint 4.5/6/7.
+- **Veredicto**: descartado por custo de manutenção + risco de descontinuação
+  upstream. Re-avaliar se Clerk virar problema.
+
+### B. NextAuth / Auth.js v5
+
+- **Prós**: open source, ecossistema Next.js maduro, sessions adapter para
+  Postgres (`@auth/drizzle-adapter` existe), zero custo recorrente.
+- **Contras**: v5 estável mas ainda com churn frequente em DX.
+  Cloudflare Workers runtime tem caveats (algumas funcionalidades exigem
+  Node runtime — incompatível com nosso deploy). Manutenção upstream
+  ativa mas com breaking changes regulares. Implementação completa
+  (com email verification, MFA, etc.) ainda fica nas nossas mãos.
+- **Veredicto**: descartado por incompatibilidade parcial com Workers
+  runtime + churn de breaking changes. Re-avaliar se Auth.js estabilizar
+  versão Edge-first.
+
+### C. Better Auth (lançado 2024, em ascensão)
+
+- **Prós**: workers-first, sessions em Postgres, TypeScript-strict,
+  open source MIT, zero custo recorrente. Filosofia próxima da nossa
+  (código próprio + tokens).
+- **Contras**: lançado há menos de 1 ano; ecossistema ainda imaturo;
+  comunidade pequena. Migrações de schema da própria lib não estão tão
+  documentadas. Risco de breaking changes alto na fase atual.
+- **Veredicto**: descartado **por enquanto** — não passa no "maturidade
+  para produção brasileira em projeto solo". Forte candidato a substituir
+  Clerk em 12-18 meses se ecossistema estabilizar.
+
+### D. Supabase Auth
+
+- **Prós**: free tier generoso (50k MAU), integração TS forte.
+- **Contras**: nossa decisão arquitetural (ADR-003) é Neon, não Supabase
+  — e Supabase Auth quer (idealmente) Supabase DB junto. Usar só Auth
+  é viável mas perde sinergia. Adiciona dependência operacional num
+  vendor extra (já temos Cloudflare + Neon + GitHub Actions).
+- **Veredicto**: descartado por desalinhamento com ADR-003 e por
+  fragmentação de vendors.
+
+### E. Código próprio (sessions em Postgres + bcrypt + OAuth manual)
+
+- **Prós**: zero peer deps, zero vendor, total controle.
+- **Contras**: auth corretamente implementado é trabalho de semanas
+  (CSRF, session fixation, brute force, password storage, OAuth state
+  validation, reset-by-email com tokens TTL, rate limiting, etc.).
+  Bugs em auth são bugs de segurança — em projeto cívico com dados de
+  usuário, custo de errar é alto. Tempo de manutenção: contínuo (CVEs
+  em deps de OAuth, novas best practices).
+- **Veredicto**: descartado. Bibliotecas de auth maduras são exatamente
+  o caso onde "preferimos código próprio a libs com escopo amplo"
+  (CLAUDE.md) **não se aplica** — segurança não é commodity replicável.
+
+### F. WorkOS
+
+- **Prós**: forte em B2B SSO, SAML, etc.
+- **Contras**: foco B2B, não cobre nosso caso B2C cívico bem. Pricing
+  voltado para enterprise.
+- **Veredicto**: descartado por desalinhamento de público-alvo.
+
+## Consequências
+
+### Positivas
+
+- **Setup em horas, não semanas**: a Sprint 4.5 pode focar em features
+  cívicas (acompanhamento, alertas) em vez de auth plumbing.
+- **A11y + i18n + dark mode prontos** no `<UserButton />` e `<SignIn />`
+  componentes — Clerk customiza via tokens CSS, integra com nossa paleta.
+- **Free tier folgado**: 50k MAU cobre o cenário realista 12-24 meses
+  sem custo.
+- **Soberania de dados cívicos preservada**: acompanhamentos e
+  preferências no nosso Postgres, `clerk_user_id` como foreign key
+  opaca — migração futura é viável.
+- **Segurança terceirizada para especialista**: brute force, password
+  storage, OAuth state, MFA, etc. ficam com o Clerk.
+
+### Negativas
+
+- **Vendor lock-in parcial**: dados de auth (e-mail, IP, sessions) em
+  Clerk US. Mitigação: dados cívicos no nosso banco; trocar provider
+  re-mapeia `external_id`.
+- **Branding "Powered by Clerk"** no tier Hobby (aceitável; remove com
+  Pro $20/mo se virar fricção).
+- **LGPD operacional**: transferência internacional de dados exige base
+  legal documentada + DPA com Clerk + cláusulas contratuais padrão.
+  Trabalho jurídico (não técnico) que cai no operador. Não inviabiliza
+  Clerk — é o trabalho que **qualquer** provider US-based exigiria.
+- **Bundle no cliente**: ~80-100 kB gzip estimados. Mitigação via
+  lazy-load (`next/dynamic`) para usuários anônimos.
+- **Risco de mudança de pricing upstream**: Clerk pode mudar Hobby tier.
+  Plano de migração documentado acima (Lucia/Better Auth + dados em
+  Postgres mitigam).
+
+### Neutras
+
+- ADR-003 (Neon Postgres) permanece válido — dados cívicos no Neon.
+- ADR-009 (Cloudflare Workers) permanece compatível — Clerk SDK suporta
+  Workers runtime nativamente (verificar empiricamente no PR da Sprint 4.1).
+- Sprint 4.1 introduz `@clerk/nextjs` como dep. Sprint 4.5 introduz tabelas
+  de domínio para acompanhamento (em ADR separado se schema for não-trivial).
+
+## Referências
+
+- [ADR-003 — Database strategy (Neon)](003-database-neon.md)
+- [ADR-009 — Deploy em Cloudflare Workers](009-cloudflare-pages.md)
+- [ADR-019 — Disciplina arquitetural (sem gargalo empírico)](019-disciplina-arquitetural-sem-gargalo.md) — princípio aplicado de forma leve aqui (princípio 14)
+- [ADR-021 — Design System & shadcn curado](021-design-system-shadcn-curado.md)
+- Clerk pricing (consultado 2026-05-15): `https://clerk.com/pricing`
+- Clerk Cloudflare Workers docs: `https://clerk.com/docs/integrations/databases/neon` e `https://clerk.com/docs/quickstarts/nextjs`
+- LGPD Lei 13.709/2018 — art. 7º (bases legais), art. 33 (transferência internacional)
+- Comparativo de auth providers: [Lucia archival announcement](https://github.com/lucia-auth/lucia/discussions/1707), [Auth.js Edge support](https://authjs.dev/), [Better Auth](https://www.better-auth.com/)

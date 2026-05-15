@@ -1,8 +1,39 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.3.2
-> Última atualização: 2026-05-15 (Sprint 3.1 entregue)
+> Última atualização: 2026-05-15 (Sprint 3.2 entregue; Wave 4 Design System iniciada)
 > Status: accepted
+
+---
+
+> **Nota histórica — renumeração de Waves em 2026-05-15**
+>
+> Originalmente, a Wave 4 era "Open Ground" — backlog sem plano contratual
+> (API pública avançada, arquitetura distribuída em Go, TSE completo,
+> Brasil a Vera Labs etc.). Após o fechamento da Sprint 3.2
+> (`v0.3.2-distribution`), o operador decidiu reposicionar a Wave 4 para
+> **"Design System & Frontend de Excelência"** com 6 sprints (4.0–4.6) —
+> uma resposta a protótipo de design parceiro que demandou uma fase
+> dedicada a elevar a qualidade visual e arquitetura do frontend sem
+> features novas de domínio.
+>
+> Consequência:
+>
+> - **Wave 4** passou a ser a fase de Design System (este documento, abaixo).
+> - **Wave 5 — Open Ground** absorveu o backlog que antes vivia na Wave 4.
+> - **Sprints 3.3 e 3.4** (TSE, API pública REST, índice de coerência,
+>   grafo) permanecem como `planejada` dentro da Wave 3, **pausadas em
+>   2026-05-15** pendentes reavaliação ao final da Wave 4. Quando
+>   reativadas, podem ser executadas como Sprints 3.3/3.4 ou migradas
+>   formalmente para Wave 5 — decisão informada por evidência empírica
+>   de uso pós-Wave 4.
+> - O label de issues `wave-4+` será renomeado para `wave-5+` ao final
+>   da Sprint 4.0 (não no PR de abertura — espera-se o ciclo de
+>   fechamento da sprint pra evitar churn duplo no GitHub).
+>
+> Razão da decisão registrada em [prompt mestre Wave 4](#wave-4--design-system--frontend-de-excelência)
+> abaixo, no [ADR-021](../architecture/ADR/021-design-system-shadcn-curado.md)
+> e no [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md).
 
 ---
 
@@ -13,7 +44,8 @@
 - [Wave 1 — MVP Público](#wave-1--mvp-público)
 - [Wave 2 — Profundidade](#wave-2--profundidade)
 - [Wave 3 — Profundidade Cívica Acessível](#wave-3--profundidade-cívica-acessível)
-- [Wave 4 — Open Ground](#wave-4--open-ground)
+- [Wave 4 — Design System & Frontend de Excelência](#wave-4--design-system--frontend-de-excelência)
+- [Wave 5 — Open Ground](#wave-5--open-ground)
 - [Dependências entre Waves](#dependências-entre-waves)
 
 ---
@@ -41,7 +73,10 @@ gantt
     Profundidade Cívica Acessível :w3, after w2, 8w
 
     section Wave 4
-    Open Ground        :w4, after w3, 2027-12-31
+    Design System & Frontend de Excelência :w4, after w3, 6w
+
+    section Wave 5
+    Open Ground        :w5, after w4, 2027-12-31
 ```
 
 | Wave | Nome | Personas Atendidas | Duração Estimada |
@@ -49,8 +84,9 @@ gantt
 | 0 | Fundação | Nenhuma (infraestrutura) | 6-8 semanas |
 | 1 | MVP Público | Cidadão, Jornalista | 8-10 semanas |
 | 2 | Profundidade | Todos | 10-12 semanas |
-| 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador, Desenvolvedor | 14-20 semanas (5 sprints + 1 micro-wave) |
-| 4 | Open Ground | (definido após Wave 3) | Backlog sem plano contratual |
+| 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador, Desenvolvedor | 14-20 semanas (5 sprints + 1 micro-wave); 3.3/3.4 pausados em 2026-05-15 |
+| 4 | Design System & Frontend de Excelência | Todos | 6 sprints (4.0–4.6) |
+| 5 | Open Ground | (definido após Wave 4) | Backlog sem plano contratual |
 
 ---
 
@@ -400,10 +436,12 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 ### Wave 3.3 — Plataforma para devs
 
 > **Tag de release**: `v0.3.3-platform`
-> **Status**: planejada
+> **Status**: ⏸️ pausada em 2026-05-15 — reavaliação ao final da Wave 4
 > **Duração estimada**: 3-4 semanas
 
-**Por que quarto**: estabiliza API antes de adicionar análise pesada. Inclui TSE inicial (subset 2022) para devs/jornalistas começarem a usar a plataforma como base de pesquisa.
+**Por que pausada**: Sprint 3.2 fechou com produto cívico consolidado e o operador redirecionou foco para Wave 4 (Design System & Frontend de Excelência). Quando reativada, pode ser executada como 3.3 ou migrada formalmente para Wave 5 — decisão dependente de feedback empírico durante a Wave 4 (demanda real de devs/jornalistas por API REST, TSE etc.).
+
+**Por que era quarta** (preservado para contexto): estabiliza API antes de adicionar análise pesada. Inclui TSE inicial (subset 2022) para devs/jornalistas começarem a usar a plataforma como base de pesquisa.
 
 #### Escopo
 
@@ -411,7 +449,7 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 - Alertas configuráveis por parlamentar/tema (rota `/alertas` com inscrição via e-mail — exige fluxo mínimo de auth; aceitar trade-off de complexidade aqui)
 - TSE inicial: schema `eleicoes` + ingestão TSE 2022 (subset doações para parlamentares em exercício)
 - Rota `/parlamentares/[id]/financiamento` com agregados PF/PJ
-- ADR-021 — Modelagem TSE (escopo recortado para Wave 3)
+- ADR para modelagem TSE (numeração a definir quando da implementação — o slot ADR-021 foi ocupado pelo Design System em 2026-05-15)
 
 #### Critérios de Done
 
@@ -424,10 +462,12 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 ### Wave 3.4 — Inteligência analítica
 
 > **Tag de release**: `v0.3.4-insight`
-> **Status**: planejada
+> **Status**: ⏸️ pausada em 2026-05-15 — reavaliação ao final da Wave 4
 > **Duração estimada**: 4-6 semanas
 
-**Por que último**: o item mais ambicioso da Wave 3. Implementado em TypeScript ([ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md)) eventualmente com Workers AI para NLP pesado. Análises de grafo grandes rodam em batch via GitHub Actions e materializam resultado no banco.
+**Por que pausada**: mesmo redirecionamento que pausou a 3.3. A 3.4 era também a sub-wave mais ambiciosa da Wave 3 — reavivá-la sem demanda concreta vai contra ADR-019.
+
+**Por que era última** (preservado para contexto): o item mais ambicioso da Wave 3. Implementado em TypeScript ([ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md)) eventualmente com Workers AI para NLP pesado. Análises de grafo grandes rodam em batch via GitHub Actions e materializam resultado no banco.
 
 #### Escopo
 
@@ -447,7 +487,7 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 - [ ] Budget Neon mantido em zona amarela controlada (storage cresce com batches materializados)
 - [ ] Princípio 13 referenciado em `/sobre/metodologia` — auditabilidade
 
-### Fora da Wave 3 — adiado para Wave 4+
+### Fora da Wave 3 — adiado para Wave 5+ (anteriormente Wave 4+)
 
 Por decisão consciente, o escopo abaixo **não entra** na Wave 3. Cada item dobraria o esforço da Wave inteira sem ganho proporcional pra cidadão; alguns foram descartados por princípio empírico (ver [ADR-019](../architecture/ADR/019-disciplina-arquitetural-sem-gargalo.md)) e por permanência do monolito ([ADR-020](../architecture/ADR/020-permanencia-monolito-typescript.md)).
 
@@ -458,36 +498,176 @@ Por decisão consciente, o escopo abaixo **não entra** na Wave 3. Cada item dob
 - **Brasil a Vera Labs (L4)**: análises de impacto com curadoria especializada
 - **Bulk Parquet via R2**: formato amigável a DuckDB/Pandas — adiado pela Wave 2.2
 
-Cada bloco vira issue mestre rotulada `wave-4+` no rastreamento de issues. Buscar com `gh issue list --label wave-4+`.
+Cada bloco vira issue mestre rotulada `wave-4+` no rastreamento de issues (label será renomeada para `wave-5+` no fechamento da Sprint 4.0 — renumeração de Waves de 2026-05-15). Buscar com `gh issue list --label wave-4+`.
 
 ---
 
-## Wave 4 — Open Ground
+## Wave 4 — Design System & Frontend de Excelência
 
-> **Status**: plano contratual pendente — será reavaliado após a Wave 3 fechar com base em evidência empírica de uso (cidadão, jornalista, contribuidor) e custo operacional.
+> **Pergunta validada**: "Conseguimos elevar a qualidade visual e arquitetural do frontend ao nível de showcase profissional sem comprometer custo, trust_level, SEO ou WCAG?"
 
-A Wave 4 é deliberadamente **open ground** — sem critérios de Done atribuídos antecipadamente. As decisões adiadas das Waves 2 e 3 (e da definição "Wave 3 — Inteligência" anterior) ficam aqui como backlog explícito, rotuladas `wave-4+` no rastreamento de issues.
+A Wave 4 nasceu após a entrega da Sprint 3.2 (`v0.3.2-distribution`) em 2026-05-15. Um protótipo de design parceiro (stack incompatível: TanStack Start + Vite + chamadas client-side à API da Câmara + mock auth) trouxe linguagem visual premium dark-first com OKLCH, IA estruturada e fluxos completos. **Extraímos a linguagem visual e a IA; reconstruímos tudo em cima da nossa stack** (Next.js 16 + RSC + Drizzle + Neon + Cloudflare Workers) com design system próprio versionado, testável e adaptado aos tokens semânticos.
 
-### Backlog (cada bullet é uma issue mestre com label `wave-4+`)
+A Wave 4 é deliberadamente **sem features novas de domínio** — toda a lógica de queries em `src/lib/queries/`, ingestão em `ingestion/`, módulos `src/modules/` e `src/shared/` permanece intocada. Refatoração é estética e arquitetural-frontend; trust_level, SEO, cobertura WCAG e custo Neon não regridem.
 
-- **API pública e ecossistema externo** — REST + OpenAPI, API keys, rate limiting, webhooks, alertas push/email com gestão de contas LGPD-aware
-- **Plataforma analítica avançada** — grafo legislativo interativo, NLP de classificação de direção, detecção de comunidades, métricas de centralidade
-- **Migração para arquitetura distribuída** — Go Strangler Fig, NATS JetStream, Apache AGE, VPS Hostinger
+Decisões arquiteturais que governam a Wave 4 ficam em:
+
+- [ADR-021](../architecture/ADR/021-design-system-shadcn-curado.md) — Design System próprio com shadcn/ui curado
+- [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) — Clerk para autenticação na Sprint 4.5+
+
+### Wave 4.0 — Fundação do Design System
+
+> **Tag de release**: `v0.4.0-design-system-foundation`
+> **Status**: 🔄 em andamento (iniciada 2026-05-15)
+> **Duração estimada**: 8 PRs sequenciais
+
+**Por que primeiro**: estabelecer tokens semânticos, theme provider e as primitivas essenciais antes de tocar em qualquer página de produto. Risco controlado — nada visual muda na home/listagens até PR de consumer concreto.
+
+#### Escopo planejado
+
+- **PR 1 — ADRs e contrato (docs-only)**: ADR-021 (Design System), ADR-022 (Clerk), atualização do CLAUDE.md (linha-pointer), reorganização do ROADMAP (Wave 4 nova + Wave 5 Open Ground com nota histórica).
+- **PR 2 — Tokens OKLCH + globals.css novo + WCAG re-audit**: paleta dark-first via OKLCH; paleta `--color-primary-*` HEX existente preservada como tema light dormente; utilitários `glass`, `grid-bg`, `text-gradient`, `shadow-glow`, `shadow-soft` em `@layer utilities`; teste vitest `import-boundaries` cobrindo regra do design system; script `.local/wcag-check.ts` com `culori` validando contrastes; nota OKLCH support em `WCAG-AUDIT.md`.
+- **PR 3 — `components.json` + primitiva `button`**: setup shadcn CLI apontando para `src/design-system/primitives/`, primeira primitiva copiada, adaptada aos tokens e testada.
+- **PR 4 — Tier 1 lote 1**: `card`, `badge`, `skeleton` (sem peer deps adicionais).
+- **PR 5 — Tier 1 lote 2**: `sonner` (toasts) + `dialog` (com peer deps Radix Dialog).
+- **PR 6 — Tier 1 lote 3**: `input`, `label`, `separator`, `tabs`.
+- **PR 7 — Rota interna `/dev/design`**: route group `(internal)` + `robots: noindex` + header `X-Robots-Tag` via `next.config.ts` + probe `dev-routes-noindex` no smoke pós-deploy.
+- **PR 8 — Fechamento**: ROADMAP atualizado, release notes `v0.4.0-design-system-foundation.md`, banner em `src/app/page.tsx`, tag publicada, label de issues `wave-4+` renomeada para `wave-5+`.
+
+#### Critérios de Done
+
+- [ ] `npm run check`, `npm run ci`, `npm run test`, `npm run build`, `npm run cf:build` passam em cada PR
+- [ ] `/dev/design` renderiza todas as primitivas Tier 1 sem erros em dark
+- [ ] Auditoria de contraste: todos os pares texto-sobre-fundo do `globals.css` ≥ 4.5:1 (corpo) ou ≥ 3:1 (large/UI), com tabela atualizada em `WCAG-AUDIT.md`
+- [ ] Bundle delta no `/` (RSC, ~0kb hidratação esperada) medido e registrado por PR
+- [ ] Build time mantido no baseline (~975ms ±20%) — feedback `feedback_build_speed.md` cobre regressão
+- [ ] Zero regressão visual em rotas existentes (`/`, `/parlamentares`, `/parlamentares/[id]`) — screenshots antes/depois no PR 2
+- [ ] Probe `dev-routes-noindex` no smoke valida `/dev/design` com `X-Robots-Tag: noindex`
+- [ ] Tag `v0.4.0-design-system-foundation` publicada
+- [ ] Label `wave-4+` renomeada para `wave-5+` no GitHub no PR 8
+
+### Wave 4.1 — Refatoração do shell (layout + home + Clerk)
+
+> **Tag de release**: integrar em `v0.4.x` (sem tag intermediária — sprints intermediárias só merge na main)
+> **Status**: planejada
+> **Duração estimada**: ~5 PRs
+
+**Por que segundo**: trocar o shell (header, footer, home) e introduzir Clerk em ilha cliente isolada antes das listagens e perfis. Mantém tudo funcionando — só muda a camada visual.
+
+#### Escopo
+
+- Novo `src/components/site/navbar.tsx` com Clerk hooks (`<SignedIn>`, `<SignedOut>`, `<UserButton>`) em ilha cliente isolada
+- Novo `src/components/site/footer.tsx`
+- `src/app/layout.tsx` reescrito: tema dark default, fonte Inter (Geist Mono mantida para mono), Navbar/Footer compostos
+- `src/app/page.tsx` (home) refeito: hero com copy "Você escolheu quem te representa…", grid de stats via `getPublicStats`, seção de features, seção de metodologia
+- Setup Clerk: `@clerk/nextjs`, env vars (`.dev.vars` + Cloudflare Secrets), `<ClerkProvider>`, middleware protegendo `/minha-area/*` (sem rotas dependentes ainda)
+- `next-themes` se decisão de produto autorizar toggle dark/light
+
+#### Critérios de Done
+
+- [ ] Rotas existentes (`/`, `/parlamentares`, etc.) continuam funcionando — apenas com novo shell visual
+- [ ] Clerk integrado, sem rotas privadas ainda
+- [ ] Lighthouse mobile do `/` ≥ 90 em performance, ≥ 100 em a11y
+- [ ] Bundle client medido — `<UserButton />` lazy-loaded para usuário anônimo
+- [ ] Evidência empírica de que Clerk free tier (50k MAU) suporta tráfego esperado registrada no PR (cross-ref do ADR-022)
+
+### Wave 4.2 — Páginas de listagem (parlamentares, proposições, votações)
+
+> **Tag de release**: integrar em `v0.4.x`
+> **Status**: planejada
+
+**Por que terceiro**: reskinning das 3 grandes listagens com o novo design system. Mantém queries e arquitetura RSC; troca componentes visuais.
+
+#### Escopo
+
+- `/parlamentares`: filtros (UF, partido, casa, busca) com primitivas do design system; cards com estética nova mas dados nossos; URL state preservado (filtros são GET)
+- `/proposicoes` e `/proposicoes/[tipo]`: idem
+- `/votacoes`: idem
+- `components/parlamentar/parlamentar-card.tsx`, `components/proposicao/proposicao-card.tsx`, `components/votacao/votacao-card.tsx`: atualizados
+- Componentes Tier 2 copiados conforme necessário (`popover`, `command` para typeahead se aparecer demanda)
+
+#### Critérios de Done
+
+- [ ] Páginas mantém SSG (cache de edge, ADR-018) — sem regressão de queries
+- [ ] Smoke probes de listagem em `ingestion/ops/smoke.ts` continuam passando
+- [ ] Filtros funcionais sem JavaScript no client (`<form method="get">` mantido onde aplicável)
+
+### Wave 4.3 — Perfil 360° do parlamentar
+
+> **Tag de release**: `v0.4.3-profile-premium`
+> **Status**: planejada
+
+**Por que quarto**: a página mais importante do site recebe o tratamento premium.
+
+#### Escopo
+
+- `/parlamentares/[id]`: novo header com foto, partido badge, redes sociais, gabinete
+- Reorganização de seções (Votos Recentes, Alinhamento, Proposições, Gastos, Top 5 Afinidade, Pares Contraditórios) com `Card` + `Tabs` se reduzir scroll
+- Disclaimer permanente para análises L3 mantido (componente `trust-badge.tsx`)
+- Recharts adotado **apenas se** `getGastosResumo` já retornar dado mensal e gráfico comunicar melhor que tabela; caso contrário, manter tabular
+
+#### Critérios de Done
+
+- [ ] Ordem das seções respeita hierarquia documentada na Sprint 3.1 (cobertura empírica)
+- [ ] Trust levels visíveis em todas as análises L3 (não removidos por estética)
+- [ ] LCP ≤ 2.5s em 4G simulado
+- [ ] Lighthouse mobile ≥ 95 em performance, ≥ 100 em a11y
+
+### Wave 4.4 — Perfis de proposição, votação, partido + busca + comparar
+
+> **Tag de release**: integrar em `v0.4.x`
+> **Status**: planejada
+
+Aplicação do design system às páginas restantes (proposição individual, votação individual, partido, busca, comparar). Padrão segue 4.2/4.3.
+
+### Wave 4.5 — Minha área (autenticada)
+
+> **Tag de release**: `v0.4.5-minha-area`
+> **Status**: planejada — pré-requisito: definir o que persistir e tabela `usuario_acompanhamento`
+
+**Por que aqui**: introduzir rotas privadas do protótipo do designer (Acompanhados, Alertas, Configurações) **apenas o que tem contrapartida no nosso domínio**. Se a sprint demandar nova tabela `usuario_acompanhamento`, abre-se ADR específico sobre persistência multi-tenant LGPD-aware antes do schema.
+
+Decisão pendente para o início da Sprint 4.5: faz sentido executar agora ou esperar 4.6? Decisão tomada na entrada da sprint com base em evidência observada durante a Wave 4 (princípio ADR-019).
+
+### Wave 4.6 — Polimento & observabilidade
+
+> **Tag de release**: `v0.4.6-polish`
+> **Status**: planejada
+
+**Por que último**: revisão de animações, microinterações, focus rings, dark/light toggle (se decidido), página `/metodologia` se ainda não migrada de `/docs`, atualização dos OG images para o novo visual, smoke probes ampliados para validar visual regression básico (screenshot diff em headless — entra só se gargalo justificar; princípio ADR-019).
+
+### Fora da Wave 4 — adiado para Wave 5
+
+Tudo o que era backlog "Wave 4 — Open Ground" (API pública avançada, arquitetura distribuída, TSE completo, Brasil a Vera Labs, expansão multi-plataforma) ficou em [Wave 5 — Open Ground](#wave-5--open-ground).
+
+---
+
+## Wave 5 — Open Ground
+
+> **Status**: plano contratual pendente — será reavaliado após a Wave 4 fechar com base em evidência empírica de uso (cidadão, jornalista, contribuidor) e custo operacional.
+
+A Wave 5 é deliberadamente **open ground** — sem critérios de Done atribuídos antecipadamente. As decisões adiadas das Waves 2, 3 e 4 (e da definição "Wave 3 — Inteligência" anterior) ficam aqui como backlog explícito, rotuladas `wave-5+` no rastreamento de issues (label renomeada de `wave-4+` no fechamento da Sprint 4.0 — ver nota histórica no topo deste documento).
+
+### Backlog (cada bullet é uma issue mestre com label `wave-5+`)
+
+- **API pública e ecossistema externo** — REST + OpenAPI, API keys, rate limiting, webhooks, alertas push/email com gestão de contas LGPD-aware (era Wave 3.3 pausada + Wave 4 Open Ground original)
+- **Plataforma analítica avançada** — grafo legislativo interativo, NLP de classificação de direção, detecção de comunidades, métricas de centralidade (era Wave 3.4 pausada)
+- **Migração para arquitetura distribuída** — Go Strangler Fig, NATS JetStream, Apache AGE, VPS Hostinger (já descartado por ADR-020 e ADR-019; mantido na lista apenas como histórico até evidência empírica reabrir discussão)
 - **Integração TSE completa** — bens declarados, gastos de campanha completos, anos anteriores além de 2022
 - **Expansão de produto** — mobile nativa, integração com redes sociais (Telegram/WhatsApp), i18n, assembleias legislativas estaduais
 - **Brasil a Vera Labs (L4)** — análises de impacto com curadoria especializada e disclaimers permanentes
 
-Listar: `gh issue list --label wave-4+`.
+Listar: `gh issue list --label wave-5+` (após renomeação na Sprint 4.0).
 
-### Quando reavaliar Wave 4
+### Quando reavaliar Wave 5
 
-Reavaliação acontece **após a Wave 3 fechar** (estimativa: Q3 2026) com 3 perguntas:
+Reavaliação acontece **após a Wave 4 fechar** (estimativa: 2026 Q4 / 2027 Q1) com 3 perguntas:
 
 1. Existe demanda concreta de cidadão, jornalista ou desenvolvedor pelo backlog acima?
-2. O custo operacional manteve-se em zona amarela controlada (ADR-017) durante a Wave 3?
+2. O custo operacional manteve-se em zona amarela controlada (ADR-017) durante as Waves 3 e 4?
 3. Qual o ROI estimado por item do backlog frente ao esforço solo?
 
-Sem essas respostas calibradas em evidência empírica, a Wave 4 permanece em modo backlog. Princípio 13 do CLAUDE.md em ação: planejamento espera dados, não inferência.
+Sem essas respostas calibradas em evidência empírica, a Wave 5 permanece em modo backlog. Princípio 13 do CLAUDE.md em ação: planejamento espera dados, não inferência. ADR-019 aplica-se a qualquer infra nova do backlog Wave 5.
 
 ---
 
@@ -498,11 +678,13 @@ graph LR
     W0["Wave 0<br/>Fundação"] --> W1["Wave 1<br/>MVP"]
     W1 --> W2["Wave 2<br/>Profundidade"]
     W2 --> W3["Wave 3<br/>Profundidade Cívica<br/>Acessível"]
-    W3 --> W4["Wave 4<br/>Open Ground"]
+    W3 --> W4["Wave 4<br/>Design System &<br/>Frontend de Excelência"]
+    W4 --> W5["Wave 5<br/>Open Ground"]
 
     W0 -->|"PostgreSQL + Ingestão<br/>obrigatórios"| W1
     W1 -->|"Next.js monolito + busca<br/>obrigatórios"| W2
     W2 -->|"Motor de Coerência básico +<br/>Cache + SSG + Tramitação<br/>obrigatórios"| W3
+    W3 -->|"Produto cívico consolidado<br/>(Sprint 3.2 fechada)"| W4
 ```
 
 | Dependência | De | Para | Tipo |
@@ -516,4 +698,6 @@ graph LR
 | Cache de edge + SSG | Wave 2.0 | Wave 3 | Obrigatória |
 | Tramitação + alinhamento | Wave 2.1 | Wave 3.1 (dashboards temáticos) | Obrigatória |
 | Orientação Câmara (`orientacao_bancada`) | Wave 2.1.1 | Wave 3.0 (Índice de Coerência) | Obrigatória |
-| API pública REST, arquitetura distribuída (Go/NATS), TSE completo | Wave 3 anterior | Wave 4+ | Migrados — fora da Wave 3 atual |
+| Produto cívico consolidado (`v0.3.2-distribution`) | Wave 3 (Sprints 3.0–3.2) | Wave 4 | Obrigatória |
+| Design tokens iniciais + paleta primária | Wave 3.1 (Sprint Tarefa 4.A) | Wave 4.0 (paleta OKLCH dark estende) | Obrigatória |
+| API pública REST, arquitetura distribuída (Go/NATS), TSE completo, Wave 3.3/3.4 pausadas | Wave 3 anterior | Wave 5+ | Migrados — fora das Waves 3 e 4 atuais |
