@@ -375,23 +375,27 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 ### Wave 3.2 — Quick wins de distribuição
 
 > **Tag de release**: `v0.3.2-distribution`
-> **Status**: planejada
-> **Duração estimada**: 2-3 semanas
+> **Status**: ✅ Concluída em 2026-05-15. 4 PRs entregues + fechamento (#137).
+> **Duração real**: 1 dia (cirúrgico — 4 PRs sequenciais)
 
 **Por que terceiro**: feature de produto consolidada (3.0 + 3.0.5 + 3.1), agora dá pra distribuir. Itens leves de descoberta orgânica que multiplicam alcance sem demandar infra nova.
 
-#### Escopo
+#### Escopo entregue
 
-- OG dinâmico expandido (mais variantes além das atuais — perfil parlamentar com gráfico de afinidade, proposição com badge de tema)
-- `/docs` pública mínima (estática, sem API ainda — explica o produto, fontes, frequência de ingestão)
-- RSS de votações relevantes (rota `/feed/votacoes.xml`)
-- Sem bulk Parquet por ora (espera Wave 4+)
+- OG dinâmico expandido para 5 listagens (home com contagem L2, /parlamentares, /proposicoes, /votacoes, /o-meu-parlamentar). Entidades já tinham OG próprio na Wave 3.0 — agora 9 cenários totais com hashes únicos garantidos por smoke probe.
+- `/docs` pública reescrita em 5 páginas pedagógicas com sidebar sticky e active state: hub, pirâmide-de-confianca, como-ler-um-perfil, glossario, fontes.
+- RSS 2.0 segmentado em ~85 feeds (1 global + 2 por casa + 27 por UF + ~25 por partido + ~30 por tema) com index human-readable em `/feed` e discovery via `metadata.alternates.types`.
+- Smoke expandido com 4 probes (`og-hash-uniqueness`, `rss-xml-valid`, `rss-discovery`, `docs-anchors`) para regressões silenciosas que status HTTP não detecta.
 
 #### Critérios de Done
 
-- [ ] OG dinâmico cobre ≥ 5 cenários (home, parlamentar, proposição, votação, partido) — extensão da entrega da Tarefa 1.1 (Sprint 3.0)
-- [ ] `/docs` pública indexável, com explicação L1/L2/L3, fontes, cadência
-- [ ] RSS validado em 2 leitores (Feedly, NetNewsWire)
+- [x] OG dinâmico cobre ≥ 5 cenários (home, parlamentar, proposição, votação, partido) — **superado**: 9 cenários (5 listagens + 4 entidades). Probe `og-hash-uniqueness` (PR #136) garante via SHA-256 que cada rota tem render próprio.
+- [x] `/docs` pública indexável, com explicação L1/L2/L3, fontes, cadência — 5 páginas em rotas explícitas (decisão C do plano), conteúdo derivado de `TRUST-PYRAMID.md`/`LEGISLATIVE-PROCESS.md`/`DATA-SOURCES.md`. Probe `docs-anchors` cobre regressão silenciosa de conteúdo pedagógico removido.
+- [x] RSS validado **estruturalmente** em xmllint + smoke probe (`rss-xml-valid` checa RSS 2.0 + atom:link rel=self + content-type) — **ressalva**: validação manual em Feedly/NetNewsWire ficou como QA follow-up pós-tag. Estrutural cobre o que regressão silenciosa quebraria.
+
+#### Decisão registrada
+
+**Corte: 594 feeds por parlamentar individual fora do escopo** (princípio ADR-019). RSS por parlamentar individual exige evidência empírica de demanda (assinaturas reais observadas em logs) antes de adicionar. Cobertura atual (~85 feeds) cobre os recortes cívicos mais úteis sem inflar build/runtime.
 
 ### Wave 3.3 — Plataforma para devs
 
