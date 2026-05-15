@@ -6,6 +6,7 @@ import {
   findDuplicateHashes,
   findMissingAnchors,
   hasRssDiscovery,
+  validateDevRouteNoindex,
   validateOgImageCanonical,
   validateRssXml,
 } from './smoke-aggregator'
@@ -289,5 +290,51 @@ describe('findMissingAnchors', () => {
     const html = '<div>Foo</div>'
     expect(findMissingAnchors(html, ['foo'])).toEqual(['foo'])
     expect(findMissingAnchors(html, ['Foo'])).toEqual([])
+  })
+})
+
+describe('validateDevRouteNoindex', () => {
+  const okHtml =
+    '<html><head><meta name="robots" content="noindex, nofollow, nocache"/></head></html>'
+
+  it('aceita header X-Robots-Tag noindex + meta robots noindex no HTML', () => {
+    expect(validateDevRouteNoindex('noindex, nofollow', okHtml)).toEqual({
+      ok: true,
+    })
+  })
+
+  it('aceita meta tag com ordem invertida de atributos', () => {
+    const html = '<html><meta content="noindex" name="robots"/></html>'
+    expect(validateDevRouteNoindex('noindex', html)).toEqual({ ok: true })
+  })
+
+  it('rejeita quando X-Robots-Tag header está ausente (null)', () => {
+    const r = validateDevRouteNoindex(null, okHtml)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('X-Robots-Tag header')
+  })
+
+  it('rejeita quando X-Robots-Tag não contém "noindex"', () => {
+    const r = validateDevRouteNoindex('index, follow', okHtml)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('X-Robots-Tag header')
+  })
+
+  it('rejeita quando o HTML não tem meta robots noindex', () => {
+    const html = '<html><head><title>x</title></head></html>'
+    const r = validateDevRouteNoindex('noindex', html)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('meta name="robots"')
+  })
+
+  it('é case-insensitive no header (Cloudflare normaliza case)', () => {
+    expect(validateDevRouteNoindex('NoIndex, NoFollow', okHtml).ok).toBe(true)
+  })
+
+  it('rejeita meta robots sem "noindex" explícito', () => {
+    const html =
+      '<html><head><meta name="robots" content="index, follow"/></head></html>'
+    const r = validateDevRouteNoindex('noindex', html)
+    expect(r.ok).toBe(false)
   })
 })
