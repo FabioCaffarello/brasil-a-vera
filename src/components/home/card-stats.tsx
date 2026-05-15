@@ -1,6 +1,12 @@
 import { BarChart3 } from 'lucide-react'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/design-system/primitives/card'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import type { PublicStats } from '@/lib/queries/stats-public'
 
@@ -27,53 +33,56 @@ function formatUltimaAtualizacao(iso: string | null): string {
   return `${dia} ${hora}`
 }
 
-// Card 3 da home — Sprint 3.1 Tarefa 2. Estatísticas em vivo + trust badge L1
-// (dados brutos agregados, sem interpretação).
+/**
+ * Card 3 da home — Sprint 4.1 PR 4 (refatorado).
+ * Consome `Card` primitive + tokens semânticos. Trust badge L1 preservado.
+ */
 export function CardStats({ stats }: Props) {
   return (
-    <article className="flex flex-col rounded-xl border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900">
-      <div className="mb-3 flex size-10 items-center justify-center rounded-lg bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300">
-        <BarChart3 aria-hidden className="size-5" />
-      </div>
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100">
-          A plataforma em números
-        </h3>
-        <TrustBadge trustLevel="L1" />
-      </div>
+    <Card className="flex flex-col">
+      <CardHeader>
+        <div
+          aria-hidden
+          className="mb-3 flex size-10 items-center justify-center rounded-lg bg-surface-elevated text-brand"
+        >
+          <BarChart3 className="size-5" />
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-lg">A plataforma em números</CardTitle>
+          <TrustBadge trustLevel="L1" />
+        </div>
+      </CardHeader>
 
-      <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-4">
-        <div>
-          <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-            parlamentares
-          </dt>
-          <dd className="font-semibold text-2xl text-zinc-900 tabular-nums dark:text-zinc-100">
-            {formatNumeroAbreviado(stats.totalParlamentares)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-zinc-500 dark:text-zinc-400">votações</dt>
-          <dd className="font-semibold text-2xl text-zinc-900 tabular-nums dark:text-zinc-100">
-            {formatNumeroAbreviado(stats.totalVotacoes)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-            proposições
-          </dt>
-          <dd className="font-semibold text-2xl text-zinc-900 tabular-nums dark:text-zinc-100">
-            {formatNumeroAbreviado(stats.totalProposicoes)}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-zinc-500 dark:text-zinc-400">
-            última atualização
-          </dt>
-          <dd className="font-semibold text-base text-zinc-900 tabular-nums dark:text-zinc-100">
-            {formatUltimaAtualizacao(stats.ultimaAtualizacaoVotacoes)}
-          </dd>
-        </div>
-      </dl>
-    </article>
+      <CardContent className="flex-1">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <div>
+            <dt className="text-foreground-muted text-xs">parlamentares</dt>
+            <dd className="font-semibold text-2xl text-foreground tabular-nums">
+              {formatNumeroAbreviado(stats.totalParlamentares)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-foreground-muted text-xs">votações</dt>
+            <dd className="font-semibold text-2xl text-foreground tabular-nums">
+              {formatNumeroAbreviado(stats.totalVotacoes)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-foreground-muted text-xs">proposições</dt>
+            <dd className="font-semibold text-2xl text-foreground tabular-nums">
+              {formatNumeroAbreviado(stats.totalProposicoes)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-foreground-muted text-xs">
+              última atualização
+            </dt>
+            <dd className="font-semibold text-base text-foreground tabular-nums">
+              {formatUltimaAtualizacao(stats.ultimaAtualizacaoVotacoes)}
+            </dd>
+          </div>
+        </dl>
+      </CardContent>
+    </Card>
   )
 }
