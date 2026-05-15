@@ -107,6 +107,9 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         }}
       />
 
+      {/* Tier 1 — ação legislativa (cobertura ≥ 22%). Ordem: o que votou →
+          se seguiu a bancada → o que propôs → como gastou. Sprint 3.1
+          Tarefa 3 — hierarquia reflete cobertura empírica. */}
       <Section
         title="Votos recentes"
         hint="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
@@ -122,23 +125,6 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
       </Section>
 
       <Section
-        title="Top 5 maior afinidade de voto"
-        hint="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
-      >
-        <Top5Afinidade afinidades={afinidades} />
-      </Section>
-
-      <Section
-        title="Pares de votos em direções opostas"
-        hint="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
-      >
-        <ParesContraditorios
-          pares={paresContraditorios}
-          stats={coerenciaStats}
-        />
-      </Section>
-
-      <Section
         title="Proposições onde é autor ou coautor"
         hint="Limitado às proposições já ingeridas no Brasil a Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
       >
@@ -151,6 +137,41 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
       >
         <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
       </Section>
+
+      {/* Tier 3 — análises comparativas (cobertura < 15%). Movidas para
+          seção secundária com separador visual + heading explicativo para
+          não competir com o conteúdo principal quando vazias. Sprint 3.1
+          Tarefa 3 — wireframe aprovado em 2026-05-15. */}
+      <div className="mt-8 border-zinc-200 border-t pt-8 dark:border-zinc-700">
+        <header className="mb-6">
+          <h2 className="font-semibold text-2xl text-zinc-900 tracking-tight dark:text-zinc-100">
+            Análises comparativas
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            Comparações com outros parlamentares e padrões de voto. Requer base
+            de votações nominais — disponível para parte dos perfis.
+          </p>
+        </header>
+
+        <div className="space-y-5">
+          <Section
+            title="Top 5 maior afinidade de voto"
+            hint="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
+          >
+            <Top5Afinidade afinidades={afinidades} />
+          </Section>
+
+          <Section
+            title="Pares de votos em direções opostas"
+            hint="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
+          >
+            <ParesContraditorios
+              pares={paresContraditorios}
+              stats={coerenciaStats}
+            />
+          </Section>
+        </div>
+      </div>
     </div>
   )
 }
