@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { aggregateProbeResults } from './smoke-aggregator'
+import {
+  aggregateProbeResults,
+  extractOgImage,
+  validateOgImageCanonical,
+} from './smoke-aggregator'
 
 describe('aggregateProbeResults', () => {
   it('retorna 100% quando todos os statuses estão na lista esperada', () => {
@@ -48,5 +52,74 @@ describe('aggregateProbeResults', () => {
     const r = aggregateProbeResults('p', [], [200])
     expect(r.total).toBe(0)
     expect(r.successRate).toBe(0)
+  })
+})
+
+describe('extractOgImage', () => {
+  it('extrai content quando property vem antes', () => {
+    const html =
+      '<meta property="og:image" content="https://example.com/og.png"/>'
+    expect(extractOgImage(html)).toBe('https://example.com/og.png')
+  })
+
+  it('extrai content quando vem antes de property (ordem invertida)', () => {
+    const html =
+      '<meta content="https://example.com/og.png" property="og:image"/>'
+    expect(extractOgImage(html)).toBe('https://example.com/og.png')
+  })
+
+  it('aceita aspas simples', () => {
+    const html =
+      "<meta property='og:image' content='https://example.com/og.png'/>"
+    expect(extractOgImage(html)).toBe('https://example.com/og.png')
+  })
+
+  it('retorna null quando meta tag ausente', () => {
+    expect(extractOgImage('<html></html>')).toBeNull()
+  })
+
+  it('pega o primeiro match (Next emite só 1 og:image por página)', () => {
+    const html =
+      '<meta property="og:image" content="https://a.com/1.png"/><meta property="og:image" content="https://a.com/2.png"/>'
+    expect(extractOgImage(html)).toBe('https://a.com/1.png')
+  })
+})
+
+describe('validateOgImageCanonical', () => {
+  const PROD = 'https://brasil-a-vera.fabio-caffarello.workers.dev'
+
+  it('aceita og:image canônico apontando para baseUrl', () => {
+    const html = `<meta property="og:image" content="${PROD}/opengraph-image?abc"/>`
+    const r = validateOgImageCanonical(html, PROD)
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.ogImage).toBe(`${PROD}/opengraph-image?abc`)
+  })
+
+  it('falha quando og:image contém "localhost"', () => {
+    const html =
+      '<meta property="og:image" content="http://localhost:3000/opengraph-image?abc"/>'
+    const r = validateOgImageCanonical(html, PROD)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('localhost')
+  })
+
+  it('falha quando og:image aponta para outro domínio', () => {
+    const html =
+      '<meta property="og:image" content="https://outro-site.com/og.png"/>'
+    const r = validateOgImageCanonical(html, PROD)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('não começa com baseUrl')
+  })
+
+  it('falha quando meta tag ausente', () => {
+    const r = validateOgImageCanonical('<html></html>', PROD)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toContain('ausente')
+  })
+
+  it('aceita baseUrl com trailing slash', () => {
+    const html = `<meta property="og:image" content="${PROD}/opengraph-image?abc"/>`
+    const r = validateOgImageCanonical(html, `${PROD}/`)
+    expect(r.ok).toBe(true)
   })
 })

@@ -2,7 +2,7 @@
 
 > **Você escolheu quem te representa. Agora veja o que ele faz.**
 
-![Status](https://img.shields.io/badge/status-Wave%202%20%E2%80%94%20Plataforma%20operacional-green)
+![Status](https://img.shields.io/badge/status-Wave%203%20em%20andamento%20%E2%80%94%20estabilizado-green)
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Node](https://img.shields.io/badge/node-22-green)
 
@@ -73,16 +73,11 @@ abrir uma PR. Padrões adicionais em
 [CODE-STYLE.md](docs/contributing/CODE-STYLE.md) e
 [COMMIT-CONVENTION.md](docs/contributing/COMMIT-CONVENTION.md).
 
-A plataforma está operacional desde a Wave 1 (MVP público) e concluiu a
-Wave 2 — Profundidade em 2026-05-13 (tag `v0.2-final`), entregando
-tramitação de proposições, alinhamento partidário, comparativo entre
-parlamentares, página de partido, infraestrutura de cache/SSG, tríade de
-observabilidade (`/api/stats`, smoke pós-deploy, poll de budget Neon) e
-testes integrados com testcontainers. A Wave 3 — Profundidade Cívica
-Acessível está em planejamento (dashboards temáticos, integração TSE,
-índice de coerência completo) — contribuições atuais focam em refinamento
-de pipelines e estabilização. Veja o [Roadmap](docs/product/ROADMAP.md)
-para detalhe das sub-waves entregues.
+Wave 2 entregue (tag `v0.2-final`, 2026-05-13). Wave 3 em andamento —
+sprints de estabilização concluídos (3.0 `v0.3.0-stable` e 3.0.5
+`v0.3.0.5-honest`); próximo passo é Sprint 3.1 (narrativa cívica e
+melhorias de frontend). Veja o [Roadmap](docs/product/ROADMAP.md) para
+detalhe dos sprints entregues e próximos.
 
 ## Documentação
 
