@@ -1,7 +1,11 @@
+import { SearchX } from 'lucide-react'
+import Link from 'next/link'
+
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { TrustBanner } from '@/components/trust-banner'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   type Casa,
   getPartidosDistintos,
@@ -82,9 +86,19 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
       </div>
 
       {parlamentares.length === 0 ? (
-        <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-          Nenhum parlamentar corresponde aos filtros. Tente limpar e refinar.
-        </p>
+        <EmptyState
+          icon={SearchX}
+          title="Nenhum parlamentar corresponde aos filtros"
+          description="Tente ajustar casa, partido ou UF para resultados diferentes."
+          action={
+            <Link
+              href="/parlamentares"
+              className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 font-medium text-sm text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Limpar filtros
+            </Link>
+          }
+        />
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {parlamentares.map((p) => (

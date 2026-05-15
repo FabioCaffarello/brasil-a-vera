@@ -66,7 +66,7 @@ export default async function Home() {
       <section className="mb-12">
         <Link
           href="/parlamentares"
-          className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-primary-700 px-4 py-2.5 font-medium text-sm text-white transition-colors duration-150 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-500"
         >
           Explorar parlamentares
           <span aria-hidden>→</span>
