@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.3
-> Última atualização: 2026-05-13
+> Brasil a Vera · Produto · v0.3.1
+> Última atualização: 2026-05-15
 > Status: accepted
 
 ---
@@ -294,26 +294,48 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 
 - [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) — LCP > 2.5s em `/`, `/parlamentares`, `/partidos/[sigla]` (perf, wave-3+ → Sprint 3.1)
 
-### Wave 3.0.5 — Refinamento NLP & Recalibragem Top 5
+### Wave 3.0.5 — Honestidade pós-3.0 (recalibragem top 5 + auto-fetch vinculação)
 
 > **Tag de release**: `v0.3.0.5-honest`
-> **Status**: planejada
-> **Duração estimada**: 2-3 semanas
+> **Status**: ✅ Concluída em 2026-05-15
+> **Duração real**: ~1 dia (escopo recalibrado durante o sprint)
 
-**Por que aqui**: dois empty states do Sprint 3.0 ficaram com copy honesto mas a feature continua "anêmica" — pares contraditórios cobre só verbos inequívocos (poucas ementas qualificam) e top 5 afinidade exibe 100% com 5 votações em comum (estatisticamente frágil). Esta micro-wave entrega o refinamento, sem ainda adicionar narrativa nova.
+**Por que aqui**: dois empty states do Sprint 3.0 ficaram com copy honesto mas a feature continua "anêmica" — pares contraditórios cobre só verbos inequívocos (poucas ementas qualificam) e top 5 afinidade exibe 100% com 5 votações em comum (estatisticamente frágil).
 
-#### Escopo
+**Redirecionamento durante o sprint** (Opção D do checkpoint): diagnóstico empírico mostrou que **NLP não era o gargalo** de pares contraditórios — gargalo real era vinculação votação→proposição (98% das nominais Câmara sem `proposicao_id` apontavam para proposições fora da janela de ingestão). Escopo reordenado para atacar gargalo real antes de refinar classificador.
 
-- **NLP refinado de classificação de direção** para pares contraditórios: além de verbos inequívocos (`proíbe`, `autoriza`, `revoga`), expandir para padrões de transformação (`amplia`, `restringe`, `reduz` + objetos do verbo). Avaliar via cobertura sobre proposições classificadas hoje (`stats.votosClassificados`)
-- **Recalibragem do top 5 afinidade**: quórum mínimo de votações em comum subiria de 5 → 20-30 (a definir empiricamente); janela temporal: últimos 12 meses. Disclaimer visível continua, mas raramente atinge 100%
-- **Revalidação empírica** com script `diagnose-orientacoes.ts` antes e depois — registrar deltas
+#### Escopo entregue
 
-#### Critérios de Done
+**Bloco 1 — Recalibragem top 5 afinidade** (PR #117):
 
-- [ ] Cobertura de pares contraditórios cresce N% (definir delta empírico no início do sprint)
-- [ ] Top 5 afinidade em prod não exibe 100% para parlamentares com `totalVotosEmComum < 20` (nova regra)
-- [ ] Tests integration cobrindo nova classificação + nova regra de quórum
-- [ ] Diagnose script atualizado para refletir deltas pós-fix
+- Quórum mínimo de votações em comum: 5 → **20** (default)
+- Janela temporal: **últimos 12 meses**
+- `ORDER BY` por percentual desc, total como desempate (não mais coincidentes absolutos)
+- Constantes `TOP5_QUORUM_MINIMO` e `TOP5_JANELA_MESES` exportadas — disclaimer sincronizado com cálculo
+
+**Blocos 2/3/4 — Diagnóstico + auto-fetch + copy** (PR #121):
+
+- Script `diagnose-3-0-5-vinculacao.ts` classifica gap de vinculação em 4 causas (a/b/c/d) — empírico mostrou 100% causa (a)
+- **Auto-fetch reverso no backfill**: quando referência aponta para proposição ausente, dispara ingestão inline. Safeguard de 50 proposições/execução
+- Split `proposicoes-core.ts` (puro) vs `proposicoes.ts` (entry-point) — bug descoberto durante implementação (import disparava ingest completo)
+- `ORDER BY` com prioridade para nominais no backfill — garante safeguard consumido em votações user-facing
+- Copy do empty state `ParesContraditorios` atualizado para refletir vinculação completa e princípio ADR-019
+
+#### Critérios de Done — atendidos
+
+- [x] Top 5 afinidade default: quórum 20 + janela 12m + ORDER BY %; falsos 100% caíram de 18.4% para 5.3%
+- [x] Vinculação votação→proposição Câmara: **20/20 → 0/0** nominais sem `proposicao_id`
+- [x] Tests integration cobrindo nova regra de top 5 (quórum filtro, janela temporal, desempate)
+- [x] Scripts de diagnose (`baseline` + `vinculacao`) permanecem como ferramenta de revalidação periódica
+- [x] Storage Neon mantido em zona AMARELA controlada (~200 proposições novas via auto-fetch)
+
+#### Issues abertas pelo sprint
+
+- Nenhuma issue nova aberta — escopo cirúrgico fechou tudo dentro do PR.
+
+#### Decisão registrada
+
+**NLP do classificador NÃO foi expandido** — princípio ADR-019 (sem gargalo empírico) protege contra expansão sem necessidade. Vocabulário atual cobre apenas verbos inequívocos; quando aparecer gargalo medido (ementas classificáveis mas ficando NÃO_CLASSIFICADA por verbos secundários), reabrir discussão com dados.
 
 ### Wave 3.1 — Narrativa Cívica & Frontend
 
