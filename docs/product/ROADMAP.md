@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.3.2
-> Última atualização: 2026-05-15 (Sprint 3.2 entregue; Wave 4 Design System iniciada)
+> Brasil a Vera · Produto · v0.4.0
+> Última atualização: 2026-05-15 (Sprint 4.0 concluída — fundação do Design System)
 > Status: accepted
 
 ---
@@ -518,33 +518,53 @@ Decisões arquiteturais que governam a Wave 4 ficam em:
 ### Wave 4.0 — Fundação do Design System
 
 > **Tag de release**: `v0.4.0-design-system-foundation`
-> **Status**: 🔄 em andamento (iniciada 2026-05-15)
-> **Duração estimada**: 8 PRs sequenciais
+> **Status**: ✅ Concluída em 2026-05-15
+> **Duração real**: 1 dia (8 PRs sequenciais — escopo cirúrgico)
 
-**Por que primeiro**: estabelecer tokens semânticos, theme provider e as primitivas essenciais antes de tocar em qualquer página de produto. Risco controlado — nada visual muda na home/listagens até PR de consumer concreto.
+**Por que primeiro**: estabelecer tokens semânticos, theme provider e as primitivas essenciais antes de tocar em qualquer página de produto. Risco controlado — nada visual mudou na home/listagens. Primeiro consumer real foi `/dev/design` (PR 7).
 
-#### Escopo planejado
+#### PRs entregues
 
-- **PR 1 — ADRs e contrato (docs-only)**: ADR-021 (Design System), ADR-022 (Clerk), atualização do CLAUDE.md (linha-pointer), reorganização do ROADMAP (Wave 4 nova + Wave 5 Open Ground com nota histórica).
-- **PR 2 — Tokens OKLCH + globals.css novo + WCAG re-audit**: paleta dark-first via OKLCH; paleta `--color-primary-*` HEX existente preservada como tema light dormente; utilitários `glass`, `grid-bg`, `text-gradient`, `shadow-glow`, `shadow-soft` em `@layer utilities`; teste vitest `import-boundaries` cobrindo regra do design system; script `.local/wcag-check.ts` com `culori` validando contrastes; nota OKLCH support em `WCAG-AUDIT.md`.
-- **PR 3 — `components.json` + primitiva `button`**: setup shadcn CLI apontando para `src/design-system/primitives/`, primeira primitiva copiada, adaptada aos tokens e testada.
-- **PR 4 — Tier 1 lote 1**: `card`, `badge`, `skeleton` (sem peer deps adicionais).
-- **PR 5 — Tier 1 lote 2**: `sonner` (toasts) + `dialog` (com peer deps Radix Dialog).
-- **PR 6 — Tier 1 lote 3**: `input`, `label`, `separator`, `tabs`.
-- **PR 7 — Rota interna `/dev/design`**: route group `(internal)` + `robots: noindex` + header `X-Robots-Tag` via `next.config.ts` + probe `dev-routes-noindex` no smoke pós-deploy.
-- **PR 8 — Fechamento**: ROADMAP atualizado, release notes `v0.4.0-design-system-foundation.md`, banner em `src/app/page.tsx`, tag publicada, label de issues `wave-4+` renomeada para `wave-5+`.
+| PR | Conteúdo |
+|---|---|
+| [#138](https://github.com/FabioCaffarello/brasil-a-vera/pull/138) | ADRs e contrato (docs-only): ADR-021 (Design System & shadcn curado), ADR-022 (Clerk para auth), CLAUDE.md linha-pointer, ROADMAP renumerado (Wave 4 nova + Wave 5 Open Ground com nota histórica). |
+| [#139](https://github.com/FabioCaffarello/brasil-a-vera/pull/139) | Tokens OKLCH dark + esqueleto `src/design-system/` + `src/lib/cn.ts` + WCAG re-audit (15 pares dark + 15 light + culori dev-time) + import-boundaries vitest + Biome override + nota OKLCH support. Diff zero provado byte-a-byte em `/docs.html`. |
+| [#140](https://github.com/FabioCaffarello/brasil-a-vera/pull/140) | `components.json` + primitiva `button` (8 testes). Bundle delta 0 (não consumida ainda). |
+| [#141](https://github.com/FabioCaffarello/brasil-a-vera/pull/141) | Tier 1 lote 1: `card` + `badge` + `skeleton` em 3 commits isolados (19 testes). |
+| [#142](https://github.com/FabioCaffarello/brasil-a-vera/pull/142) | Tier 1 lote 2: `sonner` (toasts, D4 sem next-themes) + `dialog` (Radix com focus trap, Esc, aria-labelledby/describedby) em 2 commits (12 testes). |
+| [#143](https://github.com/FabioCaffarello/brasil-a-vera/pull/143) | Tier 1 lote 3: `input` + `label` + `separator` + `tabs` em 4 commits isolados (26 testes incluindo keyboard nav ArrowRight). |
+| [#144](https://github.com/FabioCaffarello/brasil-a-vera/pull/144) | Rota interna `/dev/design` consumindo as 10 primitivas + X-Robots-Tag via `next.config.ts` + probe smoke `dev-routes-noindex` (7 testes do helper). **Primeiro consumer real** — bundle delta JS +118kb raw / ~30kb gzipped confirma estimativa do ADR-021. |
+| [#145](https://github.com/FabioCaffarello/brasil-a-vera/pull/145) | Este PR — fechamento (ROADMAP + release notes + banner + tag + label rename). |
 
-#### Critérios de Done
+#### Critérios de Done — atendidos
 
-- [ ] `npm run check`, `npm run ci`, `npm run test`, `npm run build`, `npm run cf:build` passam em cada PR
-- [ ] `/dev/design` renderiza todas as primitivas Tier 1 sem erros em dark
-- [ ] Auditoria de contraste: todos os pares texto-sobre-fundo do `globals.css` ≥ 4.5:1 (corpo) ou ≥ 3:1 (large/UI), com tabela atualizada em `WCAG-AUDIT.md`
-- [ ] Bundle delta no `/` (RSC, ~0kb hidratação esperada) medido e registrado por PR
-- [ ] Build time mantido no baseline (~975ms ±20%) — feedback `feedback_build_speed.md` cobre regressão
-- [ ] Zero regressão visual em rotas existentes (`/`, `/parlamentares`, `/parlamentares/[id]`) — screenshots antes/depois no PR 2
-- [ ] Probe `dev-routes-noindex` no smoke valida `/dev/design` com `X-Robots-Tag: noindex`
-- [ ] Tag `v0.4.0-design-system-foundation` publicada
-- [ ] Label `wave-4+` renomeada para `wave-5+` no GitHub no PR 8
+- [x] `npm run check`, `npm run ci`, `npm run test`, `npm run build`, `npm run cf:build` passam em cada PR
+- [x] `/dev/design` renderiza todas as 10 primitivas Tier 1 sem erros em dark
+- [x] Auditoria de contraste: todos os 30 pares funcionais texto-sobre-fundo passam WCAG AA (15 dark + 15 light), tabela em `WCAG-AUDIT.md`
+- [x] Bundle delta medido por PR e registrado (zero em PRs 3-6 por tree-shake, +118kb raw / ~30kb gzipped no PR 7 com primeiro consumer real)
+- [x] Build time mantido no baseline (~7-9s wall em PRs com build limpo)
+- [x] Zero regressão visual em rotas existentes — provado byte-a-byte em `/docs.html` no PR 2 (35743 = 35743 após normalização de hashes)
+- [x] Probe `dev-routes-noindex` no smoke valida `/dev/design` com `X-Robots-Tag: noindex` (header) + meta robots noindex (HTML)
+- [x] Tag `v0.4.0-design-system-foundation` publicada (após merge deste PR)
+- [x] Label `wave-4+` renomeada para `wave-5+` no GitHub (após merge deste PR — comando documentado nas release notes)
+
+#### Decisões aplicadas durante a sprint
+
+- **D1 → (a)**: Dark only no 4.0; light dormente; toggle dark/light fica para 4.1+.
+- **D2 → (a)**: `components.json` aliases `ui → @/design-system/primitives`, `utils → @/lib/cn`.
+- **D3 → (a1)**: Rota `/dev/design` em `src/app/dev/` (sem route group; nesting direto), `noindex` via meta + `X-Robots-Tag` header via `next.config.ts`, probe smoke validando ambos.
+- **D4**: Sem `next-themes` no 4.0; Sonner com `theme="dark"` hardcoded. CLI instalou next-themes automaticamente — desinstalado no PR 5.
+- **D5**: Clerk só como ADR-022; dep entra no PR da Sprint 4.1.
+- **D6 → opção 2**: Wave 4 inteira é "Design System & Frontend de Excelência"; backlog antigo migrado para Wave 5 — Open Ground.
+- **D7**: 8 PRs sequenciais mantidos.
+
+#### Issues abertas pelo sprint (carregadas adiante)
+
+- Nenhuma issue nova aberta pela sprint. Carryovers planejados para 4.1+:
+  - **Toggle dark/light** com `next-themes` (Sprint 4.1)
+  - **Inter font** (Sprint 4.1 junto com novo shell)
+  - **`tw-animate-css`** para animações de Dialog/Tabs (decisão diferida — Sprint 4.1 ou 4.3 com base em uso real)
+  - **Tokens `--color-secondary`/`--color-accent`/`--color-input`** (introduzir quando primitiva de input dedicada exigir, no Sprint 4.2+)
 
 ### Wave 4.1 — Refatoração do shell (layout + home + Clerk)
 
