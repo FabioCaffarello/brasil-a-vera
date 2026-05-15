@@ -23,15 +23,16 @@ const SITUACAO_LABELS: Record<string, string> = {
   TRANSFORMADA_EM_NORMA: 'Transformada em norma jurídica',
 }
 
+// Sprint 4.2 PR 4 commit 2/7 — mesmo mapping usado em
+// `proposicao-card.tsx` (Sprint 4.2 PR 2). Solid `bg-success` em
+// TRANSFORMADA_EM_NORMA reforça hierarquia visual (virou lei é o
+// pinnacle outcome do ciclo legislativo).
 const SITUACAO_CLASSES: Record<string, string> = {
-  TRAMITANDO:
-    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200',
-  APROVADA:
-    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
-  REJEITADA: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
-  ARQUIVADA: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  TRANSFORMADA_EM_NORMA:
-    'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200',
+  TRAMITANDO: 'bg-brand/20 text-brand',
+  APROVADA: 'bg-success/20 text-success',
+  REJEITADA: 'bg-destructive/20 text-destructive',
+  ARQUIVADA: 'bg-surface-elevated text-foreground-muted',
+  TRANSFORMADA_EM_NORMA: 'bg-success text-success-foreground',
 }
 
 export function PerfilProposicaoHeader({ proposicao }: Props) {
@@ -41,40 +42,39 @@ export function PerfilProposicaoHeader({ proposicao }: Props) {
     proposicao.ano,
   )
   const situacaoClass =
-    SITUACAO_CLASSES[proposicao.situacao] ??
-    'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
+    SITUACAO_CLASSES[proposicao.situacao] ?? SITUACAO_CLASSES.ARQUIVADA
   return (
-    <header className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+    <header className="rounded-lg border border-border bg-surface p-6">
       <div className="mb-3 flex flex-wrap items-center gap-3">
-        <h1 className="font-mono text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h1 className="font-mono font-semibold text-2xl text-foreground">
           {ref}
         </h1>
         <span
-          className={`inline-flex items-center rounded px-2.5 py-0.5 text-xs font-medium ${situacaoClass}`}
+          className={`inline-flex items-center rounded px-2.5 py-0.5 font-medium text-xs ${situacaoClass}`}
         >
           {SITUACAO_LABELS[proposicao.situacao] ?? proposicao.situacao}
         </span>
       </div>
 
-      <p className="text-base text-zinc-800 dark:text-zinc-200">
+      <p className="text-base text-foreground">
         {proposicao.ementa || (
-          <span className="italic text-zinc-500">(sem ementa)</span>
+          <span className="text-foreground-subtle italic">(sem ementa)</span>
         )}
       </p>
 
       {proposicao.ementaDetalhada &&
         proposicao.ementaDetalhada !== proposicao.ementa && (
           <details className="mt-3">
-            <summary className="cursor-pointer text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
+            <summary className="cursor-pointer text-foreground-muted text-sm hover:text-foreground">
               Ementa detalhada
             </summary>
-            <p className="mt-2 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">
+            <p className="mt-2 whitespace-pre-line text-foreground text-sm">
               {proposicao.ementaDetalhada}
             </p>
           </details>
         )}
 
-      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 text-sm text-zinc-700 dark:text-zinc-300 sm:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 text-foreground text-sm sm:grid-cols-2">
         {proposicao.regime && (
           <div>
             <dt className="inline font-medium">Regime: </dt>
@@ -86,10 +86,10 @@ export function PerfilProposicaoHeader({ proposicao }: Props) {
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <TrustBadge trustLevel={proposicao.trustLevel} />
         <a
+          className="text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground"
           href={proposicao.sourceUrl}
-          target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          target="_blank"
         >
           Ver na fonte oficial ↗
         </a>

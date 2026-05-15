@@ -5,7 +5,7 @@ interface Props {
 export function TemasList({ temas }: Props) {
   if (temas.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Sem temas classificados ainda. A Câmara classifica temas após o
         protocolo da proposição; o Senado não disponibiliza classificação
         temática no endpoint atual.
@@ -17,8 +17,8 @@ export function TemasList({ temas }: Props) {
     <ul className="flex flex-wrap gap-2">
       {temas.map((t) => (
         <li
+          className="inline-flex items-center rounded-full bg-surface-elevated px-3 py-1 font-medium text-foreground text-xs"
           key={t.codigoTema}
-          className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
         >
           {t.nomeTema}
         </li>

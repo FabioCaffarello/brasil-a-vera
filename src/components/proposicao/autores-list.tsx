@@ -9,7 +9,7 @@ interface Props {
 export function AutoresList({ autores }: Props) {
   if (autores.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Sem autores registrados na base.
       </p>
     )
@@ -19,14 +19,14 @@ export function AutoresList({ autores }: Props) {
     <ul className="space-y-2">
       {autores.map((a) => (
         <li
-          key={a.id}
           className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm"
+          key={a.id}
         >
-          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+          <span className="font-medium text-foreground">
             {a.parlamentarId ? (
               <Link
+                className="underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
                 href={`/parlamentares/${a.parlamentarId}`}
-                className="underline decoration-dotted underline-offset-2 hover:text-zinc-600 dark:hover:text-zinc-400"
               >
                 {a.nome}
               </Link>
@@ -35,11 +35,11 @@ export function AutoresList({ autores }: Props) {
             )}
           </span>
           {a.parlamentarPartidoSigla && a.parlamentarUf && (
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-foreground-muted text-xs">
               ({a.parlamentarPartidoSigla}/{a.parlamentarUf})
             </span>
           )}
-          <span className="ml-auto text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <span className="ml-auto text-foreground-muted text-xs uppercase tracking-wide">
             {a.tipoAutoria === 'AUTOR' ? 'Autor' : 'Coautor'}
           </span>
         </li>

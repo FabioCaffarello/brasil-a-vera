@@ -1,11 +1,11 @@
 import { SearchX } from 'lucide-react'
-import Link from 'next/link'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Button } from '@/design-system/primitives/button'
 import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
@@ -76,10 +76,10 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
           Proposições
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-foreground-muted text-sm">
           Projetos de lei, PECs, MPs, decretos e resoluções legislativas
           ingeridas no Brasil a Vera. Resultados ordenados por ano e número,
           mais recentes primeiro.
@@ -102,7 +102,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
         />
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
         <span>
           {proposicoes.length === LIMITE
             ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
@@ -127,12 +127,9 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
           title="Nenhuma proposição corresponde aos filtros"
           description="Tente ajustar tipo, ano ou situação para resultados diferentes."
           action={
-            <Link
-              href="/proposicoes"
-              className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 font-medium text-sm text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Limpar filtros
-            </Link>
+            <Button asChild size="sm" variant="outline">
+              <a href="/proposicoes">Limpar filtros</a>
+            </Button>
           }
         />
       ) : (
