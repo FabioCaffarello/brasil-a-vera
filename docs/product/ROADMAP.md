@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-15 (Sprint 4.0 concluída — fundação do Design System)
+> Última atualização: 2026-05-15 (Sprint 4.1 concluída — shell refatorado + auth wireado)
 > Status: accepted
 
 ---
@@ -568,28 +568,59 @@ Decisões arquiteturais que governam a Wave 4 ficam em:
 
 ### Wave 4.1 — Refatoração do shell (layout + home + Clerk)
 
-> **Tag de release**: integrar em `v0.4.x` (sem tag intermediária — sprints intermediárias só merge na main)
-> **Status**: planejada
-> **Duração estimada**: ~5 PRs
+> **Tag de release**: integrar em `v0.4.x` (sem tag intermediária — sprints intermediárias só merge na main; banner permanece `v0.4.0-design-system-foundation`)
+> **Status**: ✅ Concluída em 2026-05-15
+> **Duração real**: 1 dia (5 PRs sequenciais — escopo cirúrgico)
 
 **Por que segundo**: trocar o shell (header, footer, home) e introduzir Clerk em ilha cliente isolada antes das listagens e perfis. Mantém tudo funcionando — só muda a camada visual.
 
-#### Escopo
+#### PRs entregues
 
-- Novo `src/components/site/navbar.tsx` com Clerk hooks (`<SignedIn>`, `<SignedOut>`, `<UserButton>`) em ilha cliente isolada
-- Novo `src/components/site/footer.tsx`
-- `src/app/layout.tsx` reescrito: tema dark default, fonte Inter (Geist Mono mantida para mono), Navbar/Footer compostos
-- `src/app/page.tsx` (home) refeito: hero com copy "Você escolheu quem te representa…", grid de stats via `getPublicStats`, seção de features, seção de metodologia
-- Setup Clerk: `@clerk/nextjs`, env vars (`.dev.vars` + Cloudflare Secrets), `<ClerkProvider>`, middleware protegendo `/minha-area/*` (sem rotas dependentes ainda)
-- `next-themes` se decisão de produto autorizar toggle dark/light
+| PR | Conteúdo |
+|---|---|
+| [#146](https://github.com/FabioCaffarello/brasil-a-vera/pull/146) | Clerk setup + restricted middleware + ADR-022. ADR-022 v0.2 com §1-§6 (middleware.ts vs proxy.ts, `<Show>` API, matcher, ClerkProvider scope, gate empírico 50kb, Account Portal hosted). Decisão D1 do plano: Opção B aplicada — Provider NÃO em `<html>`, vai para AuthIsland scoped. |
+| [#147](https://github.com/FabioCaffarello/brasil-a-vera/pull/147) | Navbar + AuthSlot RSC server-side com split-point assíncrono via `AuthIslandLoader`. 3 componentes: AuthSlot (RSC), AuthIslandLoader (client lazy), AuthIsland (Provider scoped). Anônimo via `auth()` server-side renderiza `<a href="/sign-in">` estático. |
+| [#148](https://github.com/FabioCaffarello/brasil-a-vera/pull/148) | Footer + Inter font + body em `bg-background` dark global. **+ fix(deploy)**: deploy CI quebrou em main após #147 — Worker bundle estourou free tier 3 MiB (Clerk SDK em RSC). Reverteu AuthSlot RSC; AuthIslandLoader passa a ser consumido direto pelo Navbar (client-only auth check). Matcher do middleware volta a `/minha-area/(.*)`. Pages voltam a ser SSG. ADR-022 §3 v3 documenta a reversão empírica. |
+| [#150](https://github.com/FabioCaffarello/brasil-a-vera/pull/150) | Home refeita: hero ampliado, 2 CTAs via primitiva Button (default + outline), utilitário `grid-bg` consumido, banner versão em `bg-surface-elevated`, Pirâmide de Confiança em grid 2 colunas com Card primitive. 3 cards da home (`card-meu-parlamentar`, `card-stats`, `card-votacoes-semana`) refatorados consumindo Card + tokens semânticos. |
+| [#151](https://github.com/FabioCaffarello/brasil-a-vera/pull/151) | Este PR — fechamento (ROADMAP atualizado, sem tag, sem release notes formais; banner permanece v0.4.0-design-system-foundation). |
 
-#### Critérios de Done
+#### Decisões aplicadas durante a sprint
 
-- [ ] Rotas existentes (`/`, `/parlamentares`, etc.) continuam funcionando — apenas com novo shell visual
-- [ ] Clerk integrado, sem rotas privadas ainda
-- [ ] Lighthouse mobile do `/` ≥ 90 em performance, ≥ 100 em a11y
-- [ ] Bundle client medido — `<UserButton />` lazy-loaded para usuário anônimo
-- [ ] Evidência empírica de que Clerk free tier (50k MAU) suporta tráfego esperado registrada no PR (cross-ref do ADR-022)
+- **D1 (a)** — Dark hardcoded global via `<html className="dark">`; sem `next-themes` na 4.1. Toggle vai pra 4.6+ ou wave futura.
+- **D2 (a)** — Inter substitui Geist Sans como `--font-sans`. Geist Mono permanece como `--font-mono`.
+- **D3 (a)** — Refatoração completa da home (3 cards + Pirâmide) — não só hero.
+- **D4 (a)** — Inconsistência visual transitória aceita: rotas existentes (`/parlamentares`, `/proposicoes`, `/votacoes`) ainda usam zinc legacy; Sprint 4.2 reskinning resolve.
+- **D5 (a)** — `<UserButton>` lazy via `next/dynamic` dentro de AuthIsland (split-point pelo AuthIslandLoader).
+- **D6 (a)** — Sem tag intermediária. Banner mantém `v0.4.0-design-system-foundation`.
+- **D7 (a)** — 5 PRs sequenciais mantidos (1 Clerk setup + 1 Navbar + 1 shell + 1 home + 1 closure).
+
+#### Decisões empíricas falsificadas e revisadas (princípio 13)
+
+- **Opção B "pura" (PR 2)** com `<AuthSlot />` RSC chamando `auth()` server-side em todo header → quebrou deploy CI free tier. **Revertida** no PR 3 ([commit `0262b86`](https://github.com/FabioCaffarello/brasil-a-vera/commit/0262b86)). Causa: Clerk SDK no main `handler.mjs` empurrou o Worker gzipped de 2.79 MB → 3.23 MB, estourando 3 MiB.
+- **`default.minify: true` no OpenNext** (tentativa de mitigação) → quebra em `@vercel/og/index.edge.js` (esbuild `minifySyntax` falha em `export { ImageResponse }` não declarado no file pré-bundled pelo Next).
+- **API `<SignedIn>`/`<SignedOut>`** (research pré-implementação dizia que continuavam funcionais em Core 3) → **Falsificado empiricamente**: Clerk 7.3.4 (Core 3) removeu esses exports. Apenas `<Show when>` está disponível. Documentado em ADR-022 §2 v2.
+
+#### Critérios de Done — atendidos
+
+- [x] Rotas existentes (`/`, `/parlamentares`, etc.) continuam funcionando — apenas com novo shell visual (zinc legacy convivendo com tokens semânticos do shell)
+- [x] Clerk integrado, sem rotas privadas ainda; middleware dormente em `/minha-area/(.*)`
+- [x] Worker server bundle gzipped (Cloudflare) ≤ 3 MiB: 2.807 MB com margem 339 KB ✓
+- [x] Bundle client medido — `<UserButton />` lazy-loaded via `next/dynamic` em AuthIslandLoader; anônimos baixam Clerk chunk APÓS hydrate
+- [x] Login real validado end-to-end pelo owner (Account Portal hosted; redirect funcional via `redirectToSignIn({ returnBackUrl: '/' })`)
+- [x] Free tier preservado — sem upgrade Workers Paid necessário (issue [#149](https://github.com/FabioCaffarello/brasil-a-vera/issues/149) registrada para revisitar Opção B "pura" quando sairmos do free tier)
+- [x] Inter font aplicada; Geist Mono preservada
+- [x] Body migrou para `bg-background text-foreground` (dark global hardcoded)
+
+#### Issues abertas pela sprint
+
+- [#149](https://github.com/FabioCaffarello/brasil-a-vera/issues/149) — `auth: restaurar AuthSlot RSC (Opção B "pura") quando sairmos do Workers free tier`. Label `wave-5+`. Documenta o trigger (upgrade Workers Paid $5/mo OU upstream resolve `@vercel/og` minify) e os passos concretos para re-aplicar.
+
+#### Carryover para Sprint 4.2
+
+- Reskinning amplo das listagens (`/parlamentares`, `/proposicoes`, `/votacoes`) — migrar dos tokens zinc legacy para semânticos OKLCH
+- Refatorar cards de listagem (parlamentar-card, proposicao-card, votacao-card) consumindo Card primitive
+- Filtros (UF, partido, casa, busca) consumindo Input/Label primitivas
+- Tier 2 primitivas podem entrar se necessário (popover, command para typeahead)
 
 ### Wave 4.2 — Páginas de listagem (parlamentares, proposições, votações)
 
