@@ -15,6 +15,12 @@ on:
 # - DATABASE_URL e DIRECT_URL — bootstrappados idempotentemente a cada
 #   deploy a partir dos GitHub Secrets (steps abaixo). Resiliente ao
 #   incidente investigado em #52.
+# - CLERK_SECRET_KEY e NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY —
+#   bootstrappados idempotentemente. NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+#   também é exportada no env do step de build (Next.js inline
+#   `NEXT_PUBLIC_*` no client bundle em build-time). Adição motivada
+#   pelo incidente Sprint 4.2 PR 1 (todos /api/* e páginas 500 quando
+#   Worker não tinha o secret, pós-merge de #152).
 # - ADMIN_API_KEY — single-source no Cloudflare; o workflow só verifica
 #   que ainda está setada e falha rápido caso não esteja.
 # Ver docs/contributing/DEPLOYMENT.md.
@@ -48,15 +54,29 @@ jobs:
       # não-determinística — `wrangler secret put` restaura sem
       # intervenção manual. `printf '%s'` sem newline evita injetar `\n`
       # no valor.
+      #
+      # Secrets do Clerk (CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
+      # entram aqui após o incidente Sprint 4.2 PR 1 (PR #152): o matcher
+      # amplo do clerkMiddleware passou a invocar `auth()` em toda request,
+      # o que exige `CLERK_SECRET_KEY` no runtime do Worker. Sem o secret,
+      # toda rota retorna 500. NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY também
+      # entra como Worker secret porque o middleware server-side lê esse
+      # valor em runtime para validar tokens — separadamente, o step de
+      # build abaixo inline o mesmo valor no bundle client (UserButton,
+      # SignInButton). Princípio 13: incidente registrado empíricamente.
       - name: Bootstrap runtime secrets from GitHub Secrets
         run: |
           printf '%s' "$DATABASE_URL_VALUE" | npx wrangler secret put DATABASE_URL
           printf '%s' "$DIRECT_URL_VALUE" | npx wrangler secret put DIRECT_URL
+          printf '%s' "$CLERK_SECRET_KEY_VALUE" | npx wrangler secret put CLERK_SECRET_KEY
+          printf '%s' "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_VALUE" | npx wrangler secret put NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           DATABASE_URL_VALUE: ${{ secrets.DATABASE_URL }}
           DIRECT_URL_VALUE: ${{ secrets.DIRECT_URL }}
+          CLERK_SECRET_KEY_VALUE: ${{ secrets.CLERK_SECRET_KEY }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY_VALUE: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       # ADMIN_API_KEY não é bootstrappada (single-source no Cloudflare por
       # design — não vive em GitHub Secrets). Verificação explícita aqui
@@ -97,6 +117,13 @@ jobs:
           # build. Em produção, o DATABASE_URL real vem dos Workers Secrets
           # da Cloudflare em runtime.
           DATABASE_URL: postgresql://placeholder:placeholder@placeholder.neon.tech/placeholder?sslmode=require
+          # NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY precisa estar disponível no
+          # build porque Next.js inline qualquer `process.env.NEXT_PUBLIC_*`
+          # no client bundle (AuthIsland, UserButton). Sem isso, o chunk
+          # client de Clerk é gerado com `undefined` no lugar da chave e
+          # falha ao inicializar quando usuário autenticado renderiza
+          # `<UserButton />`. Não é secret — `pk_*` é público por design.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
