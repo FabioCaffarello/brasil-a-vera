@@ -5,24 +5,35 @@ import dynamic from 'next/dynamic'
 import { Skeleton } from '@/design-system/primitives/skeleton'
 
 /**
- * AuthIslandLoader — Sprint 4.1 PR 2.
+ * AuthIslandLoader — Sprint 4.1 PR 3.
  *
- * Wrapper cliente que cria um split-point assíncrono para `AuthIsland`.
- * Sem este wrapper, o `AuthIsland` (que importa `ClerkProvider`, `Show`,
- * `SignInButton`, `dark`, `UserButton`) iria para o bundle estático da
- * rota — mesmo quando o servidor renderizasse o caminho anônimo (branch
- * else do `<AuthSlot />`).
+ * Thin client wrapper que cria split-point assíncrono para `AuthIsland`.
+ * O Navbar (RSC) importa este loader; o módulo `auth-island.tsx` (com
+ * `ClerkProvider`, `Show`, `SignInButton`, `UserButton`) só baixa
+ * assincronamente após page hydrate.
  *
- * Como funciona o split:
- * - `next/dynamic(() => import('./auth-island'), { ssr: false })` faz o
- *   bundler criar um chunk SEPARADO para auth-island.tsx
- * - O chunk de auth-island só é referenciado no HTML quando este
- *   `<AuthIslandLoader />` for de fato renderizado
- * - `AuthSlot` (RSC) chama `<AuthIslandLoader />` apenas para autenticados
- * - Anônimo: nem o AuthIslandLoader é renderizado → chunk Clerk não vai
- *   pra HTML → browser nunca baixa
+ * Por que NÃO usamos AuthSlot (RSC com auth() server-side):
  *
- * Skeleton placeholder enquanto a chunk carrega (autenticados).
+ * Sprint 4.1 PR 2 introduziu AuthSlot RSC chamando `auth()` no header.
+ * Anônimos veriam link estático "Entrar" (zero JS); autenticados,
+ * AuthIslandLoader. Arquitetura "Opção B" do ADR-022 §4.
+ *
+ * Após merge do PR 2 em main, deploy CI no Cloudflare free tier (3 MiB
+ * gzipped) estourou em ~162 KiB. Causa: `auth()` em RSC força Clerk SDK
+ * no main handler.mjs do server, somando ~600-1000 KB raw / ~150-300 KB
+ * compressed. Sprint 4.1 PR 3 revertou — Clerk só roda no middleware
+ * (~150 KB gzipped, próprio bundle) e no client island via this loader.
+ *
+ * Trade-off aceito (ADR-022 §3 v3):
+ * - Perdemos zero-JS-anônimo no path (Clerk chunk baixa lazy após paint)
+ * - Anônimos veem Skeleton até hidratar (~200ms tipicamente)
+ * - DOM render inicial NÃO inclui Clerk — LCP não afetado
+ * - Free tier preservado (vs $5/mo Workers Paid)
+ *
+ * `next/dynamic` cria split-point real: AuthIsland chunk só é
+ * referenciado no HTML quando AuthIslandLoader monta (pós-hydrate).
+ *
+ * `ssr: false` — Clerk client SDK não roda no SSR. Reduz HTML emitido.
  */
 const AuthIsland = dynamic(
   () => import('./auth-island').then((m) => m.AuthIsland),

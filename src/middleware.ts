@@ -7,49 +7,28 @@ import { clerkMiddleware } from '@clerk/nextjs/server'
  *
  * Next 16 (out/2025) renomeou middleware → proxy. O arquivo legacy
  * `middleware.ts` continua funcionando, só emite deprecation warning.
+ * `@opennextjs/cloudflare` ainda NÃO suporta `proxy.ts` (issue
+ * opennextjs/opennextjs-cloudflare#962). Mantemos `middleware.ts` como
+ * dívida conhecida; migração quando suporte chegar. Ver ADR-022 §1.
  *
- * MAS o adapter @opennextjs/cloudflare (nosso runtime de produção, ver
- * ADR-009) ainda NÃO suporta `proxy.ts` — issue
- * opennextjs/opennextjs-cloudflare#962 (aberta out/2025). E mesmo em
- * Workers fora do OpenNext, relato vercel/next.js#86122 mostra proxy.ts
- * não executar atrás de Cloudflare orange-cloud.
+ * Escopo do matcher: `/minha-area/(.*)` apenas.
  *
- * Decisão registrada em ADR-022 §1: mantemos `middleware.ts` como dívida
- * conhecida; abrir PR de codemod quando o suporte upstream chegar.
+ * Sprint 4.1 PR 2 expandiu o matcher para padrão genérico (Clerk
+ * quickstart) — necessário para `auth()` server-side em `<AuthSlot />`
+ * (Opção B). PR 3 revertou: deploy CI no Cloudflare free tier (3 MiB
+ * gzipped) estourou em ~162 KiB porque o Clerk SDK no main handler.mjs
+ * crescia além do limite. Detalhes em ADR-022 §3 (v3).
  *
- * Escopo do matcher (revisado no PR 2):
+ * Solução: `auth()` removido de RSCs de layout. Auth determination via
+ * `<AuthIslandLoader />` no Navbar (client lazy via `next/dynamic`).
+ * Anônimos pagam Clerk chunk DEPOIS da hidratação (não bloqueia LCP);
+ * Clerk SDK sai do main handler.mjs do server.
  *
- * O matcher cobre TODAS as rotas não-estáticas. Razão: o `<AuthSlot />`
- * (RSC server-side) usa `auth()` no header de TODAS as páginas para
- * decidir entre o link estático "Entrar" (anônimos, zero JS de Clerk) e
- * o `<AuthIsland />` lazy (autenticados, carrega Clerk client). Sem o
- * middleware rodar, `auth()` lança erro:
- *
- *   "auth() was called but Clerk can't detect usage of clerkMiddleware()"
- *
- * Esta é uma REVISÃO do escopo restrito do PR 1 (apenas `/minha-area/(.*)`).
- * Documentado em ADR-022 §3 (v2) com trade-offs:
- * + Permite arquitetura server-side de AuthSlot (Opção B)
- * + Custo zero de Clerk no bundle de rotas anônimas
- * - Middleware roda em toda request (CPU ~1-2ms via clerk session check)
- * - Pages que antes eram static (○) viram dynamic (ƒ) por causa do
- *   auth() em layout — mitigação via Cache-Control (ADR-018)
- *
- * O matcher abaixo segue o padrão recomendado pelo Clerk:
- * - Exclui `_next` internals e extensões de asset estáticos
- * - Inclui rotas API
- * - Em modo "dormente" (sem `auth.protect()`). Sprint 4.5 adiciona
- *   `auth.protect()` para `/minha-area/*` quando rotas privadas existirem.
+ * Como nenhuma rota `/minha-area/*` existe ainda (Sprint 4.5 cria), o
+ * middleware está registrado mas dormente (sem `auth.protect()`).
  */
 export default clerkMiddleware()
 
 export const config = {
-  matcher: [
-    // Cobre todas as rotas não-asset (padrão recomendado pelo Clerk).
-    // Bloqueia caminhos com extensões estáticas (.html, .css, .js, etc.)
-    // e o diretório _next.
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Sempre roda em rotas API e tRPC.
-    '/(api|trpc)(.*)',
-  ],
+  matcher: ['/minha-area/(.*)'],
 }

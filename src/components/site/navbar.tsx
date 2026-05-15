@@ -2,10 +2,10 @@ import Link from 'next/link'
 
 import { SearchForm } from '@/components/busca/search-form'
 
-import { AuthSlot } from './auth-slot'
+import { AuthIslandLoader } from './auth-island-loader'
 
 /**
- * Navbar — Sprint 4.1 PR 2.
+ * Navbar — Sprint 4.1 PR 3 (revisada).
  *
  * RSC default. Substitui o header inline do layout.tsx.
  *
@@ -14,13 +14,10 @@ import { AuthSlot } from './auth-slot'
  *   migração ampla para foreground/surface). Manter pra zero regressão
  *   visual durante a Sprint 4.1 — só introduzimos auth + estrutura.
  *
- * Auth: `<AuthSlot />` decide server-side se anônimo vs autenticado.
- * - Anônimo (default): link estático `<a href="/sign-in">Entrar</a>`,
- *   zero JS de Clerk no bundle do usuário
- * - Autenticado: renderiza `<AuthIsland />` (client lazy com ClerkProvider
- *   + UserButton)
- *
- * Honra a Opção B do ADR-022 §4 — custo zero em rota anônima.
+ * Auth: `<AuthIslandLoader />` client lazy via next/dynamic. Detalhes
+ * sobre por que NÃO mais usamos AuthSlot RSC com auth() server-side em
+ * ADR-022 §3 (v3) — bundle size do free tier Cloudflare exigiu reverter
+ * a Opção B "pura" pós-CI empírico.
  *
  * A11y mantida: <nav aria-label="Principal">, skip-link continua em
  * layout.tsx, focus rings preservados.
@@ -82,7 +79,7 @@ export function Navbar() {
             </li>
           </ul>
           <SearchForm variant="header" />
-          <AuthSlot />
+          <AuthIslandLoader />
         </div>
       </nav>
     </header>

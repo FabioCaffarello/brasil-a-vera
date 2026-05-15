@@ -124,42 +124,45 @@ Alternativa de downgrade para `@clerk/nextjs@6.x` (que tinha `<SignedIn>`)
 foi descartada — perderíamos features Core 3 (sem benefício compensador
 para Brasil a Vera).
 
-### 3. Matcher do middleware — REVISADO no PR 2 (foi `/minha-area/(.*)`, virou genérico)
+### 3. Matcher do middleware — REVERTIDO no PR 3 (volta a `/minha-area/(.*)`)
 
 **PR 1 (original)**: matcher = `['/minha-area/(.*)']` para evitar custo CPU
 em rotas públicas e potencial conflito com edge cache (ADR-018).
 
-**PR 2 (revisado)**: matcher genérico cobrindo todas as rotas não-asset:
+**PR 2 (revisado para amplo)**: matcher genérico cobrindo todas as rotas
+não-asset. Razão: `<AuthSlot />` RSC server-side precisa de `auth()` em
+todas as páginas.
+
+**PR 3 (REVERTIDO para restrito)**: matcher voltou a `['/minha-area/(.*)']`
+após validação empírica do deploy CI.
+
+**Razão da reversão**: o merge do PR 2 em main quebrou o deploy Cloudflare:
+
 ```
-'/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-'/(api|trpc)(.*)'
+✘ Your Worker exceeded the size limit of 3 MiB.
+- handler.mjs: 11649 KiB (raw)
+Total Upload: 13898 KiB / gzip: 3234 KiB (limite 3072 KiB free tier)
 ```
 
-**Razão da revisão**: o `<AuthSlot />` (RSC server-side introduzido no
-PR 2 para Opção B) chama `auth()` no header de todas as páginas — para
-decidir entre link estático "Entrar" (anônimos, zero JS de Clerk) vs
-`<AuthIsland />` lazy (autenticados, carrega Clerk client).
+O Clerk SDK no main `handler.mjs` (via `import { auth } from '@clerk/nextjs/server'`
+em `<AuthSlot />`) crescia o bundle compressed em ~440 KB e estourou o
+free tier (Workers Free: 3 MiB script gzipped; Workers Paid $5/mo: 10 MiB).
 
-`auth()` exige que `clerkMiddleware()` tenha rodado, senão:
-```
-Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware()
-```
+Tentativa de `default.minify: true` (OpenNext) quebrou esbuild em
+`@vercel/og/index.edge.js` (`Export ImageResponse doesn't exist in this
+file` — file pré-bundled pelo Next não sobrevive a `minifySyntax`).
 
-Sem expandir o matcher, AuthSlot quebraria em rotas públicas. A arquitetura
-Opção B (zero JS anônimo) depende de matcher amplo.
+Trade-off da reversão (PR 3):
+- ✅ Free tier preservado (zero custo adicional vs $5/mo Workers Paid)
+- ✅ SSG / static prerender retornam para `/docs/*`, `/partidos/[sigla]`
+- ✅ Middleware roda só em `/minha-area/(.*)` (CPU econômico, edge cache natural)
+- ❌ Perdemos "zero JS anônimo" do PR 2 — anônimos pagam Clerk chunk via
+  AuthIslandLoader lazy (após hydrate, ~50 KB compressed background download)
+- ❌ Anônimo vê Skeleton brevemente até hidratar
 
-**Trade-offs aceitos da revisão**:
-
-| Aspecto | Antes (matcher restrito) | Depois (matcher genérico) |
-|---|---|---|
-| CPU por request pública | 0ms (middleware skip) | ~1-2ms (Clerk session parse) |
-| Bundle JS rota anônima | bloqueado por Provider em `<html>` (+50kb gzip) | zero (link estático) |
-| SSG / static prerender | preservado | quebrado — pages viram dynamic (ƒ) |
-| Edge cache (ADR-018) | natural via SSG | requer `Cache-Control: s-maxage` |
-
-A perda de SSG e o custo de CPU são compensados pela economia de bundle
-em **todas** as visitas anônimas (~80% do tráfego). Cache-Control no edge
-(ADR-018 já cobre os TTLs) preserva a performance percebida.
+A perda de zero-JS-anônimo é aceita porque (a) LCP não é afetado (chunk
+load é pós-paint), (b) free tier preservado, (c) margem de ~350 KB no
+limite de 3 MiB (medido empíricamente).
 
 `clerkMiddleware()` continua em modo "dormente" (sem `auth.protect()`).
 No Sprint 4.5, quando `/minha-area/*` for criada, adiciona
@@ -188,30 +191,32 @@ empírica mostrou que o Next bundla todas as dependências estaticamente reachab
 árvore de layout, INDEPENDENTE de render condicional server-side. Resultado: +78kb
 gzipped por rota anônima — PIOR que Opção A (+50kb).
 
-**Topologia final (3 componentes)**:
+**Topologia final do PR 3 (revertida — 2 componentes)**:
 
 | Arquivo | Tipo | Papel |
 |---|---|---|
-| `auth-slot.tsx` | RSC | `auth()` server-side; decide branch (anônimo/autenticado) |
 | `auth-island-loader.tsx` | Client | Thin wrapper que faz `dynamic(() => import('./auth-island'), { ssr: false })`. **Cria o split-point assíncrono** |
 | `auth-island.tsx` | Client | Implementação real: `<ClerkProvider>` + `<Show when>` + `<UserButton>` |
 
-**Fluxo**:
+**Removidos no PR 3** (estavam no PR 2):
+- `auth-slot.tsx` (RSC com `auth()`) — causava o bloat no handler.mjs
+- `src/app/sign-in/page.tsx` (redirectToSignIn stub) — não mais necessário; `<SignInButton>` do Clerk gera URL Account Portal direto
 
-- **Anônimo** (sem session cookie): AuthSlot renderiza `<a href="/sign-in">Entrar</a>`
-  estático (HTML puro). AuthIslandLoader **não é renderizado** → split-point
-  assíncrono **não é referenciado no HTML** → browser **não baixa chunk Clerk**
-- **Autenticado** (session válida): AuthSlot renderiza `<AuthIslandLoader />`.
-  Wrapper monta no client, `dynamic()` carrega `auth-island.tsx` chunk
-  assincronamente. Skeleton mostra durante load. Após load: ClerkProvider hidrata
-  + UserButton renderiza
-- **`/sign-in`**: rota RSC `force-dynamic` que chama `redirectToSignIn()`. Anônimo
-  clica "Entrar" → navega para `/sign-in` → server redirect para Account Portal hosted
+**Fluxo (PR 3)**:
 
-**Medição empírica final do PR 2** (curl real, anonymous /docs):
-- main pré-Wave-4.1: 10 chunks, 190,428 gz bytes
-- branch sem AuthIslandLoader: 15 chunks, 269,155 gz bytes (+78kb)
-- branch com AuthIslandLoader (final): 14 chunks, 201,821 gz bytes (**+11kb**)
+- **Initial paint** (anônimo OU autenticado): Navbar (RSC) renderiza
+  `<AuthIslandLoader />` que mostra `<Skeleton />` placeholder. Zero Clerk no HTML.
+- **Após hydrate**: AuthIslandLoader monta no client, `dynamic()` carrega
+  `auth-island.tsx` chunk assincronamente.
+- **Após chunk load**: `<ClerkProvider>` hidrata; `<Show when>` decide
+  client-side renderizar `<SignInButton>` (anônimo) ou `<UserButton>` (autenticado).
+
+**Medição empírica do PR 3** (curl /docs anônimo):
+- Initial HTML JS chunks: 14, 201,823 gzipped (mesmo do PR 2 baseline)
+- Lazy AuthIsland chunk (loads after hydrate): ~50 KB compressed
+- LCP NÃO impactado (chunk load post-paint)
+- **Server-side Worker bundle (Cloudflare)**: 2.79 MB gzipped (margem 350 KB
+  no limite 3 MiB do free tier) ✓
 
 A diferença residual de +11kb gzipped vem de Next runtime adicional para middleware
 edge + AuthIslandLoader chunk em si (pequeno; necessário para criar o split-point).
