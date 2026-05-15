@@ -124,19 +124,29 @@ Alternativa de downgrade para `@clerk/nextjs@6.x` (que tinha `<SignedIn>`)
 foi descartada — perderíamos features Core 3 (sem benefício compensador
 para Brasil a Vera).
 
-### 3. Matcher do middleware — REVERTIDO no PR 3 (volta a `/minha-area/(.*)`)
+### 3. Matcher do middleware — ciclo completo (4 revisões empíricas)
 
-**PR 1 (original)**: matcher = `['/minha-area/(.*)']` para evitar custo CPU
-em rotas públicas e potencial conflito com edge cache (ADR-018).
+Esta seção registra todas as iterações do matcher, em ordem cronológica.
+Padrão de aprendizado empírico (princípio 13): cada revisão é resposta a
+um sinal real (CI fail ou architecture goal).
 
-**PR 2 (revisado para amplo)**: matcher genérico cobrindo todas as rotas
-não-asset. Razão: `<AuthSlot />` RSC server-side precisa de `auth()` em
-todas as páginas.
+| Versão | PR | Matcher | Estado |
+|---|---|---|---|
+| v1 | Sprint 4.1 PR 1 (#146) | `['/minha-area/(.*)']` | restrito (modo dormente) |
+| v2 | Sprint 4.1 PR 2 (#147) | padrão Clerk genérico | revertido em CI fail |
+| v3 | Sprint 4.1 PR 3 (#148) | `['/minha-area/(.*)']` | restaurado (free tier preservado) |
+| **v4** | **Sprint 4.2 PR 1 (este)** | **padrão Clerk genérico** | **re-aplicado pós Workers Paid** |
 
-**PR 3 (REVERTIDO para restrito)**: matcher voltou a `['/minha-area/(.*)']`
-após validação empírica do deploy CI.
+**v1 (original, PR 1 da Sprint 4.1)**: matcher = `['/minha-area/(.*)']`
+para evitar custo CPU em rotas públicas e potencial conflito com edge
+cache (ADR-018).
 
-**Razão da reversão**: o merge do PR 2 em main quebrou o deploy Cloudflare:
+**v2 (revisão PR 2 da Sprint 4.1)**: matcher genérico cobrindo todas as
+rotas não-asset. Razão: `<AuthSlot />` RSC server-side precisa de
+`auth()` em todas as páginas.
+
+**v3 (reversão PR 3 da Sprint 4.1)**: matcher voltou a
+`['/minha-area/(.*)']` após validação empírica do deploy CI falhar:
 
 ```
 ✘ Your Worker exceeded the size limit of 3 MiB.
@@ -151,18 +161,33 @@ free tier (Workers Free: 3 MiB script gzipped; Workers Paid $5/mo: 10 MiB).
 Tentativa de `default.minify: true` (OpenNext) quebrou esbuild em
 `@vercel/og/index.edge.js` (`Export ImageResponse doesn't exist in this
 file` — file pré-bundled pelo Next não sobrevive a `minifySyntax`).
+Issue [#149](https://github.com/FabioCaffarello/brasil-a-vera/issues/149)
+registrou o estado e o gate para revisão.
 
-Trade-off da reversão (PR 3):
-- ✅ Free tier preservado (zero custo adicional vs $5/mo Workers Paid)
+Trade-off da reversão v3:
+- ✅ Free tier preservado (zero custo adicional)
 - ✅ SSG / static prerender retornam para `/docs/*`, `/partidos/[sigla]`
-- ✅ Middleware roda só em `/minha-area/(.*)` (CPU econômico, edge cache natural)
-- ❌ Perdemos "zero JS anônimo" do PR 2 — anônimos pagam Clerk chunk via
-  AuthIslandLoader lazy (após hydrate, ~50 KB compressed background download)
-- ❌ Anônimo vê Skeleton brevemente até hidratar
+- ✅ Middleware roda só em `/minha-area/(.*)`
+- ❌ Perdemos "zero JS anônimo" — anônimos pagam Clerk chunk via
+  AuthIslandLoader lazy (após hydrate, ~50 KB compressed)
 
-A perda de zero-JS-anônimo é aceita porque (a) LCP não é afetado (chunk
-load é pós-paint), (b) free tier preservado, (c) margem de ~350 KB no
-limite de 3 MiB (medido empíricamente).
+**v4 (re-aplicação PR 1 da Sprint 4.2 — este)**: matcher genérico
+RESTAURADO após owner executar upgrade para **Workers Paid** ($5/mo) em
+2026-05-15. Issue #149 fechada por este PR.
+
+Workers Paid eleva o Worker script gzipped limit de 3 MiB → **10 MiB**.
+Bundle empírico do PR 1 da 4.2 será medido e registrado abaixo (esperado
+~3.23 MB gzipped — confortavelmente dentro do novo limite, com margem
+de ~6.8 MB).
+
+Trade-offs aceitos com v4:
+- ✅ Custo zero JS de Clerk em rotas anônimas (Opção B "pura" restaurada)
+- ✅ `auth()` server-side disponível em qualquer RSC para Sprint 4.5+
+- ❌ Pages que eram static (○) voltam a ser dynamic (ƒ) por `auth()` em layout
+  → mitigação via `Cache-Control: s-maxage` no edge (ADR-018 já cobre)
+- ❌ Middleware roda em toda request (~1-2ms CPU) → ainda confortável no
+  budget Workers Paid 50ms/request (ADR-009)
+- 💰 Custo recorrente $5/mo (Workers Paid) — registrado em ADR-017 v0.2
 
 `clerkMiddleware()` continua em modo "dormente" (sem `auth.protect()`).
 No Sprint 4.5, quando `/minha-area/*` for criada, adiciona

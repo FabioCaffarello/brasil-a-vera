@@ -1,7 +1,7 @@
 # ADR-017: Budget mensal e observabilidade de custo
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-12
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-05-15 (Sprint 4.2 PR 1 — Workers Paid line item)
 > Status: accepted
 
 ---
@@ -100,6 +100,56 @@ real (Neon billing) vs budget, e registrando:
 - Ação corretiva tomada, se houve
 
 Issue recorrente (#39) lembra de fazer.
+
+## Cloudflare Workers Paid line item (Sprint 4.2)
+
+Em 2026-05-15, o owner executou upgrade para **Workers Paid** ($5/mo)
+para resolver o gate documentado em issue [#149](https://github.com/FabioCaffarello/brasil-a-vera/issues/149)
+(Worker bundle estourando o limite 3 MiB do free tier após introdução do
+Clerk SDK server-side via `<AuthSlot />` RSC — ADR-022 §3).
+
+### Impacto no budget
+
+| Componente | Custo mensal | Status |
+|---|---|---|
+| Cloudflare Workers (Paid) | **$5.00** | Recorrente, partir de 2026-05-15 |
+| Neon Postgres | $0 — $5 (Free / Launch) | Variável, monitorado |
+| Cloudflare R2 | $0 (free tier 10 GB) | Não atingido |
+| Outros | $0 | Não aplicável |
+
+### Zonas atualizadas (com line item Workers Paid)
+
+A baseline mensal passa de **$0** para **$5** apenas com Workers Paid.
+As três zonas continuam válidas mas agora correspondem ao **custo adicional
+acima do Workers Paid baseline** (Neon, R2, etc.):
+
+| Zona | Faixa Neon/extras | Total mensal | Resposta esperada |
+|---|---|---|---|
+| 🟢 **Verde** | $0 — $5 | $5 — $10 | Operação normal. Sem ação. |
+| 🟡 **Amarela** | $5 — $15 | $10 — $20 | Revisão semanal. Acelerar ADR-016 (archive) ou ADR-018 (cache). |
+| 🔴 **Vermelha** | > $15 | > $20 | STOP em features. Revisão arquitetural obrigatória. |
+
+### Justificativa do upgrade Workers Paid
+
+Documentada em ADR-022 §3 v4 (matcher v4 — re-aplicação Opção B "pura"):
+
+- Free tier impedia arquitetura server-side com `auth()` em RSC
+- 162 KB acima do limite 3 MiB → não dá pra "minify aggressively" sem
+  quebrar `@vercel/og`
+- $5/mo é trade-off favorável: trade $60/ano por zero JS de Clerk em
+  rotas anônimas (~80% do tráfego) E `auth()` server-side disponível
+  para Sprint 4.5+ Minha Área
+- Workers Paid limit (10 MiB) dá ~6.8 MB de margem para Sprint 4.3-4.6
+  features sem novos gates
+
+### Reavaliação do upgrade
+
+Se em 12 meses (até maio/2027) NÃO entrarmos em zona amarela e o
+projeto não decolar (sem MAU crescimento, sem doações cobrindo o custo),
+considerar downgrade para Workers Free + reverter arquitetura para
+client-only auth (commit `0262b86`, Sprint 4.1 PR 3). Mantenedor solo
+não deve sustentar $60/ano de própria conta indefinidamente sem
+contrapartida cívica observada.
 
 ## Alternativas Consideradas
 
