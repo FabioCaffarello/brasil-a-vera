@@ -53,6 +53,20 @@ export function validateOgImageCanonical(
   return { ok: true, ogImage }
 }
 
+/**
+ * Verifica presença de todas as strings âncora no HTML. Usado pelo probe
+ * de cards-na-home no smoke — guarda contra regressão silenciosa de
+ * componentes removidos do JSX sem que o status HTTP mude.
+ *
+ * Retorna lista das âncoras AUSENTES (vazia = todas presentes).
+ */
+export function findMissingAnchors(
+  html: string,
+  anchors: readonly string[],
+): string[] {
+  return anchors.filter((a) => !html.includes(a))
+}
+
 export function aggregateProbeResults(
   name: string,
   statuses: number[],

@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import {
   aggregateProbeResults,
+  findMissingAnchors,
   type ProbeResult,
   validateOgImageCanonical,
 } from './smoke-aggregator'
@@ -83,6 +84,15 @@ const OG_ROUTES = [
   '/o-meu-parlamentar',
 ] as const
 
+// Strings âncora que precisam aparecer no HTML da home — guarda contra
+// regressão silenciosa de cards removidos do JSX (audit pré-3.2 mostrou
+// que status HTTP-only não pega esse caso). Sprint 3.1 hygiene.
+const HOME_CARDS_ANCHORS = [
+  'Quem representa seu estado',
+  'Votações da semana',
+  'A plataforma em números',
+] as const
+
 const SUCCESS_THRESHOLD_PERCENT = 99
 const WARMUP_DELAY_MS = 5_000
 
@@ -110,6 +120,42 @@ async function fetchHtml(url: string): Promise<string | null> {
     return await res.text()
   } catch {
     return null
+  }
+}
+
+/**
+ * Probe de presença textual de âncoras no HTML da home. Falha rígida
+ * quando qualquer string esperada estiver ausente (guarda contra remoção
+ * silenciosa de componentes do JSX que não muda status HTTP).
+ */
+async function runHomeAnchorsProbe(
+  baseUrl: string,
+  anchors: readonly string[],
+): Promise<ProbeResult & { missing: string[] }> {
+  const html = await fetchHtml(`${baseUrl}/`)
+  if (html === null) {
+    return {
+      name: 'home-anchors',
+      total: 1,
+      expected: 0,
+      unexpected: 0,
+      errors: 1,
+      successRate: 0,
+      statuses: { error: 1 },
+      missing: [...anchors],
+    }
+  }
+  const missing = findMissingAnchors(html, anchors)
+  const ok = missing.length === 0
+  return {
+    name: 'home-anchors',
+    total: 1,
+    expected: ok ? 1 : 0,
+    unexpected: ok ? 0 : 1,
+    errors: 0,
+    successRate: ok ? 100 : 0,
+    statuses: ok ? { ok: 1 } : { missing: 1 },
+    missing,
   }
 }
 
@@ -179,7 +225,7 @@ async function main() {
     JSON.stringify({
       event: 'smoke_start',
       baseUrl,
-      probes: PROBES.length + 1, // +1 = og-canonical
+      probes: PROBES.length + 2, // +2 = og-canonical + home-anchors
     }),
   )
 
@@ -207,9 +253,20 @@ async function main() {
   // de 99% genérica). Falha o smoke independentemente do threshold.
   const ogFailed = ogResult.expected < ogResult.total
 
+  const anchorsResult = await runHomeAnchorsProbe(baseUrl, HOME_CARDS_ANCHORS)
+  console.log(JSON.stringify({ event: 'smoke_probe_result', ...anchorsResult }))
+  totalRequests += anchorsResult.total
+  totalExpected += anchorsResult.expected
+  // Falha rígida: cards na home são entrada cívica primária. Removê-los
+  // silenciosamente do JSX é regressão crítica de produto.
+  const anchorsFailed = anchorsResult.missing.length > 0
+
   const overallSuccessRate =
     totalRequests === 0 ? 0 : (totalExpected / totalRequests) * 100
-  const passed = overallSuccessRate >= SUCCESS_THRESHOLD_PERCENT && !ogFailed
+  const passed =
+    overallSuccessRate >= SUCCESS_THRESHOLD_PERCENT &&
+    !ogFailed &&
+    !anchorsFailed
 
   console.log(
     JSON.stringify({
@@ -219,7 +276,9 @@ async function main() {
       overallSuccessRate: Math.round(overallSuccessRate * 100) / 100,
       threshold: SUCCESS_THRESHOLD_PERCENT,
       ogCanonicalFailed: ogFailed,
+      homeAnchorsFailed: anchorsFailed,
       ...(ogFailed ? { ogFailures: ogResult.failures } : {}),
+      ...(anchorsFailed ? { missingAnchors: anchorsResult.missing } : {}),
     }),
   )
 
