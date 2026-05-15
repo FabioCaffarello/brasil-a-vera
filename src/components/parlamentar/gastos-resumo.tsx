@@ -47,7 +47,9 @@ export function GastosResumoBlock({ ano, resumo }: Props) {
             </span>
             <span className="shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
               {formatBRL(c.total)}
-              <span className="ml-1 text-xs text-zinc-500">({c.n})</span>
+              <span className="ml-1 text-xs text-zinc-500 dark:text-zinc-400">
+                ({c.n})
+              </span>
             </span>
           </li>
         ))}
