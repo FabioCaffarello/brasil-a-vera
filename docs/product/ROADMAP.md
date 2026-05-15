@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.3.1
-> Última atualização: 2026-05-15
+> Brasil a Vera · Produto · v0.3.2
+> Última atualização: 2026-05-15 (Sprint 3.1 entregue)
 > Status: accepted
 
 ---
@@ -339,27 +339,38 @@ A Wave 3 **deliberadamente recorta escopo** — API pública REST, grafo legisla
 
 ### Wave 3.1 — Narrativa Cívica & Frontend
 
-> **Tag de release**: `v0.3.1-narrative`
-> **Status**: planejada
-> **Duração estimada**: 3-4 semanas
+> **Tag de release**: `v0.3.1-civic`
+> **Status**: ✅ Concluída em 2026-05-15
+> **Duração real**: ~1 dia (escopo cirúrgico)
 
 **Por que segundo**: o cidadão que chega à plataforma sem nome em mente não sabe por onde começar. Esta sub-wave adiciona portas de entrada narrativas (não só "buscar X") e ajusta tipografia/espaçamento para destravar legibilidade.
 
-#### Escopo
+#### Escopo entregue
 
-- Cards narrativos na home: "veja o que aconteceu esta semana", "deputado em maior divergência partidária", "proposição mais comentada"
-- Rota `/o-meu-parlamentar` — entrada por CEP/cidade → propõe parlamentares relevantes
-- Tipografia consistente entre títulos/corpo, espaçamento revisado
-- Lighthouse: fechar [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) (LCP > 2.5s em `/`, `/parlamentares`, `/partidos/[sigla]`)
-- QA mobile completo (375 / 414 / 360px) com regressões abertas como issues
+- **Design tokens** (Tarefa 4.A, PR #124): paleta primária azul-marinho institucional via `@theme inline` em Tailwind v4; `docs/design/DESIGN-TOKENS.md` documenta princípios e variantes consideradas
+- **Hierarquia do perfil 360°** (Tarefa 3, PR #125): refactor em 2 tiers — Tier 1 (ação legislativa) acima da dobra, Tier 3 (análises comparativas) em seção secundária com separador. Reflete cobertura empírica
+- **Rota `/o-meu-parlamentar`** (Tarefa 1, PR #126): entrada cívica em 3 estados (form UF → autocomplete município → cards de representantes); dataset IBGE inline (5.571 municípios, 27 UFs); pedagogia explícita ("Congresso é representação estadual, não municipal")
+- **Cards narrativos na home** (Tarefa 2, PR #127): 3 cards (Quem representa seu estado / Votações da semana / Plataforma em números) com `getPublicStats` + `getVotacoesRecentes`; fallback honesto 7d → 30d; lucide-react adicionado
+- **Refinement aplicado** (Tarefa 4.B, PR #128): CTAs principais e focus rings migrados para `primary-700/500`; `EmptyState` component novo aplicado em listagens
+- **Audit de tooltips L1-L4** (Tarefa 5, PR #129): cobertura já completa (10 usos de `TrustBadge` em 8 arquivos); refinements de link primary + aria-label + focus ring
+- **QA mobile aprofundado** (Tarefa 6, PR #130): Lighthouse em 15 rotas; 2 fixes a11y (`text-zinc-500` dark mode contrast + `<dl>` aninhada); LCP > 2.5s expandido em #114
 
-#### Critérios de Done
+#### Critérios de Done — atendidos
 
-- [ ] Home tem ≥ 3 cards de entrada narrativa, cada um linkando para fluxo cívico concreto
-- [ ] `/o-meu-parlamentar` funcional para 1 método de entrada (CEP ou estado/cidade)
-- [ ] LCP < 2.5s nas 3 rotas afetadas em [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114)
-- [ ] Sem regressão CLS / A11y vs baseline Sprint 3.0
-- [ ] Tabela QA mobile no PR de fechamento com screenshots ou descrição textual
+- [x] Home tem **3 cards** de entrada narrativa, cada um linkando para fluxo cívico concreto
+- [x] `/o-meu-parlamentar` funcional para entrada por estado/município (decisão de escopo: sem CEP)
+- [ ] LCP < 2.5s — **não atingido**: 7 rotas ainda > 2.5s. Dependência cristalizada na #114: requer R2 incremental cache (#58, blocked). Documentado como carryover
+- [x] CLS = 0 em todas as 15 rotas auditadas (zero regressão)
+- [x] A11y mantido — 2 violações detectadas pelo audit foram corrigidas; pós-deploy esperar 100 em todas
+- [x] Tabela QA mobile completa no PR #130
+
+#### Issues abertas pelo sprint (carregadas adiante)
+
+- [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) — LCP > 2.5s em 7 rotas (ampliado de 3 para 7); bloqueado por #58 (R2 cache)
+
+#### Decisão registrada
+
+**Modo escuro mantido** — implementado em todo o codebase desde Waves anteriores. Custo de remover > manter. Refinement aplicado em ambos os modos.
 
 ### Wave 3.2 — Quick wins de distribuição
 
