@@ -1,14 +1,23 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist_Mono, Inter } from 'next/font/google'
 
+import { Footer } from '@/components/site/footer'
 import { Navbar } from '@/components/site/navbar'
 import './globals.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+// Inter — tipografia principal do Brasil a Vera a partir da Sprint 4.1.
+// Substitui Geist Sans (que servia desde a Wave 1). Razão:
+// - Inter é otimizada para corpo de texto longo (interfaces densas, dados)
+// - Padrão de facto em design systems modernos (Vercel, Linear, Stripe)
+// - next/font/google self-hosta com `display: swap` automático — sem
+//   FOUT/FOIT extra; LCP impact mínimo (~30kb WOFF2 no critical path).
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 })
 
+// Geist Mono preservada como --font-mono para código/diagnósticos
+// (ex.: WCAG audit display, tokens output em /dev/design).
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
@@ -49,27 +58,24 @@ export const metadata: Metadata = {
   },
 }
 
-// ClerkProvider escopo — decisão registrada em ADR-022 §4 (Opção B).
+// Sprint 4.1 PR 3 — shell global migra para tokens semânticos dark-first.
 //
-// Após medição empírica no PR 1 da Sprint 4.1 mostrou que envolver <html>
-// com <ClerkProvider> adicionava ~50.8kb gzipped em TODAS as rotas
-// públicas (gate de 50kb tripado em 815 bytes — 1.6% além).
+// Decisão D1 do plano da Sprint 4.1 (item a): dark hardcoded sem
+// next-themes. <html className="dark"> força o tema dark em todas as
+// rotas, independente de `prefers-color-scheme` do sistema do usuário.
+// Light theme dormente (light tokens em :root do globals.css) — quando
+// uma sprint futura introduzir toggle dark/light, basta remover o
+// className="dark" daqui e adicionar `next-themes` Provider.
 //
-// Decisão do owner: Opção B — Provider NÃO entra em <html>. Em vez
-// disso, o <AuthIsland> (Sprint 4.1 PR 2, client component lazy via
-// next/dynamic) embrulha localmente um <ClerkProvider> em volta dos
-// componentes que precisam (<UserButton>, hooks Clerk client).
+// Body migra de `bg-zinc-50 dark:bg-zinc-950` (zinc-based) para
+// `bg-background text-foreground` (tokens semânticos do design system).
+// As rotas existentes que ainda usam zinc continuam funcionando — Sprint
+// 4.2 fará reskinning completo das listagens. Inconsistência visual
+// transitória aceita (D4 do plano).
 //
-// Implicações:
-// - Rotas anônimas (~80% do tráfego) NÃO pagam o bundle do Clerk SDK
-//   no client — Provider só hidrata quando AuthIsland mounta
-// - auth() server-side em RSCs continua funcionando (lê de cookies via
-//   middleware; não exige Provider client)
-// - clerkMiddleware (src/middleware.ts) é INDEPENDENTE do Provider;
-//   roda server-side em /minha-area/(.*) only
-// - Sprint 4.5 quando criar /minha-area/* — pode adicionar Provider
-//   no layout daquele route group para client hooks dentro de rotas
-//   privadas (custo limitado a usuários autenticados)
+// ClerkProvider — registrado em ADR-022 §4 (Opção B + refinamento empírico
+// do PR 2). Provider mora dentro do <AuthIslandLoader /> (lazy via
+// next/dynamic), não em <html>. Anônimos baixam zero JS de Clerk.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -78,7 +84,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       {/* suppressHydrationWarning no <body> — extensões de browser
           (ColorZilla, Grammarly, LastPass, etc.) frequentemente injetam
@@ -87,34 +93,20 @@ export default function RootLayout({
           é bug nosso. Padrão React 19 recomendado para isolar a injeção
           ao nível em que ocorre (não cobre descendentes). */}
       <body
-        className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100"
+        className="min-h-full bg-background text-foreground"
         suppressHydrationWarning
       >
         <a
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-surface focus:px-3 focus:py-2 focus:font-medium focus:text-foreground focus:text-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           href="#conteudo"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-zinc-300 focus:bg-white focus:px-3 focus:py-2 focus:font-medium focus:text-sm focus:text-zinc-900 focus:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:border-zinc-600 dark:focus:bg-zinc-900 dark:focus:text-zinc-100"
         >
           Pular para o conteúdo
         </a>
         <Navbar />
-        <main id="conteudo" className="min-h-[calc(100vh-3rem)]">
+        <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
           {children}
         </main>
-        <footer className="border-t border-zinc-200 bg-white py-4 text-xs text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4">
-            <span>
-              Dados oficiais da Câmara dos Deputados e do Senado Federal.
-            </span>
-            <a
-              href="https://github.com/FabioCaffarello/brasil-a-vera"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-zinc-900 dark:hover:text-zinc-100"
-            >
-              Código no GitHub ↗
-            </a>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
   )

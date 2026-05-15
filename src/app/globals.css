@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Custom dark variant — Sprint 4.1 PR 3.
+   Por que: Sprint 4.1 introduz <html className="dark"> hardcoded (D1
+   opção a — dark global, sem next-themes ainda). Para que classes Tailwind
+   `dark:*` ativem com a classe `.dark` no html (em vez do default v4 que
+   é `@media (prefers-color-scheme: dark)`), declaramos o custom-variant.
+   Sem isso, rotas que ainda usam `dark:bg-zinc-*` ficariam em light mode
+   para usuários com prefers-color-scheme: light (inconsistente com o
+   shell dark). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* =============================================================
    Brasil a Vera — Design System (Sprint 4.0 PR 2)
    Documento canônico: docs/design/DESIGN-TOKENS.md
@@ -20,8 +30,10 @@
 
 /* ---------- 1. Token mapping para Tailwind v4 ---------- */
 @theme inline {
-  /* Fonts (preservados — Inter entra na Sprint 4.1 com o novo shell). */
-  --font-sans: var(--font-geist-sans);
+  /* Fonts. Inter substituiu Geist Sans na Sprint 4.1 PR 3 (tipografia
+     padrão moderna de design systems; otimizada para texto longo).
+     Geist Mono permanece como --font-mono para código/diagnósticos. */
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
   /* Paleta primária institucional HEX (Variante 2 — azul-marinho).
