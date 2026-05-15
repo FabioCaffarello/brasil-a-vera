@@ -59,7 +59,7 @@ export default async function Home() {
           Você escolheu quem te representa. Agora veja o que ele faz.
         </p>
         <p className="mt-4 inline-block rounded bg-zinc-100 px-3 py-1 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
-          Wave 3 em andamento · v0.3.1-civic
+          Wave 3 em andamento · v0.3.2-distribution
         </p>
       </header>
 
