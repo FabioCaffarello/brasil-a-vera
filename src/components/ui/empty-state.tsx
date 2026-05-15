@@ -15,19 +15,18 @@ interface Props {
 // limitação estrutural do dado.
 //
 // Sprint 3.1 Tarefa 4.B — refinement aplicado.
+// Sprint 4.2 PR 3 — migrado para tokens semânticos OKLCH.
 export function EmptyState({ icon: Icon, title, description, action }: Props) {
   return (
-    <div className="rounded-lg border border-zinc-200 border-dashed bg-zinc-50/50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/50">
+    <div className="rounded-lg border border-border border-dashed bg-surface/50 p-8 text-center">
       {Icon && (
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-surface-elevated text-foreground-muted">
           <Icon aria-hidden className="size-6" />
         </div>
       )}
-      <p className="font-medium text-sm text-zinc-700 dark:text-zinc-300">
-        {title}
-      </p>
+      <p className="font-medium text-foreground text-sm">{title}</p>
       {description && (
-        <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mx-auto mt-1 max-w-md text-foreground-muted text-sm">
           {description}
         </p>
       )}

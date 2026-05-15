@@ -1,11 +1,11 @@
 import { SearchX } from 'lucide-react'
-import Link from 'next/link'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Button } from '@/design-system/primitives/button'
 import {
   type Casa,
   getPartidosDistintos,
@@ -49,10 +49,10 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
           Parlamentares
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-foreground-muted text-sm">
           Deputados federais (Câmara) e senadores (Senado) em exercício na
           legislatura atual.
         </p>
@@ -67,7 +67,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
         <Filtros partidos={partidos} ufs={ufs} selecionado={filtros} />
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
         <span>
           {parlamentares.length}{' '}
           {parlamentares.length === 1 ? 'resultado' : 'resultados'}
@@ -91,12 +91,9 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           title="Nenhum parlamentar corresponde aos filtros"
           description="Tente ajustar casa, partido ou UF para resultados diferentes."
           action={
-            <Link
-              href="/parlamentares"
-              className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 font-medium text-sm text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Limpar filtros
-            </Link>
+            <Button asChild size="sm" variant="outline">
+              <a href="/parlamentares">Limpar filtros</a>
+            </Button>
           }
         />
       ) : (
