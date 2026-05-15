@@ -1,5 +1,12 @@
+import { Button } from '@/design-system/primitives/button'
+import { Label } from '@/design-system/primitives/label'
+
 // Server Component — `<form action="...">` submete via GET, RSC re-renderiza
-// com os novos searchParams. Sem JS de client necessário.
+// com os novos searchParams. Sem JS de client necessário para submit.
+//
+// Sprint 4.2 PR 2 commit 4/6 — refatorado para tokens semânticos +
+// primitivas Label/Button do design system. <select> nativo preservado
+// (Select é Tier 2; sem demanda concreta para custom virtualization).
 
 interface Props {
   partidos: string[]
@@ -17,22 +24,29 @@ const CASAS = [
   { value: 'SENADO', label: 'Senado Federal' },
 ]
 
+const SELECT_CLASS =
+  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
 export function Filtros({ partidos, ufs, selecionado }: Props) {
   return (
     <form
       action="/parlamentares"
+      className="rounded-lg border border-border bg-surface p-4"
       method="get"
-      className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900"
     >
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-col gap-1">
+          <Label
+            className="text-foreground-muted text-xs"
+            htmlFor="filtro-casa"
+          >
             Casa
-          </span>
+          </Label>
           <select
-            name="casa"
+            className={SELECT_CLASS}
             defaultValue={selecionado.casa ?? ''}
-            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            id="filtro-casa"
+            name="casa"
           >
             {CASAS.map((c) => (
               <option key={c.value} value={c.value}>
@@ -40,16 +54,20 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-col gap-1">
+          <Label
+            className="text-foreground-muted text-xs"
+            htmlFor="filtro-partido"
+          >
             Partido
-          </span>
+          </Label>
           <select
-            name="partido"
+            className={SELECT_CLASS}
             defaultValue={selecionado.partido ?? ''}
-            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            id="filtro-partido"
+            name="partido"
           >
             <option value="">Todos</option>
             {partidos.map((p) => (
@@ -58,16 +76,17 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-col gap-1">
+          <Label className="text-foreground-muted text-xs" htmlFor="filtro-uf">
             UF
-          </span>
+          </Label>
           <select
-            name="uf"
+            className={SELECT_CLASS}
             defaultValue={selecionado.uf ?? ''}
-            className="min-h-[44px] rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            id="filtro-uf"
+            name="uf"
           >
             <option value="">Todas</option>
             {ufs.map((u) => (
@@ -76,22 +95,16 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               </option>
             ))}
           </select>
-        </label>
+        </div>
       </div>
 
       <div className="mt-3 flex justify-end gap-2">
-        <a
-          href="/parlamentares"
-          className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-        >
-          Limpar
-        </a>
-        <button
-          type="submit"
-          className="min-h-[44px] rounded bg-primary-700 px-3 py-1.5 font-medium text-white text-xs transition-colors duration-150 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-500"
-        >
+        <Button asChild size="sm" variant="outline">
+          <a href="/parlamentares">Limpar</a>
+        </Button>
+        <Button size="sm" type="submit">
           Filtrar
-        </button>
+        </Button>
       </div>
     </form>
   )
