@@ -1,9 +1,11 @@
 # Auditoria WCAG 2.1 AA — Brasil a Vera
 
-**Data:** 2026-05-11
+**Data:** 2026-05-15 (atualizado na Sprint 4.0 PR 2 — paleta dark OKLCH)
+**Data original:** 2026-05-11
 **Escopo:** Todas as rotas públicas da Wave 1 (`/`, `/parlamentares`,
 `/parlamentares/[id]`, `/proposicoes`, `/proposicoes/[tipo]/[numero]/[ano]`,
-`/votacoes`, `/votacoes/[id]`, `/busca`).
+`/votacoes`, `/votacoes/[id]`, `/busca`) + tokens semânticos do
+design system introduzidos na Sprint 4.0.
 **Critério:** WCAG 2.1 nível AA.
 
 ## Filosofia
@@ -114,3 +116,104 @@ Se você usa leitor de tela, navegação por teclado ou tem qualquer
 fricção com a interface, abra issue em
 [brasil-a-vera/issues](https://github.com/FabioCaffarello/brasil-a-vera/issues)
 com o tag `a11y`. A11y bugs têm prioridade sobre features.
+
+---
+
+## Wave 4.0 — Paleta dark OKLCH (2026-05-15)
+
+A Sprint 4.0 PR 2 introduziu tokens semânticos OKLCH em `src/app/globals.css`
+para o design system (`src/design-system/`). Esta seção registra os pares
+texto/fundo validados.
+
+### Método
+
+Script `.local/wcag-check.ts` (dev-time only, **não vai pro bundle**) usa
+a lib `culori` (devDep) pra:
+
+1. Parsear cada valor OKLCH para sRGB
+2. Calcular relative luminance (WCAG fórmula)
+3. Computar ratio entre cada par fg/bg definido
+4. Marcar AA/AAA pass/fail por kind (body ≥ 4.5, ui/large ≥ 3.0)
+
+Output literal abaixo (rodado em 2026-05-15 após calibragem):
+
+### Light theme (institucional, dormente em 4.0)
+
+| Par | fg → bg | Ratio | Kind | Status |
+|---|---|---:|---|---|
+| foreground / background | `#161719` → `#fafafa` | 17.16 | body | AAA ✅ |
+| foreground / surface | `#161719` → `#ffffff` | 17.91 | body | AAA ✅ |
+| foreground-muted / background | `#3e4042` → `#fafafa` | 9.99 | body | AAA ✅ |
+| foreground-muted / surface | `#3e4042` → `#ffffff` | 10.43 | body | AAA ✅ |
+| foreground-subtle / background | `#707274` → `#fafafa` | 4.65 | body | AA ✅ |
+| foreground-subtle / surface | `#707274` → `#ffffff` | 4.85 | body | AA ✅ |
+| primary-foreground / primary (button) | `#ffffff` → `#173550` | 12.64 | body | AAA ✅ |
+| primary / background (link) | `#173550` → `#fafafa` | 12.11 | body | AAA ✅ |
+| primary / surface (link em card) | `#173550` → `#ffffff` | 12.64 | body | AAA ✅ |
+| success-foreground / success (badge) | `#ffffff` → `#137738` | 5.65 | body | AA ✅ |
+| warning-foreground / warning (badge) | `#ffffff` → `#b25400` | 5.11 | body | AA ✅ |
+| destructive-foreground / destructive (badge) | `#ffffff` → `#b32322` | 6.59 | body | AA ✅ |
+| ring / background (focus ring UI) | `#22405b` → `#fafafa` | 10.36 | ui | AAA ✅ |
+| border / background (divisor decorativo) | `#dbdee1` → `#fafafa` | 1.29 | decorative | N/A |
+| border-strong / background (divisor decorativo) | `#c5c8ca` → `#fafafa` | 1.62 | decorative | N/A |
+
+### Dark theme (Wave 4 padrão)
+
+| Par | fg → bg | Ratio | Kind | Status |
+|---|---|---:|---|---|
+| foreground / background | `#f3f5f8` → `#07090e` | 18.26 | body | AAA ✅ |
+| foreground / surface | `#f3f5f8` → `#0c1016` | 17.54 | body | AAA ✅ |
+| foreground / surface-elevated | `#f3f5f8` → `#12161d` | 16.61 | body | AAA ✅ |
+| foreground-muted / background | `#9ea5b0` → `#07090e` | 8.03 | body | AAA ✅ |
+| foreground-muted / surface | `#9ea5b0` → `#0c1016` | 7.71 | body | AAA ✅ |
+| foreground-subtle / background | `#848992` → `#07090e` | 5.69 | body | AA ✅ |
+| foreground-subtle / surface | `#848992` → `#0c1016` | 5.47 | body | AA ✅ |
+| primary-foreground / primary (button) | `#07090e` → `#438aff` | 6.03 | body | AA ✅ |
+| primary / background (link) | `#438aff` → `#07090e` | 6.03 | body | AA ✅ |
+| primary / surface (link em card) | `#438aff` → `#0c1016` | 5.79 | body | AA ✅ |
+| success-foreground / success (badge) | `#060606` → `#32c364` | 8.79 | body | AAA ✅ |
+| warning-foreground / warning (badge) | `#0b0b0b` → `#f2a618` | 9.60 | body | AAA ✅ |
+| destructive-foreground / destructive (badge) | `#fcfcfc` → `#cc2827` | 5.22 | body | AA ✅ |
+| ring / background (focus ring UI) | `#438aff` → `#07090e` | 6.03 | ui | AAA ✅ |
+| border / background (divisor decorativo) | `#2a2e35` → `#07090e` | 1.46 | decorative | N/A |
+| border-strong / background (divisor decorativo) | `#43484f` → `#07090e` | 2.16 | decorative | N/A |
+
+**✅ Todos os pares funcionais passam WCAG AA.**
+
+### Sobre `border` / `border-strong` decorativos
+
+WCAG 1.4.11 (Non-text Contrast, AA, ≥ 3:1) aplica-se a **UI components** —
+boundaries que indicam o limite de um componente interativo (input outline,
+button outline, focus ring). Borders **decorativos** (divisores entre seções,
+linhas entre cards) **não estão no escopo** desse critério.
+
+Nossos tokens `--border` e `--border-strong` são decorativos. Quando uma
+primitiva de input ou button precisar de outline próprio para indicar
+state, ela usará `--ring` (que passa 6.03 dark, 10.36 light) ou um token
+dedicado como `--border-input` a ser introduzido com a primitiva `input`
+no PR 6 da Sprint 4.0.
+
+### OKLCH browser support
+
+OKLCH em CSS é nativo nos seguintes navegadores:
+
+- Chromium 111+ (Mar/2023)
+- Safari 16.4+ (Mar/2023)
+- Firefox 113+ (Mai/2023)
+
+Caniuse global > 95% em 2026-05. **Sem fallback HEX até demanda observada**
+(princípio ADR-019 / 14): se cidadão real reportar regressão de
+renderização em browser antigo, abrir issue com evidência e adicionar
+`@supports (color: oklch(0 0 0))` com fallback no `globals.css`.
+
+### Como re-rodar a auditoria
+
+```bash
+# Dev-time only — não roda em CI, não vai pro bundle.
+# culori já está em devDependencies desde a Sprint 4.0 PR 2.
+npx tsx --tsconfig tsconfig.ingestion.json .local/wcag-check.ts
+```
+
+Output retorna exit code 0 se todos os pares passam AA; exit code 1
+listando os pares falhando. Inclui na PR description ao introduzir token
+novo ou alterar valor existente.

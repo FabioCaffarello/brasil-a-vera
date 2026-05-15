@@ -73,5 +73,29 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/design-system/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@/lib/queries": {
+                    "message": "design-system/ não pode acessar queries — é folha do grafo (ADR-021)."
+                  },
+                  "@/shared/db": {
+                    "message": "design-system/ não pode acessar DB — é folha do grafo (ADR-021)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

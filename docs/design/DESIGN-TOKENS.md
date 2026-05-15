@@ -1,18 +1,92 @@
 # Design Tokens
 
-> Brasil a Vera · Design · v0.1
-> Última atualização: 2026-05-15 (Sprint 3.1 Tarefa 4.A)
-> Status: **accepted** — cor primária = **Variante 2 (azul-marinho institucional)**.
+> Brasil a Vera · Design · v0.2
+> Última atualização: 2026-05-15 (Sprint 4.0 PR 2 — tokens semânticos OKLCH dark-first)
+> Status: **accepted**
+> Governança: [ADR-021 — Design System & shadcn-curado](../architecture/ADR/021-design-system-shadcn-curado.md)
+
+---
+
+## Sumário
+
+- [Princípios](#princípios)
+- [Tokens semânticos — Sprint 4.0 (OKLCH)](#tokens-semânticos--sprint-40-oklch)
+- [Paleta neutra (mantida)](#paleta-neutra-mantida)
+- [Paleta semântica (Tailwind legacy, mantida)](#paleta-semântica-tailwind-legacy-mantida)
+- [Cor primária — Variante 2 (institucional dormente)](#cor-primária--decidida-variante-2-azul-marinho-institucional)
+- [Tipografia](#tipografia)
+- [Espaçamento](#espaçamento)
+- [Borda e Radius](#borda-e-radius)
+- [Sombras](#sombras)
+- [Estados de interação](#estados-de-interação)
 
 ---
 
 ## Princípios
 
-1. **Refinement, não redesign**. Mantém estrutura visual atual; adiciona personalidade via cor primária e formaliza escalas. Sem refactor amplo de classes Tailwind nos componentes.
-2. **Mudança mínima viável**. `zinc` permanece como neutro (95% das ocorrências hoje). Substituir seria refactor de centenas de classes em ~80 arquivos — fora do escopo de "tokens".
-3. **Identidade brasileira atenuada**. A escolha de cor primária deve sugerir Brasil sem cair em saturação ou cafonice. Tons sóbrios, baixa saturação, alto contraste para WCAG.
-4. **Acessibilidade preservada**. Todos os pares texto/fundo passam WCAG 2.1 AA (≥4.5:1 para texto normal, ≥3:1 para texto grande). Focus rings visíveis em qualquer cor primária escolhida.
-5. **Tailwind v4 nativo**. Tokens via `@theme inline` em `globals.css`. Sem `tailwind.config.ts` (projeto está em v4).
+1. **Dark-first na Wave 4**. Sprint 4.0 estabelece a paleta OKLCH dark como padrão; light fica dormente (tokens institucionais HEX preservados para retorno futuro).
+2. **Tokens semânticos sempre via CSS variables**. Componentes do design system consomem `var(--color-foreground)`, nunca `#fafafa` ou `oklch(...)` inline.
+3. **Refinement, não redesign** (princípio herdado da Sprint 3.1). Tokens novos NÃO substituem `zinc-*` em consumers existentes — coexistem.
+4. **Acessibilidade preservada**. Todos os pares texto/fundo passam WCAG 2.1 AA (≥4.5:1 corpo, ≥3:1 large/UI). Validação empírica via `.local/wcag-check.ts` (culori) registrada em `WCAG-AUDIT.md`.
+5. **Tailwind v4 nativo**. Tokens via `@theme inline` em `globals.css`. Sem `tailwind.config.ts`.
+
+---
+
+## Tokens semânticos — Sprint 4.0 (OKLCH)
+
+Esta camada nova foi introduzida em 2026-05-15 pela Sprint 4.0 PR 2. Define o vocabulário do design system (`src/design-system/`). **Não substitui** os tokens institucionais HEX — coexistem.
+
+### Lista canônica
+
+| Token CSS var | Tailwind class | Função | Light (OKLCH) | Dark (OKLCH) |
+|---|---|---|---|---|
+| `--background` | `bg-background` | Fundo da página | `0.985 0 0` | `0.14 0.012 260` |
+| `--surface` | `bg-surface` | Card padrão | `1 0 0` | `0.17 0.014 260` |
+| `--surface-elevated` | `bg-surface-elevated` | Card CTA elevado | `1 0 0` | `0.2 0.016 260` |
+| `--surface-overlay` | `bg-surface-overlay` | Backdrop de Dialog/Sheet | `0.205 0.005 260 / 0.5` | `0.07 0.006 260 / 0.6` |
+| `--border` | `border-border` | Borda decorativa | `0.9 0.005 250` | `0.3 0.014 260` |
+| `--border-strong` | `border-border-strong` | Borda hover/foco | `0.83 0.005 250` | `0.4 0.014 260` |
+| `--foreground` | `text-foreground` | Texto principal | `0.205 0.005 260` | `0.97 0.005 250` |
+| `--foreground-muted` | `text-foreground-muted` | Texto secundário | `0.37 0.005 260` | `0.72 0.018 260` |
+| `--foreground-subtle` | `text-foreground-subtle` | Texto terciário (captions) | `0.55 0.005 260` | `0.63 0.014 260` |
+| `--primary` | `bg-brand`/`text-brand` | Marca / CTA principal (semantic) | `0.32 0.06 248` | `0.65 0.19 260` |
+| `--primary-foreground` | `text-brand-foreground` | Texto sobre `--primary` | `1 0 0` | `0.14 0.012 260` |
+| `--success` | `bg-success` | Estado positivo | `0.5 0.13 150` | `0.72 0.18 150` |
+| `--success-foreground` | `text-success-foreground` | Texto sobre `--success` | `1 0 0` | `0.12 0 0` |
+| `--warning` | `bg-warning` | Disclaimer / amostra insuficiente | `0.55 0.16 60` | `0.78 0.16 75` |
+| `--warning-foreground` | `text-warning-foreground` | Texto sobre `--warning` | `1 0 0` | `0.15 0 0` |
+| `--destructive` | `bg-destructive` | Estado negativo | `0.5 0.18 27` | `0.55 0.2 27` |
+| `--destructive-foreground` | `text-destructive-foreground` | Texto sobre `--destructive` | `1 0 0` | `0.99 0 0` |
+| `--ring` | `ring-ring` | Focus ring (WCAG 2.4.7) | `0.36 0.06 248` | `0.65 0.19 260` |
+| `--chart-1..5` | `text-chart-N` / `fill-chart-N` | Paleta Recharts (Sprint 4.3+) | ver `globals.css` | ver `globals.css` |
+
+### Decisão de nomenclatura: `--color-brand` (não `--color-primary`)
+
+A paleta institucional já ocupa `--color-primary-50..950` (HEX). Para evitar conflito, o token semântico do design system aparece em Tailwind como `bg-brand` / `text-brand-foreground`. A CSS variable interna é `--primary` (sem prefixo), mas o `@theme inline` mapeia para `--color-brand`.
+
+### Diferenças vs proposta original do designer
+
+Valores extraídos do `styles.css` do designer parceiro (`usernamette/vera-politica`, linhas 48-95). Re-validação WCAG no `wcag-check.ts` exigiu 5 ajustes:
+
+| Token (dark) | Designer | Nosso (após WCAG) | Razão |
+|---|---|---|---|
+| `--foreground-muted` | `0.66 0.018 260` | `0.72 0.018 260` | Passa AAA em ambos `--surface` e `--background` |
+| `--foreground-subtle` | (não tinha) | `0.63 0.014 260` | Novo token; designer só tinha foreground-muted |
+| `--destructive` | `0.66 0.22 25` | `0.55 0.2 27` | Designer dava ratio 3.35 contra fg branco (FAIL AA); escurecido passa 5.22 |
+| `--primary-foreground` | `0.99 0 0` (branco) | `0.14 0.012 260` (= `--background`) | Designer dava 3.21 sobre `--primary`; dark text sobre bright primary é estratégia idêntica à de success/warning do próprio designer |
+| `--border` / `--border-strong` | alpha 8%/15% white | lightness `0.3` / `0.4` | Decorativos (fora WCAG 1.4.11); mais visíveis no dark |
+
+### Utilitários custom
+
+Em `@layer utilities` (consumir via `className="glass"` etc):
+
+- `.glass` — superfície translúcida com `backdrop-filter: blur(12px)`
+- `.grid-bg` — fundo com grid sutil + máscara radial (hero da home)
+- `.text-gradient` — gradiente em headings hero (white → cool-gray)
+- `.shadow-glow` — elevação com brilho de marca (CTA destacado)
+- `.shadow-soft` — sombra suave (cards elevados)
+
+Otimizados para dark. Light theme dormente; consumers em light adaptarão localmente quando 4.1+ trouxer toggle.
 
 ---
 

@@ -1,17 +1,33 @@
 @import "tailwindcss";
 
-/* Design tokens — Sprint 3.1 Tarefa 4.A.
+/* =============================================================
+   Brasil a Vera — Design System (Sprint 4.0 PR 2)
    Documento canônico: docs/design/DESIGN-TOKENS.md
-   Princípio: refinement, não redesign. `zinc` permanece como neutro
-   dominante; identidade é adicionada via paleta primária custom. */
+   Auditoria WCAG: docs/architecture/WCAG-AUDIT.md
+   ADR de governança: docs/architecture/ADR/021-design-system-shadcn-curado.md
+
+   Estrutura:
+   1. @theme inline   — exposição dos tokens para Tailwind v4
+   2. :root           — tema light (institucional, dormente no Sprint 4.0)
+   3. media + .dark   — tema dark (Wave 4 padrão; ativa por preferência
+                         do sistema OU classe .dark explícita)
+   4. @layer base     — propositadamente NÃO inclui body styles aqui pra
+                         garantir diff zero em rotas existentes (Sprint 4.0
+                         PR 2 critério). Entra no PR da Sprint 4.1.
+   5. @layer utilities — glass, grid-bg, text-gradient, shadow-glow, shadow-soft
+   6. @media (prefers-reduced-motion) — preservado da Wave 1
+   ============================================================= */
+
+/* ---------- 1. Token mapping para Tailwind v4 ---------- */
 @theme inline {
+  /* Fonts (preservados — Inter entra na Sprint 4.1 com o novo shell). */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Cor primária — Variante 2 (azul-marinho institucional).
-     Aplicada em focus rings, CTAs principais, links de navegação.
-     NÃO substitui zinc em texto regular ou UIs de dados.
-     Contraste primary-700 / branco: 10.3:1 (AA + AAA). */
+  /* Paleta primária institucional HEX (Variante 2 — azul-marinho).
+     PRESERVADA como tema light dormente e como fallback de identidade.
+     Documento canônico: docs/design/DESIGN-TOKENS.md
+     Contraste primary-700/branco: 10.3:1 (AA + AAA). */
   --color-primary-50: #f0f4f8;
   --color-primary-100: #d9e2ec;
   --color-primary-200: #bcccdc;
@@ -23,12 +39,192 @@
   --color-primary-800: #1a2a3a;
   --color-primary-900: #102a43;
   --color-primary-950: #061a35;
+
+  /* Tokens semânticos Sprint 4.0 (consumidos por src/design-system/**).
+     Valores literais nos blocos :root / dark abaixo.
+     Auditoria WCAG: docs/architecture/WCAG-AUDIT.md (Sprint 4.0). */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-brand: var(--primary);
+  --color-brand-foreground: var(--primary-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Radius scale — formaliza a já praticada no DESIGN-TOKENS. */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
 }
 
-/* WCAG 2.3.3 — respeitar a preferência do sistema operacional por movimento
-   reduzido. `!important` é intencional aqui: precisa sobrescrever classes
-   utilitárias do Tailwind (transition-*, animate-*) que vencem por especificidade
-   em outras condições. Padrão recomendado pelo The A11y Project. */
+/* ---------- 2. Tema light (institucional, dormente em 4.0) ---------- */
+:root {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.205 0.005 260);
+  --foreground-muted: oklch(0.37 0.005 260);
+  --foreground-subtle: oklch(0.55 0.005 260);
+  --surface: oklch(1 0 0);
+  --surface-elevated: oklch(1 0 0);
+  --surface-overlay: oklch(0.205 0.005 260 / 0.5);
+  --border: oklch(0.9 0.005 250);
+  --border-strong: oklch(0.83 0.005 250);
+  --primary: oklch(0.32 0.06 248);
+  --primary-foreground: oklch(1 0 0);
+  --success: oklch(0.5 0.13 150);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.55 0.16 60);
+  --warning-foreground: oklch(1 0 0);
+  --destructive: oklch(0.5 0.18 27);
+  --destructive-foreground: oklch(1 0 0);
+  --ring: oklch(0.36 0.06 248);
+
+  --chart-1: oklch(0.32 0.06 248);
+  --chart-2: oklch(0.5 0.13 150);
+  --chart-3: oklch(0.5 0.18 27);
+  --chart-4: oklch(0.45 0.18 295);
+  --chart-5: oklch(0.55 0.16 60);
+}
+
+/* ---------- 3. Tema dark (Wave 4 padrão) ----------
+   Ativa em duas situações:
+   (a) prefers-color-scheme: dark — usuário com tema dark do sistema
+   (b) classe .dark explícita — usada por /dev/design (PR 7) e shell 4.1+
+
+   Valores re-validados contra WCAG AA via .local/wcag-check.ts (culori).
+   Resultado registrado em docs/architecture/WCAG-AUDIT.md.
+
+   Diferenças vs proposta original do designer:
+   - foreground-muted: 0.66 → 0.72 (passa AAA em ambos surface e background)
+   - foreground-subtle: introduzido em 0.63 (designer não tinha equivalente)
+   - destructive: 0.66 → 0.55 (fg branco passa AA agora — antes 3.35)
+   - primary-foreground: 0.99 → casa com --background (texto escuro sobre
+     bright primary; estratégia idêntica à success/warning do designer)
+   - border / border-strong: alpha 8%/15% → lightness 0.30/0.40 (decorativos,
+     fora do escopo WCAG 1.4.11 mas mais visíveis no dark) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.14 0.012 260);
+    --foreground: oklch(0.97 0.005 250);
+    --foreground-muted: oklch(0.72 0.018 260);
+    --foreground-subtle: oklch(0.63 0.014 260);
+    --surface: oklch(0.17 0.014 260);
+    --surface-elevated: oklch(0.2 0.016 260);
+    --surface-overlay: oklch(0.07 0.006 260 / 0.6);
+    --border: oklch(0.3 0.014 260);
+    --border-strong: oklch(0.4 0.014 260);
+    --primary: oklch(0.65 0.19 260);
+    --primary-foreground: oklch(0.14 0.012 260);
+    --success: oklch(0.72 0.18 150);
+    --success-foreground: oklch(0.12 0 0);
+    --warning: oklch(0.78 0.16 75);
+    --warning-foreground: oklch(0.15 0 0);
+    --destructive: oklch(0.55 0.2 27);
+    --destructive-foreground: oklch(0.99 0 0);
+    --ring: oklch(0.65 0.19 260);
+
+    --chart-1: oklch(0.65 0.19 260);
+    --chart-2: oklch(0.72 0.18 150);
+    --chart-3: oklch(0.66 0.22 25);
+    --chart-4: oklch(0.62 0.22 295);
+    --chart-5: oklch(0.78 0.16 75);
+  }
+}
+
+.dark {
+  --background: oklch(0.14 0.012 260);
+  --foreground: oklch(0.97 0.005 250);
+  --foreground-muted: oklch(0.72 0.018 260);
+  --foreground-subtle: oklch(0.63 0.014 260);
+  --surface: oklch(0.17 0.014 260);
+  --surface-elevated: oklch(0.2 0.016 260);
+  --surface-overlay: oklch(0.07 0.006 260 / 0.6);
+  --border: oklch(0.3 0.014 260);
+  --border-strong: oklch(0.4 0.014 260);
+  --primary: oklch(0.65 0.19 260);
+  --primary-foreground: oklch(0.14 0.012 260);
+  --success: oklch(0.72 0.18 150);
+  --success-foreground: oklch(0.12 0 0);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.15 0 0);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.65 0.19 260);
+
+  --chart-1: oklch(0.65 0.19 260);
+  --chart-2: oklch(0.72 0.18 150);
+  --chart-3: oklch(0.66 0.22 25);
+  --chart-4: oklch(0.62 0.22 295);
+  --chart-5: oklch(0.78 0.16 75);
+}
+
+/* ---------- 5. Utilitários (opt-in via @apply ou className direta) ----------
+   Otimizados para dark; consumidores em light theme adaptam via overrides
+   locais quando o tema light voltar a ser explicitamente suportado (4.1+). */
+@layer utilities {
+  .glass {
+    background: linear-gradient(
+      180deg,
+      oklch(1 0 0 / 0.04),
+      oklch(1 0 0 / 0.015)
+    );
+    backdrop-filter: blur(12px);
+    border: 1px solid oklch(1 0 0 / 0.06);
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(oklch(1 0 0 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(
+      ellipse 60% 50% at 50% 0%,
+      #000 30%,
+      transparent 80%
+    );
+  }
+
+  .text-gradient {
+    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.7 0.02 260));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .shadow-glow {
+    box-shadow:
+      0 0 0 1px oklch(1 0 0 / 0.06),
+      0 20px 60px -20px oklch(0.65 0.19 260 / 0.45);
+  }
+
+  .shadow-soft {
+    box-shadow:
+      0 1px 0 oklch(1 0 0 / 0.04) inset,
+      0 10px 30px -15px oklch(0 0 0 / 0.6);
+  }
+}
+
+/* ---------- 6. WCAG 2.3.3 — prefers-reduced-motion (preservado) ----------
+   `!important` é intencional aqui: precisa sobrescrever classes utilitárias
+   do Tailwind (transition-*, animate-*) que vencem por especificidade em
+   outras condições. Padrão recomendado pelo The A11y Project. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
