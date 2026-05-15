@@ -57,11 +57,11 @@ export function VotosResumo({ totais }: Props) {
           </dd>
         </div>
       )}
-      <div className="border-t border-zinc-200 pt-2 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
-        <div className={STAT_LINE}>
-          <dt>Total computado</dt>
-          <dd className="tabular-nums">{totalNominal}</dd>
-        </div>
+      <div
+        className={`${STAT_LINE} border-zinc-200 border-t pt-2 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400`}
+      >
+        <dt>Total computado</dt>
+        <dd className="tabular-nums">{totalNominal}</dd>
       </div>
     </dl>
   )
