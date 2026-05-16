@@ -1,11 +1,22 @@
 import { TRUST_LEVEL_LABELS, type TrustLevel } from '@/shared/trust'
 
+/**
+ * Cores do badge de cada nível de confiança em tokens semânticos OKLCH
+ * (Sprint 4.6 — Wave 4 polimento final).
+ *
+ * Mapeamento da pirâmide L1→L4 (confiança decai):
+ * - L1 (dado oficial inteiro) → success subtle
+ * - L2 (agregação determinística) → brand subtle (azul-marinho institucional)
+ * - L3 (cálculo derivado / fórmula) → warning subtle
+ * - L4 (estimativa) → warning solid (mesma família, saturação mais alta —
+ *   sinaliza "atenção redobrada" sem invocar destructive, que é alarme)
+ */
 export function getTrustLevelColor(level: TrustLevel): string {
   const colors: Record<TrustLevel, string> = {
-    L1: 'bg-green-50 text-green-700 border-green-200',
-    L2: 'bg-blue-50 text-blue-700 border-blue-200',
-    L3: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    L4: 'bg-orange-50 text-orange-700 border-orange-200',
+    L1: 'bg-success/10 text-success border-success/40',
+    L2: 'bg-brand/10 text-brand border-brand/40',
+    L3: 'bg-warning/10 text-warning border-warning/40',
+    L4: 'bg-warning/20 text-warning border-warning',
   }
   return colors[level]
 }

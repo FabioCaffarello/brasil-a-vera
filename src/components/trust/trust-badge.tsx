@@ -51,21 +51,21 @@ export function TrustBadge({ trustLevel }: { trustLevel: TrustLevel }) {
         onKeyDown={(e) => {
           if (e.key === 'Escape') setOpen(false)
         }}
-        className={`inline-flex cursor-help items-center rounded border px-2 py-0.5 font-medium text-xs transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${getTrustLevelColor(trustLevel)}`}
+        className={`inline-flex cursor-help items-center rounded border px-2 py-0.5 font-medium text-xs transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${getTrustLevelColor(trustLevel)}`}
       >
         {trustLevel} — {label}
       </button>
       <span
+        className="absolute top-full left-0 z-20 mt-1 w-64 rounded-md border border-border bg-surface p-3 text-foreground text-xs leading-snug shadow-lg"
+        hidden={!open}
         id={tooltipId}
         role="tooltip"
-        hidden={!open}
-        className="absolute top-full left-0 z-20 mt-1 w-64 rounded-md border border-zinc-200 bg-white p-3 text-xs text-zinc-700 leading-snug shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
       >
-        <p className="font-medium text-zinc-900 dark:text-zinc-100">{label}</p>
-        <p className="mt-1">{description}</p>
+        <p className="font-medium text-foreground">{label}</p>
+        <p className="mt-1 text-foreground-muted">{description}</p>
         <Link
+          className="mt-2 inline-block text-brand underline decoration-dotted underline-offset-2 transition-colors duration-150 hover:text-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           href="/#piramide-confianca"
-          className="mt-2 inline-block text-primary-700 underline decoration-dotted underline-offset-2 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100"
         >
           Saiba mais sobre a Pirâmide de Confiança
         </Link>
