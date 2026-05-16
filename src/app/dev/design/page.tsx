@@ -1,6 +1,15 @@
-import { Inbox, Sparkles } from 'lucide-react'
+import {
+  Database,
+  Inbox,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Vote,
+} from 'lucide-react'
 
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { KpiStrip } from '@/design-system/compositions/kpi-strip'
+import { SectionCard } from '@/design-system/compositions/section-card'
 import { Badge } from '@/design-system/primitives/badge'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -408,6 +417,96 @@ export default function DesignSystemPage() {
               variant="plain"
             />
           </div>
+        </div>
+
+        {/* ----- KpiStrip ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">KpiStrip</h3>
+          <p className="text-foreground-muted text-sm">
+            Strip de KPIs configurável da Sprint 6.0 PR 4. Props:{' '}
+            <code>items: KpiItem[]</code>. Cap automático em 4 colunas md+
+            (evita fragmentação). Hint colorido por <code>tone</code> semântico
+            (sem hardcode de cores).
+          </p>
+
+          {/* Variante 4 itens com tones diversos */}
+          <KpiStrip
+            items={[
+              {
+                icon: <Vote className="h-4 w-4" />,
+                label: 'Alinhamento',
+                value: '87%',
+                hint: '▲ 5 pp vs trimestre anterior',
+                tone: 'success',
+              },
+              {
+                icon: <TrendingUp className="h-4 w-4" />,
+                label: 'Votos analisados',
+                value: '124',
+                hint: 'últimos 30 dias',
+              },
+              {
+                icon: <Inbox className="h-4 w-4" />,
+                label: 'Proposições',
+                value: '12',
+                hint: 'como autor principal',
+                tone: 'muted',
+              },
+              {
+                icon: <TrendingDown className="h-4 w-4" />,
+                label: 'Gastos CEAP',
+                value: 'R$ 38k',
+                hint: '▼ 12% vs trimestre',
+                tone: 'destructive',
+              },
+            ]}
+          />
+
+          {/* Variante 2 itens (responsivo: cap em 2 col md+) */}
+          <KpiStrip
+            items={[
+              { label: 'Mandatos', value: '2' },
+              { label: 'Comissões ativas', value: '4', tone: 'warning' },
+            ]}
+          />
+        </div>
+
+        {/* ----- SectionCard ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">SectionCard</h3>
+          <p className="text-foreground-muted text-sm">
+            Wrapper de seção da Sprint 6.0 PR 4. Header com slots{' '}
+            <code>icon</code>, <code>title</code>, <code>subtitle</code>,{' '}
+            <code>badge</code> (geralmente TrustBadge L1-L4). Aceita{' '}
+            <code>id</code> para integração futura com SectionNav (PR 5).
+          </p>
+
+          <SectionCard
+            id="example-votos"
+            title="Votos recentes"
+            subtitle="Últimas 10 votações nominais"
+            icon={<Vote className="h-5 w-5" />}
+            badge={
+              <Badge variant="outline" className="text-xs">
+                L2 · Câmara
+              </Badge>
+            }
+          >
+            <p className="text-foreground-muted text-sm">
+              Conteúdo da seção entra aqui. Em produção, será uma tabela ou
+              lista renderizada por componente de domínio
+              (`components/parlamentar/votos-recentes.tsx` etc).
+            </p>
+          </SectionCard>
+
+          <SectionCard
+            title="Sem subtitle, sem icon, sem badge"
+            icon={<Database className="h-5 w-5" />}
+          >
+            <p className="text-foreground-muted text-sm">
+              Variante minimal — só title + icon + children.
+            </p>
+          </SectionCard>
         </div>
       </section>
 
