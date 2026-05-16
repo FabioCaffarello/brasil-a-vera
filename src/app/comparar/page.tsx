@@ -1,5 +1,10 @@
+import { Columns3 } from 'lucide-react'
+
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
+import { DataBadge } from '@/design-system/compositions/data-badge'
+import { HeroSection } from '@/design-system/compositions/hero-section'
+import { SectionCard } from '@/design-system/compositions/section-card'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
 
 export const metadata = {
@@ -33,31 +38,12 @@ function parseIds(raw: string | string[] | undefined): {
   return { ids, hasInvalid }
 }
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <header className="mb-3">
-        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
-          {title}
-        </h2>
-        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
-      </header>
-      {children}
-    </section>
-  )
-}
-
-// ErrorState (D4 Sprint 4.3 herdada): caixa de "comparativo indisponível"
-// migrada de amber para warning subtle, mesmo padrão de `ParesContraditorios`
-// e `AlinhamentoBancada` (amostra insuficiente).
+/**
+ * ErrorState — Sprint 4.3 D4 herdada. Caixa de "comparativo indisponível"
+ * em warning subtle (mesmo padrão `ParesContraditorios`, `AlinhamentoBancada`
+ * com amostra insuficiente). Mantido como helper local Sprint 6.4 — é
+ * warning cirúrgico, não cabe em composição genérica.
+ */
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
@@ -115,44 +101,46 @@ export default async function CompararPage({ searchParams }: PageProps) {
   )
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 px-4 py-8">
-      <header className="space-y-1">
-        <p className="font-mono text-foreground-muted text-xs uppercase tracking-wider">
-          Comparativo
-        </p>
-        <h1 className="font-bold text-3xl text-foreground">
-          {result.parlamentares.length} parlamentares lado a lado
-        </h1>
-        {hasInvalid && (
-          <p className="text-warning text-xs">
-            Alguns IDs fornecidos não eram UUIDs válidos e foram ignorados.
-          </p>
-        )}
-      </header>
+    <>
+      <HeroSection
+        description={
+          hasInvalid
+            ? 'Alguns IDs fornecidos não eram UUIDs válidos e foram ignorados.'
+            : undefined
+        }
+        kicker={
+          <DataBadge
+            icon={<Columns3 className="h-3 w-3" />}
+            label="Comparativo"
+            tone="accent"
+          />
+        }
+        title={`${result.parlamentares.length} parlamentares lado a lado`}
+        variant="plain"
+      />
 
-      <Section
-        title="Comparação"
-        hint="Presença em votações nominais, autoria primária de proposições, gastos CEAP do ano corrente."
-      >
-        <ParlamentaresGrid
-          parlamentares={result.parlamentares}
-          metricas={result.metricas}
-          ano={result.ano}
-        />
-      </Section>
+      <div className="mx-auto max-w-5xl space-y-5 px-4 pb-8">
+        <SectionCard
+          subtitle="Presença em votações nominais, autoria primária de proposições, gastos CEAP do ano corrente."
+          title="Comparação"
+        >
+          <ParlamentaresGrid
+            ano={result.ano}
+            metricas={result.metricas}
+            parlamentares={result.parlamentares}
+          />
+        </SectionCard>
 
-      <Section
-        title="Concordância entre pares"
-        hint={`% de coincidência nos votos das votações em comum (mín. ${
-          // Linkar para constante via texto literal é OK porque é estável.
-          5
-        } votações comparáveis para considerar amostra estatisticamente válida)`}
-      >
-        <ConcordanciaMatrix
-          pares={result.concordancia}
-          nomesPorId={nomesPorId}
-        />
-      </Section>
-    </div>
+        <SectionCard
+          subtitle={`% de coincidência nos votos das votações em comum (mín. 5 votações comparáveis para considerar amostra estatisticamente válida).`}
+          title="Concordância entre pares"
+        >
+          <ConcordanciaMatrix
+            nomesPorId={nomesPorId}
+            pares={result.concordancia}
+          />
+        </SectionCard>
+      </div>
+    </>
   )
 }
