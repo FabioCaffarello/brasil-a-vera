@@ -4,6 +4,8 @@ interface Props {
   totalParlamentares: number
 }
 
+// Sprint 4.4 PR 1 commit 1/6 — refatorado para tokens semânticos.
+// Header simples (eyebrow uppercase + h1 + nome oficial + contagem).
 export function PartidoHeader({
   sigla,
   nomeOficial,
@@ -11,18 +13,14 @@ export function PartidoHeader({
 }: Props) {
   return (
     <header className="space-y-2">
-      <p className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+      <p className="font-mono text-foreground-muted text-xs uppercase tracking-wider">
         Partido
       </p>
-      <h1 className="font-bold text-3xl text-zinc-900 dark:text-zinc-100">
-        {sigla}
-      </h1>
+      <h1 className="font-bold text-3xl text-foreground">{sigla}</h1>
       {nomeOficial && nomeOficial !== sigla && (
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          {nomeOficial}
-        </p>
+        <p className="text-foreground-muted text-sm">{nomeOficial}</p>
       )}
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         {totalParlamentares === 0
           ? 'Nenhum parlamentar atualmente filiado nesta sigla.'
           : `${totalParlamentares} ${totalParlamentares === 1 ? 'parlamentar' : 'parlamentares'} no Brasil a Vera.`}
