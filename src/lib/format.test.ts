@@ -58,6 +58,6 @@ describe('getTipoVotoStyle', () => {
   it('cai em default para tipos desconhecidos', () => {
     const s = getTipoVotoStyle('XYZ')
     expect(s.label).toBe('XYZ')
-    expect(s.classes).toContain('bg-zinc-200')
+    expect(s.classes).toContain('bg-surface-elevated')
   })
 })
