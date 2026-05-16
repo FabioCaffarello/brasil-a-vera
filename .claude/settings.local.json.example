@@ -1,0 +1,3 @@
+{
+  "_comment": "Copie este arquivo para .claude/settings.local.json (ignorado pelo git) para overrides locais. Mesma sintaxe de settings.json. Útil para adicionar Bash(meu-script-pessoal) ou flexibilizar uma regra para sua máquina sem afetar o time."
+}
