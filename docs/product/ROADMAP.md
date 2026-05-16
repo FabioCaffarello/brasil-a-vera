@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-16 (Sprint 4.2 concluída — listagens reskinned + AuthSlot RSC restaurado pós Workers Paid)
+> Última atualização: 2026-05-16 (Sprint 4.3 concluída — Perfil 360° do parlamentar com tokens semânticos, tag v0.4.3-profile-premium)
 > Status: accepted
 
 ---
@@ -680,23 +680,55 @@ Decisões arquiteturais que governam a Wave 4 ficam em:
 ### Wave 4.3 — Perfil 360° do parlamentar
 
 > **Tag de release**: `v0.4.3-profile-premium`
-> **Status**: planejada
+> **Status**: ✅ Concluída em 2026-05-16
+> **Duração real**: 1 dia (4 PRs sequenciais — Foundation + Tier 1 + Tier 3 + Closure)
 
-**Por que quarto**: a página mais importante do site recebe o tratamento premium.
+**Por que quarto**: a página mais importante do site recebe o tratamento premium — 8 arquivos refatorados para tokens semânticos OKLCH (1 page + 7 sub-componentes parlamentar/*).
 
-#### Escopo
+#### PRs entregues
 
-- `/parlamentares/[id]`: novo header com foto, partido badge, redes sociais, gabinete
-- Reorganização de seções (Votos Recentes, Alinhamento, Proposições, Gastos, Top 5 Afinidade, Pares Contraditórios) com `Card` + `Tabs` se reduzir scroll
-- Disclaimer permanente para análises L3 mantido (componente `trust-badge.tsx`)
-- Recharts adotado **apenas se** `getGastosResumo` já retornar dado mensal e gráfico comunicar melhor que tabela; caso contrário, manter tabular
+| PR | Conteúdo |
+|---|---|
+| [#162](https://github.com/FabioCaffarello/brasil-a-vera/pull/162) | Foundation — `PerfilHeader` + `Section` helper + divisória/heading Tier 3 ("Análises comparativas"). 2 commits. |
+| [#163](https://github.com/FabioCaffarello/brasil-a-vera/pull/163) | Tier 1 — `votos-recentes`, `alinhamento` (3 limiares semânticos success/foreground/warning + box warning), `proposicoes-autor`, `gastos-resumo` (D5 Recharts NÃO adotado). 4 commits. |
+| [#164](https://github.com/FabioCaffarello/brasil-a-vera/pull/164) | Tier 3 — `afinidade-voto` Top 5 + `pares-contraditorios` (D4 amber → warning/5 subtle; RESTRITIVA/PERMISSIVA → destructive/success). 2 commits. |
+| [#165](https://github.com/FabioCaffarello/brasil-a-vera/pull/165) | Este PR — fechamento (ROADMAP, release notes, banner v0.4.3, tag). |
 
-#### Critérios de Done
+#### Decisões aplicadas durante a sprint (D1-D8 aprovadas em bloco)
 
-- [ ] Ordem das seções respeita hierarquia documentada na Sprint 3.1 (cobertura empírica)
-- [ ] Trust levels visíveis em todas as análises L3 (não removidos por estética)
-- [ ] LCP ≤ 2.5s em 4G simulado
-- [ ] Lighthouse mobile ≥ 95 em performance, ≥ 100 em a11y
+- **D1 (a)** — `Section` helper inline preservado (não Card primitive). Consistência com /proposicoes/[id] e /votacoes/[id] (Sprint 4.2). Card tem geometria diferente — refator desnecessário.
+- **D2 (b)** — Sem Tabs no Tier 1. Transparência cívica favorece visão única.
+- **D3 (a)** — Foto via `<img>` nativo (biome-ignore documentado). Next/Image exigiria remotePatterns para camara.leg.br + senado.leg.br — ganho marginal vs overhead.
+- **D4** — Acento amber em `ParesContraditorios` → warning subtle (`border-warning/40 bg-warning/5` + `text-warning` heading). RESTRITIVA → destructive, PERMISSIVA → success (leitura cívica imediata).
+- **D5 (b)** — Sem Recharts. ADR-019 (sem dep nova sem evidência de gargalo). Tabela atual com top 3 + agregado já comunica claramente.
+- **D6 (b)** — Sem Tabs no Tier 3. Empty states informativos — esconder em tab perde valor.
+- **D7** — LCP medido empiricamente APÓS reskin completo. **Carregado para Sprint 4.6** (princípio 13 — sem medição = sem claim de atingido). Lighthouse mobile exige ambiente production-like.
+- **D8 (a)** — 4 PRs sequenciais: Foundation + Tier 1 + Tier 3 + Closure.
+
+#### Critérios de Done — parcialmente atendidos
+
+- [x] **Ordem das seções respeita hierarquia documentada na Sprint 3.1 (cobertura empírica)** — Tier 1 (votos → bancada → proposições → gastos) e Tier 3 (Top 5, Pares) com divisória "Análises comparativas" preservados
+- [x] **Trust levels visíveis em todas as análises L3 (não removidos por estética)** — TrustBadge L2 em Top5Afinidade e ParesContraditorios; trustLevel do parlamentar no PerfilHeader
+- [⚠️] **LCP ≤ 2.5s em 4G simulado** — Medição diferida para Sprint 4.6 (princípio 13)
+- [⚠️] **Lighthouse mobile ≥ 95 performance, ≥ 100 a11y** — Idem, requer ambiente production-like real
+
+Os 2 critérios Lighthouse ficam **explicitamente carregados como
+carryover empírico para Sprint 4.6**, não como bloqueio para a tag. PR
+de validação Lighthouse + plano de otimização entra na sprint de
+polimento.
+
+#### Carryover para Sprint 4.4
+
+- `/partidos/[sigla]` — reskin (rota não revisada no Wave 4)
+- `/busca` — reskin
+- `/comparar` — reskin
+- Primitivas Tier 2 (`popover`, `command`) copiadas se aparecer demanda
+
+#### Carryover para Sprint 4.6 (Polimento & observabilidade)
+
+- Validação Lighthouse mobile (LCP ≤ 2.5s + scores ≥ 95/100)
+- Plano de otimização específico baseado em dado real (avatares, queries, HTML size)
+- Smoke probe de performance regression (opcional, depende de gargalo)
 
 ### Wave 4.4 — Perfis de proposição, votação, partido + busca + comparar
 
