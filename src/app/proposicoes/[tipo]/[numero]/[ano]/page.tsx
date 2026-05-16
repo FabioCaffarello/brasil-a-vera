@@ -1,3 +1,4 @@
+import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { AutoresList } from '@/components/proposicao/autores-list'
@@ -5,6 +6,8 @@ import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
+import { SectionCard } from '@/design-system/compositions/section-card'
+import { SectionNav } from '@/design-system/compositions/section-nav'
 import { formatProposicaoRef } from '@/lib/format'
 import {
   getAutoresByProposicao,
@@ -49,28 +52,6 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <header className="mb-3">
-        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
-          {title}
-        </h2>
-        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
-      </header>
-      {children}
-    </section>
-  )
-}
-
 export default async function ProposicaoDetalhePage({ params }: PageProps) {
   const raw = await params
   const parsed = parseParams(raw)
@@ -91,7 +72,7 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
   ])
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8">
       <PerfilProposicaoHeader
         proposicao={{
           tipo: proposicao.tipo,
@@ -106,30 +87,61 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
         }}
       />
 
-      <Section title="Temas">
-        <TemasList temas={temas} />
-      </Section>
+      <SectionNav
+        className="mt-6"
+        items={[
+          { id: 'temas', label: 'Temas', icon: <Tag className="h-4 w-4" /> },
+          {
+            id: 'autores',
+            label: 'Autores',
+            icon: <Users className="h-4 w-4" />,
+          },
+          {
+            id: 'votacoes',
+            label: 'Votações',
+            icon: <FileText className="h-4 w-4" />,
+          },
+          {
+            id: 'tramitacao',
+            label: 'Tramitação',
+            icon: <Clock className="h-4 w-4" />,
+          },
+        ]}
+        stickyTop="3.5rem"
+      />
 
-      <Section
-        title="Autores"
-        hint="Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome."
-      >
-        <AutoresList autores={autores} />
-      </Section>
+      <div className="mt-6 space-y-5">
+        <SectionCard className="scroll-mt-28" id="temas" title="Temas">
+          <TemasList temas={temas} />
+        </SectionCard>
 
-      <Section
-        title="Votações vinculadas"
-        hint="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente — virá em PR seguinte."
-      >
-        <VotacoesVinculadas votacoes={votacoes} />
-      </Section>
+        <SectionCard
+          className="scroll-mt-28"
+          id="autores"
+          subtitle="Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome."
+          title="Autores"
+        >
+          <AutoresList autores={autores} />
+        </SectionCard>
 
-      <Section
-        title="Tramitação"
-        hint="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
-      >
-        <TramitacaoTimeline eventos={tramitacao} />
-      </Section>
+        <SectionCard
+          className="scroll-mt-28"
+          id="votacoes"
+          subtitle="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente."
+          title="Votações vinculadas"
+        >
+          <VotacoesVinculadas votacoes={votacoes} />
+        </SectionCard>
+
+        <SectionCard
+          className="scroll-mt-28"
+          id="tramitacao"
+          subtitle="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
+          title="Tramitação"
+        >
+          <TramitacaoTimeline eventos={tramitacao} />
+        </SectionCard>
+      </div>
     </div>
   )
 }
