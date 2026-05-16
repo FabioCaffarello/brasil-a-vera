@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-16 (Wave 4 fechada — tag `v0.4-final-public`; Sprint 4.5 pulada, Sprint 4.6 entregue)
+> Brasil a Vera · Produto · v0.5.0
+> Última atualização: 2026-05-16 (Sprint 5.0 fechada — tag `v0.5.0-claude-ecosystem`; demais sprints Wave 5 open ground)
 > Status: accepted
 
 ---
@@ -856,9 +856,25 @@ Tudo o que era backlog "Wave 4 — Open Ground" (API pública avançada, arquite
 
 ## Wave 5 — Open Ground
 
-> **Status**: plano contratual pendente — será reavaliado após a Wave 4 fechar com base em evidência empírica de uso (cidadão, jornalista, contribuidor) e custo operacional.
+> **Status**: Sprint 5.0 fechada em 2026-05-16 (tag `v0.5.0-claude-ecosystem`). Demais sprints permanecem **open ground** — reavaliadas com base em evidência empírica de uso e custo operacional.
 
-A Wave 5 é deliberadamente **open ground** — sem critérios de Done atribuídos antecipadamente. As decisões adiadas das Waves 2, 3 e 4 (e da definição "Wave 3 — Inteligência" anterior) ficam aqui como backlog explícito, rotuladas `wave-5+` no rastreamento de issues (label renomeada de `wave-4+` no fechamento da Sprint 4.0 — ver nota histórica no topo deste documento).
+A Wave 5 é deliberadamente **open ground** — sem critérios de Done atribuídos antecipadamente para a maioria das sprints. As decisões adiadas das Waves 2, 3 e 4 (e da definição "Wave 3 — Inteligência" anterior) ficam aqui como backlog explícito, rotuladas `wave-5+` no rastreamento de issues (label renomeada de `wave-4+` no fechamento da Sprint 4.0 — ver nota histórica no topo deste documento).
+
+### Sprint 5.0 — Fundação `.claude/` + governança `.github/` ✅
+
+Entregue em 2026-05-16. PRs #176, #178-#185, #194. Saída tag `v0.5.0-claude-ecosystem`.
+
+Cobre a passagem de single-maintainer para multi-contribuidor: ecossistema `.claude/` versionado como infraestrutura de time, governança humana em `.github/` (CODEOWNERS, labels canônicas, PR template ampliado, issue templates, SECURITY.md, branch protection configurada).
+
+- 1 subagent: `design-system-curator` (E2E validado adicionando primitiva `popover`)
+- 6 skills: `/add-primitive`, `/design-token-check`, `/visual-qa`, `/plan-sprint`, `/new-adr`, `/release-notes`
+- 3 hooks: `pre-edit-guardrail`, `pre-commit-quality` (vitest-related), `post-edit-tokens`
+- 2 workflows novos advisory: `pr-sanity`, `design-tokens` (promoção a required check após 2 sprints empíricas)
+- Dependabot configurado (npm + actions, grupos)
+- Onboarding humano em `.claude/docs/ONBOARDING-DESIGNER.md` e `ONBOARDING-ENGINEER.md`
+- Branch protection em `main` (Required PR + 1 approval + 3 status checks + conversation resolution)
+
+Release notes completas: [`docs/releases/v0.5.0-claude-ecosystem.md`](../releases/v0.5.0-claude-ecosystem.md).
 
 ### Backlog (cada bullet é uma issue mestre com label `wave-5+`)
 
