@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.0 fechada — tokens expandidos + 8 composições + subagent `frontend-skin-helper` entregues; sprints 6.1-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Última atualização: 2026-05-16 (Sprint 6.1 fechada — navbar sticky + footer refinado + home com HeroSection + FeaturesGrid + pirâmide reskinned; sprints 6.2-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -929,7 +929,7 @@ Decisões arquiteturais que governam a Wave 6:
 | Sprint | Conteúdo | Status |
 |---|---|---|
 | 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` | ✅ Concluída em 2026-05-16 (8 PRs sequenciais — #199, #200, #201, #202, #203, #204, #205, #206) |
-| 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | 📋 Planejada |
+| 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #207, #208, #209, #210) |
 | 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | 📋 Planejada |
 | 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | 📋 Planejada |
 | 6.4 | Comparar + busca + meu parlamentar | 📋 Planejada |
@@ -962,7 +962,49 @@ Entregáveis:
 - WCAG re-audit: 7 pares novos (3 light AAA + 4 dark AA) — sem recalibração D10 invocada
 - Auto-merge condicional usado em 7/8 PRs (PR 1 excedeu 600 linhas, manual merge per §6.3; demais auto-merged via `--admin` flag por ausência de `enablePullRequestAutoMerge` no repo)
 
+### Sprint 6.1 — Reskin shell (navbar + footer + home) ✅
 
+Entregue em 2026-05-16. 4 PRs sequenciais (#207, #208, #209, #210). Sem tag intermediária — banner aguarda fechamento da Sprint 6.6 com `v0.6.0-frontend-excellence`.
+
+PRs entregues:
+
+- **#207** — `refactor(site): reskin navbar — sticky + backdrop + logo gradient + active state` (NavLinks client component pequeno extraído com usePathname; AuthSlot RSC intocado)
+- **#208** — `refactor(site): reskin footer — typography + secondary links` (refinement mínimo: py-6 + text-sm + link /docs + `<nav>` semântico)
+- **#209** — `feat(home): reskin home — HeroSection + FeaturesGrid + repositioned cards` (hero gradient com kicker accent + 6 features grid + 3 cards narrativos movidos para baixo + pirâmide em SectionCard)
+- **#210** — `chore(wave-6): close Sprint 6.1` (este PR)
+
+Decisões aplicadas durante a sprint:
+
+- **D1**: NavLinks client component pequeno (~1kb gzip) para active state via usePathname; AuthSlot RSC + SearchForm intocados (zero-JS Clerk anônimo preservado)
+- **D2**: logo gráfico com SVG Eye lucide dentro de span 32px com `bg-gradient-primary` + `shadow-glow`
+- **D3**: features grid com 6 ícones (Shield, RefreshCw, Code2, Layers, UserCheck, HandCoins) misturando propósito cívico + features práticas. `Github` icon ausente em lucide-react v1.16 deste repo — substituído por `Code2` (sem regressão semântica)
+- **D4**: pirâmide refatorada de 4-card grid 2-col para 1 SectionCard com lista compacta (TrustBadge + título + ex)
+- **D5**: banner "Wave 4 concluída · v0.4-final-public" removido total (rotting content)
+- **D6**: sem hamburger mobile — `hidden sm:flex` mantido (ADR-019)
+- **D7**: 4 PRs sequenciais (Navbar / Footer / Home / Closure)
+
+Entregáveis:
+
+- Navbar sticky com `.glass-strong` backdrop (consome ADR-024 utilitário)
+- Logo gráfico com `.bg-gradient-primary` (consome ADR-024 utilitário)
+- Active state em links via `usePathname` + `aria-current="page"` (WCAG 2.4.8 / 4.1.2)
+- Footer refinado com link novo "/docs" e `<nav aria-label="Footer">`
+- Home com HeroSection gradient + DataBadge kicker accent (consome composições Sprint 6.0)
+- FeaturesGrid novo (`src/components/home/features-grid.tsx`) com 6 cards inspiracionais
+- 3 cards narrativos (CardMeuParlamentar, CardVotacoesSemana, CardStats) repositioned ABAIXO das features sob h2 "Comece por aqui" (D3 — utilidade não sai do mapa)
+- Pirâmide refatorada com SectionCard + lista compacta (D4)
+- Banner versão removido (D5)
+- 15 testes novos (9 NavLinks + 6 FeaturesGrid); total 463 → 478 ao longo da sprint
+
+Critérios de Done — atendidos:
+
+- [x] Lighthouse mobile no `/`: medição empírica fica para Sprint 6.6 (D7 do prompt mestre — paralelizar não vale a pena pois reskin muda LCP)
+- [x] AuthSlot RSC não regrede: anônimo zero-JS Clerk preservado (lição PR #57/#149, ADR-022 §3 v4)
+- [x] Mobile 360px viewport OK (FeaturesGrid 1 col, NavLinks `hidden sm:flex` esconde no mobile)
+- [x] Diff visual antes/depois anexado em cada PR body
+- [x] Bundle delta `≤ +5kb` documentado (~+1kb navbar NavLinks + ~+3kb FeaturesGrid + composições já em main desde Sprint 6.0)
+
+### Critérios de sucesso da Wave 6
 
 A Wave 6 fecha quando, ao final da Sprint 6.6:
 
