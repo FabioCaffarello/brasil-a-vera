@@ -1,4 +1,5 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
 /**
  * Middleware do Clerk — Sprint 4.2 PR 1 (matcher expandido após Workers Paid).
@@ -48,7 +49,25 @@ import { clerkMiddleware } from '@clerk/nextjs/server'
  *   dentro do budget Workers Paid 50ms/request (ADR-009)
  * - ❌ Custo recorrente $5/mo (ADR-017 atualizado)
  */
-export default clerkMiddleware()
+// Hostname legado (Sprint 4.2 migrou pra `brasilavera.org`). O Worker
+// continua acessível em `*.workers.dev` porque Cloudflare não desativa
+// o default URL quando você adiciona Custom Domain — então redirecionamos
+// no middleware (única camada que vê o `Host`; a zona `workers.dev` é da
+// Cloudflare e não permite Redirect Rules custom). 301 preserva SEO
+// (transfere autoridade do link), preview URLs do Workers Builds
+// (`<hash>-brasil-a-vera.fabio-caffarello.workers.dev`) NÃO matcham
+// porque a comparação é exata.
+const LEGACY_PROD_HOST = 'brasil-a-vera.fabio-caffarello.workers.dev'
+const CANONICAL_HOST = 'brasilavera.org'
+
+export default clerkMiddleware((_auth, req) => {
+  if (req.headers.get('host') === LEGACY_PROD_HOST) {
+    const url = new URL(req.url)
+    url.host = CANONICAL_HOST
+    url.protocol = 'https:'
+    return NextResponse.redirect(url, 301)
+  }
+})
 
 export const config = {
   matcher: [
