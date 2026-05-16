@@ -12,6 +12,6 @@ export function getSiteUrl(): string {
     process.env.SITE_URL ??
     (process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
-      : 'https://brasil-a-vera.fabio-caffarello.workers.dev')
+      : 'https://brasilavera.org')
   )
 }

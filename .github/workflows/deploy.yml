@@ -138,4 +138,4 @@ jobs:
         # Para alertas ongoing de 5xx, ver docs/contributing/DEPLOYMENT.md.
         run: npm run smoke
         env:
-          SMOKE_BASE_URL: https://brasil-a-vera.fabio-caffarello.workers.dev
+          SMOKE_BASE_URL: https://brasilavera.org

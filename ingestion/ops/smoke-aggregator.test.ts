@@ -91,7 +91,7 @@ describe('extractOgImage', () => {
 })
 
 describe('validateOgImageCanonical', () => {
-  const PROD = 'https://brasil-a-vera.fabio-caffarello.workers.dev'
+  const PROD = 'https://brasilavera.org'
 
   it('aceita og:image canônico apontando para baseUrl', () => {
     const html = `<meta property="og:image" content="${PROD}/opengraph-image?abc"/>`
