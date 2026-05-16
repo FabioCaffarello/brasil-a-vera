@@ -1,3 +1,6 @@
+import { Button } from '@/design-system/primitives/button'
+import { Input } from '@/design-system/primitives/input'
+
 interface Props {
   defaultValue?: string
   variant?: 'header' | 'page'
@@ -8,22 +11,30 @@ interface Props {
 //
 // `<search>` é landmark HTML5 nativo para regiões de busca — substitui o
 // `role="search"` no <form>.
+//
+// Sprint 4.4 PR 3 — migrado para primitivas Input + Button (Server
+// Component compatíveis). `<label className="sr-only">` mantido nativo
+// — Label primitive (Radix) é `'use client'` e não agrega valor para
+// labels visualmente escondidas (sem click-target ou peer-disabled).
+//
+// Header variant preserva animação de width on focus
+// (`w-32 focus:w-48 sm:w-48 sm:focus:w-64`) via className override.
 export function SearchForm({ defaultValue, variant = 'header' }: Props) {
   if (variant === 'header') {
     return (
       <search>
-        <form action="/busca" method="get" className="flex items-center">
-          <label htmlFor="search-header" className="sr-only">
+        <form action="/busca" className="flex items-center" method="get">
+          <label className="sr-only" htmlFor="search-header">
             Buscar parlamentares, proposições e votações
           </label>
-          <input
-            id="search-header"
-            type="search"
-            name="q"
-            defaultValue={defaultValue}
-            placeholder="Buscar…"
+          <Input
             autoComplete="off"
-            className="min-h-[44px] w-32 rounded border border-zinc-300 bg-white px-2 py-1 text-sm placeholder:text-zinc-400 transition-all duration-150 focus:w-48 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:placeholder:text-zinc-500 sm:w-48 sm:focus:w-64"
+            className="w-32 transition-all duration-150 focus:w-48 sm:w-48 sm:focus:w-64"
+            defaultValue={defaultValue}
+            id="search-header"
+            name="q"
+            placeholder="Buscar…"
+            type="search"
           />
         </form>
       </search>
@@ -32,25 +43,20 @@ export function SearchForm({ defaultValue, variant = 'header' }: Props) {
 
   return (
     <search>
-      <form action="/busca" method="get" className="flex items-center gap-2">
-        <label htmlFor="search-page" className="sr-only">
+      <form action="/busca" className="flex items-center gap-2" method="get">
+        <label className="sr-only" htmlFor="search-page">
           Buscar parlamentares, proposições e votações
         </label>
-        <input
-          id="search-page"
-          type="search"
-          name="q"
-          defaultValue={defaultValue}
-          placeholder="Nome do parlamentar, ementa, descrição da votação ou PL 1234/2025"
+        <Input
           autoComplete="off"
-          className="min-h-[44px] flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-base placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-zinc-600 dark:bg-zinc-800 dark:placeholder:text-zinc-500"
+          className="flex-1"
+          defaultValue={defaultValue}
+          id="search-page"
+          name="q"
+          placeholder="Nome do parlamentar, ementa, descrição da votação ou PL 1234/2025"
+          type="search"
         />
-        <button
-          type="submit"
-          className="min-h-[44px] rounded-md bg-primary-700 px-4 py-2 font-medium text-sm text-white transition-colors duration-150 hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-500"
-        >
-          Buscar
-        </button>
+        <Button type="submit">Buscar</Button>
       </form>
     </search>
   )
