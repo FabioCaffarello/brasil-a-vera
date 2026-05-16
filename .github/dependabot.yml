@@ -45,6 +45,17 @@ updates:
         update-types:
           - minor
           - patch
+      react:
+        # react e react-dom precisam subir juntos (peer dep entre eles
+        # exige paridade de patch). Sem agrupar, PR isolado de
+        # react-dom@X quebra peer com react@<X. Lição da triagem da
+        # Sprint 5.0 (PR react-dom 19.2.4→19.2.6 falhou em CI).
+        patterns:
+          - 'react'
+          - 'react-dom'
+        update-types:
+          - minor
+          - patch
     ignore:
       # Next major upgrades exigem janela de validação manual.
       - dependency-name: next
