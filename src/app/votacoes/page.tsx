@@ -5,6 +5,7 @@ import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
+import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
   type Casa,
@@ -67,24 +68,19 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
   ])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
-          Votações
-        </h1>
-        <p className="mt-1 text-foreground-muted text-sm">
-          Plenário e comissões da Câmara e do Senado. A maioria das votações em
-          comissão é simbólica (sem voto individual registrado) — use o filtro
-          para ver só nominais.
-        </p>
-      </header>
-
-      <TrustBanner
-        level="L1"
-        message="Votações oficiais da Câmara e do Senado, sem transformação."
+    <>
+      <HeroSection
+        description="Plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais."
+        title="Votações"
+        variant="gradient"
       />
 
-      <div className="mb-6">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        <TrustBanner
+          level="L1"
+          message="Votações oficiais da Câmara e do Senado, sem transformação."
+        />
+
         <FiltrosVotacao
           anos={anos}
           selecionado={{
@@ -94,48 +90,48 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             somenteNominais: params.somenteNominais === '1',
           }}
         />
-      </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
-        <span>
-          {votacoes.length === LIMITE
-            ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-            : `${votacoes.length} ${votacoes.length === 1 ? 'resultado' : 'resultados'}`}
-        </span>
-        {votacoes.length > 0 && (
-          <ExportCsvLink
-            href={`/api/export/votacoes?${new URLSearchParams(
-              Object.entries({
-                casa: filtros.casa ?? '',
-                ano: filtros.ano ? String(filtros.ano) : '',
-                resultado: filtros.resultado ?? '',
-                somenteNominais: filtros.somenteNominais ? '1' : '',
-              }).filter(([, v]) => v !== ''),
-            ).toString()}`}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+          <span>
+            {votacoes.length === LIMITE
+              ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
+              : `${votacoes.length} ${votacoes.length === 1 ? 'resultado' : 'resultados'}`}
+          </span>
+          {votacoes.length > 0 && (
+            <ExportCsvLink
+              href={`/api/export/votacoes?${new URLSearchParams(
+                Object.entries({
+                  casa: filtros.casa ?? '',
+                  ano: filtros.ano ? String(filtros.ano) : '',
+                  resultado: filtros.resultado ?? '',
+                  somenteNominais: filtros.somenteNominais ? '1' : '',
+                }).filter(([, v]) => v !== ''),
+              ).toString()}`}
+            />
+          )}
+        </div>
+
+        {votacoes.length === 0 ? (
+          <EmptyState
+            action={
+              <Button asChild size="sm" variant="outline">
+                <a href="/votacoes">Limpar filtros</a>
+              </Button>
+            }
+            description="Tente ajustar casa, ano, resultado ou desmarcar 'só nominais' para resultados diferentes."
+            icon={SearchX}
+            title="Nenhuma votação corresponde aos filtros"
           />
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {votacoes.map((v) => (
+              <li key={v.id}>
+                <VotacaoCard votacao={v} />
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-
-      {votacoes.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Nenhuma votação corresponde aos filtros"
-          description="Tente ajustar casa, ano, resultado ou desmarcar 'só nominais' para resultados diferentes."
-          action={
-            <Button asChild size="sm" variant="outline">
-              <a href="/votacoes">Limpar filtros</a>
-            </Button>
-          }
-        />
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {votacoes.map((v) => (
-            <li key={v.id}>
-              <VotacaoCard votacao={v} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    </>
   )
 }
