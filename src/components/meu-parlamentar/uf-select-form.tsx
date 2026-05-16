@@ -1,25 +1,31 @@
+import { Button } from '@/design-system/primitives/button'
 import { nomeUfCompleto, UFS, type Uf } from '@/lib/municipios'
 
 // Form server-rendered — submete via GET, navegação para `?uf=X` faz o
 // próximo step do fluxo aparecer. Sem JS.
+//
+// Sprint 4.6 PR 3 — migrado para Button primitive + tokens semânticos.
+// Native `<select>` preservado (Tier 2 do DS plan; submit GET sem JS;
+// mesmo pattern dos filtros de listagem desde Sprint 4.2 PR 2).
+const SELECT_CLASS =
+  'min-h-[44px] rounded-md border border-border-strong bg-background px-3 py-2 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
 export function UfSelectForm({ selecionada }: { selecionada?: Uf }) {
   return (
     <form
       action="/o-meu-parlamentar"
+      className="space-y-4 rounded-lg border border-border bg-surface p-5"
       method="get"
-      className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900"
     >
       <label className="flex flex-col gap-1.5">
-        <span className="font-medium text-sm text-zinc-700 dark:text-zinc-300">
-          Estado
-        </span>
+        <span className="font-medium text-foreground text-sm">Estado</span>
         <select
-          name="uf"
+          className={SELECT_CLASS}
           defaultValue={selecionada ?? ''}
+          name="uf"
           required
-          className="min-h-[44px] rounded border border-zinc-300 bg-white px-3 py-2 text-base dark:border-zinc-600 dark:bg-zinc-800"
         >
-          <option value="" disabled>
+          <option disabled value="">
             Selecione…
           </option>
           {UFS.map((u) => (
@@ -30,12 +36,7 @@ export function UfSelectForm({ selecionada }: { selecionada?: Uf }) {
         </select>
       </label>
 
-      <button
-        type="submit"
-        className="inline-flex min-h-[44px] items-center justify-center rounded bg-primary-700 px-4 py-2 font-medium text-sm text-white hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-600 dark:hover:bg-primary-500"
-      >
-        Continuar
-      </button>
+      <Button type="submit">Continuar</Button>
     </form>
   )
 }
