@@ -1,27 +1,5 @@
 {
   "permissions": {
-    "deny": [
-      "Bash(sudo:*)",
-      "Bash(rm -rf:*)",
-      "Bash(git push --force:*)",
-      "Bash(git push -f:*)",
-      "Bash(git push origin main:*)",
-      "Bash(git push origin master:*)",
-      "Bash(git reset --hard origin/main:*)",
-      "Bash(git branch -D main:*)",
-      "Bash(npm run cf:deploy:*)",
-      "Bash(npm run db:push:*)",
-      "Bash(npx wrangler deploy:*)",
-      "Bash(wrangler deploy:*)",
-      "Bash(drizzle-kit drop:*)",
-      "Bash(drizzle-kit push:*)",
-      "Edit(.env*)",
-      "Write(.env*)",
-      "Edit(src/shared/db/migrations/**)",
-      "Write(src/shared/db/migrations/**)",
-      "Edit(.github/workflows/**)",
-      "Write(.github/workflows/**)"
-    ],
     "allow": [
       "Bash(npm run dev)",
       "Bash(npm run check)",
@@ -61,6 +39,28 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git push origin master:*)",
+      "Bash(git reset --hard origin/main:*)",
+      "Bash(git branch -D main:*)",
+      "Bash(npm run cf:deploy:*)",
+      "Bash(npm run db:push:*)",
+      "Bash(npx wrangler deploy:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(drizzle-kit drop:*)",
+      "Bash(drizzle-kit push:*)",
+      "Edit(.env*)",
+      "Write(.env*)",
+      "Edit(src/shared/db/migrations/**)",
+      "Write(src/shared/db/migrations/**)",
+      "Edit(.github/workflows/**)",
+      "Write(.github/workflows/**)"
     ]
   },
   "hooks": {
@@ -95,5 +95,11 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "neon@claude-plugins-official": true,
+    "interface-design@interface-design": true
   }
 }
