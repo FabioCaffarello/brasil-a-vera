@@ -42,6 +42,11 @@ export const colors = {
   // Foco (WCAG 2.4.7)
   ring: 'var(--color-ring)',
 
+  // Acento narrativo Wave 6 (ADR-024) — inflexão narrativa, NÃO estado nem CTA primário.
+  // Uso restrito: badge contexto hero, gradient overlay, chip narrativo.
+  accent: 'var(--color-accent)',
+  accentForeground: 'var(--color-accent-foreground)',
+
   // Charts (Recharts — Sprint 4.3+ se entrar)
   chart1: 'var(--color-chart-1)',
   chart2: 'var(--color-chart-2)',
