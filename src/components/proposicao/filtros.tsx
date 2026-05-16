@@ -1,11 +1,11 @@
+import Link from 'next/link'
+
+import {
+  FilterChip,
+  FilterChips,
+} from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 import { Label } from '@/design-system/primitives/label'
-
-// Server Component — `<form action="...">` submete via GET, RSC re-renderiza
-// com os novos searchParams. Sem JS de client necessário para submit.
-//
-// Sprint 4.2 PR 2 commit 5/6 — refatorado para tokens semânticos +
-// primitivas Label/Button do design system, espelhando parlamentar/filtros.
 
 interface Props {
   anos: number[]
@@ -16,18 +16,16 @@ interface Props {
   }
 }
 
-const TIPOS = [
-  { value: '', label: 'Todos os tipos' },
-  { value: 'PL', label: 'PL — Projeto de Lei' },
-  { value: 'PEC', label: 'PEC — Emenda à Constituição' },
-  { value: 'PLP', label: 'PLP — Lei Complementar' },
-  { value: 'MPV', label: 'MPV — Medida Provisória' },
-  { value: 'PDC', label: 'PDC — Decreto Legislativo' },
-  { value: 'PRC', label: 'PRC — Resolução' },
+const TIPOS_CHIPS = [
+  { value: 'PL', label: 'PL' },
+  { value: 'PEC', label: 'PEC' },
+  { value: 'PLP', label: 'PLP' },
+  { value: 'MPV', label: 'MPV' },
+  { value: 'PDC', label: 'PDC' },
+  { value: 'PRC', label: 'PRC' },
 ]
 
-const SITUACOES = [
-  { value: '', label: 'Todas as situações' },
+const SITUACOES_CHIPS = [
   { value: 'TRAMITANDO', label: 'Tramitando' },
   { value: 'APROVADA', label: 'Aprovada' },
   { value: 'REJEITADA', label: 'Rejeitada' },
@@ -38,34 +36,89 @@ const SITUACOES = [
 const SELECT_CLASS =
   'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 
+/**
+ * Helper interno: constrói href preservando outros filtros. Override
+ * com `null` remove o filtro do URL.
+ */
+function buildHref(
+  current: Props['selecionado'],
+  overrides: Partial<Record<keyof Props['selecionado'], string | null>>,
+): string {
+  const merged: Record<string, string | undefined | null> = {
+    ...current,
+    ...overrides,
+  }
+  const params = new URLSearchParams()
+  for (const key of ['tipo', 'ano', 'situacao'] as const) {
+    const value = merged[key]
+    if (value !== null && value !== undefined && value !== '') {
+      params.set(key, value)
+    }
+  }
+  const query = params.toString()
+  return query ? `/proposicoes?${query}` : '/proposicoes'
+}
+
+/**
+ * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6, reskin listagens).
+ *
+ * Hybrid pragmático (D1 do plano Sprint 6.2):
+ * - **Tipo** (6 opções: PL, PEC, PLP, MPV, PDC, PRC + "Todos"): FilterChips
+ *   com Links. Labels curtos (siglas) — full names em PL/PEC/etc seriam
+ *   ruins na chip
+ * - **Situação** (5 opções + "Todas"): FilterChips com Links
+ * - **Ano**: mantém `<select>` em form GET — alta cardinalidade (~10+ anos)
+ *
+ * Form preserva chip Tipo + Situação via hidden inputs ao submeter Ano.
+ */
 export function FiltrosProposicao({ anos, selecionado }: Props) {
   return (
-    <form
-      action="/proposicoes"
-      className="rounded-lg border border-border bg-surface p-4"
-      method="get"
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="flex flex-col gap-1">
-          <Label
-            className="text-foreground-muted text-xs"
-            htmlFor="filtro-tipo"
+    <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
+      <FilterChips label="Tipo">
+        <FilterChip asChild selected={!selecionado.tipo}>
+          <Link href={buildHref(selecionado, { tipo: null })}>Todos</Link>
+        </FilterChip>
+        {TIPOS_CHIPS.map((t) => (
+          <FilterChip
+            asChild
+            key={t.value}
+            selected={selecionado.tipo === t.value}
           >
-            Tipo
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.tipo ?? ''}
-            id="filtro-tipo"
-            name="tipo"
+            <Link href={buildHref(selecionado, { tipo: t.value })}>
+              {t.label}
+            </Link>
+          </FilterChip>
+        ))}
+      </FilterChips>
+
+      <FilterChips label="Situação">
+        <FilterChip asChild selected={!selecionado.situacao}>
+          <Link href={buildHref(selecionado, { situacao: null })}>Todas</Link>
+        </FilterChip>
+        {SITUACOES_CHIPS.map((s) => (
+          <FilterChip
+            asChild
+            key={s.value}
+            selected={selecionado.situacao === s.value}
           >
-            {TIPOS.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <Link href={buildHref(selecionado, { situacao: s.value })}>
+              {s.label}
+            </Link>
+          </FilterChip>
+        ))}
+      </FilterChips>
+
+      <form
+        action="/proposicoes"
+        className="flex flex-wrap items-end gap-3 border-border border-t pt-4"
+        method="get"
+      >
+        {selecionado.tipo ? (
+          <input name="tipo" type="hidden" value={selecionado.tipo} />
+        ) : null}
+        {selecionado.situacao ? (
+          <input name="situacao" type="hidden" value={selecionado.situacao} />
+        ) : null}
 
         <div className="flex flex-col gap-1">
           <Label className="text-foreground-muted text-xs" htmlFor="filtro-ano">
@@ -86,36 +139,15 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <Label
-            className="text-foreground-muted text-xs"
-            htmlFor="filtro-situacao"
-          >
-            Situação
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.situacao ?? ''}
-            id="filtro-situacao"
-            name="situacao"
-          >
-            {SITUACOES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+        <div className="ml-auto flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="/proposicoes">Limpar</a>
+          </Button>
+          <Button size="sm" type="submit">
+            Filtrar
+          </Button>
         </div>
-      </div>
-
-      <div className="mt-3 flex justify-end gap-2">
-        <Button asChild size="sm" variant="outline">
-          <a href="/proposicoes">Limpar</a>
-        </Button>
-        <Button size="sm" type="submit">
-          Filtrar
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
 }
