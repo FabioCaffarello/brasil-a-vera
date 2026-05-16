@@ -1,0 +1,47 @@
+# Code owners — Brasil a Vera
+# Sintaxe: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-policies/customizing-your-repository/about-code-owners
+#
+# Cada padrão de path → @handle do revisor obrigatório.
+# Quando branch protection com "Require review from Code Owners" estiver
+# ativa (a configurar pós-merge do PR 2), o GitHub exige aprovação de
+# pelo menos um dos handles listados para cada padrão tocado pelo PR.
+# Enquanto não estiver ativa, GitHub apenas atribui auto-reviewer.
+#
+# Handles adicionais (design parceiros, novos engineers) entram via
+# amendment quando contribuidores se firmarem (Sprint 5.1+).
+
+# Default — qualquer path não coberto abaixo
+* @FabioCaffarello
+
+# Infraestrutura crítica
+/.github/                 @FabioCaffarello
+/.claude/settings.json    @FabioCaffarello
+/.claude/hooks/           @FabioCaffarello
+/.claude/agents/          @FabioCaffarello
+/biome.json               @FabioCaffarello
+/next.config.ts           @FabioCaffarello
+/open-next.config.ts      @FabioCaffarello
+/drizzle.config.ts        @FabioCaffarello
+/package.json             @FabioCaffarello
+/package-lock.json        @FabioCaffarello
+/wrangler.jsonc           @FabioCaffarello
+/wrangler.toml            @FabioCaffarello
+
+# Domínio e dados
+/ingestion/               @FabioCaffarello
+/src/lib/queries/         @FabioCaffarello
+/src/modules/             @FabioCaffarello
+/src/shared/              @FabioCaffarello
+
+# Arquitetura e produto
+/docs/architecture/       @FabioCaffarello
+/docs/product/            @FabioCaffarello
+
+# Design system e apresentação
+/src/design-system/       @FabioCaffarello
+/src/components/          @FabioCaffarello
+/docs/design/             @FabioCaffarello
+
+# Skills + onboarding do Claude (qualquer contribuidor pode propor)
+/.claude/skills/          @FabioCaffarello
+/.claude/docs/            @FabioCaffarello

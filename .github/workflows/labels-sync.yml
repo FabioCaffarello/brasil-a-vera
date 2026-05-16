@@ -1,0 +1,61 @@
+name: Labels sync
+
+# Sincroniza .github/labels.yml com o vocabulário de labels do repo no
+# GitHub. Disparado manualmente apenas (workflow_dispatch) — labels são
+# governança humana, não automação contínua. Idempotente via
+# `gh label create --force`.
+#
+# Ver docs/contributing/WORKFLOWS.md para mapa completo de workflows.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  # Labels são entidades de issues — gh label create exige issues: write
+  issues: write
+  contents: read
+
+concurrency:
+  group: labels-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Apply labels.yml to repo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate labels.yml shape
+        # Falha cedo se YAML estiver malformado, ou se algum entry não
+        # tem name/color. Description é opcional.
+        run: |
+          set -euo pipefail
+          count=$(yq '.labels | length' .github/labels.yml)
+          if [ "$count" -eq 0 ]; then
+            echo "::error::labels.yml is empty or malformed"
+            exit 1
+          fi
+          missing=$(yq -r '.labels[] | select(.name == null or .color == null) | .name // "<no-name>"' .github/labels.yml)
+          if [ -n "$missing" ]; then
+            echo "::error::Entries with missing name or color: $missing"
+            exit 1
+          fi
+          echo "Validated $count label entries."
+
+      - name: Sync labels via gh CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # `gh label create --force` cria se não existir, atualiza se
+        # existir. Roda em loop sobre cada entry de labels.yml.
+        # Description vazia é tratada como string vazia (gh aceita).
+        run: |
+          set -euo pipefail
+          yq -r '.labels[] | [.name, .color, (.description // "")] | @tsv' .github/labels.yml \
+          | while IFS=$'\t' read -r name color description; do
+              echo "Syncing label: $name"
+              gh label create "$name" \
+                --color "$color" \
+                --description "$description" \
+                --force
+            done
