@@ -94,36 +94,24 @@ export default function PiramideDeConfianca() {
         <ul className="space-y-6">
           {LEVELS.map(({ level, whatIs, example, howToRead }) => (
             <li
+              className="rounded-lg border border-border bg-surface p-5"
               key={level}
-              className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900"
             >
               <div className="mb-3">
                 <TrustBadge trustLevel={level} />
               </div>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
-                    O que é
-                  </dt>
-                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">
-                    {whatIs}
-                  </dd>
+                  <dt className="font-medium text-foreground">O que é</dt>
+                  <dd className="mt-1 text-foreground">{whatIs}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
-                    Exemplo
-                  </dt>
-                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300 italic">
-                    {example}
-                  </dd>
+                  <dt className="font-medium text-foreground">Exemplo</dt>
+                  <dd className="mt-1 text-foreground italic">{example}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
-                    Como ler
-                  </dt>
-                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">
-                    {howToRead}
-                  </dd>
+                  <dt className="font-medium text-foreground">Como ler</dt>
+                  <dd className="mt-1 text-foreground">{howToRead}</dd>
                 </div>
               </dl>
             </li>
@@ -166,7 +154,7 @@ export default function PiramideDeConfianca() {
           </Li>
           <Li>
             <strong>Exports CSV</strong>: cada linha do CSV inclui a coluna{' '}
-            <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs dark:bg-zinc-800">
+            <code className="rounded bg-surface-elevated px-1.5 py-0.5 font-mono text-xs">
               trust_level
             </code>{' '}
             — dado retirado do contexto da plataforma mantém a classificação.
