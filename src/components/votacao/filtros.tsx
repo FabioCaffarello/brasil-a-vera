@@ -1,13 +1,11 @@
+import Link from 'next/link'
+
+import {
+  FilterChip,
+  FilterChips,
+} from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 import { Label } from '@/design-system/primitives/label'
-
-// Server Component — `<form action="...">` submete via GET, RSC re-renderiza
-// com os novos searchParams. Sem JS de client necessário para submit.
-//
-// Sprint 4.2 PR 2 commit 6/6 — refatorado para tokens semânticos +
-// primitivas Label/Button do design system, espelhando parlamentar/filtros
-// e proposicao/filtros. Mantém checkbox nativo (Checkbox é Tier 2; sem
-// primitiva curada ainda — mesmo critério de Select).
 
 interface Props {
   anos: number[]
@@ -19,49 +17,118 @@ interface Props {
   }
 }
 
-const CASAS = [
-  { value: '', label: 'Câmara + Senado' },
-  { value: 'CAMARA', label: 'Câmara dos Deputados' },
-  { value: 'SENADO', label: 'Senado Federal' },
-]
-
-const RESULTADOS = [
-  { value: '', label: 'Aprovadas + rejeitadas' },
-  { value: 'aprovadas', label: 'Só aprovadas' },
-  { value: 'rejeitadas', label: 'Só rejeitadas' },
-]
-
 const SELECT_CLASS =
   'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 
+/**
+ * Helper interno: constrói href preservando outros filtros. Override
+ * com `null` remove o filtro do URL.
+ *
+ * `somenteNominais` é boolean — passar `'1'` ativa, `null` desativa.
+ */
+function buildHref(
+  current: Props['selecionado'],
+  overrides: Partial<{
+    casa: string | null
+    ano: string | null
+    resultado: string | null
+    somenteNominais: string | null
+  }>,
+): string {
+  const params = new URLSearchParams()
+  const casa = overrides.casa !== undefined ? overrides.casa : current.casa
+  if (casa) params.set('casa', casa)
+
+  const ano = overrides.ano !== undefined ? overrides.ano : current.ano
+  if (ano) params.set('ano', ano)
+
+  const resultado =
+    overrides.resultado !== undefined ? overrides.resultado : current.resultado
+  if (resultado) params.set('resultado', resultado)
+
+  const nominais =
+    overrides.somenteNominais !== undefined
+      ? overrides.somenteNominais
+      : current.somenteNominais
+        ? '1'
+        : null
+  if (nominais) params.set('somenteNominais', nominais)
+
+  const query = params.toString()
+  return query ? `/votacoes?${query}` : '/votacoes'
+}
+
+/**
+ * Filtros de votações — Sprint 6.2 PR 3 (Wave 6, reskin listagens).
+ *
+ * Hybrid pragmático (D1):
+ * - **Casa** (3 opções): FilterChips com Link asChild
+ * - **Resultado** (3 opções): FilterChips com Link asChild
+ * - **Só nominais** (toggle bool): FilterChip único acting as toggle —
+ *   click adiciona/remove `somenteNominais=1` do URL
+ * - **Ano** (~10+ valores): mantém `<select>` em form GET
+ *
+ * Form preserva chips ao submeter Ano via hidden inputs.
+ */
 export function FiltrosVotacao({ anos, selecionado }: Props) {
   return (
-    <form
-      action="/votacoes"
-      className="rounded-lg border border-border bg-surface p-4"
-      method="get"
-    >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="flex flex-col gap-1">
-          <Label
-            className="text-foreground-muted text-xs"
-            htmlFor="filtro-casa"
+    <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
+      <FilterChips label="Casa">
+        <FilterChip asChild selected={!selecionado.casa}>
+          <Link href={buildHref(selecionado, { casa: null })}>
+            Câmara + Senado
+          </Link>
+        </FilterChip>
+        <FilterChip asChild selected={selecionado.casa === 'CAMARA'}>
+          <Link href={buildHref(selecionado, { casa: 'CAMARA' })}>Câmara</Link>
+        </FilterChip>
+        <FilterChip asChild selected={selecionado.casa === 'SENADO'}>
+          <Link href={buildHref(selecionado, { casa: 'SENADO' })}>Senado</Link>
+        </FilterChip>
+      </FilterChips>
+
+      <FilterChips label="Resultado">
+        <FilterChip asChild selected={!selecionado.resultado}>
+          <Link href={buildHref(selecionado, { resultado: null })}>Todas</Link>
+        </FilterChip>
+        <FilterChip asChild selected={selecionado.resultado === 'aprovadas'}>
+          <Link href={buildHref(selecionado, { resultado: 'aprovadas' })}>
+            Só aprovadas
+          </Link>
+        </FilterChip>
+        <FilterChip asChild selected={selecionado.resultado === 'rejeitadas'}>
+          <Link href={buildHref(selecionado, { resultado: 'rejeitadas' })}>
+            Só rejeitadas
+          </Link>
+        </FilterChip>
+      </FilterChips>
+
+      <FilterChips label="Tipo de registro">
+        <FilterChip asChild selected={Boolean(selecionado.somenteNominais)}>
+          <Link
+            href={buildHref(selecionado, {
+              somenteNominais: selecionado.somenteNominais ? null : '1',
+            })}
           >
-            Casa
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.casa ?? ''}
-            id="filtro-casa"
-            name="casa"
-          >
-            {CASAS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            Só nominais (com voto individual)
+          </Link>
+        </FilterChip>
+      </FilterChips>
+
+      <form
+        action="/votacoes"
+        className="flex flex-wrap items-end gap-3 border-border border-t pt-4"
+        method="get"
+      >
+        {selecionado.casa ? (
+          <input name="casa" type="hidden" value={selecionado.casa} />
+        ) : null}
+        {selecionado.resultado ? (
+          <input name="resultado" type="hidden" value={selecionado.resultado} />
+        ) : null}
+        {selecionado.somenteNominais ? (
+          <input name="somenteNominais" type="hidden" value="1" />
+        ) : null}
 
         <div className="flex flex-col gap-1">
           <Label className="text-foreground-muted text-xs" htmlFor="filtro-ano">
@@ -82,51 +149,15 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           </select>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <Label
-            className="text-foreground-muted text-xs"
-            htmlFor="filtro-resultado"
-          >
-            Resultado
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.resultado ?? ''}
-            id="filtro-resultado"
-            name="resultado"
-          >
-            {RESULTADOS.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
+        <div className="ml-auto flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <a href="/votacoes">Limpar</a>
+          </Button>
+          <Button size="sm" type="submit">
+            Filtrar
+          </Button>
         </div>
-      </div>
-
-      <Label
-        className="mt-3 flex items-center gap-2 text-foreground text-sm"
-        htmlFor="filtro-somente-nominais"
-      >
-        <input
-          className="size-5 rounded border-border-strong accent-brand"
-          defaultChecked={Boolean(selecionado.somenteNominais)}
-          id="filtro-somente-nominais"
-          name="somenteNominais"
-          type="checkbox"
-          value="1"
-        />
-        Só votações nominais (com voto individual registrado)
-      </Label>
-
-      <div className="mt-3 flex justify-end gap-2">
-        <Button asChild size="sm" variant="outline">
-          <a href="/votacoes">Limpar</a>
-        </Button>
-        <Button size="sm" type="submit">
-          Filtrar
-        </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
 }

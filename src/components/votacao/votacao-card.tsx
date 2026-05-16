@@ -17,20 +17,23 @@ interface Props {
 }
 
 /**
- * Card de listagem de votação — Sprint 4.2 PR 2 (refatorado).
- * Migra de zinc/emerald/rose HEX para tokens semânticos OKLCH.
+ * Card de listagem de votação — Sprint 6.2 PR 3 (Wave 6, reskin
+ * listagens).
  *
- * Badges aprovada/rejeitada:
- * - Aprovada → bg-success/20 + text-success
- * - Rejeitada → bg-destructive/20 + text-destructive
+ * Mudanças vs Sprint 4.2 PR 2:
+ * - Hover refinado: + hover:bg-surface-elevated (consistente com
+ *   ParlamentarCard + ProposicaoCard pós-Sprint 6.2)
+ * - Estrutura mantida — badges aprovada/rejeitada inline com tons
+ *   semânticos (success/destructive subtle)
  *
- * Mesmo padrão usado em card-votacoes-semana (home, Sprint 4.1 PR 4).
+ * Mesmo padrão de badge usado em card-votacoes-semana (home,
+ * Sprint 4.1 PR 4).
  */
 export function VotacaoCard({ votacao: v }: Props) {
   const totalNominais = v.votosSim + v.votosNao + v.abstencoes
   return (
     <Link
-      className="block rounded-lg border border-border bg-surface p-4 transition hover:border-border-strong hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       href={`/votacoes/${v.id}`}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-xs">
