@@ -1,0 +1,47 @@
+name: Design feedback
+description: Reportar problema de UX, visual, ou propor melhoria de design.
+title: "[design] "
+labels: ["design", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feedback de design é bem-vindo — UX confuso, contraste ruim,
+        layout que quebra em mobile, microcopy estranho.
+
+  - type: input
+    id: rota
+    attributes:
+      label: Rota ou componente
+      description: URL ou nome do componente afetado.
+      placeholder: "/parlamentares ou TrustBadge"
+    validations:
+      required: true
+
+  - type: input
+    id: dispositivo
+    attributes:
+      label: Dispositivo / viewport
+      description: Desktop / mobile / tablet, e tamanho aproximado se relevante.
+      placeholder: "Mobile 360x800 / iOS Safari"
+    validations:
+      required: false
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Descrição do feedback
+      description: |
+        O que está confuso, quebrado, ou poderia ser melhor?
+        Se for proposta de melhoria, descreva o problema que ela resolve
+        antes da solução.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Opcional. Imagem mostrando o problema ou referência visual.
+    validations:
+      required: false

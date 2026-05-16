@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussão de roadmap e visão de produto
+    url: https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/product/ROADMAP.md
+    about: Antes de abrir uma issue de feature, leia o ROADMAP atual para entender o estado da Wave.
+  - name: Pirâmide de confiança (como classificamos dados)
+    url: https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/TRUST-PYRAMID.md
+    about: Para reportes de "dado incorreto", consulte primeiro o que cada nível L1-L4 significa.

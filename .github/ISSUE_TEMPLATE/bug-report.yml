@@ -1,0 +1,57 @@
+name: Bug report
+description: Reportar um bug reproduzível na plataforma.
+title: "[bug] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar. Quanto mais específico, mais rápido o conserto.
+        Se você acha que o dado da plataforma diverge da fonte oficial, use
+        o template "Dado incorreto" no lugar deste.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição do bug
+      description: O que aconteceu? O que você esperava que acontecesse?
+      placeholder: Ao clicar em X, a página Y mostrou Z em vez de W.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      description: Numerados, do início ao fim. Inclua URL exata se aplicável.
+      placeholder: |
+        1. Acesse https://brasilavera.org/parlamentares
+        2. Clique em "Filtrar por partido"
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: Comportamento esperado
+      placeholder: A lista deveria ordenar por nome.
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Ambiente
+      description: Navegador, sistema, dispositivo (desktop/mobile), tema (dark/light se aplicável).
+      placeholder: "Chrome 142 / macOS 15 / desktop / dark"
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot ou contexto adicional
+      description: Opcional. Cole imagens ou anote qualquer detalhe que possa ajudar.
+    validations:
+      required: false
