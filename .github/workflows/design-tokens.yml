@@ -28,7 +28,7 @@ jobs:
     name: zinc / HEX / primary-N legacy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Scan zinc legacy
         id: zinc
