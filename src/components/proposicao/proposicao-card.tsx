@@ -21,7 +21,7 @@ const SITUACAO_LABELS: Record<string, string> = {
 }
 
 /**
- * Mapeamento situação → tokens semânticos.
+ * Mapeamento situação → tokens semânticos (mantido vs Sprint 4.2).
  *
  * - TRAMITANDO: active, em progresso → bg-brand/20 + text-brand (subtle)
  * - APROVADA: outcome positivo → bg-success/20 + text-success (subtle)
@@ -39,9 +39,18 @@ const SITUACAO_CLASSES: Record<string, string> = {
 }
 
 /**
- * Card de listagem de proposição — Sprint 4.2 PR 2 (refatorado).
- * Migra de zinc/blue/emerald/rose/violet HEX para tokens semânticos.
- * Mapeamento das 5 situações documentado em SITUACAO_CLASSES acima.
+ * Card de listagem de proposição — Sprint 6.2 PR 2 (Wave 6, reskin
+ * listagens).
+ *
+ * Mudanças vs Sprint 4.2 PR 2:
+ * - Hover refinado para `hover:bg-surface-elevated` (consistente com
+ *   ParlamentarCard pós-Sprint 6.2 PR 1)
+ * - Estrutura mantida — badge situação inline funciona bem, não
+ *   migra para DataBadge (estilos subtle vs DataBadge `bg-X/10` são
+ *   funcionalmente equivalentes; refactor sem ganho)
+ *
+ * SITUACAO_LABELS + SITUACAO_CLASSES preservados — mapping Sprint 4.2
+ * D5 ainda canônico.
  */
 export function ProposicaoCard({ proposicao }: Props) {
   const { tipo, numero, ano, ementa, situacao } = proposicao
@@ -50,7 +59,7 @@ export function ProposicaoCard({ proposicao }: Props) {
     SITUACAO_CLASSES[situacao] ?? SITUACAO_CLASSES.ARQUIVADA
   return (
     <Link
-      className="block rounded-lg border border-border bg-surface p-4 transition hover:border-border-strong hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       href={href}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

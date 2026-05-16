@@ -5,6 +5,7 @@ import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
   type FiltrosProposicao as Filtros,
@@ -74,24 +75,19 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
   ])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
-          Proposições
-        </h1>
-        <p className="mt-1 text-foreground-muted text-sm">
-          Projetos de lei, PECs, MPs, decretos e resoluções legislativas
-          ingeridas no Brasil a Vera. Resultados ordenados por ano e número,
-          mais recentes primeiro.
-        </p>
-      </header>
-
-      <TrustBanner
-        level="L1"
-        message="Proposições oficiais da Câmara e do Senado, sem transformação."
+    <>
+      <HeroSection
+        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil a Vera. Resultados ordenados por ano e número, mais recentes primeiro."
+        title="Proposições"
+        variant="gradient"
       />
 
-      <div className="mb-6">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        <TrustBanner
+          level="L1"
+          message="Proposições oficiais da Câmara e do Senado, sem transformação."
+        />
+
         <FiltrosProposicao
           anos={anos}
           selecionado={{
@@ -100,47 +96,47 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             situacao: params.situacao,
           }}
         />
-      </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
-        <span>
-          {proposicoes.length === LIMITE
-            ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-            : `${proposicoes.length} ${proposicoes.length === 1 ? 'resultado' : 'resultados'}`}
-        </span>
-        {proposicoes.length > 0 && (
-          <ExportCsvLink
-            href={`/api/export/proposicoes?${new URLSearchParams(
-              Object.entries({
-                tipo: filtros.tipo ?? '',
-                ano: filtros.ano ? String(filtros.ano) : '',
-                situacao: filtros.situacao ?? '',
-              }).filter(([, v]) => v !== ''),
-            ).toString()}`}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+          <span>
+            {proposicoes.length === LIMITE
+              ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
+              : `${proposicoes.length} ${proposicoes.length === 1 ? 'resultado' : 'resultados'}`}
+          </span>
+          {proposicoes.length > 0 && (
+            <ExportCsvLink
+              href={`/api/export/proposicoes?${new URLSearchParams(
+                Object.entries({
+                  tipo: filtros.tipo ?? '',
+                  ano: filtros.ano ? String(filtros.ano) : '',
+                  situacao: filtros.situacao ?? '',
+                }).filter(([, v]) => v !== ''),
+              ).toString()}`}
+            />
+          )}
+        </div>
+
+        {proposicoes.length === 0 ? (
+          <EmptyState
+            action={
+              <Button asChild size="sm" variant="outline">
+                <a href="/proposicoes">Limpar filtros</a>
+              </Button>
+            }
+            description="Tente ajustar tipo, ano ou situação para resultados diferentes."
+            icon={SearchX}
+            title="Nenhuma proposição corresponde aos filtros"
           />
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {proposicoes.map((p) => (
+              <li key={p.id}>
+                <ProposicaoCard proposicao={p} />
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-
-      {proposicoes.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Nenhuma proposição corresponde aos filtros"
-          description="Tente ajustar tipo, ano ou situação para resultados diferentes."
-          action={
-            <Button asChild size="sm" variant="outline">
-              <a href="/proposicoes">Limpar filtros</a>
-            </Button>
-          }
-        />
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {proposicoes.map((p) => (
-            <li key={p.id}>
-              <ProposicaoCard proposicao={p} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    </>
   )
 }
