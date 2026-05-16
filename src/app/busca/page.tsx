@@ -26,14 +26,10 @@ function Section({
   return (
     <section>
       <header className="mb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
           {title}
         </h2>
-        {hint && (
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {hint}
-          </p>
-        )}
+        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
       </header>
       {children}
     </section>
@@ -47,10 +43,10 @@ export default async function BuscaPage({ searchParams }: PageProps) {
   if (!query) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="mb-2 font-semibold text-2xl text-foreground tracking-tight">
           Buscar
         </h1>
-        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-6 text-foreground-muted text-sm">
           Pesquise por nome de parlamentar, palavra na ementa de uma proposição,
           descrição de votação ou referência canônica (ex.: "PL 1234/2025").
         </p>
@@ -62,11 +58,11 @@ export default async function BuscaPage({ searchParams }: PageProps) {
   if (query.length < 2) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="mb-2 font-semibold text-2xl text-foreground tracking-tight">
           Buscar
         </h1>
         <SearchForm variant="page" defaultValue={query} />
-        <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-4 text-foreground-muted text-sm">
           Digite ao menos 2 caracteres.
         </p>
       </div>
@@ -82,19 +78,19 @@ export default async function BuscaPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <header>
-        <h1 className="mb-3 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="mb-3 font-semibold text-2xl text-foreground tracking-tight">
           Resultados para “{query}”
         </h1>
         <SearchForm variant="page" defaultValue={query} />
       </header>
 
       {resultados.proposicaoMatchExato && (
-        <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
-          <p className="text-sm text-emerald-900 dark:text-emerald-200">
+        <section className="rounded-lg border border-success/40 bg-success/10 p-4">
+          <p className="text-foreground text-sm">
             Você digitou uma referência de proposição. Ir direto para{' '}
             <Link
+              className="font-mono font-semibold text-success underline decoration-dotted underline-offset-2"
               href={`/proposicoes/${resultados.proposicaoMatchExato.tipo}/${resultados.proposicaoMatchExato.numero}/${resultados.proposicaoMatchExato.ano}`}
-              className="font-mono font-semibold underline decoration-dotted underline-offset-2"
             >
               {formatProposicaoRef(
                 resultados.proposicaoMatchExato.tipo,
@@ -108,7 +104,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
       )}
 
       {totalResultados === 0 ? (
-        <p className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+        <p className="rounded-lg border border-border bg-surface p-6 text-foreground-muted text-sm">
           Nenhum resultado encontrado. Tente termos mais curtos ou variantes
           (sem acento, sem aspas).
         </p>
