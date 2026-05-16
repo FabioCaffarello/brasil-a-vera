@@ -13,7 +13,9 @@ O app é deployed em Cloudflare Workers via OpenNext. Push em `main` dispara o w
 
 Falha em qualquer step deixa o workflow vermelho. **Smoke vermelho não auto-rollback**; é sinal para humano avaliar e reagir.
 
-URL de produção: <https://brasil-a-vera.fabio-caffarello.workers.dev>
+URL de produção: <https://brasilavera.org> (hostname canônico desde Sprint 4.2;
+o legado `https://brasil-a-vera.fabio-caffarello.workers.dev` continua roteado
+ao mesmo Worker via Cloudflare Custom Domain).
 
 ## Migrations automáticas no deploy
 
@@ -96,7 +98,7 @@ grep '^DIRECT_URL=' .env.local | cut -d= -f2- | npx wrangler secret put DIRECT_U
 Implementado em `ingestion/ops/smoke.ts`. Roda automaticamente no workflow de deploy mas também pode ser executado manualmente:
 
 ```bash
-SMOKE_BASE_URL=https://brasil-a-vera.fabio-caffarello.workers.dev npm run smoke
+SMOKE_BASE_URL=https://brasilavera.org npm run smoke
 ```
 
 ### O que verifica
