@@ -83,7 +83,7 @@ export default async function Home() {
           </Button>
         </div>
         <p className="mt-6 inline-flex items-center rounded bg-surface-elevated px-3 py-1 text-foreground-muted text-xs">
-          Wave 4 em andamento · v0.4.3-profile-premium
+          Wave 4 concluída · v0.4-final-public
         </p>
       </header>
 

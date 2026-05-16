@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-16 (Sprint 4.4 concluída — /partidos/[sigla] + /comparar + /busca reskinned; banner mantém v0.4.3-profile-premium)
+> Última atualização: 2026-05-16 (Wave 4 fechada — tag `v0.4-final-public`; Sprint 4.5 pulada, Sprint 4.6 entregue)
 > Status: accepted
 
 ---
@@ -784,19 +784,69 @@ Sem carryover técnico do reskin — Wave 4.4 fecha o ciclo de reskinning de rot
 
 ### Wave 4.5 — Minha área (autenticada)
 
-> **Tag de release**: `v0.4.5-minha-area`
-> **Status**: planejada — pré-requisito: definir o que persistir e tabela `usuario_acompanhamento`
+> **Status**: ⏸️ Pulada deliberadamente em 2026-05-16 — issue [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174) documenta reativação condicional
 
-**Por que aqui**: introduzir rotas privadas do protótipo do designer (Acompanhados, Alertas, Configurações) **apenas o que tem contrapartida no nosso domínio**. Se a sprint demandar nova tabela `usuario_acompanhamento`, abre-se ADR específico sobre persistência multi-tenant LGPD-aware antes do schema.
+**Decisão D0(a) da Sprint 4.6**: análise ADR-019 no início da execução mostrou que toda a infraestrutura de auth estava pronta (Clerk + Workers Paid + middleware expandido) **mas sem demanda observada** de cidadão/jornalista/contribuidor para features autenticadas. Construir tabela `usuario_acompanhamento` + ADR LGPD-aware + 3 rotas privadas sem trigger real seria especulativo.
 
-Decisão pendente para o início da Sprint 4.5: faz sentido executar agora ou esperar 4.6? Decisão tomada na entrada da sprint com base em evidência observada durante a Wave 4 (princípio ADR-019).
+Em vez disso, Sprint 4.6 incorporou o polimento final (zinc/primary cleanup descoberto + plano Lighthouse) e a Wave 4 fechou em `v0.4-final-public`.
 
-### Wave 4.6 — Polimento & observabilidade
+Pré-requisitos para reativação documentados em [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174):
+- Trigger empírico (issue ou decisão de produto)
+- Definir o que persistir
+- ADR específico sobre persistência multi-tenant LGPD-aware ANTES do schema
+- Migration SQL pura
 
-> **Tag de release**: `v0.4.6-polish`
-> **Status**: planejada
+### Wave 4.6 — Polimento final + plano Lighthouse
 
-**Por que último**: revisão de animações, microinterações, focus rings, dark/light toggle (se decidido), página `/metodologia` se ainda não migrada de `/docs`, atualização dos OG images para o novo visual, smoke probes ampliados para validar visual regression básico (screenshot diff em headless — entra só se gargalo justificar; princípio ADR-019).
+> **Tag de release**: integrar em `v0.4-final-public` (tag final da Wave 4)
+> **Status**: ✅ Concluída em 2026-05-16
+> **Duração real**: 1 dia (5 PRs sequenciais — escopo expandido em D0(a) para incluir reskin remanescente descoberto pré-sprint)
+
+**Por que último**: encerra o reskin para tokens semânticos OKLCH e entrega o plano de medição empírica dos critérios da Sprint 4.3.
+
+#### Descoberta pré-sprint (D0(a))
+
+Reconhecimento revelou **12 arquivos ainda em HEX legacy** não previstos no plano original da Wave 4:
+- Componentes universais: `TrustBadge` (aparece em todas detail pages) + `Navbar` (todas páginas)
+- `/docs/*` (5 páginas + 2 components compartilhados)
+- `/o-meu-parlamentar` + 2 form components (`uf-select-form`, `municipio-autocomplete`)
+- `/feed` (índice dos ~85 feeds RSS)
+
+Plano original da 4.6 era apenas Lighthouse + polish. Decisão D0(a): incorporar o reskin restante para fechar Wave 4 sem fragmentação visual.
+
+#### PRs entregues
+
+| PR | Conteúdo |
+|---|---|
+| [#170](https://github.com/FabioCaffarello/brasil-a-vera/pull/170) | TrustBadge (pirâmide L1→L4 em tokens) + Navbar (5 links + brand-distinct em "Meu parlamentar"). 2 commits. |
+| [#171](https://github.com/FabioCaffarello/brasil-a-vera/pull/171) | `/docs/*` reskin — sidebar-nav, typography helpers (docsLinkClass propaga para 5 páginas), hub `/docs` (4 cards com hover brand subtle), `/docs/fontes` (cards produção + planejadas), `/docs/piramide-de-confianca` (4 cards L1-L4 com TrustBadges em tokens), `/docs/glossario`. 6 commits. |
+| [#172](https://github.com/FabioCaffarello/brasil-a-vera/pull/172) | `/o-meu-parlamentar` (3 estados do fluxo cívico + amber → warning subtle herdada) + 2 form components (uf-select-form com Button primitive, municipio-autocomplete combobox WAI-ARIA) + `/feed` (5 grupos com hover brand/5). 4 commits. **Sweep final confirma**: zero className zinc/primary em rotas renderizadas. |
+| [#173](https://github.com/FabioCaffarello/brasil-a-vera/pull/173) | Plano + template Lighthouse mobile (`docs/architecture/LIGHTHOUSE-PLAN.md` 195 linhas + `LIGHTHOUSE-RESULTS.md` 118 linhas). Doc-only. D4(b) aplicada — owner mede em produção, registra resultado. |
+| [#175](https://github.com/FabioCaffarello/brasil-a-vera/pull/175) | Este PR — fechamento (ROADMAP, release notes `v0.4-final-public.md`, banner home, issue #174). |
+
+#### Decisões aplicadas durante a sprint (D0-D5 aprovadas em bloco)
+
+- **D0(a)** — Incorporar descoberta pré-sprint (12 arquivos) à 4.6, em vez de criar Sprint 4.7. Fecha tudo em uma tag única.
+- **D1** — 5 PRs sequenciais: TrustBadge+Navbar → /docs → /o-meu-parlamentar + /feed → Lighthouse plan → Closure.
+- **D2(b)** — Tag final = `v0.4-final-public` (não `v0.4.6-polish`). Comunica "Wave 4 público concluído" melhor.
+- **D3** — Sprint 4.5 → issue `wave-5+` ([#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174)) com pré-requisitos.
+- **D4(b)** — Lighthouse: documentar plano de medição em produção (princípio 13), não rodar localmente.
+- **D5(b)** — Sem smoke probe de performance preemptivo (ADR-019, sem gargalo concreto).
+
+#### Critérios de Done — atendidos
+
+- [x] **Zero className zinc/primary HEX** em rotas renderizadas (sweep final no PR 3 confirma)
+- [x] **TrustBadge L1-L4** unificado em tokens semânticos cross-rota
+- [x] **Pirâmide visualmente coerente** entre perfis (TrustBadge nas headers) e `/docs/piramide-de-confianca` (4 cards lado a lado)
+- [x] **Plano de medição Lighthouse documentado** com procedimento detalhado, 13 rotas a medir, playbook de mitigação se falhar
+- [x] **Template de resultados** para owner preencher após execução
+- [x] **Bundle gzipped reduzido** (2.21 → 2.19 MB) — efeito colateral de adoção de primitivas
+- [x] **Issue de tracking** para Sprint 4.5 reativação (#174)
+
+#### Carryover empírico explícito para Wave 5
+
+- [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) — Lighthouse mobile baseline (2026-05-13) com 3 rotas > 2.5s LCP. Re-medição com plano de 4.6 PR 4 — owner executa, registra, decide veredito (fechar se passa; abrir issue específica em `wave-5+` + `perf` se falha)
+- [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174) — Reativação Sprint 4.5 (Minha Área) condicional a demanda real
 
 ### Fora da Wave 4 — adiado para Wave 5
 
