@@ -1,0 +1,160 @@
+# Vocabulário canônico de labels do Brasil a Vera.
+# Fonte de verdade. Aplicado pelo workflow .github/workflows/labels-sync.yml
+# via `gh label create --force` (idempotente).
+#
+# Convenção de cores:
+#   - Bug / blocker / incidente:   tons de vermelho (B60205, D73A4A, D93F0B)
+#   - Wave / planejamento:         FBCA04 amarelo (Wave 2) / 1D76DB azul (Wave 3) / CCCCCC cinza (Wave 5+)
+#   - Performance / otimização:    D4C5F9 violeta
+#   - Banco / ingestão:            0E8A16 verde
+#   - Tooling / chore:             C2E0C6 verde claro / CCCCCC cinza
+#   - Ops / observabilidade:       006B75 ciano escuro
+#   - Segurança:                   B60205 vermelho
+#   - Áreas (area:*):              5DC8DB azul claro novo
+#   - Apoio à comunidade:          7057ff (good first issue) / 008672 (help wanted)
+#   - GitHub defaults:             cores originais preservadas
+
+labels:
+  # GitHub defaults — preservados
+  - name: bug
+    color: d73a4a
+    description: Something isn't working
+  - name: documentation
+    color: 0075ca
+    description: Improvements or additions to documentation
+  - name: duplicate
+    color: cfd3d7
+    description: This issue or pull request already exists
+  - name: enhancement
+    color: a2eeef
+    description: New feature or request
+  - name: good first issue
+    color: 7057ff
+    description: Good for newcomers
+  - name: help wanted
+    color: '008672'
+    description: Extra attention is needed
+  - name: invalid
+    color: e4e669
+    description: This doesn't seem right
+  - name: question
+    color: d876e3
+    description: Further information is requested
+  - name: wontfix
+    color: ffffff
+    description: This will not be worked on
+
+  # Waves históricas — preservadas (issues passadas/abertas referenciam)
+  - name: wave-2
+    color: FBCA04
+    description: Wave 2 — em planejamento
+  - name: wave-2-blocker
+    color: D93F0B
+    description: Wave 2 — precisa estar resolvido antes do kickoff
+  - name: wave-2.0
+    color: FBCA04
+    description: Wave 2.0 — Foundation Hardening
+  - name: wave-2.1
+    color: F9D0C4
+    description: Wave 2.1 — Domain Depth
+  - name: wave-2.2
+    color: C5DEF5
+    description: Wave 2.2 — Distribution & Polish (opcional)
+  - name: wave-3+
+    color: 1D76DB
+    description: Wave 3 ou posterior
+  - name: wave-3.0
+    color: 1D76DB
+    description: Wave 3.0 — Realignment (sub-wave da Wave 3 Profundidade Cívica Acessível)
+  - name: wave-3.1
+    color: 1D76DB
+    description: Wave 3.1 — Dashboards Temáticos (sub-wave da Wave 3)
+  - name: wave-3.2
+    color: 1D76DB
+    description: Wave 3.2 — TSE Doações Eleitorais (sub-wave da Wave 3)
+  - name: wave-5+
+    color: CCCCCC
+    description: Wave 5 ou posterior — backlog sem plano contratual
+
+  # Áreas funcionais — existentes
+  - name: adr
+    color: 5319E7
+    description: Architecture Decision Record
+  - name: db
+    color: 0E8A16
+    description: Banco de dados / schema / migrations
+  - name: ingestion
+    color: 0E8A16
+    description: Scripts de ingestão
+  - name: testing
+    color: BFE5BF
+    description: Testes / coverage / CI
+  - name: security
+    color: B60205
+    description: Segurança / vulns / hardening
+  - name: tooling
+    color: C2E0C6
+    description: Tooling de dev / lint / build
+  - name: chore
+    color: CCCCCC
+    description: Manutenção / cleanup / debt
+  - name: ops
+    color: 006B75
+    description: Operações / monitoramento / deploy
+  - name: perf
+    color: D4C5F9
+    description: Performance / cache / otimização
+  - name: ui
+    color: BFD4F2
+    description: Interface / componentes / páginas
+  - name: incident
+    color: B60205
+    description: Incidente operacional detectado automaticamente
+  - name: blocked
+    color: B60205
+    description: Bloqueada por outra issue / dependência externa
+
+  # Tipos de issue (issue templates do PR 8)
+  - name: feature
+    color: a2eeef
+    description: Nova funcionalidade proposta
+  - name: dado-incorreto
+    color: D93F0B
+    description: Dado da plataforma diverge da fonte oficial
+  - name: design
+    color: BFD4F2
+    description: UX / visual feedback ou proposta de design system
+
+  # Workflow
+  - name: triage
+    color: FBCA04
+    description: Precisa de triagem inicial
+  - name: accepted
+    color: 0E8A16
+    description: Aceito, aguardando execução
+  - name: in-progress
+    color: A2EEEF
+    description: Em execução
+
+  # Áreas finas — granularidade para Wave 5+ multi-contribuidor
+  - name: 'area:design-system'
+    color: 5DC8DB
+    description: Toca src/design-system/** (primitivas, tokens, composições)
+  - name: 'area:apresentacao'
+    color: 5DC8DB
+    description: Toca src/components/** ou rotas em src/app/**
+  - name: 'area:ingestao'
+    color: 5DC8DB
+    description: Toca ingestion/** ou scripts ETL
+  - name: 'area:queries'
+    color: 5DC8DB
+    description: Toca src/lib/queries/** ou camada de leitura do DB
+  - name: 'area:infra'
+    color: 5DC8DB
+    description: Toca .github/, config root, deploy, ou CI
+  - name: 'area:adr'
+    color: 5DC8DB
+    description: Toca docs/architecture/ADR/**
+  - name: 'area:claude-config'
+    color: 5DC8DB
+    description: Toca .claude/ (settings, hooks, agents, skills, docs)

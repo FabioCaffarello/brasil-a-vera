@@ -93,7 +93,7 @@ runs:
         )
           gh issue create \
             --title "incident: ${CONTEXT} failed at ${TIMESTAMP}" \
-            --label "incident,ingestion,wave-2.0" \
+            --label "incident,ingestion" \
             --body "$issue_body" \
             || echo "GitHub issue create failed (non-fatal)" >&2
         fi
