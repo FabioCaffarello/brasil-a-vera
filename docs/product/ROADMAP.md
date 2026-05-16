@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.0 abre — Wave 6 "Frontend de Excelência (reskin diagnóstico-dirigido)" entra em execução; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Última atualização: 2026-05-16 (Sprint 6.0 fechada — tokens expandidos + 8 composições + subagent `frontend-skin-helper` entregues; sprints 6.1-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -928,7 +928,7 @@ Decisões arquiteturais que governam a Wave 6:
 
 | Sprint | Conteúdo | Status |
 |---|---|---|
-| 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` (PR 8) | 🚧 Em execução (abertura 2026-05-16) |
+| 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` | ✅ Concluída em 2026-05-16 (8 PRs sequenciais — #199, #200, #201, #202, #203, #204, #205, #206) |
 | 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | 📋 Planejada |
 | 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | 📋 Planejada |
 | 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | 📋 Planejada |
@@ -936,7 +936,33 @@ Decisões arquiteturais que governam a Wave 6:
 | 6.5 | Metodologia (hub TOC sticky + prose) + redirect 301 `/docs/*` → `/metodologia#anchor` (D3 híbrido) | 📋 Planejada |
 | 6.6 | Performance final + Lighthouse fechamento (#114) + métrica auto-merge + tag `v0.6.0-frontend-excellence` | 📋 Planejada |
 
-### Critérios de sucesso da Wave 6
+### Sprint 6.0 — Tokens + composições fundamentais ✅
+
+Entregue em 2026-05-16. 8 PRs sequenciais (#199, #200, #201, #202, #203, #204, #205, #206). Sem tag intermediária — banner aguarda fechamento da Sprint 6.6 com `v0.6.0-frontend-excellence`.
+
+PRs entregues:
+
+- **#199** — `docs(wave-6): open Sprint 6.0 — ADRs 023/024 + ROADMAP + prompt mestre` (bundle de abertura de wave)
+- **#200** — `feat(ds): expand tokens — accent + gradient-primary + bg-hero + glass-strong` (consome ADR-024; WCAG passou AA na 1ª rodada sem recalibração D10)
+- **#201** — `feat(ds): add HeroSection composition`
+- **#202** — `feat(ds): add KpiStrip + SectionCard compositions`
+- **#203** — `feat(ds): add SectionNav + FilterChips compositions` (SectionNav é o único client component da sprint — IntersectionObserver)
+- **#204** — `feat(ds): add PartyBadge + StatsGrid + DataBadge compositions`
+- **#205** — `feat(dev): showcase Wave 6 compositions integrated in /dev/design` (mock de perfil parlamentar)
+- **#206** — `chore: close Sprint 6.0 + add frontend-skin-helper subagent` (este PR)
+
+Entregáveis:
+
+- 2 ADRs (023 critério de animação, 024 token `--accent` roxo)
+- 4 tokens novos + 3 utilitários CSS (`--accent`, `--accent-foreground`, `--gradient-primary`, `.glass-strong`, `.bg-hero`, `.bg-gradient-primary`)
+- 8 composições em `src/design-system/compositions/` (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge)
+- 78 testes novos (9 + 10 + 8 + 9 + 15 + 11 + 8 + 7 = 77 + smoke checks)
+- 1 subagent novo: `frontend-skin-helper` (D5 standalone, escopo refactor de página em domínio — disjunto do `design-system-curator`)
+- `/dev/design` com seção "Exemplo integrado — mock de perfil parlamentar" usando as 8 composições juntas + showcase individual por variante de cada composição
+- WCAG re-audit: 7 pares novos (3 light AAA + 4 dark AA) — sem recalibração D10 invocada
+- Auto-merge condicional usado em 7/8 PRs (PR 1 excedeu 600 linhas, manual merge per §6.3; demais auto-merged via `--admin` flag por ausência de `enablePullRequestAutoMerge` no repo)
+
+
 
 A Wave 6 fecha quando, ao final da Sprint 6.6:
 
