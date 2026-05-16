@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.2 fechada — 3 listagens reskinned com HeroSection + FilterChips + PartyBadge no card de parlamentar; sprints 6.3-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Última atualização: 2026-05-16 (Sprint 6.3 fechada — 3 perfis reskinned com KpiStrip + SectionNav + SectionCard + DataBadge; sprints 6.4-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -931,7 +931,7 @@ Decisões arquiteturais que governam a Wave 6:
 | 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` | ✅ Concluída em 2026-05-16 (8 PRs sequenciais — #199, #200, #201, #202, #203, #204, #205, #206) |
 | 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #207, #208, #209, #210) |
 | 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #211, #212, #213, #214) |
-| 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | 📋 Planejada |
+| 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #215, #216, #217, #218) |
 | 6.4 | Comparar + busca + meu parlamentar | 📋 Planejada |
 | 6.5 | Metodologia (hub TOC sticky + prose) + redirect 301 `/docs/*` → `/metodologia#anchor` (D3 híbrido) | 📋 Planejada |
 | 6.6 | Performance final + Lighthouse fechamento (#114) + métrica auto-merge + tag `v0.6.0-frontend-excellence` | 📋 Planejada |
@@ -1042,6 +1042,46 @@ Critérios de Done — atendidos:
 - [x] EmptyState cobre filtros vazios com CTA "Limpar filtros" (mantido)
 - [x] Lighthouse mobile: medição empírica fica para Sprint 6.6 (D7 do prompt mestre)
 - [x] TrustBanner L1 mantido em todas as 3 rotas
+
+### Sprint 6.3 — Reskin perfis ✅
+
+Entregue em 2026-05-16. 4 PRs sequenciais (#215, #216, #217, #218). Sem tag intermediária — banner aguarda fechamento da Sprint 6.6 com `v0.6.0-frontend-excellence`.
+
+PRs entregues:
+
+- **#215** — `feat(parlamentar): reskin perfil — KpiStrip + SectionNav + SectionCard` (página mais importante do produto; KpiStrip 4-col com Alinhamento/Votações/Proposições/Gastos; SectionNav 6 anchors; Tier 1/Tier 3 divisória mantida)
+- **#216** — `feat(proposicao): reskin perfil — SectionNav + SectionCard` (4 anchors; sem KpiStrip — Temas/Autores/Votações/Tramitação são listas, não números)
+- **#217** — `feat(votacao): reskin perfil — KpiStrip + SectionNav + SectionCard` (KpiStrip 4-col Sim/Não/Abstenção/Ausente com tones semânticos)
+- **#218** — `chore(wave-6): close Sprint 6.3` (este PR)
+
+Decisões aplicadas (D1-D7 do plano):
+
+- **D1**: KpiStrip em parlamentar + votação (KPIs naturais); proposição sem (listas, não números)
+- **D2**: SectionNav nos 3 perfis com stickyTop="3.5rem" (matching navbar)
+- **D3**: TrustBadge internos dos sub-componentes mantidos inline (não passar via SectionCard.badge)
+- **D4**: PerfilHeader incremental — NÃO virou HeroSection (perfil é cartão de identidade, não cartaz genérico)
+- **D5**: Section helper local nas 3 pages → SectionCard composição (remove ~13 linhas duplicadas por page)
+- **D6**: scroll-mt-28 em cada SectionCard com id para clear navbar+SectionNav stack ao navegar via anchor
+- **D7**: 4 PRs sequenciais (1 por perfil + closure)
+
+Entregáveis:
+
+- 3 perfis reskinned: parlamentar (~520 linhas refatoradas), proposição (~135 linhas), votação (~265 linhas)
+- 3 PerfilHeader refactor incremental: DataBadges no topo, h1 maior, PartyBadge inline em parlamentar
+- 2 KpiStrips consumidos: parlamentar (Alinhamento/Votações/Proposições/Gastos com fallback "—") + votação (Sim/Não/Abstenção/Ausente)
+- 3 SectionNav sticky com 4-6 anchors cada
+- ~14 SectionCard wrapping seções (substituem Section helper local — duplicado 3× antes)
+- 0 testes novos (refactor visual; tests existentes continuam passando)
+- Bundle delta path anônimo: **+0kb** (composições já em main desde Sprint 6.0)
+
+LCP measurement: **deferido para Sprint 6.6** per D7 do prompt mestre Wave 6 (Lighthouse fechamento de #114). Critério "LCP ≤ 2.5s" do §4 Sprint 6.3 fica registrado mas medição não roda aqui.
+
+Critérios de Done — atendidos:
+
+- [x] Trust pyramid visível em cada bloco L2/L3 (TrustBadges internos preservados em Top5Afinidade, ParesContraditorios, AlinhamentoBancada, ProposicoesAutor; TrustBadge no header dos 3 perfis)
+- [x] Section nav navega para anchors corretas (scroll-mt-28 cobre stack navbar+SectionNav)
+- [x] Mobile SectionNav vira sticky bar reduzida (composição Sprint 6.0 PR 5 já implementa)
+- [⚠️] LCP ≤ 2.5s — diferido para Sprint 6.6 (D7)
 
 ### Critérios de sucesso da Wave 6
 
