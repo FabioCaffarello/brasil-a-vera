@@ -16,6 +16,11 @@ interface Props {
   }
 }
 
+// Sprint 4.3 PR 1 — refatorado para tokens semânticos OKLCH.
+// Foto remota via <img> nativo (biome-ignore documentado; Next/Image
+// exigiria remotePatterns em next.config.ts para camara.leg.br e
+// senado.leg.br — sem ganho proporcional ao overhead). Dimensões
+// explícitas preservam CLS=0.
 export function PerfilHeader({ parlamentar }: Props) {
   const cargoLabel =
     parlamentar.casa === 'CAMARA' ? 'Deputado Federal' : 'Senador'
@@ -23,37 +28,37 @@ export function PerfilHeader({ parlamentar }: Props) {
     parlamentar.casa === 'CAMARA' ? 'Câmara dos Deputados' : 'Senado Federal'
 
   return (
-    <header className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900 sm:flex-row sm:items-start">
+    <header className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-6 sm:flex-row sm:items-start">
       {parlamentar.urlFoto ? (
         // biome-ignore lint/performance/noImgElement: foto vem de domínio externo (camara.leg.br / senado.leg.br); Next/Image exige config de remote patterns. Largura/altura explícitas reservam espaço e evitam CLS.
         <img
-          src={parlamentar.urlFoto}
           alt={`Foto oficial de ${parlamentar.nome}`}
-          width={112}
-          height={112}
           className="size-24 shrink-0 rounded-full object-cover sm:size-28"
+          height={112}
+          src={parlamentar.urlFoto}
+          width={112}
         />
       ) : (
         <div
           aria-hidden="true"
-          className="size-24 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700 sm:size-28"
+          className="size-24 shrink-0 rounded-full bg-surface-elevated sm:size-28"
         />
       )}
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <h1 className="font-semibold text-2xl text-foreground">
             {parlamentar.nome}
           </h1>
           {parlamentar.nomeCivil &&
             parlamentar.nomeCivil !== parlamentar.nome && (
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <p className="text-foreground-muted text-sm">
                 {parlamentar.nomeCivil}
               </p>
             )}
         </div>
 
-        <dl className="grid grid-cols-1 gap-x-6 gap-y-1 text-sm text-zinc-700 dark:text-zinc-300 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-1 text-foreground text-sm sm:grid-cols-2">
           <div>
             <dt className="inline font-medium">Cargo: </dt>
             <dd className="inline">{cargoLabel}</dd>
@@ -89,10 +94,10 @@ export function PerfilHeader({ parlamentar }: Props) {
         <div className="flex flex-wrap items-center gap-3 pt-2 text-sm">
           <TrustBadge trustLevel={parlamentar.trustLevel} />
           <a
+            className="text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground"
             href={parlamentar.sourceUrl}
-            target="_blank"
             rel="noopener noreferrer"
-            className="text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+            target="_blank"
           >
             Ver na fonte oficial ↗
           </a>

@@ -49,16 +49,12 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+    <section className="rounded-lg border border-border bg-surface p-5">
       <header className="mb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
           {title}
         </h2>
-        {hint && (
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {hint}
-          </p>
-        )}
+        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
       </header>
       {children}
     </section>
@@ -142,12 +138,12 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
           seção secundária com separador visual + heading explicativo para
           não competir com o conteúdo principal quando vazias. Sprint 3.1
           Tarefa 3 — wireframe aprovado em 2026-05-15. */}
-      <div className="mt-8 border-zinc-200 border-t pt-8 dark:border-zinc-700">
+      <div className="mt-8 border-border border-t pt-8">
         <header className="mb-6">
-          <h2 className="font-semibold text-2xl text-zinc-900 tracking-tight dark:text-zinc-100">
+          <h2 className="font-semibold text-2xl text-foreground tracking-tight">
             Análises comparativas
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-foreground-muted text-sm">
             Comparações com outros parlamentares e padrões de voto. Requer base
             de votações nominais — disponível para parte dos perfis.
           </p>
