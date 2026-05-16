@@ -10,6 +10,7 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { Button } from '@/design-system/primitives/button'
+import { formatNumeroAbreviado } from '@/lib/format-number'
 import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'
 import type { TrustLevel } from '@/shared/trust'
@@ -57,10 +58,11 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO premium — Sprint 6.1 PR 3 (Wave 6). Consome composição
-          HeroSection (gradient variant) com kicker DataBadge accent +
-          duplo CTA. Full-width — gradient .bg-hero + .grid-bg estendem
-          até as bordas. */}
+      {/* HERO premium — spike PR #223. Consome HeroSection com
+          variant="gradient-glow": 3 blobs animados + accent line + stagger
+          reveal, 100% CSS (ADR-023). KPIs reais via getPublicStats(), cada
+          número com DataBadge carregando trust_level (princípio 3 do
+          CLAUDE.md + slogan da Pirâmide de Confiança logo abaixo). */}
       <HeroSection
         actions={
           <>
@@ -83,7 +85,30 @@ export default async function Home() {
             tone="accent"
           />
         }
+        kpis={
+          <div className="flex flex-wrap gap-2">
+            <DataBadge
+              label={`${formatNumeroAbreviado(stats.totalParlamentares)} parlamentares`}
+              source="L1"
+              tone="brand"
+            />
+            <DataBadge
+              label={`${formatNumeroAbreviado(stats.totalProposicoes)} proposições`}
+              source="L1"
+            />
+            <DataBadge
+              label={`${formatNumeroAbreviado(stats.totalVotacoes)} votações`}
+              source="L1"
+            />
+            <DataBadge
+              icon={<Sparkles className="h-3 w-3" />}
+              label="Atualização diária"
+              tone="accent"
+            />
+          </div>
+        }
         title="Brasil a Vera"
+        variant="gradient-glow"
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">

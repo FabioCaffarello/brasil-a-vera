@@ -99,4 +99,65 @@ describe('HeroSection composition', () => {
     expect(screen.getByRole('button', { name: 'Primary' })).toBeDefined()
     expect(screen.getByRole('button', { name: 'Secondary' })).toBeDefined()
   })
+
+  describe('variante gradient-glow', () => {
+    it('aplica .bg-hero, .grid-bg, .hero-glow e .hero-stagger', () => {
+      const { container } = render(
+        <HeroSection title="Glow" variant="gradient-glow" />,
+      )
+      const section = container.querySelector('section')
+      expect(section?.className).toContain('bg-hero')
+      expect(section?.className).toContain('grid-bg')
+      expect(section?.className).toContain('hero-glow')
+      expect(container.querySelector('.hero-stagger')).not.toBeNull()
+    })
+
+    it('aplica .text-gradient no h1 (gradient-glow herda do gradient)', () => {
+      render(<HeroSection title="Glow" variant="gradient-glow" />)
+      const heading = screen.getByRole('heading', { level: 1 })
+      const gradientSpan = heading.querySelector('.text-gradient')
+      expect(gradientSpan).not.toBeNull()
+      expect(gradientSpan?.textContent).toBe('Glow')
+    })
+
+    it('renderiza 3 blobs + accent line, todos aria-hidden', () => {
+      const { container } = render(
+        <HeroSection title="Glow" variant="gradient-glow" />,
+      )
+      const blobs = container.querySelectorAll('.hero-glow__blob')
+      expect(blobs.length).toBe(3)
+      const line = container.querySelector('.hero-glow__accent-line')
+      expect(line).not.toBeNull()
+      for (const decorative of [...Array.from(blobs), line]) {
+        expect(decorative?.getAttribute('aria-hidden')).toBe('true')
+      }
+    })
+
+    it('NÃO aplica .hero-glow na variante gradient (default)', () => {
+      const { container } = render(<HeroSection title="Plain gradient" />)
+      const section = container.querySelector('section')
+      expect(section?.className).not.toContain('hero-glow')
+      expect(container.querySelector('.hero-glow__blob')).toBeNull()
+      expect(container.querySelector('.hero-stagger')).toBeNull()
+    })
+  })
+
+  describe('slot kpis', () => {
+    it('renderiza kpis quando fornecido', () => {
+      render(
+        <HeroSection
+          title="Com KPIs"
+          kpis={<span data-testid="kpi-cell">513 deputados</span>}
+        />,
+      )
+      expect(screen.getByTestId('kpi-cell').textContent).toBe('513 deputados')
+    })
+
+    it('não renderiza container de kpis quando ausente', () => {
+      const { container } = render(<HeroSection title="Sem KPIs" />)
+      // O container de kpis tem `.mt-10` — garantir que não há div vazia
+      const emptyMt10 = container.querySelector('.mt-10:empty')
+      expect(emptyMt10).toBeNull()
+    })
+  })
 })

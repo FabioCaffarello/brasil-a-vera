@@ -538,9 +538,13 @@ export default function DesignSystemPage() {
           <p className="text-foreground-muted text-sm">
             Hero configurável da Sprint 6.0 PR 3. Props: <code>kicker</code>,{' '}
             <code>title</code>, <code>description</code>, <code>actions</code>,{' '}
-            <code>variant</code> (<code>gradient</code> | <code>plain</code>).
-            Consome utilitários <code>.bg-hero</code>, <code>.grid-bg</code>,{' '}
-            <code>.text-gradient</code> (ADR-024) na variante gradient.
+            <code>kpis</code>, <code>variant</code> (<code>gradient</code> |{' '}
+            <code>gradient-glow</code> | <code>plain</code>). Consome
+            utilitários <code>.bg-hero</code>, <code>.grid-bg</code>,{' '}
+            <code>.text-gradient</code> (ADR-024) e — na variante{' '}
+            <code>gradient-glow</code> — <code>.hero-glow*</code> +{' '}
+            <code>.hero-stagger</code> com <code>@keyframes</code> +{' '}
+            <code>@starting-style</code> (ADR-023, sem framer-motion).
           </p>
 
           {/* Variante 1: gradient completa */}
@@ -578,6 +582,44 @@ export default function DesignSystemPage() {
               title="Variante plain — consumer controla o background"
               description="Útil quando o consumer já carrega um background próprio (ex: dentro de outro container colorido)."
               variant="plain"
+            />
+          </div>
+
+          {/* Variante 4: gradient-glow (spike PR #223). Multi-glow + stagger
+              reveal + accent line, 100% CSS (ADR-023, sem framer-motion).
+              Aceita o slot `kpis` para badges narrativos abaixo das actions. */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              kicker={
+                <>
+                  <Sparkles
+                    aria-hidden="true"
+                    className="h-4 w-4 text-accent"
+                  />
+                  <span>Spike — Hero gradient-glow</span>
+                </>
+              }
+              title="Transparência política sem ruído"
+              description="Variante gradient-glow: 3 blobs animados, accent line, stagger reveal — tudo via CSS (@keyframes + @starting-style). Zero JS extra vs ~50 kB gzip de framer-motion."
+              actions={
+                <>
+                  <Button>Explorar parlamentares</Button>
+                  <Button variant="outline">Ver proposições</Button>
+                </>
+              }
+              kpis={
+                <div className="flex flex-wrap gap-2">
+                  <DataBadge label="513 deputados" source="L1" tone="brand" />
+                  <DataBadge label="Proposições rastreadas" source="L1" />
+                  <DataBadge label="Votações analisadas" source="L1" />
+                  <DataBadge
+                    icon={<Sparkles className="h-3 w-3" />}
+                    label="Atualização diária"
+                    tone="accent"
+                  />
+                </div>
+              }
+              variant="gradient-glow"
             />
           </div>
         </div>
