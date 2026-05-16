@@ -1,5 +1,6 @@
-import { Inbox } from 'lucide-react'
+import { Inbox, Sparkles } from 'lucide-react'
 
+import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Badge } from '@/design-system/primitives/badge'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -342,6 +343,72 @@ export default function DesignSystemPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </section>
+
+      <Separator />
+
+      {/* ============================ COMPOSITIONS — WAVE 6 ============================ */}
+      <section aria-labelledby="compositions-title" className="space-y-6">
+        <h2 className="font-semibold text-2xl" id="compositions-title">
+          Compositions — Wave 6
+        </h2>
+        <p className="text-foreground-muted text-sm">
+          Padrões visuais sem domínio acoplado. Configuráveis via props.
+          Boundary import: importam apenas de{' '}
+          <code>design-system/primitives</code>,{' '}
+          <code>design-system/tokens</code> e <code>lib/cn</code> (ADR-021
+          §Regra de import boundary).
+        </p>
+
+        {/* ----- HeroSection ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">HeroSection</h3>
+          <p className="text-foreground-muted text-sm">
+            Hero configurável da Sprint 6.0 PR 3. Props: <code>kicker</code>,{' '}
+            <code>title</code>, <code>description</code>, <code>actions</code>,{' '}
+            <code>variant</code> (<code>gradient</code> | <code>plain</code>).
+            Consome utilitários <code>.bg-hero</code>, <code>.grid-bg</code>,{' '}
+            <code>.text-gradient</code> (ADR-024) na variante gradient.
+          </p>
+
+          {/* Variante 1: gradient completa */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              kicker={
+                <>
+                  <Sparkles
+                    className="h-4 w-4 text-accent"
+                    aria-hidden="true"
+                  />
+                  <span>Wave 6 · Frontend de Excelência</span>
+                </>
+              }
+              title="Brasil a Vera"
+              description="Plataforma de transparência política brasileira. Você escolheu quem te representa. Agora veja o que ele faz."
+              actions={
+                <>
+                  <Button>Encontrar meus representantes</Button>
+                  <Button variant="outline">Explorar parlamentares</Button>
+                </>
+              }
+            />
+          </div>
+
+          {/* Variante 2: gradient mínima (só título) */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection title="Apenas título (gradient)" />
+          </div>
+
+          {/* Variante 3: plain (sem gradient, sem text-gradient) */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              kicker="Sem gradient"
+              title="Variante plain — consumer controla o background"
+              description="Útil quando o consumer já carrega um background próprio (ex: dentro de outro container colorido)."
+              variant="plain"
+            />
+          </div>
+        </div>
       </section>
 
       <Separator />
