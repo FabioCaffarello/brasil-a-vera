@@ -6,10 +6,14 @@ interface Props {
   resumo: GastosResumo
 }
 
+// Sprint 4.3 PR 2 commit 4/4 — refatorado para tokens semânticos.
+// D5 (Sprint 4.3): Recharts NÃO adotado — ADR-019 (sem dep nova sem
+// evidência de gargalo). Tabela atual com top 3 + agregado já é clara
+// para a finalidade.
 export function GastosResumoBlock({ ano, resumo }: Props) {
   if (resumo.totalRegistros === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Sem gastos CEAP registrados em {ano} para este parlamentar.
       </p>
     )
@@ -27,10 +31,10 @@ export function GastosResumoBlock({ ano, resumo }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-baseline gap-2">
-        <span className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <span className="font-semibold text-2xl text-foreground">
           {formatBRL(resumo.totalGeral)}
         </span>
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="text-foreground-muted text-sm">
           em {resumo.totalRegistros} gasto
           {resumo.totalRegistros === 1 ? '' : 's'} · ano {ano}
         </span>
@@ -39,22 +43,22 @@ export function GastosResumoBlock({ ano, resumo }: Props) {
       <ul className="space-y-1.5 text-sm">
         {top.map((c) => (
           <li
-            key={c.categoriaDescricao}
             className="flex items-baseline justify-between gap-3"
+            key={c.categoriaDescricao}
           >
-            <span className="min-w-0 truncate text-zinc-700 dark:text-zinc-300">
+            <span className="min-w-0 truncate text-foreground">
               {c.categoriaDescricao}
             </span>
-            <span className="shrink-0 tabular-nums text-zinc-600 dark:text-zinc-400">
+            <span className="shrink-0 tabular-nums text-foreground-muted">
               {formatBRL(c.total)}
-              <span className="ml-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="ml-1 text-foreground-muted text-xs">
                 ({c.n})
               </span>
             </span>
           </li>
         ))}
         {restoCategorias.length > 0 && (
-          <li className="flex items-baseline justify-between gap-3 border-t border-zinc-200 pt-1.5 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+          <li className="flex items-baseline justify-between gap-3 border-border border-t pt-1.5 text-foreground-muted">
             <span>
               + {restoCategorias.length} outras categoria
               {restoCategorias.length === 1 ? '' : 's'}
