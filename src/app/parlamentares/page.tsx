@@ -5,6 +5,7 @@ import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
   type Casa,
@@ -47,64 +48,60 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
   ])
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
-          Parlamentares
-        </h1>
-        <p className="mt-1 text-foreground-muted text-sm">
-          Deputados federais (Câmara) e senadores (Senado) em exercício na
-          legislatura atual.
-        </p>
-      </header>
-
-      <TrustBanner
-        level="L1"
-        message="Dados oficiais da Câmara e do Senado, sem transformação."
+    <>
+      <HeroSection
+        description="Deputados federais (Câmara) e senadores (Senado) em exercício na legislatura atual."
+        title="Parlamentares"
+        variant="gradient"
       />
 
-      <div className="mb-6">
-        <Filtros partidos={partidos} ufs={ufs} selecionado={filtros} />
-      </div>
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        <TrustBanner
+          level="L1"
+          message="Dados oficiais da Câmara e do Senado, sem transformação."
+        />
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
-        <span>
-          {parlamentares.length}{' '}
-          {parlamentares.length === 1 ? 'resultado' : 'resultados'}
-        </span>
-        {parlamentares.length > 0 && (
-          <ExportCsvLink
-            href={`/api/export/parlamentares?${new URLSearchParams(
-              Object.entries({
-                casa: filtros.casa ?? '',
-                partido: filtros.partido ?? '',
-                uf: filtros.uf ?? '',
-              }).filter(([, v]) => v !== ''),
-            ).toString()}`}
+        <Filtros partidos={partidos} selecionado={filtros} ufs={ufs} />
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+          <span>
+            {parlamentares.length}{' '}
+            {parlamentares.length === 1 ? 'resultado' : 'resultados'}
+          </span>
+          {parlamentares.length > 0 && (
+            <ExportCsvLink
+              href={`/api/export/parlamentares?${new URLSearchParams(
+                Object.entries({
+                  casa: filtros.casa ?? '',
+                  partido: filtros.partido ?? '',
+                  uf: filtros.uf ?? '',
+                }).filter(([, v]) => v !== ''),
+              ).toString()}`}
+            />
+          )}
+        </div>
+
+        {parlamentares.length === 0 ? (
+          <EmptyState
+            action={
+              <Button asChild size="sm" variant="outline">
+                <a href="/parlamentares">Limpar filtros</a>
+              </Button>
+            }
+            description="Tente ajustar casa, partido ou UF para resultados diferentes."
+            icon={SearchX}
+            title="Nenhum parlamentar corresponde aos filtros"
           />
+        ) : (
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {parlamentares.map((p) => (
+              <li key={p.id}>
+                <ParlamentarCard parlamentar={p} />
+              </li>
+            ))}
+          </ul>
         )}
       </div>
-
-      {parlamentares.length === 0 ? (
-        <EmptyState
-          icon={SearchX}
-          title="Nenhum parlamentar corresponde aos filtros"
-          description="Tente ajustar casa, partido ou UF para resultados diferentes."
-          action={
-            <Button asChild size="sm" variant="outline">
-              <a href="/parlamentares">Limpar filtros</a>
-            </Button>
-          }
-        />
-      ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {parlamentares.map((p) => (
-            <li key={p.id}>
-              <ParlamentarCard parlamentar={p} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    </>
   )
 }
