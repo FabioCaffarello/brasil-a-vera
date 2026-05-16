@@ -377,6 +377,161 @@ export default function DesignSystemPage() {
           §Regra de import boundary).
         </p>
 
+        {/* ----- INTEGRATED EXAMPLE — mock de perfil parlamentar ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">
+            Exemplo integrado — mock de perfil parlamentar
+          </h3>
+          <p className="text-foreground-muted text-sm">
+            Demonstração das 8 composições da Wave 6 trabalhando juntas em um
+            layout realista (mock — não usa dados reais). Antecipa como ficará o
+            reskin de <code>/parlamentares/[id]</code> na Sprint 6.3.
+          </p>
+
+          <div className="overflow-hidden rounded-lg border border-border bg-background">
+            {/* Hero do perfil */}
+            <HeroSection
+              variant="gradient"
+              kicker={
+                <DataBadge
+                  label="L2"
+                  source="Câmara"
+                  tone="accent"
+                  icon={<Sparkles className="h-3 w-3" />}
+                />
+              }
+              title="Jane Doe (exemplo)"
+              description="Deputada Federal pela bancada de SP. Mock — dados ilustrativos para QA visual. Em produção, este header virá de queries server-side."
+              actions={
+                <div className="flex flex-wrap items-center gap-2">
+                  <PartyBadge sigla="PT" name="Partido dos Trabalhadores" />
+                  <span className="text-foreground-muted text-sm">
+                    · SP · 57ª Legislatura
+                  </span>
+                </div>
+              }
+            />
+
+            {/* KPI strip */}
+            <div className="p-6">
+              <KpiStrip
+                items={[
+                  {
+                    icon: <Vote className="h-4 w-4" />,
+                    label: 'Alinhamento',
+                    value: '87%',
+                    hint: '▲ 5 pp vs trimestre',
+                    tone: 'success',
+                  },
+                  {
+                    icon: <TrendingUp className="h-4 w-4" />,
+                    label: 'Votos analisados',
+                    value: '124',
+                    hint: 'últimos 30 dias',
+                  },
+                  {
+                    icon: <Inbox className="h-4 w-4" />,
+                    label: 'Proposições',
+                    value: '12',
+                    hint: 'como autor',
+                    tone: 'muted',
+                  },
+                  {
+                    icon: <TrendingDown className="h-4 w-4" />,
+                    label: 'Gastos CEAP',
+                    value: 'R$ 38k',
+                    hint: '▼ 12% vs trimestre',
+                    tone: 'destructive',
+                  },
+                ]}
+              />
+            </div>
+
+            {/* SectionNav sticky */}
+            <SectionNav
+              items={[
+                { id: 'mock-votos', label: 'Votos', icon: <Vote /> },
+                {
+                  id: 'mock-bancada',
+                  label: 'Bancada',
+                  icon: <TrendingUp />,
+                },
+                {
+                  id: 'mock-gastos',
+                  label: 'Gastos',
+                  icon: <TrendingDown />,
+                },
+              ]}
+            />
+
+            {/* 3 SectionCards demonstrando ids para o SectionNav */}
+            <div className="space-y-6 p-6">
+              <SectionCard
+                id="mock-votos"
+                icon={<Vote className="h-5 w-5" />}
+                title="Votos recentes"
+                subtitle="Últimas 10 votações nominais com cobertura de imprensa"
+                badge={<DataBadge label="L2" source="Câmara" tone="brand" />}
+              >
+                <FilterChips label="Filtrar por sessão" className="mb-4">
+                  <FilterChip selected>Todas</FilterChip>
+                  <FilterChip count={10}>Plenário</FilterChip>
+                  <FilterChip count={3}>Comissões</FilterChip>
+                </FilterChips>
+                <p className="text-foreground-muted text-sm">
+                  Conteúdo da seção entraria aqui em produção (tabela de votos
+                  individuais, mapping para nominais Câmara, etc).
+                </p>
+              </SectionCard>
+
+              <SectionCard
+                id="mock-bancada"
+                icon={<TrendingUp className="h-5 w-5" />}
+                title="Alinhamento de bancada"
+                subtitle="% de votos no mesmo sentido que a orientação do partido"
+                badge={<DataBadge label="L3" source="análise" tone="accent" />}
+              >
+                <StatsGrid
+                  items={[
+                    { value: '87%', label: 'Alinhamento médio' },
+                    { value: '8%', label: 'Divergência' },
+                    { value: '5%', label: 'Ausências em votos' },
+                  ]}
+                />
+              </SectionCard>
+
+              <SectionCard
+                id="mock-gastos"
+                icon={<TrendingDown className="h-5 w-5" />}
+                title="Gastos CEAP"
+                subtitle="Cota para o Exercício da Atividade Parlamentar"
+                badge={
+                  <DataBadge
+                    label="L2"
+                    source="Portal Transparência"
+                    tone="warning"
+                  />
+                }
+              >
+                <p className="text-foreground-muted text-sm">
+                  Tabela de gastos por categoria entraria aqui em produção. Por
+                  enquanto, mock para QA visual.
+                </p>
+              </SectionCard>
+            </div>
+          </div>
+
+          <p className="text-foreground-subtle text-xs">
+            Composições usadas neste mock: <code>HeroSection</code> (gradient
+            variant), <code>DataBadge</code> (kicker accent + badges por
+            SectionCard), <code>PartyBadge</code> (sigla PT),{' '}
+            <code>KpiStrip</code> (4 KPIs com tones), <code>SectionNav</code>{' '}
+            (sticky, 3 anchors), <code>SectionCard</code> (3 instâncias com
+            ids), <code>FilterChips</code> (selected state),{' '}
+            <code>StatsGrid</code> (3 stats inline).
+          </p>
+        </div>
+
         {/* ----- HeroSection ----- */}
         <div className="space-y-4">
           <h3 className="font-medium text-foreground text-lg">HeroSection</h3>
