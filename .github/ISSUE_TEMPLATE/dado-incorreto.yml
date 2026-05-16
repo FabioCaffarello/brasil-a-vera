@@ -1,0 +1,42 @@
+name: Dado incorreto
+description: Reportar quando um dado da plataforma diverge da fonte oficial.
+title: "[dado-incorreto] "
+labels: ["dado-incorreto", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        O Brasil a Vera consolida dados públicos oficiais (Câmara, Senado,
+        TSE, Portal da Transparência). Quando o dado da plataforma diverge
+        do que a fonte oficial mostra, é prioridade corrigir.
+        Forma minimalista — só três campos.
+
+  - type: input
+    id: rota
+    attributes:
+      label: Rota afetada
+      description: URL completa do Brasil a Vera onde você viu o dado.
+      placeholder: "https://brasilavera.org/parlamentares/abc-123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: divergencia
+    attributes:
+      label: O que diverge e qual a fonte oficial
+      description: |
+        Descreva o que está errado e cole o link para a fonte oficial
+        (página da Câmara, Senado, TSE, Portal da Transparência etc.).
+      placeholder: |
+        Brasil a Vera mostra 12 votações em 2024 para o parlamentar X,
+        mas a página oficial da Câmara mostra 18 (link).
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidência (screenshot ou trecho)
+      description: Opcional mas muito útil — print da divergência ou cópia do trecho que você viu na fonte oficial.
+    validations:
+      required: false
