@@ -13,10 +13,13 @@ interface Props {
   votos: Voto[]
 }
 
+// Sprint 4.3 PR 2 commit 1/4 — refatorado para tokens semânticos.
+// Badge do tipo de voto consome `getTipoVotoStyle` em `lib/format.ts`
+// (já em tokens desde Sprint 4.2 PR 5).
 export function VotosRecentes({ votos }: Props) {
   if (votos.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Sem votos nominais registrados no período coberto pela base.
       </p>
     )
@@ -27,11 +30,8 @@ export function VotosRecentes({ votos }: Props) {
       {votos.map((v) => {
         const style = getTipoVotoStyle(v.voto)
         return (
-          <li
-            key={v.votacaoId}
-            className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700"
-          >
-            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <li className="rounded-lg border border-border p-3" key={v.votacaoId}>
+            <div className="flex flex-wrap items-center gap-2 text-foreground-muted text-xs">
               <span>{formatDataBR(v.dataHora)}</span>
               <span aria-hidden>·</span>
               <span>{v.orgao}</span>
@@ -45,13 +45,11 @@ export function VotosRecentes({ votos }: Props) {
             </div>
             <div className="mt-1.5 flex items-start gap-3">
               <span
-                className={`inline-flex shrink-0 items-center rounded px-2 py-0.5 text-xs font-semibold ${style.classes}`}
+                className={`inline-flex shrink-0 items-center rounded px-2 py-0.5 font-semibold text-xs ${style.classes}`}
               >
                 {style.label}
               </span>
-              <p className="text-sm text-zinc-800 dark:text-zinc-200">
-                {v.descricao}
-              </p>
+              <p className="text-foreground text-sm">{v.descricao}</p>
             </div>
           </li>
         )
