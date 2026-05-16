@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.1 fechada — navbar sticky + footer refinado + home com HeroSection + FeaturesGrid + pirâmide reskinned; sprints 6.2-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Última atualização: 2026-05-16 (Sprint 6.2 fechada — 3 listagens reskinned com HeroSection + FilterChips + PartyBadge no card de parlamentar; sprints 6.3-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -930,7 +930,7 @@ Decisões arquiteturais que governam a Wave 6:
 |---|---|---|
 | 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` | ✅ Concluída em 2026-05-16 (8 PRs sequenciais — #199, #200, #201, #202, #203, #204, #205, #206) |
 | 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #207, #208, #209, #210) |
-| 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | 📋 Planejada |
+| 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #211, #212, #213, #214) |
 | 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | 📋 Planejada |
 | 6.4 | Comparar + busca + meu parlamentar | 📋 Planejada |
 | 6.5 | Metodologia (hub TOC sticky + prose) + redirect 301 `/docs/*` → `/metodologia#anchor` (D3 híbrido) | 📋 Planejada |
@@ -1003,6 +1003,45 @@ Critérios de Done — atendidos:
 - [x] Mobile 360px viewport OK (FeaturesGrid 1 col, NavLinks `hidden sm:flex` esconde no mobile)
 - [x] Diff visual antes/depois anexado em cada PR body
 - [x] Bundle delta `≤ +5kb` documentado (~+1kb navbar NavLinks + ~+3kb FeaturesGrid + composições já em main desde Sprint 6.0)
+
+### Sprint 6.2 — Reskin listagens ✅
+
+Entregue em 2026-05-16. 4 PRs sequenciais (#211, #212, #213, #214). Sem tag intermediária — banner aguarda fechamento da Sprint 6.6 com `v0.6.0-frontend-excellence`.
+
+PRs entregues:
+
+- **#211** — `feat(parlamentares): reskin listing — HeroSection + FilterChips Casa + PartyBadge in card` (primeira do hybrid pragmático D1 + PartyBadge no card via D2)
+- **#212** — `feat(proposicoes): reskin listing — HeroSection + FilterChips Tipo/Situação` (Tipo + Situação chip; Ano select; ProposicaoCard hover refinado)
+- **#213** — `feat(votacoes): reskin listing — HeroSection + FilterChips Casa/Resultado/Nominais` ("Só nominais" como FilterChip toggle bool; demais como radio-style)
+- **#214** — `chore(wave-6): close Sprint 6.2` (este PR)
+
+Decisões aplicadas (D1-D7 do plano Sprint 6.2):
+
+- **D1**: hybrid pragmático — FilterChips para baixa cardinalidade (Casa, Tipo, Situação, Resultado, "Só nominais"), `<select>` para alta (Partido, UF, Ano)
+- **D2**: PartyBadge integrated em ParlamentarCard (cor por identidade visual oficial via map hardcoded)
+- **D3**: hover sutil sem flair (gradient overlay 6% e seta diagonal NÃO adotados — princípio "lista densa > visual flashy")
+- **D4**: HeroSection sem kicker (description já comunica contexto)
+- **D5**: TrustBanner posicionado entre hero e filtros (intocado)
+- **D6**: ExportCsvLink mantido como Button outline
+- **D7**: 4 PRs sequenciais (3 routes + closure)
+
+Entregáveis:
+
+- 3 rotas reskinned com mesmo padrão: `<HeroSection variant="gradient">` full-width → container `max-w-6xl` → TrustBanner → Filtros (chips + form) → resultados header → grid de cards
+- Helper interno `buildHref(currentFilters, overrides)` em cada filtros.tsx preserva outros filtros ao trocar um chip (URL=state, GET form sem JS)
+- `<input type="hidden">` no form preserva chips ao submeter selects (Ano, Partido, UF)
+- ParlamentarCard agora consome `<PartyBadge size="sm">` (composição Sprint 6.0 PR 6)
+- ProposicaoCard e VotacaoCard com hover refinado `hover:bg-surface-elevated` (consistente)
+- "Só nominais" virou FilterChip toggle (click adiciona/remove `somenteNominais=1` do URL)
+- 0 testes novos (refactor visual, sem novas suites — testes existentes continuam passando)
+
+Critérios de Done — atendidos:
+
+- [x] URL state preservado em todos os filtros (chips e form coexistem; hidden inputs sincronizam)
+- [x] SSG mantido — pages continuam RSC, queries server-side, sem `'use client'`
+- [x] EmptyState cobre filtros vazios com CTA "Limpar filtros" (mantido)
+- [x] Lighthouse mobile: medição empírica fica para Sprint 6.6 (D7 do prompt mestre)
+- [x] TrustBanner L1 mantido em todas as 3 rotas
 
 ### Critérios de sucesso da Wave 6
 
