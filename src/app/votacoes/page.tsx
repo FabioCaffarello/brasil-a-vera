@@ -1,11 +1,11 @@
 import { SearchX } from 'lucide-react'
-import Link from 'next/link'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
+import { Button } from '@/design-system/primitives/button'
 import {
   type Casa,
   type FiltrosVotacao as Filtros,
@@ -69,10 +69,10 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+        <h1 className="font-semibold text-2xl text-foreground tracking-tight">
           Votações
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-1 text-foreground-muted text-sm">
           Plenário e comissões da Câmara e do Senado. A maioria das votações em
           comissão é simbólica (sem voto individual registrado) — use o filtro
           para ver só nominais.
@@ -96,7 +96,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
         />
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
         <span>
           {votacoes.length === LIMITE
             ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
@@ -122,12 +122,9 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
           title="Nenhuma votação corresponde aos filtros"
           description="Tente ajustar casa, ano, resultado ou desmarcar 'só nominais' para resultados diferentes."
           action={
-            <Link
-              href="/votacoes"
-              className="inline-flex min-h-[44px] items-center rounded border border-zinc-300 px-3 py-1.5 font-medium text-sm text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Limpar filtros
-            </Link>
+            <Button asChild size="sm" variant="outline">
+              <a href="/votacoes">Limpar filtros</a>
+            </Button>
           }
         />
       ) : (

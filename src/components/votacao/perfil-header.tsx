@@ -13,10 +13,13 @@ interface Props {
   }
 }
 
+// Sprint 4.2 PR 5 commit 3/8 — refatorado para tokens semânticos.
+// Badge aprovada/rejeitada usa o mesmo padrão de `votacao-card` (PR 2):
+// `bg-success/20 text-success` vs `bg-destructive/20 text-destructive`.
 export function PerfilVotacaoHeader({ votacao: v }: Props) {
   return (
-    <header className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+    <header className="rounded-lg border border-border bg-surface p-6">
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-foreground-muted text-sm">
         <span>{formatDataHoraBR(v.dataHora)}</span>
         <span aria-hidden>·</span>
         <span>{v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}</span>
@@ -26,25 +29,23 @@ export function PerfilVotacaoHeader({ votacao: v }: Props) {
         <span
           className={
             v.aprovada
-              ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200'
-              : 'rounded bg-rose-100 px-2 py-0.5 text-xs font-medium text-rose-800 dark:bg-rose-900/40 dark:text-rose-200'
+              ? 'rounded bg-success/20 px-2 py-0.5 font-medium text-success text-xs'
+              : 'rounded bg-destructive/20 px-2 py-0.5 font-medium text-destructive text-xs'
           }
         >
           {v.aprovada ? 'Aprovada' : 'Rejeitada'}
         </span>
       </div>
 
-      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-        {v.descricao}
-      </h1>
+      <h1 className="font-semibold text-foreground text-xl">{v.descricao}</h1>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
         <TrustBadge trustLevel={v.trustLevel} />
         <a
+          className="text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground"
           href={v.sourceUrl}
-          target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-600 underline decoration-dotted underline-offset-2 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          target="_blank"
         >
           Ver na fonte oficial ↗
         </a>

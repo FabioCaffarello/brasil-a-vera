@@ -58,30 +58,35 @@ export function formatProposicaoRef(
 }
 
 // Labels e cores para o enum `tipo_voto`. Centralizado para reuso entre
-// VotosRecentes (perfil parlamentar) e PaginaVotacao (futuro).
+// VotosRecentes (perfil parlamentar), PaginaVotacao e Pares Contraditórios.
+//
+// Sprint 4.2 PR 5 — migrado para tokens semânticos OKLCH:
+// - SIM   → success (outcome positivo)
+// - NÃO   → destructive (outcome negativo)
+// - ABSTENCAO → warning (deliberate non-vote, intermediário)
+// - AUSENTE → surface-elevated + foreground-muted (não se manifestou)
+// - OBSTRUCAO → brand/20 + brand (manobra procedural distinta — merece
+//   destaque visual sem cair em success/destructive/warning)
 const TIPO_VOTO_LABELS: Record<string, { label: string; classes: string }> = {
   SIM: {
     label: 'SIM',
-    classes:
-      'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200',
+    classes: 'bg-success/20 text-success',
   },
   NAO: {
     label: 'NÃO',
-    classes: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200',
+    classes: 'bg-destructive/20 text-destructive',
   },
   ABSTENCAO: {
     label: 'Abstenção',
-    classes:
-      'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
+    classes: 'bg-warning/20 text-warning',
   },
   AUSENTE: {
     label: 'Ausente',
-    classes: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+    classes: 'bg-surface-elevated text-foreground-muted',
   },
   OBSTRUCAO: {
     label: 'Obstrução',
-    classes:
-      'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200',
+    classes: 'bg-brand/20 text-brand',
   },
 }
 
@@ -92,7 +97,7 @@ export function getTipoVotoStyle(tipo: string): {
   return (
     TIPO_VOTO_LABELS[tipo] ?? {
       label: tipo,
-      classes: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
+      classes: 'bg-surface-elevated text-foreground-muted',
     }
   )
 }

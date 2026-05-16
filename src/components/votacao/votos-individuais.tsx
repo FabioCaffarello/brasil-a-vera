@@ -19,6 +19,13 @@ const TIPOS = [
   { value: 'OBSTRUCAO', label: 'Obstrução' },
 ]
 
+// Sprint 4.2 PR 5 commit 7/8 — filter tabs + list refatorados para
+// tokens semânticos. Badge de cada voto usa `getTipoVotoStyle` em
+// `format.ts` (commit 1/8), que já está em tokens.
+//
+// Filter pill ativo: variant `inverse` (foreground/background trocados)
+// para destacar seleção sem ressaltar com cor — semelhante ao pattern
+// de Button variant=default.
 export function VotosIndividuais({
   votos,
   filtroAtual,
@@ -38,13 +45,13 @@ export function VotosIndividuais({
             : `/votacoes/${votacaoId}`
           return (
             <Link
-              key={t.value}
-              href={href}
               className={
                 isAtivo
-                  ? 'rounded bg-zinc-900 px-2.5 py-1 font-medium text-white dark:bg-zinc-100 dark:text-zinc-900'
-                  : 'rounded border border-zinc-300 px-2.5 py-1 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800'
+                  ? 'rounded bg-foreground px-2.5 py-1 font-medium text-background'
+                  : 'rounded border border-border-strong px-2.5 py-1 text-foreground hover:bg-surface-elevated'
               }
+              href={href}
+              key={t.value}
             >
               {t.label}
             </Link>
@@ -53,14 +60,14 @@ export function VotosIndividuais({
       </nav>
 
       {votos.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-foreground-muted text-sm">
           {filtroAtual
             ? 'Nenhum voto deste tipo registrado nesta votação.'
             : 'Sem votos individuais.'}
         </p>
       ) : (
         <>
-          <p className="mb-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="mb-2 text-foreground-muted text-xs">
             {votos.length}
             {totalSemFiltro != null && filtroAtual && ` de ${totalSemFiltro}`}{' '}
             voto{votos.length === 1 ? '' : 's'}
@@ -70,20 +77,20 @@ export function VotosIndividuais({
               const style = getTipoVotoStyle(v.voto)
               return (
                 <li
+                  className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-elevated"
                   key={v.id}
-                  className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                 >
                   <Link
+                    className="min-w-0 flex-1 truncate text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
                     href={`/parlamentares/${v.parlamentarId}`}
-                    className="min-w-0 flex-1 truncate text-zinc-800 underline decoration-dotted underline-offset-2 hover:text-zinc-600 dark:text-zinc-200 dark:hover:text-zinc-400"
                   >
                     {v.parlamentarNome}
                   </Link>
-                  <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span className="shrink-0 text-foreground-muted text-xs">
                     {v.parlamentarPartidoSigla}/{v.parlamentarUf}
                   </span>
                   <span
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${style.classes}`}
+                    className={`shrink-0 rounded px-1.5 py-0.5 font-medium text-xs ${style.classes}`}
                   >
                     {style.label}
                   </span>
