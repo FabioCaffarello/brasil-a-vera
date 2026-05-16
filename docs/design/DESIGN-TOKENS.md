@@ -291,7 +291,64 @@ Implementação via Tailwind: `hover:bg-zinc-100 focus-visible:ring-2 focus-visi
 ## Próximos passos
 
 - [x] Operador escolheu Variante 2 (2026-05-15)
-- [ ] Aplicar tokens via `@theme inline` em `src/app/globals.css`
-- [ ] Componentes consumem os tokens nas Tarefas 3 (hierarquia perfil) e 4.B (microinterações)
+- [x] Aplicar tokens via `@theme inline` em `src/app/globals.css` (Sprint 4.0 PR 2)
+- [x] Componentes consumem os tokens nas Tarefas 3 (hierarquia perfil) e 4.B (microinterações) — Wave 4
 
 **Sem mudança em componentes nesta fase** — só os tokens. Refactor visual aplicado nas Tarefas seguintes consome esses tokens.
+
+---
+
+## Wave 6 — Acento narrativo `--accent` + utilitários (2026-05-16)
+
+Sprint 6.0 PR 2 introduziu o token `--accent` (roxo) + 3 utilitários CSS,
+governados pelo [ADR-024](../architecture/ADR/024-acentos-secundarios-accent-roxo.md).
+Coexistem com a paleta semântica Wave 4 — **não substituem** nenhum token.
+
+### Tokens novos
+
+| Token CSS var | Tailwind class | Função | Light (OKLCH) | Dark (OKLCH) |
+|---|---|---|---|---|
+| `--accent` | `bg-accent` / `text-accent` | Acento narrativo (NÃO estado, NÃO CTA primário) | `0.45 0.18 295` | `0.62 0.22 295` |
+| `--accent-foreground` | `text-accent-foreground` | Texto sobre `--accent` | `1 0 0` (branco) | `0.14 0.012 260` (= `--background`) |
+
+Auditoria WCAG: 7 pares novos (3 light + 4 dark), todos passam AA na 1ª
+rodada (sem recalibração D10). Output literal em
+[`WCAG-AUDIT.md` § Wave 6.0](../architecture/WCAG-AUDIT.md#wave-60---accent-roxo--utilitários-2026-05-16).
+
+### Fronteiras de uso (ADR-024 §3)
+
+**PODE aparecer em:**
+- Badge de contexto hero (`DataBadge` com Sparkles + kicker)
+- Hover overlay sutil em cards premium (`bg-accent/5` no `:hover`)
+- Composição `--gradient-primary` (logo navbar, CTA destacado, overlay)
+- Chip narrativo em `StatsGrid` ou selo de feature
+- Focus ring de elementos secundários narrativos (não substitui `--ring`)
+
+**NÃO PODE aparecer em:**
+- CTAs primários (continua `--brand`)
+- Focus ring de input/button primário (continua `--ring` = `--primary`)
+- Estados semânticos (`--success`, `--warning`, `--destructive`)
+- TrustBadge / pirâmide L1–L4
+- Texto longo / corpo de prosa
+
+### Regra mnemônica
+
+> `--brand` é a marca; `--accent` é a inflexão narrativa. Estado tem
+> token próprio. Quando em dúvida, escolha `--brand` (default seguro).
+
+### Utilitários CSS novos (em `@layer utilities`)
+
+- `.glass-strong` — backdrop-filter blur(18px), pareado com `.glass` para surfaces sticky mais elevadas (futuro navbar sticky)
+- `.bg-hero` — gradient radial composto (primary + accent) com 25%/18% de alpha; consume tokens via `color-mix(in oklch, ...)` para preservar única fonte de verdade
+- `.bg-gradient-primary` — gradient linear 135° (`--primary` → `--accent`); logo navbar, CTA premium, hover overlays
+
+Otimizados para dark; light dormente herda automaticamente (valores OKLCH
+mudam por tema; as classes utilitárias usam `var(...)` sempre).
+
+### Recalibração ad-hoc (D10, autorizada se necessário)
+
+Se em wave futura algum par fg/bg envolvendo `--accent` reprovar AA
+(ex.: novo `--surface-X` brilhante), o Claude Code está autorizado a
+recalibrar `L` (lightness) iterativamente até passar, com output
+literal `wcag-check.ts` antes/depois no corpo do PR. Sem pausa, sem
+pergunta — registro empírico é o gate.

@@ -217,3 +217,66 @@ npx tsx --tsconfig tsconfig.ingestion.json .local/wcag-check.ts
 Output retorna exit code 0 se todos os pares passam AA; exit code 1
 listando os pares falhando. Inclui na PR description ao introduzir token
 novo ou alterar valor existente.
+
+---
+
+## Wave 6.0 — `--accent` (roxo) + utilitários (2026-05-16)
+
+A Sprint 6.0 PR 2 introduziu o token `--accent` (roxo, ADR-024) +
+utilitários `--gradient-primary`, `.bg-hero`, `.glass-strong`,
+`.bg-gradient-primary` em `globals.css`. Esta seção registra os 7
+novos pares texto/fundo validados (3 light + 4 dark).
+
+### Valores adotados
+
+| Token | Light (OKLCH) | Dark (OKLCH) |
+|---|---|---|
+| `--accent` | `0.45 0.18 295` | `0.62 0.22 295` |
+| `--accent-foreground` | `1 0 0` (branco) | `0.14 0.012 260` (= `--background`, dark text) |
+
+### Output literal `wcag-check.ts` (1ª rodada, 2026-05-16)
+
+Sem recalibração necessária — todos os pares passaram AA na primeira
+rodada com os valores propostos no ADR-024. D10 (recalibração ad-hoc
+autorizada) **não foi invocada**.
+
+### Light theme — pares novos
+
+| Par | fg → bg | Ratio | Kind | Status |
+|---|---|---:|---|---|
+| accent / background (link narrativo) | `#6034ac` → `#fafafa` | 7.77 | body | AAA ✅ |
+| accent / surface (chip narrativo) | `#6034ac` → `#ffffff` | 8.12 | body | AAA ✅ |
+| accent-foreground / accent (badge) | `#ffffff` → `#6034ac` | 8.12 | body | AAA ✅ |
+
+### Dark theme — pares novos
+
+| Par | fg → bg | Ratio | Kind | Status |
+|---|---|---:|---|---|
+| accent / background (link narrativo) | `#945ff9` → `#07090e` | 4.97 | body | AA ✅ |
+| accent / surface (chip narrativo) | `#945ff9` → `#0c1016` | 4.78 | body | AA ✅ |
+| accent / surface-elevated (chip em CTA) | `#945ff9` → `#12161d` | 4.52 | body | AA ✅ |
+| accent-foreground / accent (badge) | `#07090e` → `#945ff9` | 4.97 | body | AA ✅ |
+
+**✅ Todos os 7 pares novos passam WCAG AA.** Os 30 pares existentes
+(Wave 4.0) continuam passando inalterados.
+
+### Notas
+
+- O par mais apertado é `accent / surface-elevated` no dark (4.52 vs
+  threshold 4.5), uma margem de 0.02. Margem segura mas vale monitorar
+  se algum consumer futuro empurrar accent contra surface ainda mais
+  brilhante — recalibrar L para 0.65 daria folga.
+- Light theme: accent roxo escurecido (`0.45 0.18 295`) entrega AAA em
+  todos os pares. Reserva confortável para temas light dormentes
+  voltarem a ser explicitamente suportados.
+- Dark theme: accent roxo claro (`0.62 0.22 295`) entrega AA. Estratégia
+  de foreground escolhida (texto escuro `--background` sobre bright
+  accent) é o mesmo padrão de `--primary`/`--success`/`--warning` no
+  dark — coerência cross-token.
+
+### Utilitários CSS (não tocam WCAG por si)
+
+- `.glass-strong` — backdrop-filter blur(18px); decorativo, sem teste
+  de contraste aplicável (overlay translúcido sobre conteúdo abaixo)
+- `.bg-hero` — radial gradient com `color-mix(in oklch, var(--primary)/var(--accent), transparent)`; decorativo, conteúdo dentro do hero usa `--foreground` (cobertos pelos pares já auditados)
+- `.bg-gradient-primary` — linear gradient primary→accent; decorativo, texto sobre essa superfície DEVE usar `--primary-foreground` (que é o mesmo valor de `--accent-foreground` no dark, então cobertura WCAG aplica)
