@@ -9,6 +9,7 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
+      "!next-env.d.ts",
       "!node_modules",
       "!.next",
       "!.open-next",
