@@ -23,13 +23,13 @@ export function SidebarNav() {
           return (
             <li key={href}>
               <Link
-                href={href}
                 aria-current={isActive ? 'page' : undefined}
                 className={
                   isActive
-                    ? 'block rounded px-3 py-2 font-medium text-primary-700 bg-primary-50 dark:bg-primary-950 dark:text-primary-200'
-                    : 'block rounded px-3 py-2 text-zinc-700 transition-colors duration-150 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                    ? 'block rounded bg-brand/10 px-3 py-2 font-medium text-brand'
+                    : 'block rounded px-3 py-2 text-foreground transition-colors duration-150 hover:bg-surface-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                 }
+                href={href}
               >
                 {label}
               </Link>

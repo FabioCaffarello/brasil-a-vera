@@ -6,7 +6,7 @@
 import Link from 'next/link'
 
 export const docsLinkClass =
-  'text-primary-700 underline underline-offset-2 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100'
+  'text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 
 export function Section({
   title,
@@ -19,12 +19,10 @@ export function Section({
 }) {
   return (
     <section className="mb-12" id={id}>
-      <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <h2 className="mb-3 font-medium text-foreground-muted text-sm uppercase tracking-wide">
         {title}
       </h2>
-      <div className="space-y-4 text-base text-zinc-700 dark:text-zinc-300">
-        {children}
-      </div>
+      <div className="space-y-4 text-base text-foreground">{children}</div>
     </section>
   )
 }
@@ -83,12 +81,10 @@ export function DocsHeader({
 }) {
   return (
     <header className="mb-10">
-      <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+      <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
         {title}
       </h1>
-      <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">
-        {subtitle}
-      </p>
+      <p className="mt-2 text-foreground-muted text-lg">{subtitle}</p>
     </header>
   )
 }

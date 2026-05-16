@@ -76,13 +76,13 @@ export default function DocsHub() {
           {SUBPAGES.map((page) => (
             <li key={page.href}>
               <Link
+                className="block h-full rounded-lg border border-border bg-surface p-4 transition-colors duration-150 hover:border-brand/60 hover:bg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={page.href}
-                className="block h-full rounded-lg border border-zinc-200 bg-white p-4 transition-colors duration-150 hover:border-primary-300 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-primary-700 dark:hover:bg-primary-950"
               >
-                <h3 className="mb-1 font-medium text-zinc-900 dark:text-zinc-100">
+                <h3 className="mb-1 font-medium text-foreground">
                   {page.title}
                 </h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-foreground-muted text-sm">
                   {page.description}
                 </p>
               </Link>
@@ -124,13 +124,13 @@ export default function DocsHub() {
         </Ul>
       </Section>
 
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Toda a documentação completa vive no repositório no GitHub —{' '}
         <a
-          href="https://github.com/FabioCaffarello/brasil-a-vera/tree/main/docs"
-          target="_blank"
-          rel="noopener noreferrer"
           className={docsLinkClass}
+          href="https://github.com/FabioCaffarello/brasil-a-vera/tree/main/docs"
+          rel="noopener noreferrer"
+          target="_blank"
         >
           docs/
         </a>

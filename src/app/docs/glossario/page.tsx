@@ -292,17 +292,13 @@ export default function GlossarioPage() {
           <dl className="space-y-5">
             {group.entries.map((entry) => (
               <div
+                className="rounded-lg border border-border bg-surface p-4"
                 key={entry.term}
-                className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
               >
-                <dt className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {entry.term}
-                </dt>
+                <dt className="font-medium text-foreground">{entry.term}</dt>
                 <dd className="mt-2 space-y-2 text-sm">
-                  <p className="text-zinc-700 dark:text-zinc-300">
-                    {entry.technical}
-                  </p>
-                  <p className="text-zinc-500 italic dark:text-zinc-400">
+                  <p className="text-foreground">{entry.technical}</p>
+                  <p className="text-foreground-muted italic">
                     Linguagem acessível: {entry.acessivel}
                   </p>
                 </dd>

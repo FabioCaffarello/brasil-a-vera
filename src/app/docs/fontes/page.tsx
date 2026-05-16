@@ -119,32 +119,26 @@ export default function FontesPage() {
         <div className="space-y-6">
           {SOURCES.map((source) => (
             <article
+              className="rounded-lg border border-border bg-surface p-5"
               key={source.name}
-              className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900"
             >
               <header className="mb-3">
-                <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
-                  {source.name}
-                </h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <h3 className="font-semibold text-foreground">{source.name}</h3>
+                <p className="text-foreground-muted text-sm">
                   <ExternalLink href={source.url}>{source.url}</ExternalLink>
                 </p>
               </header>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
-                    O que ingere
-                  </dt>
-                  <dd className="mt-1 text-zinc-700 dark:text-zinc-300">
-                    {source.scope}
-                  </dd>
+                  <dt className="font-medium text-foreground">O que ingere</dt>
+                  <dd className="mt-1 text-foreground">{source.scope}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <dt className="font-medium text-foreground">
                     Cadência de atualização
                   </dt>
                   <dd className="mt-1">
-                    <ul className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                    <ul className="space-y-1 text-foreground">
                       {source.cadence.map((row) => (
                         <li key={row.label}>
                           <strong>{row.label}</strong>: {row.value}
@@ -154,11 +148,11 @@ export default function FontesPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <dt className="font-medium text-foreground">
                     Particularidades
                   </dt>
                   <dd className="mt-1">
-                    <ul className="space-y-1 text-zinc-700 dark:text-zinc-300">
+                    <ul className="space-y-1 text-foreground">
                       {source.caveats.map((c) => (
                         <li key={c}>— {c}</li>
                       ))}
@@ -199,16 +193,12 @@ export default function FontesPage() {
         <div className="space-y-4">
           {PLANNED.map((p) => (
             <div
+              className="rounded-lg border border-border border-dashed bg-surface/50 p-4"
               key={p.name}
-              className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900/50"
             >
-              <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
-                {p.name}
-              </h3>
-              <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-                {p.status}
-              </p>
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              <h3 className="font-medium text-foreground">{p.name}</h3>
+              <p className="mt-1 text-foreground text-sm">{p.status}</p>
+              <p className="mt-1 text-foreground-muted text-xs">
                 Previsão: {p.targetWave}
               </p>
             </div>
