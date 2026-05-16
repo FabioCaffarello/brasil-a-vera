@@ -11,10 +11,14 @@ interface Props {
   afinidades: AfinidadeRow[]
 }
 
+// Sprint 4.3 PR 3 commit 1/2 — refatorado para tokens semânticos.
+// Top 5 parlamentares de maior afinidade de voto (L2, agregação
+// determinística). Avatar via <img> nativo (mesma justificativa do
+// PerfilHeader — domínio externo camara.leg.br/senado.leg.br).
 export function Top5Afinidade({ afinidades }: Props) {
   if (afinidades.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Sem votos nominais em quantidade suficiente para calcular afinidade. São
         necessárias ao menos {TOP5_QUORUM_MINIMO} votações em comum com outros
         parlamentares nos últimos {TOP5_JANELA_MESES} meses — pode acontecer com
@@ -29,13 +33,13 @@ export function Top5Afinidade({ afinidades }: Props) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <TrustBadge trustLevel="L2" />
-        <span className="text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="text-foreground-muted text-xs">
           Agregação determinística — fórmula em{' '}
           <a
-            href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/TRUST-PYRAMID.md"
-            target="_blank"
-            rel="noopener noreferrer"
             className="underline decoration-dotted underline-offset-2"
+            href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/TRUST-PYRAMID.md"
+            rel="noopener noreferrer"
+            target="_blank"
           >
             docs
           </a>
@@ -45,47 +49,47 @@ export function Top5Afinidade({ afinidades }: Props) {
       <ul className="space-y-2">
         {afinidades.map((a, i) => (
           <li
+            className="flex items-center gap-3 rounded-lg border border-border p-3"
             key={a.parlamentarId}
-            className="flex items-center gap-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700"
           >
             <span
-              className="shrink-0 font-mono text-sm font-medium text-zinc-500 dark:text-zinc-400"
               aria-hidden
+              className="shrink-0 font-medium font-mono text-foreground-muted text-sm"
             >
               {i + 1}.
             </span>
             {a.urlFoto ? (
               // biome-ignore lint/performance/noImgElement: foto remota; dimensões explícitas evitam CLS.
               <img
-                src={a.urlFoto}
                 alt=""
-                loading="lazy"
-                width={40}
-                height={40}
                 className="size-10 shrink-0 rounded-full object-cover"
+                height={40}
+                loading="lazy"
+                src={a.urlFoto}
+                width={40}
               />
             ) : (
               <div
                 aria-hidden="true"
-                className="size-10 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700"
+                className="size-10 shrink-0 rounded-full bg-surface-elevated"
               />
             )}
             <div className="min-w-0 flex-1">
               <Link
+                className="block truncate font-medium text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
                 href={`/parlamentares/${a.parlamentarId}`}
-                className="block truncate font-medium text-zinc-800 underline decoration-dotted underline-offset-2 hover:text-zinc-600 dark:text-zinc-200 dark:hover:text-zinc-400"
               >
                 {a.nome}
               </Link>
-              <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="truncate text-foreground-muted text-xs">
                 {a.partidoSigla}/{a.uf}
               </p>
             </div>
             <div className="shrink-0 text-right tabular-nums">
-              <p className="text-lg font-semibold text-zinc-800 dark:text-zinc-200">
+              <p className="font-semibold text-foreground text-lg">
                 {a.percentualAfinidade}%
               </p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-foreground-muted text-xs">
                 {a.votosCoincidentes}/{a.totalVotosEmComum}
               </p>
             </div>
@@ -93,14 +97,14 @@ export function Top5Afinidade({ afinidades }: Props) {
         ))}
       </ul>
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-xs">
         Cálculo considera{' '}
         <strong>mínimo de {TOP5_QUORUM_MINIMO} votações em comum</strong> nos
         últimos <strong>{TOP5_JANELA_MESES} meses</strong>. Pares ordenados por
         percentual de afinidade; empates desempatam pela base maior.
       </p>
 
-      <details className="text-xs text-zinc-500 dark:text-zinc-400">
+      <details className="text-foreground-muted text-xs">
         <summary className="cursor-pointer">Como é calculado</summary>
         <p className="mt-2 max-w-prose">
           Para cada outro parlamentar que votou nas mesmas votações nominais que
