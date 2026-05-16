@@ -7,14 +7,17 @@ import {
   Vote,
 } from 'lucide-react'
 
+import { DataBadge } from '@/design-system/compositions/data-badge'
 import {
   FilterChip,
   FilterChips,
 } from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
+import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
+import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Badge } from '@/design-system/primitives/badge'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -613,6 +616,117 @@ export default function DesignSystemPage() {
                 </p>
               </section>
             </div>
+          </div>
+        </div>
+
+        {/* ----- PartyBadge ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">PartyBadge</h3>
+          <p className="text-foreground-muted text-sm">
+            Badge colorido por sigla, espelhando identidade visual do partido
+            (Sprint 6.0 PR 6, D4). Mapa hardcoded — siglas desconhecidas caem em
+            variante neutra. Aria-label legível (
+            <code>Partido {'{name || sigla}'}</code>).
+          </p>
+
+          {/* Variante grid 8 partidos (4 cols, top da Câmara) */}
+          <div className="flex flex-wrap gap-2">
+            <PartyBadge sigla="PT" name="Partido dos Trabalhadores" />
+            <PartyBadge sigla="PL" name="Partido Liberal" />
+            <PartyBadge sigla="UNIÃO" name="União Brasil" />
+            <PartyBadge sigla="PP" name="Progressistas" />
+            <PartyBadge sigla="MDB" name="Movimento Democrático Brasileiro" />
+            <PartyBadge
+              sigla="PSDB"
+              name="Partido da Social Democracia Brasileira"
+            />
+            <PartyBadge sigla="REPUBLICANOS" />
+            <PartyBadge sigla="PSD" />
+            <PartyBadge sigla="PDT" />
+            <PartyBadge sigla="PSB" />
+            <PartyBadge sigla="PSOL" />
+            <PartyBadge sigla="NOVO" />
+            <PartyBadge sigla="PCdoB" />
+            <PartyBadge sigla="AVANTE" />
+            <PartyBadge sigla="CIDADANIA" />
+            <PartyBadge sigla="ZZZ" name="Sigla desconhecida (fallback)" />
+          </div>
+
+          {/* Variante sm */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-foreground-muted text-sm">size=sm:</span>
+            <PartyBadge sigla="PT" size="sm" />
+            <PartyBadge sigla="PL" size="sm" />
+            <PartyBadge sigla="UNIÃO" size="sm" />
+            <PartyBadge sigla="PSB" size="sm" />
+          </div>
+        </div>
+
+        {/* ----- StatsGrid ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">StatsGrid</h3>
+          <p className="text-foreground-muted text-sm">
+            Grid de stats para overviews/landings (Sprint 6.0 PR 6). Comparado a{' '}
+            <code>KpiStrip</code>: sem ícone, sem <code>tone</code>, valor maior
+            (<code>text-3xl</code>), separadores via grid gap em vez de border.
+            Markup <code>&lt;dl&gt;/&lt;dt&gt;/&lt;dd&gt;</code> semântico.
+          </p>
+
+          <StatsGrid
+            items={[
+              {
+                value: '513',
+                label: 'Deputados',
+                hint: 'Câmara dos Deputados',
+              },
+              { value: '81', label: 'Senadores', hint: 'Senado Federal' },
+              {
+                value: '~3.5k',
+                label: 'Proposições/ano',
+                hint: 'Câmara + Senado',
+              },
+              { value: '24', label: 'Comissões' },
+            ]}
+          />
+        </div>
+
+        {/* ----- DataBadge ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">DataBadge</h3>
+          <p className="text-foreground-muted text-sm">
+            Badge genérico de metadado (Sprint 6.0 PR 6). Útil como kicker em{' '}
+            <code>HeroSection</code> ou chip narrativo. Domain-agnostic —
+            consumer decide o que <code>label</code>/<code>source</code>{' '}
+            representam. <code>tone</code> semântico via token (zero hardcode de
+            cores).
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <DataBadge label="L1" source="oficial" tone="success" />
+            <DataBadge label="L2" source="Câmara" tone="brand" />
+            <DataBadge label="L3" source="análise" tone="accent" />
+            <DataBadge
+              label="L4"
+              source="curadoria"
+              tone="warning"
+              icon={<Sparkles className="h-3 w-3" />}
+            />
+            <DataBadge label="default" tone="default" />
+            <DataBadge
+              label="destructive"
+              tone="destructive"
+              source="contradição"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <DataBadge
+              label="Wave 6"
+              source="Sprint 6.0"
+              tone="accent"
+              icon={<Sparkles className="h-3 w-3" />}
+            />
+            <DataBadge label="Sem source nem icon" tone="brand" />
           </div>
         </div>
       </section>
