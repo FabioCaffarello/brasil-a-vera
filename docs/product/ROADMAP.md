@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.5.0
-> Última atualização: 2026-05-16 (Sprint 5.0 fechada — tag `v0.5.0-claude-ecosystem`; demais sprints Wave 5 open ground)
+> Brasil a Vera · Produto · v0.6.0
+> Última atualização: 2026-05-16 (Sprint 6.0 abre — Wave 6 "Frontend de Excelência (reskin diagnóstico-dirigido)" entra em execução; contrato vigente em `docs/wave-6/PROMPT-MESTRE.md`)
 > Status: accepted
 
 ---
@@ -46,6 +46,7 @@
 - [Wave 3 — Profundidade Cívica Acessível](#wave-3--profundidade-cívica-acessível)
 - [Wave 4 — Design System & Frontend de Excelência](#wave-4--design-system--frontend-de-excelência)
 - [Wave 5 — Open Ground](#wave-5--open-ground)
+- [Wave 6 — Frontend de Excelência (reskin diagnóstico-dirigido)](#wave-6--frontend-de-excelência-reskin-diagnóstico-dirigido)
 - [Dependências entre Waves](#dependências-entre-waves)
 
 ---
@@ -87,6 +88,7 @@ gantt
 | 3 | Profundidade Cívica Acessível | Cidadão, Jornalista, Pesquisador, Desenvolvedor | 14-20 semanas (5 sprints + 1 micro-wave); 3.3/3.4 pausados em 2026-05-15 |
 | 4 | Design System & Frontend de Excelência | Todos | 6 sprints (4.0–4.6) |
 | 5 | Open Ground | (definido após Wave 4) | Backlog sem plano contratual |
+| 6 | Frontend de Excelência (reskin diagnóstico-dirigido) | Cidadão, Jornalista | 7 sprints (6.0–6.6) — Wave 6 absorve protótipo maduro do designer parceiro |
 
 ---
 
@@ -896,6 +898,69 @@ Reavaliação acontece **após a Wave 4 fechar** (estimativa: 2026 Q4 / 2027 Q1)
 3. Qual o ROI estimado por item do backlog frente ao esforço solo?
 
 Sem essas respostas calibradas em evidência empírica, a Wave 5 permanece em modo backlog. Princípio 13 do CLAUDE.md em ação: planejamento espera dados, não inferência. ADR-019 aplica-se a qualquer infra nova do backlog Wave 5.
+
+---
+
+## Wave 6 — Frontend de Excelência (reskin diagnóstico-dirigido)
+
+> **Pergunta validada**: "Conseguimos portar a linguagem visual madura do protótipo do designer parceiro (`usernamette/vera-politica`) para a nossa stack RSC + tokens próprios + queries server-side sem regredir performance, a11y, trust pyramid ou AuthSlot RSC anônimo zero-JS?"
+
+> **Contrato vigente**: [`docs/wave-6/PROMPT-MESTRE.md`](../wave-6/PROMPT-MESTRE.md). Releia §0, §1, §5, §6 a cada início de Sprint. Decisões D1-D11 fechadas em 2026-05-16.
+
+A Wave 6 nasce em 2026-05-16, logo após o fechamento da Sprint 5.0 (`v0.5.0-claude-ecosystem`). A Wave 4 entregou a fundação do design system (tokens OKLCH + 10 primitivas + boundary import enforced); a Wave 5 entregou a infraestrutura de colaboração (`.claude/` ecossistema + governança `.github/`). **A Wave 6 é a primeira em que ambas as fundações se encontram em código de produto visível ao cidadão**, portando a linguagem visual madura do designer parceiro para a nossa stack.
+
+A Wave 6 é deliberadamente **sem features novas de domínio** — toda a lógica de queries em `src/lib/queries/`, ingestão em `ingestion/`, módulos `src/modules/` e `src/shared/` permanece intocada. Reskin é só camada de apresentação; trust_level, SEO, cobertura WCAG e custo Neon não regridem.
+
+### Modo operacional (decisão D8 do prompt mestre)
+
+- Toda a Wave 6 é tocada pelo owner em role `engineer`.
+- Claude Code tem **autorização para abrir E mergear PRs sem checkpoint humano explícito**, condicionado às barreiras técnicas do [prompt mestre §6](../wave-6/PROMPT-MESTRE.md). PRs auto-merged recebem label `auto-merged-wave-6` para auditoria.
+- Felipe NÃO opera nesta wave. Refinamento do `ONBOARDING-DESIGNER.md` baseado em Wave 6 fica para abertura de Wave 7+.
+- Registro leve em `CLAUDE.md` (seção "Auto-merge — Wave 6"), sem ADR formal — o desvio é transitório, escopado e auditável.
+- Métrica honesta de PRs auto-merged + spot-check vai no release `v0.6.0-frontend-excellence`.
+
+Decisões arquiteturais que governam a Wave 6:
+
+- [ADR-023](../architecture/ADR/023-criterios-de-animacao-e-revealing.md) — Critérios para introdução de animação e revealing (CSS animation + `@starting-style` default; framer-motion bloqueado salvo 3 critérios concorrentes)
+- [ADR-024](../architecture/ADR/024-acentos-secundarios-accent-roxo.md) — Acentos secundários (`--accent` roxo) + utilitários `--gradient-primary`, `.bg-hero`, `.glass-strong`
+
+### Sprints planejadas
+
+| Sprint | Conteúdo | Status |
+|---|---|---|
+| 6.0 | Tokens expandidos (`--accent`, `--gradient-primary`, `.glass-strong`, `.bg-hero`) + 8 composições fundamentais (HeroSection, KpiStrip, SectionCard, SectionNav, FilterChips, PartyBadge, StatsGrid, DataBadge) + subagent `frontend-skin-helper` (PR 8) | 🚧 Em execução (abertura 2026-05-16) |
+| 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | 📋 Planejada |
+| 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | 📋 Planejada |
+| 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | 📋 Planejada |
+| 6.4 | Comparar + busca + meu parlamentar | 📋 Planejada |
+| 6.5 | Metodologia (hub TOC sticky + prose) + redirect 301 `/docs/*` → `/metodologia#anchor` (D3 híbrido) | 📋 Planejada |
+| 6.6 | Performance final + Lighthouse fechamento (#114) + métrica auto-merge + tag `v0.6.0-frontend-excellence` | 📋 Planejada |
+
+### Critérios de sucesso da Wave 6
+
+A Wave 6 fecha quando, ao final da Sprint 6.6:
+
+- Visitante anônimo abre `brasilavera.org` e a primeira impressão visual rivaliza com produtos comerciais.
+- Cidadão em deep link a perfil parlamentar entende em ≤ 30s: nome, partido, KPIs, fonte oficial, navegação.
+- Lighthouse mobile ≥ 95 perf, 100 a11y, **LCP ≤ 2.5s em todas as 15 rotas medidas — issue [#114](https://github.com/FabioCaffarello/brasil-a-vera/issues/114) fechada com evidência**.
+- Trust pyramid visível em 100% dos blocos L2/L3.
+- Bundle JS no path anônimo ≤ Wave 5 baseline.
+- Cada PR Wave 6 com screenshot antes/depois + Lighthouse delta documentado.
+- ADRs 023 e 024 publicados.
+- Métrica honesta de auto-merge no release v0.6.0 ("X de Y PRs auto-merged, Z desvios encontrados em spot-check").
+
+### Fora da Wave 6 — adiado para Wave 7+
+
+Decisões D2/D5/D11 do prompt mestre rejeitam de antemão:
+
+- `/analise` (dashboard de stats agregados com Recharts) — sem ADR Recharts + sem evidência de engajamento com stats
+- `/minha-area/*` (issue [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174)) — sem demanda observada
+- 24 peer deps Radix Tier 2/3 preventivos do protótipo
+- TanStack Start, React Query no cliente, useQueries em loop (anti-patterns Lovable)
+- `framer-motion` como default — bloqueado por [ADR-023](../architecture/ADR/023-criterios-de-animacao-e-revealing.md) (critério)
+- Troca de Inter por Roboto — decisão Wave 4 PR 3 vale, sem ADR para reverter
+
+Gaps identificados durante a wave que não couberem na sprint atual viram `gh issue` com label `wave-6+` ou `wave-7+` (regra do prompt mestre §6.5). Princípio: cada gap não resolvido vira artefato rastreável, não dívida implícita.
 
 ---
 

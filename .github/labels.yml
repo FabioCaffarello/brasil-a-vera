@@ -75,6 +75,12 @@ labels:
   - name: wave-5+
     color: CCCCCC
     description: Wave 5 ou posterior — backlog sem plano contratual
+  - name: wave-6+
+    color: CCCCCC
+    description: Wave 6 ou posterior — gap rastreável durante Wave 6 (Frontend de Excelência)
+  - name: auto-merged-wave-6
+    color: 5DC8DB
+    description: PR auto-mergeado pelo Claude Code em modo autônomo Wave 6 (decisão D8 do prompt mestre)
 
   # Áreas funcionais — existentes
   - name: adr
