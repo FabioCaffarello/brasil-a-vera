@@ -43,33 +43,30 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+    <section className="rounded-lg border border-border bg-surface p-5">
       <header className="mb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
           {title}
         </h2>
-        {hint && (
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {hint}
-          </p>
-        )}
+        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
       </header>
       {children}
     </section>
   )
 }
 
+// ErrorState (D4 Sprint 4.3 herdada): caixa de "comparativo indisponível"
+// migrada de amber para warning subtle, mesmo padrão de `ParesContraditorios`
+// e `AlinhamentoBancada` (amostra insuficiente).
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 dark:border-amber-900 dark:bg-amber-950">
-        <h1 className="font-medium text-amber-900 text-base dark:text-amber-200">
+      <div className="rounded-lg border border-warning/40 bg-warning/10 p-5">
+        <h1 className="font-medium text-base text-warning">
           Comparativo indisponível
         </h1>
-        <p className="mt-1 text-amber-800 text-sm dark:text-amber-300">
-          {message}
-        </p>
-        <p className="mt-3 text-amber-700 text-xs dark:text-amber-400">
+        <p className="mt-1 text-sm text-warning">{message}</p>
+        <p className="mt-3 text-warning text-xs">
           Use a URL com 2 ou 3 IDs separados por vírgula:
           <br />
           <code className="font-mono">
@@ -120,14 +117,14 @@ export default async function CompararPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-8">
       <header className="space-y-1">
-        <p className="font-mono text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        <p className="font-mono text-foreground-muted text-xs uppercase tracking-wider">
           Comparativo
         </p>
-        <h1 className="font-bold text-3xl text-zinc-900 dark:text-zinc-100">
+        <h1 className="font-bold text-3xl text-foreground">
           {result.parlamentares.length} parlamentares lado a lado
         </h1>
         {hasInvalid && (
-          <p className="text-amber-700 text-xs dark:text-amber-400">
+          <p className="text-warning text-xs">
             Alguns IDs fornecidos não eram UUIDs válidos e foram ignorados.
           </p>
         )}
