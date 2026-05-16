@@ -7,9 +7,14 @@ import {
   Vote,
 } from 'lucide-react'
 
+import {
+  FilterChip,
+  FilterChips,
+} from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
+import { SectionNav } from '@/design-system/compositions/section-nav'
 import { Badge } from '@/design-system/primitives/badge'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -507,6 +512,108 @@ export default function DesignSystemPage() {
               Variante minimal — só title + icon + children.
             </p>
           </SectionCard>
+        </div>
+
+        {/* ----- FilterChips ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">FilterChips</h3>
+          <p className="text-foreground-muted text-sm">
+            Grupo de chips de filtro da Sprint 6.0 PR 5. <code>FilterChip</code>{' '}
+            individual + <code>FilterChips</code> wrapper. RSC-compatível:
+            consumer hooka comportamento via <code>asChild</code> (linka a URL
+            com search params, mantém URL = state). State <code>selected</code>{' '}
+            é responsabilidade do consumer.
+          </p>
+
+          {/* Variante 1: button puro, com selected state */}
+          <FilterChips label="Casa">
+            <FilterChip selected>Câmara</FilterChip>
+            <FilterChip>Senado</FilterChip>
+          </FilterChips>
+
+          {/* Variante 2: com count badges */}
+          <FilterChips label="Partido (top 5)">
+            <FilterChip selected count={92}>
+              PT
+            </FilterChip>
+            <FilterChip count={88}>PL</FilterChip>
+            <FilterChip count={43}>UNIÃO</FilterChip>
+            <FilterChip count={38}>PP</FilterChip>
+            <FilterChip count={32}>MDB</FilterChip>
+          </FilterChips>
+
+          {/* Variante 3: asChild polimórfico — chip vira <a> com href */}
+          <FilterChips label="UF (asChild → <a>)">
+            <FilterChip asChild selected>
+              <a href="?uf=SP">SP</a>
+            </FilterChip>
+            <FilterChip asChild>
+              <a href="?uf=RJ">RJ</a>
+            </FilterChip>
+            <FilterChip asChild>
+              <a href="?uf=MG">MG</a>
+            </FilterChip>
+          </FilterChips>
+        </div>
+
+        {/* ----- SectionNav ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">SectionNav</h3>
+          <p className="text-foreground-muted text-sm">
+            Barra sticky de jump links da Sprint 6.0 PR 5. Client component
+            (IntersectionObserver para active state). Mobile: sticky reduzida +
+            scroll horizontal (D6 do prompt mestre). Desktop: mesma estrutura,
+            sem scroll. Sem framer-motion.
+          </p>
+
+          <div className="rounded-lg border border-border bg-surface">
+            <SectionNav
+              items={[
+                { id: 'nav-demo-votos', label: 'Votos', icon: <Vote /> },
+                {
+                  id: 'nav-demo-gastos',
+                  label: 'Gastos',
+                  icon: <TrendingDown />,
+                },
+                {
+                  id: 'nav-demo-proposicoes',
+                  label: 'Proposições',
+                  icon: <Inbox />,
+                },
+              ]}
+            />
+            <div className="space-y-4 p-6">
+              <section
+                id="nav-demo-votos"
+                className="rounded border border-border p-4"
+              >
+                <h4 className="font-medium text-foreground">Votos</h4>
+                <p className="text-foreground-muted text-sm">
+                  Section #nav-demo-votos. Role para baixo para ver SectionNav
+                  marcar o item ativo (precisa de scroll real — em viewport
+                  curto não dispara).
+                </p>
+              </section>
+              <section
+                id="nav-demo-gastos"
+                className="rounded border border-border p-4"
+              >
+                <h4 className="font-medium text-foreground">Gastos</h4>
+                <p className="text-foreground-muted text-sm">
+                  Section #nav-demo-gastos.
+                </p>
+              </section>
+              <section
+                id="nav-demo-proposicoes"
+                className="rounded border border-border p-4"
+              >
+                <h4 className="font-medium text-foreground">Proposições</h4>
+                <p className="text-foreground-muted text-sm">
+                  Section #nav-demo-proposicoes.
+                </p>
+              </section>
+            </div>
+          </div>
         </div>
       </section>
 
