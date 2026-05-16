@@ -6,12 +6,14 @@ interface Props {
   nomesPorId: Map<string, string>
 }
 
+// Sprint 4.4 PR 2 commit 2/3 — refatorado para tokens semânticos.
+// Mesmo padrão de 3 limiares de cor de `AlinhamentoBancada` (Sprint
+// 4.3 PR 2) e `FidelidadeMediaBlock` (Sprint 4.4 PR 1): success /
+// foreground / warning. Coerência cross-rota na leitura de %.
 export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
   if (pares.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Sem pares para comparar.
-      </p>
+      <p className="text-foreground-muted text-sm">Sem pares para comparar.</p>
     )
   }
 
@@ -23,20 +25,20 @@ export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
         const insuficiente = par.percentual === null
 
         const colorClass = insuficiente
-          ? 'text-zinc-500 dark:text-zinc-400'
+          ? 'text-foreground-muted'
           : (par.percentual ?? 0) >= 80
-            ? 'text-emerald-700 dark:text-emerald-400'
+            ? 'text-success'
             : (par.percentual ?? 0) >= 50
-              ? 'text-zinc-700 dark:text-zinc-300'
-              : 'text-amber-700 dark:text-amber-400'
+              ? 'text-foreground'
+              : 'text-warning'
 
         return (
           <li
+            className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-border p-3"
             key={`${par.parlamentarA}-${par.parlamentarB}`}
-            className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-700"
           >
-            <span className="text-sm text-zinc-800 dark:text-zinc-200">
-              {nomeA} <span className="text-zinc-400">×</span> {nomeB}
+            <span className="text-foreground text-sm">
+              {nomeA} <span className="text-foreground-subtle">×</span> {nomeB}
             </span>
             <span className="text-right">
               {insuficiente ? (
@@ -50,7 +52,7 @@ export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
                   >
                     {par.percentual}%
                   </span>{' '}
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <span className="text-foreground-muted text-xs">
                     ({par.coincidentes}/{par.total} votos comuns)
                   </span>
                 </>
