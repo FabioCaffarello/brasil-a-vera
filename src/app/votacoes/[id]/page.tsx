@@ -56,16 +56,12 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+    <section className="rounded-lg border border-border bg-surface p-5">
       <header className="mb-3">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
           {title}
         </h2>
-        {hint && (
-          <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-            {hint}
-          </p>
-        )}
+        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
       </header>
       {children}
     </section>
@@ -121,7 +117,7 @@ export default async function VotacaoPage({ params, searchParams }: PageProps) {
           {proposicao ? (
             <ProposicaoVinculada proposicao={proposicao} />
           ) : (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-foreground-muted text-sm">
               Nenhuma proposição foi vinculada a esta votação na base atual. O
               backfill liga apenas votações cuja proposição já foi ingerida (o
               conjunto de proposições é restrito ao período coberto até agora).
