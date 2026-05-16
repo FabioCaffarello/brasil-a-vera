@@ -1,0 +1,72 @@
+# Dependabot — atualização automática de dependências.
+# Wave 5 Sprint 5.0 PR 9. Aberto pelo Dependabot semanalmente.
+#
+# Justificativa ADR-019 (princípio leve): gargalo empírico já existe —
+# atualizações de dep são manuais hoje e dependem do owner lembrar.
+# Dependabot é zero custo cognitivo, abre PR revisável.
+#
+# open-pull-requests-limit: 5 para evitar floods.
+# Grupos consolidam updates relacionados em 1 PR (dev deps, radix-ui).
+# Major do Next ignorado — controlado pelo owner em janela de upgrade.
+
+version: 2
+updates:
+  # npm (devDependencies + dependencies)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:00'
+      timezone: America/Sao_Paulo
+    target-branch: main
+    open-pull-requests-limit: 5
+    labels:
+      - chore
+      - tooling
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+      radix-ui:
+        patterns:
+          - '@radix-ui/*'
+        update-types:
+          - minor
+          - patch
+      clerk:
+        patterns:
+          - '@clerk/*'
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Next major upgrades exigem janela de validação manual.
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      # React major idem.
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '04:30'
+      timezone: America/Sao_Paulo
+    target-branch: main
+    open-pull-requests-limit: 3
+    labels:
+      - chore
+      - ops
+    commit-message:
+      prefix: ci

@@ -1,0 +1,74 @@
+name: PR sanity
+
+# Checagens leves de qualidade de PR. Advisory inicial (não-bloqueante)
+# por 2 sprints até validação empírica de zero falsos positivos
+# (Sprint 5.0, princípio 13). Promoção a required check em PR específico
+# depois.
+#
+# Dispara em pull_request: opened, edited, synchronize. O guard em
+# 'edited' evita run em qualquer mudança de descrição sem alteração
+# de body (mitigação do risco 13 do plano).
+#
+# Ver docs/contributing/WORKFLOWS.md para mapa completo.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: pr-sanity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sanity:
+    name: Description + checklist + diff size
+    runs-on: ubuntu-latest
+    # Guard contra ruído de edited sem mudança de body.
+    if: github.event.action != 'edited' || github.event.changes.body != null
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check PR description is non-empty
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ -z "$PR_BODY" ] || [ "$PR_BODY" = "null" ]; then
+            echo "::warning::PR description is empty. Add a 'O que muda' section so reviewers have context."
+          fi
+          # Detecta placeholder do template ainda no body
+          if echo "$PR_BODY" | grep -q '<!-- 1-3 parágrafos descritivos'; then
+            echo "::warning::PR body still contains template placeholder comments. Replace them with real content."
+          fi
+
+      - name: Check PR diff size
+        run: |
+          # +600 lines (excluding lock files) é gatilho de sugestão de split.
+          # Não-bloqueante; só comenta.
+          additions=$(gh pr view ${{ github.event.pull_request.number }} --json additions --jq '.additions')
+          lock_additions=$(git diff --shortstat origin/main...HEAD -- '*-lock.json' 'package-lock.json' 'pnpm-lock.yaml' 'yarn.lock' 2>/dev/null | grep -oE '[0-9]+ insertions' | grep -oE '[0-9]+' || echo 0)
+          net=$((additions - lock_additions))
+          echo "Net additions (excluding lock files): $net"
+          if [ "$net" -gt 600 ]; then
+            echo "::warning::PR has $net additions excluding lock files. Consider splitting into smaller PRs."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check area label on .github/workflows changes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Se PR toca .github/workflows/**, exigimos label area:infra para visibilidade.
+          # Bloqueante quando promovido a required (advisory por enquanto).
+          changed=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path' | grep -E '^\.github/workflows/' || true)
+          if [ -n "$changed" ]; then
+            labels=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
+            if ! echo "$labels" | grep -q '^area:infra$'; then
+              echo "::warning::PR touches .github/workflows/** but is missing the 'area:infra' label. Add it for visibility."
+            fi
+          fi
