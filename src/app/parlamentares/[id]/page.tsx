@@ -1,3 +1,4 @@
+import { FileText, Inbox, TrendingDown, Users, Vote } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
@@ -7,6 +8,10 @@ import { ParesContraditorios } from '@/components/parlamentar/pares-contraditori
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
+import { KpiStrip } from '@/design-system/compositions/kpi-strip'
+import { SectionCard } from '@/design-system/compositions/section-card'
+import { SectionNav } from '@/design-system/compositions/section-nav'
+import { formatBRL } from '@/lib/format'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
 import {
   getCoerenciaStats,
@@ -39,28 +44,6 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-lg border border-border bg-surface p-5">
-      <header className="mb-3">
-        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
-          {title}
-        </h2>
-        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
-      </header>
-      {children}
-    </section>
-  )
-}
-
 export default async function ParlamentarPerfilPage({ params }: PageProps) {
   const { id } = await params
   const parlamentar = await getParlamentarById(id)
@@ -85,59 +68,166 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     getAlinhamentoParlamentar(parlamentar.id),
   ])
 
+  // KpiStrip values com fallback honesto (D1 do plano Sprint 6.3 — "—"
+  // quando dados ausentes em vez de esconder o strip; mantém estrutura).
+  const alinhamentoTone =
+    alinhamento.percentual === null
+      ? 'muted'
+      : alinhamento.percentual >= 80
+        ? 'success'
+        : alinhamento.percentual >= 50
+          ? 'default'
+          : 'warning'
+
   return (
-    <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
-      <PerfilHeader
-        parlamentar={{
-          nome: parlamentar.nome,
-          nomeCivil: parlamentar.nomeCivil,
-          casa: parlamentar.casa,
-          partidoSigla: parlamentar.partidoSigla,
-          partidoNome: parlamentar.partidoNome,
-          uf: parlamentar.uf,
-          urlFoto: parlamentar.urlFoto,
-          legislatura: parlamentar.legislatura,
-          situacaoMandato: parlamentar.situacaoMandato,
-          sourceUrl: parlamentar.sourceUrl,
-          trustLevel: parlamentar.trustLevel,
-        }}
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="space-y-5">
+        <PerfilHeader
+          parlamentar={{
+            nome: parlamentar.nome,
+            nomeCivil: parlamentar.nomeCivil,
+            casa: parlamentar.casa,
+            partidoSigla: parlamentar.partidoSigla,
+            partidoNome: parlamentar.partidoNome,
+            uf: parlamentar.uf,
+            urlFoto: parlamentar.urlFoto,
+            legislatura: parlamentar.legislatura,
+            situacaoMandato: parlamentar.situacaoMandato,
+            sourceUrl: parlamentar.sourceUrl,
+            trustLevel: parlamentar.trustLevel,
+          }}
+        />
+
+        <KpiStrip
+          items={[
+            {
+              icon: <Vote className="h-4 w-4" />,
+              label: 'Alinhamento à bancada',
+              value:
+                alinhamento.percentual === null
+                  ? '—'
+                  : `${alinhamento.percentual}%`,
+              hint:
+                alinhamento.total > 0
+                  ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
+                  : 'sem orientação no período',
+              tone: alinhamentoTone,
+            },
+            {
+              icon: <Users className="h-4 w-4" />,
+              label: 'Votações analisadas',
+              value: alinhamento.total > 0 ? alinhamento.total : votos.length,
+              hint:
+                alinhamento.total > 0
+                  ? 'com orientação'
+                  : 'recentes (nominais)',
+            },
+            {
+              icon: <Inbox className="h-4 w-4" />,
+              label: 'Proposições como autor',
+              value: proposicoes.length,
+              hint: proposicoes.length === 5 ? 'mostrando 5 mais recentes' : '',
+              tone: 'muted',
+            },
+            {
+              icon: <TrendingDown className="h-4 w-4" />,
+              label: `Gastos CEAP ${anoCorrente}`,
+              value:
+                gastos.totalRegistros === 0
+                  ? '—'
+                  : formatBRL(gastos.totalGeral),
+              hint:
+                gastos.totalRegistros === 0
+                  ? 'sem gastos registrados'
+                  : `${gastos.totalRegistros} registros`,
+              tone: gastos.totalRegistros === 0 ? 'muted' : 'default',
+            },
+          ]}
+        />
+      </div>
+
+      <SectionNav
+        className="mt-6"
+        items={[
+          { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
+          {
+            id: 'alinhamento',
+            label: 'Alinhamento',
+            icon: <Users className="h-4 w-4" />,
+          },
+          {
+            id: 'proposicoes',
+            label: 'Proposições',
+            icon: <Inbox className="h-4 w-4" />,
+          },
+          {
+            id: 'gastos',
+            label: 'Gastos',
+            icon: <TrendingDown className="h-4 w-4" />,
+          },
+          {
+            id: 'afinidade',
+            label: 'Top 5',
+            icon: <Users className="h-4 w-4" />,
+          },
+          {
+            id: 'pares',
+            label: 'Pares',
+            icon: <FileText className="h-4 w-4" />,
+          },
+        ]}
+        stickyTop="3.5rem"
       />
 
-      {/* Tier 1 — ação legislativa (cobertura ≥ 22%). Ordem: o que votou →
-          se seguiu a bancada → o que propôs → como gastou. Sprint 3.1
-          Tarefa 3 — hierarquia reflete cobertura empírica. */}
-      <Section
-        title="Votos recentes"
-        hint="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
-      >
-        <VotosRecentes votos={votos} />
-      </Section>
+      <div className="mt-6 space-y-5">
+        {/* Tier 1 — ação legislativa (cobertura ≥ 22%). Ordem: o que votou →
+            se seguiu a bancada → o que propôs → como gastou. Sprint 3.1
+            Tarefa 3 — hierarquia reflete cobertura empírica. */}
+        <SectionCard
+          className="scroll-mt-28"
+          id="votos"
+          subtitle="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
+          title="Votos recentes"
+        >
+          <VotosRecentes votos={votos} />
+        </SectionCard>
 
-      <Section
-        title="Alinhamento à bancada"
-        hint="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
-      >
-        <AlinhamentoBancada alinhamento={alinhamento} casa={parlamentar.casa} />
-      </Section>
+        <SectionCard
+          className="scroll-mt-28"
+          id="alinhamento"
+          subtitle="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
+          title="Alinhamento à bancada"
+        >
+          <AlinhamentoBancada
+            alinhamento={alinhamento}
+            casa={parlamentar.casa}
+          />
+        </SectionCard>
 
-      <Section
-        title="Proposições onde é autor ou coautor"
-        hint="Limitado às proposições já ingeridas no Brasil a Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
-      >
-        <ProposicoesAutor proposicoes={proposicoes} />
-      </Section>
+        <SectionCard
+          className="scroll-mt-28"
+          id="proposicoes"
+          subtitle="Limitado às proposições já ingeridas no Brasil a Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
+          title="Proposições onde é autor ou coautor"
+        >
+          <ProposicoesAutor proposicoes={proposicoes} />
+        </SectionCard>
 
-      <Section
-        title={`Gastos parlamentares — ${anoCorrente}`}
-        hint="Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido."
-      >
-        <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
-      </Section>
+        <SectionCard
+          className="scroll-mt-28"
+          id="gastos"
+          subtitle="Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido."
+          title={`Gastos parlamentares — ${anoCorrente}`}
+        >
+          <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
+        </SectionCard>
+      </div>
 
       {/* Tier 3 — análises comparativas (cobertura < 15%). Movidas para
           seção secundária com separador visual + heading explicativo para
           não competir com o conteúdo principal quando vazias. Sprint 3.1
-          Tarefa 3 — wireframe aprovado em 2026-05-15. */}
+          Tarefa 3 — wireframe aprovado em 2026-05-15. Sprint 6.3 manteve
+          a divisória (princípio: reskin não muda hierarquia cívica). */}
       <div className="mt-8 border-border border-t pt-8">
         <header className="mb-6">
           <h2 className="font-semibold text-2xl text-foreground tracking-tight">
@@ -150,22 +240,26 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         </header>
 
         <div className="space-y-5">
-          <Section
+          <SectionCard
+            className="scroll-mt-28"
+            id="afinidade"
+            subtitle="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
             title="Top 5 maior afinidade de voto"
-            hint="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
           >
             <Top5Afinidade afinidades={afinidades} />
-          </Section>
+          </SectionCard>
 
-          <Section
+          <SectionCard
+            className="scroll-mt-28"
+            id="pares"
+            subtitle="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
             title="Pares de votos em direções opostas"
-            hint="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
           >
             <ParesContraditorios
               pares={paresContraditorios}
               stats={coerenciaStats}
             />
-          </Section>
+          </SectionCard>
         </div>
       </div>
     </div>
