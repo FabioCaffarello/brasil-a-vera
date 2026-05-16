@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-15 (Sprint 4.1 concluída — shell refatorado + auth wireado)
+> Última atualização: 2026-05-16 (Sprint 4.2 concluída — listagens reskinned + AuthSlot RSC restaurado pós Workers Paid)
 > Status: accepted
 
 ---
@@ -622,26 +622,60 @@ Decisões arquiteturais que governam a Wave 4 ficam em:
 - Filtros (UF, partido, casa, busca) consumindo Input/Label primitivas
 - Tier 2 primitivas podem entrar se necessário (popover, command para typeahead)
 
-### Wave 4.2 — Páginas de listagem (parlamentares, proposições, votações)
+### Wave 4.2 — Páginas de listagem (parlamentares, proposições, votações) + AuthSlot RSC restaurado
 
-> **Tag de release**: integrar em `v0.4.x`
-> **Status**: planejada
+> **Tag de release**: integrar em `v0.4.x` (sem tag intermediária — banner permanece `v0.4.0-design-system-foundation`)
+> **Status**: ✅ Concluída em 2026-05-16
+> **Duração real**: 1 dia (6 PRs sequenciais)
 
-**Por que terceiro**: reskinning das 3 grandes listagens com o novo design system. Mantém queries e arquitetura RSC; troca componentes visuais.
+**Por que terceiro**: reskinning das 3 grandes listagens (cards, filtros, páginas inteiras + detalhes de proposição e votação) com o novo design system + aproveitamento do upgrade Workers Paid (decidido pelo owner em 2026-05-15) para restaurar a "Opção B pura" do AuthSlot RSC (closes #149).
 
-#### Escopo
+#### PRs entregues
 
-- `/parlamentares`: filtros (UF, partido, casa, busca) com primitivas do design system; cards com estética nova mas dados nossos; URL state preservado (filtros são GET)
-- `/proposicoes` e `/proposicoes/[tipo]`: idem
-- `/votacoes`: idem
-- `components/parlamentar/parlamentar-card.tsx`, `components/proposicao/proposicao-card.tsx`, `components/votacao/votacao-card.tsx`: atualizados
-- Componentes Tier 2 copiados conforme necessário (`popover`, `command` para typeahead se aparecer demanda)
+| PR | Conteúdo |
+|---|---|
+| [#152](https://github.com/FabioCaffarello/brasil-a-vera/pull/152) | **AuthSlot RSC restaurado pós Workers Paid** (closes #149). `clerkMiddleware()` matcher expandido para padrão Clerk (todas rotas não-asset + `/api`/`/trpc`); `AuthSlot` server-side via `auth()` renderiza `<a href="/sign-in">` estático para anônimos (zero JS de Clerk) e `<AuthIslandLoader />` lazy para autenticados. ADR-022 §3 v4 documenta a 4ª iteração do matcher. ADR-017 v0.2 atualizado com Workers Paid $5/mo (+ downgrade plan em 12 meses). |
+| [#153](https://github.com/FabioCaffarello/brasil-a-vera/pull/153) | Cards + filtros (3+3) refatorados para tokens semânticos + Label/Button primitives em 6 commits isolados. Mapping das 5 situações de proposição estabelecido (TRAMITANDO/APROVADA/REJEITADA/ARQUIVADA/TRANSFORMADA_EM_NORMA com solid vs subtle). Pattern de filtros (`<Label htmlFor>` + native `<select>` + Button asChild Limpar/Filtrar) replicado nas 3 rotas. |
+| [#154](https://github.com/FabioCaffarello/brasil-a-vera/pull/154) | `/parlamentares` reskin + 3 componentes compartilhados (`TrustBanner`, `EmptyState`, `ExportCsvLink`). `ExportCsvLink` migrou para `Button asChild` com ícone Lucide `Download`. Empty state action virou `<Button asChild variant="outline" size="sm">`. Visual nivelado em todas as 4 páginas que consomem os shared. |
+| [#156](https://github.com/FabioCaffarello/brasil-a-vera/pull/156) | `/proposicoes` listing + detail em 7 commits. `Section` helper inline + 5 sub-componentes (`perfil-header`, `autores-list`, `temas-list`, `tramitacao-timeline`, `votacoes-vinculadas`) reskinned. Mapping das 5 situações no perfil idêntico ao card (consistência ponta-a-ponta). |
+| [#160](https://github.com/FabioCaffarello/brasil-a-vera/pull/160) | `/votacoes` listing + detail em 8 commits + TIPO_VOTO centralizado em `lib/format.ts` (`getTipoVotoStyle`). Badges de voto SIM/NÃO/Abstenção/Ausente/Obstrução semânticos (success/destructive/warning/surface-elevated/brand). Reusado em `votos-individuais` (este PR) e em `parlamentar/votos-recentes` + `pares-contraditorios` (perfil — herdam tokens, containers seguem para Sprint 4.3). |
+| [#161](https://github.com/FabioCaffarello/brasil-a-vera/pull/161) | Este PR — fechamento (ROADMAP atualizado; sem tag, sem release notes formais; banner permanece `v0.4.0-design-system-foundation`). |
 
-#### Critérios de Done
+#### Decisões aplicadas durante a sprint
 
-- [ ] Páginas mantém SSG (cache de edge, ADR-018) — sem regressão de queries
-- [ ] Smoke probes de listagem em `ingestion/ops/smoke.ts` continuam passando
-- [ ] Filtros funcionais sem JavaScript no client (`<form method="get">` mantido onde aplicável)
+- **D1 — AuthSlot RSC restaurado** Workers Paid ($5/mo, 10 MiB limit) acomoda Clerk SDK no `handler.mjs` com folga: bundle final 2.21 MB gzipped (vs limite 10 MiB). Trade-off `static (○) → dynamic (ƒ)` em pages com `auth()` no layout mitigado por Cache-Control no edge (ADR-018). ADR-022 §3 v4 documenta a 4ª iteração do matcher.
+- **D2 — Reskin de shared components inclui na PR 3** (não isolado): `TrustBanner`, `EmptyState`, `ExportCsvLink` são consumidos por 4 páginas — manter zinc legacy enquanto `/parlamentares` ganhava tokens seria visualmente fragmentado. PR 3 nivela base; PR 4 e 5 ficam mais enxutos (apenas `page.tsx` + sub-componentes específicos).
+- **D3 — `<select>` e `<input type="checkbox">` nativos preservados** Select e Checkbox são Tier 2 no plano DS (ADR-021); sem demanda concreta para custom virtualization. Mantêm a11y out-of-the-box e submit GET sem JS. Checkbox ganha `accent-brand` para tonalizar marcação.
+- **D4 — TIPO_VOTO centralizado em `lib/format.ts`** Em vez de inline em cada componente, `getTipoVotoStyle` mapeia o enum para tokens semânticos. Consumido por 3 lugares (`votos-individuais`, `votos-recentes`, `pares-contraditorios`) — única fonte de verdade para badges de voto cross-rota.
+- **D5 — Solid vs subtle como hierarquia de 5 situações** Apenas 4 tokens (brand/success/destructive/surface-elevated) cobrem 5 estados via dosagem (subtle `bg-X/20` vs solid `bg-X`). TRANSFORMADA_EM_NORMA usa solid `bg-success` (virou lei, pinnacle outcome); demais usam subtle. Documentado em `proposicao-card` e replicado em `perfil-header`.
+- **D6 — Sem tag, sem release notes** Sprints intermediárias da Wave 4 não geram tag (padrão estabelecido na 4.1). Banner mantém `v0.4.0-design-system-foundation`. Tag `v0.4.x` final acumula 4.1+4.2+4.3+....
+- **D7 — 6 PRs sequenciais** 1 AuthSlot + 1 cards/filtros + 1 /parlamentares + 1 /proposicoes (listing+detail) + 1 /votacoes (listing+detail) + 1 closure. Cada PR mergeado e validado em local antes do próximo.
+
+#### Critérios de Done — atendidos
+
+- [x] Páginas mantém arquitetura RSC e queries (cache de edge, ADR-018) — apenas apresentação alterada
+- [x] Filtros funcionais sem JavaScript no client (`<form method="get">` mantido nas 3 rotas)
+- [x] Smoke probes existentes continuam passando (sem regressão funcional)
+- [x] 364 testes (40 arquivos) verdes ao longo dos 6 PRs
+- [x] Worker bundle gzipped: 2.21 MB no final da sprint (vs limite 10 MiB Workers Paid, folga ~7.8 MiB)
+- [x] AuthSlot RSC anônimo: zero JS de Clerk para visitantes não logados (link estático `<a href="/sign-in">`)
+- [x] `auth()` server-side disponível em qualquer RSC (matcher Clerk padrão), preparando Sprint 4.5 (rotas privadas)
+- [x] Tokens semânticos consistentes entre listagem e detalhe (mapping idêntico de situações/aprovada-rejeitada/tipo_voto)
+- [x] Issue #149 fechada via PR #152
+
+#### Issues fechadas pela sprint
+
+- [#149](https://github.com/FabioCaffarello/brasil-a-vera/issues/149) — `auth: restaurar AuthSlot RSC (Opção B "pura") quando sairmos do Workers free tier`. Fechada via #152.
+
+#### Carryover para Sprint 4.3 (Perfil 360° do parlamentar)
+
+- `/parlamentares/[id]` (perfil 360°) inteiro: reskin com novo design system. Sub-componentes `parlamentar/*` que ainda usam zinc legacy:
+  - `votos-recentes.tsx` (badges já em tokens via `getTipoVotoStyle` — só container)
+  - `pares-contraditorios.tsx` (idem)
+  - `alinhamento.tsx`, `top-5-afinidade.tsx`, `gastos-resumo.tsx`, `proposicoes-do-parlamentar.tsx`, `perfil-header.tsx` (parlamentar)
+- Reorganização de seções com `Card` primitive + `Tabs` se reduzir scroll (ADR-021 Tier 1)
+- Trust badges L3 mantidos em todas as análises
+- Decisão de Recharts adiada até confirmar se `getGastosResumo` retorna dado mensal melhor que tabela atual
 
 ### Wave 4.3 — Perfil 360° do parlamentar
 
