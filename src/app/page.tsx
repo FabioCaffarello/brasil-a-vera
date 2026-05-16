@@ -1,4 +1,3 @@
-import { ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 import { CardMeuParlamentar } from '@/components/home/card-meu-parlamentar'
@@ -6,10 +5,8 @@ import { CardStats } from '@/components/home/card-stats'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
-import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
+import { GlowyWavesHero } from '@/design-system/compositions/glowy-waves-hero'
 import { SectionCard } from '@/design-system/compositions/section-card'
-import { Button } from '@/design-system/primitives/button'
 import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'
 import type { TrustLevel } from '@/shared/trust'
@@ -61,29 +58,20 @@ export default async function Home() {
           HeroSection (gradient variant) com kicker DataBadge accent +
           duplo CTA. Full-width — gradient .bg-hero + .grid-bg estendem
           até as bordas. */}
-      <HeroSection
-        actions={
-          <>
-            <Button asChild>
-              <Link href="/o-meu-parlamentar">
-                Encontrar meus representantes
-                <ArrowRight aria-hidden className="ml-2 size-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/parlamentares">Explorar parlamentares</Link>
-            </Button>
-          </>
-        }
-        description="Você escolheu quem te representa. Agora veja o que ele faz."
-        kicker={
-          <DataBadge
-            icon={<Sparkles className="h-3 w-3" />}
-            label="Transparência cívica"
-            tone="accent"
-          />
-        }
+
+      <GlowyWavesHero
+        kicker="Dados oficiais · Câmara dos Deputados"
         title="Brasil a Vera"
+        subtitle="Você escolheu quem te representa. Agora veja o que ele faz."
+        primaryCta={{ href: '/parlamentares', label: 'Explorar parlamentares' }}
+        secondaryCta={{ href: '/proposicoes', label: 'Ver proposições' }}
+        stats={[
+          { label: 'Deputados Federais', value: '513' },
+          { label: 'Proposições', value: '+250k' },
+          { label: 'Votações analisadas', value: '+30k' },
+          { label: 'Atualização', value: 'Diária' },
+        ]}
+        highlights={['Dados oficiais', 'Atualização diária', 'API pública']}
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">
