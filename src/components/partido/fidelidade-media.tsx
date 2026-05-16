@@ -4,6 +4,9 @@ interface Props {
   fidelidade: FidelidadeInternaMedia
 }
 
+// Sprint 4.4 PR 1 commit 3/6 — refatorado para tokens semânticos.
+// Mesmo padrão de 3 limiares de cor do `AlinhamentoBancada` (Sprint
+// 4.3 PR 2 commit 2/4): success / foreground / warning.
 export function FidelidadeMediaBlock({ fidelidade }: Props) {
   const { percentualMedio, parlamentaresElegiveis, parlamentaresTotal } =
     fidelidade
@@ -11,7 +14,7 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
   if (percentualMedio === null) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-foreground-muted text-sm">
           {parlamentaresTotal === 0
             ? 'Sem orientações partidárias registradas para as votações desta bancada até o momento. A cobertura cresce a cada execução do cron de ingestão (4×/dia). Senado não publica orientações em endpoint público (#83) — fidelidade só é calculável para parlamentares da Câmara.'
             : `Nenhum membro tem 50+ votos comparáveis (orientação não-LIBERADO + voto não-AUSENTE). ${parlamentaresTotal} ${parlamentaresTotal === 1 ? 'membro tem' : 'membros têm'} algum dado, mas amostra é insuficiente.`}
@@ -22,10 +25,10 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
 
   const colorClass =
     percentualMedio >= 80
-      ? 'text-emerald-700 dark:text-emerald-400'
+      ? 'text-success'
       : percentualMedio >= 50
-        ? 'text-zinc-700 dark:text-zinc-300'
-        : 'text-amber-700 dark:text-amber-400'
+        ? 'text-foreground'
+        : 'text-warning'
 
   return (
     <div className="space-y-2">
@@ -33,11 +36,11 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
         <span className={`font-semibold text-3xl tabular-nums ${colorClass}`}>
           {percentualMedio}%
         </span>
-        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+        <span className="text-foreground-muted text-sm">
           fidelidade interna média
         </span>
       </div>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-xs">
         Média simples do alinhamento dos {parlamentaresElegiveis}{' '}
         {parlamentaresElegiveis === 1
           ? 'parlamentar elegível'
