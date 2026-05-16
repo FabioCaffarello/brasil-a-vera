@@ -1,0 +1,114 @@
+name: Design tokens advisory
+
+# Análise estática de tokens legacy em PRs que tocam UI.
+# Roda os mesmos greps do /design-token-check skill (com filtros para
+# JSDoc e issue refs). Advisory inicial — comenta no PR sem falhar.
+# Promoção a required check após 2 sprints sem falsos positivos
+# (Sprint 5.0, princípio 13).
+#
+# Ver docs/contributing/WORKFLOWS.md.
+
+on:
+  pull_request:
+    paths:
+      - 'src/design-system/**'
+      - 'src/components/**'
+      - 'src/app/globals.css'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+concurrency:
+  group: design-tokens-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: zinc / HEX / primary-N legacy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan zinc legacy
+        id: zinc
+        run: |
+          set +e
+          matches=$(grep -rEn 'bg-zinc-[0-9]+|text-zinc-[0-9]+|border-zinc-[0-9]+' \
+            --include='*.tsx' --include='*.css' \
+            src/ 2>/dev/null \
+            | grep -vE ':\s*(//|\*|/\*)')
+          if [ -n "$matches" ]; then
+            echo "Found zinc legacy:"
+            echo "$matches"
+            {
+              echo 'matches<<EOF'
+              echo "$matches"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "ZINC: clean"
+          fi
+
+      - name: Scan HEX inline in DS/components
+        id: hex
+        run: |
+          set +e
+          matches=$(grep -rEn '#[0-9a-fA-F]{3,8}' \
+            --include='*.tsx' --include='*.ts' --include='*.css' \
+            --exclude='*.test.tsx' --exclude='*.test.ts' \
+            src/design-system/ src/components/ 2>/dev/null \
+            | grep -vE ':\s*(//|\*|/\*)' \
+            | grep -vE '#[0-9]+([^0-9a-fA-F]|$)')
+          if [ -n "$matches" ]; then
+            echo "Found HEX inline:"
+            echo "$matches"
+            {
+              echo 'matches<<EOF'
+              echo "$matches"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "HEX: clean"
+          fi
+
+      - name: Scan bg-primary-N in design-system
+        id: primary
+        run: |
+          set +e
+          matches=$(grep -rEn 'bg-primary-[0-9]+|text-primary-[0-9]+|border-primary-[0-9]+' \
+            --include='*.tsx' --include='*.ts' \
+            src/design-system/ 2>/dev/null \
+            | grep -vE ':\s*(//|\*|/\*)')
+          if [ -n "$matches" ]; then
+            echo "Found bg-primary-N in design-system:"
+            echo "$matches"
+            {
+              echo 'matches<<EOF'
+              echo "$matches"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "PRIMARY-N IN DS: clean"
+          fi
+
+      - name: Comment on PR if violations
+        if: steps.zinc.outputs.matches != '' || steps.hex.outputs.matches != '' || steps.primary.outputs.matches != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZINC: ${{ steps.zinc.outputs.matches }}
+          HEX: ${{ steps.hex.outputs.matches }}
+          PRIMARY: ${{ steps.primary.outputs.matches }}
+        run: |
+          body="## Design tokens advisory\n\nThis PR introduces or keeps legacy design token usage. The workflow is advisory only (does not block merge) for the first 2 sprints — see Sprint 5.0 plan.\n\n"
+          if [ -n "$ZINC" ]; then
+            body+="### zinc-\\d+ classes\n\n\`\`\`\n${ZINC}\n\`\`\`\n\n"
+          fi
+          if [ -n "$HEX" ]; then
+            body+="### HEX inline in design-system/components\n\n\`\`\`\n${HEX}\n\`\`\`\n\n"
+          fi
+          if [ -n "$PRIMARY" ]; then
+            body+="### bg-primary-N in src/design-system\n\n\`\`\`\n${PRIMARY}\n\`\`\`\n\n"
+          fi
+          body+="Run \`/design-token-check\` locally for the same scan. See the design-system-curator subagent for token translation guidance."
+          printf '%b' "$body" | gh pr comment ${{ github.event.pull_request.number }} -F -
