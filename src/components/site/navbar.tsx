@@ -5,15 +5,10 @@ import { SearchForm } from '@/components/busca/search-form'
 import { AuthSlot } from './auth-slot'
 
 /**
- * Navbar — Sprint 4.2 PR 1 (AuthSlot restaurado).
+ * Navbar — Sprint 4.2 PR 1 (AuthSlot restaurado), refeita em Sprint 4.6
+ * para tokens semânticos OKLCH (Wave 4 polimento final).
  *
  * RSC default. Substitui o header inline do layout.tsx.
- *
- * Consumo dos tokens semânticos do design system (PR 2 da Sprint 4.0):
- * - Estrutura usa zinc/primary legacy ainda (Sprint 4.3 reskinning faz
- *   migração ampla para foreground/surface). Manter pra zero regressão
- *   visual durante a Sprint 4.2 PR 1 — escopo aqui é apenas restaurar
- *   AuthSlot.
  *
  * Auth: `<AuthSlot />` RSC server-side decide via `auth()`:
  * - Anônimo (~80% do tráfego): renderiza link estático `<a href="/sign-in">`
@@ -26,17 +21,23 @@ import { AuthSlot } from './auth-slot'
  * 4.2 PR 1 após upgrade Workers Paid (issue #149).
  *
  * A11y mantida: <nav aria-label="Principal">, skip-link continua em
- * layout.tsx, focus rings preservados.
+ * layout.tsx, focus rings preservados (agora via `ring-ring` semântico).
+ *
+ * Link "Meu parlamentar" tratado como brand action (cor `text-brand`)
+ * — porta de entrada cívica recomendada, destaca-se dos demais links.
  */
+const NAV_LINK_CLASS =
+  'text-foreground transition-colors duration-150 hover:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
 export function Navbar() {
   return (
-    <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <header className="border-border border-b bg-surface">
       <nav
         aria-label="Principal"
         className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3"
       >
         <Link
-          className="font-semibold tracking-tight hover:text-zinc-700 dark:hover:text-zinc-300"
+          className="font-semibold tracking-tight text-foreground hover:text-foreground-muted"
           href="/"
         >
           Brasil a Vera
@@ -45,41 +46,29 @@ export function Navbar() {
           <ul className="hidden items-center gap-4 text-sm sm:flex">
             <li>
               <Link
-                className="font-medium text-primary-700 transition-colors duration-150 hover:text-primary-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-primary-300 dark:hover:text-primary-100"
+                className="font-medium text-brand transition-colors duration-150 hover:text-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href="/o-meu-parlamentar"
               >
                 Meu parlamentar
               </Link>
             </li>
             <li>
-              <Link
-                className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                href="/parlamentares"
-              >
+              <Link className={NAV_LINK_CLASS} href="/parlamentares">
                 Parlamentares
               </Link>
             </li>
             <li>
-              <Link
-                className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                href="/proposicoes"
-              >
+              <Link className={NAV_LINK_CLASS} href="/proposicoes">
                 Proposições
               </Link>
             </li>
             <li>
-              <Link
-                className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                href="/votacoes"
-              >
+              <Link className={NAV_LINK_CLASS} href="/votacoes">
                 Votações
               </Link>
             </li>
             <li>
-              <Link
-                className="text-zinc-700 transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:text-zinc-300 dark:hover:text-zinc-100"
-                href="/docs"
-              >
+              <Link className={NAV_LINK_CLASS} href="/docs">
                 Docs
               </Link>
             </li>
