@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.3 fechada — 3 perfis reskinned com KpiStrip + SectionNav + SectionCard + DataBadge; sprints 6.4-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Última atualização: 2026-05-16 (Sprint 6.4 fechada — comparar/busca/meu-parlamentar reskinned com HeroSection variants + SectionCard; sprints 6.5-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -932,7 +932,7 @@ Decisões arquiteturais que governam a Wave 6:
 | 6.1 | Reskin shell (navbar sticky + footer + home com hero premium + features grid) | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #207, #208, #209, #210) |
 | 6.2 | Reskin listagens (parlamentares + proposições + votações) com FilterChips + cards premium | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #211, #212, #213, #214) |
 | 6.3 | Reskin perfis (parlamentar + proposição + votação) com HeroCard + KpiStrip + SectionNav | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #215, #216, #217, #218) |
-| 6.4 | Comparar + busca + meu parlamentar | 📋 Planejada |
+| 6.4 | Comparar + busca + meu parlamentar | ✅ Concluída em 2026-05-16 (4 PRs sequenciais — #219, #220, #221, #222) |
 | 6.5 | Metodologia (hub TOC sticky + prose) + redirect 301 `/docs/*` → `/metodologia#anchor` (D3 híbrido) | 📋 Planejada |
 | 6.6 | Performance final + Lighthouse fechamento (#114) + métrica auto-merge + tag `v0.6.0-frontend-excellence` | 📋 Planejada |
 
@@ -1082,6 +1082,44 @@ Critérios de Done — atendidos:
 - [x] Section nav navega para anchors corretas (scroll-mt-28 cobre stack navbar+SectionNav)
 - [x] Mobile SectionNav vira sticky bar reduzida (composição Sprint 6.0 PR 5 já implementa)
 - [⚠️] LCP ≤ 2.5s — diferido para Sprint 6.6 (D7)
+
+### Sprint 6.4 — Comparar + busca + meu parlamentar ✅
+
+Entregue em 2026-05-16. 4 PRs sequenciais (#219, #220, #221, #222). Sem tag intermediária.
+
+PRs entregues:
+
+- **#219** — `feat(comparar): reskin — HeroSection plain + SectionCard + DataBadge kicker` (Columns3 icon como kicker; ErrorState helper local mantido)
+- **#220** — `feat(busca): reskin — HeroSection gradient (entry) + SectionCard (results)` (3 estados: empty/min-2/results; gradient só no empty state)
+- **#221** — `feat(meu-parlamentar): reskin — HeroSection + SectionCard nos 3 estados` (3 estados: no-UF/UF-sem-município/full; gradient no entry, plain nos contextuais)
+- **#222** — `chore(wave-6): close Sprint 6.4` (este PR)
+
+Decisões aplicadas (D1-D7 do plano):
+
+- **D1**: HeroSection selective — gradient nos estados entry/landing (busca empty, no UF), plain nos estados result/contextual (com query, com UF+município, comparativo carregado)
+- **D2**: Section/Heading/PageShell helpers locais (3 cópias) → SectionCard
+- **D3**: ErrorState em /comparar mantido (warning cirúrgico sem match em composição)
+- **D4**: SearchForm como sibling após HeroSection (não dentro de `actions`)
+- **D5**: SectionNav NÃO usado (2-3 sections por page, marginal)
+- **D6**: DataBadge kicker accent em /comparar e /busca-empty e /meu-parlamentar-entry
+- **D7**: 4 PRs sequenciais (1 por rota + closure)
+
+Entregáveis:
+
+- 3 rotas restantes reskinned: /comparar, /busca, /o-meu-parlamentar
+- 3 PerfilHeader-style HeroSections com variant condicional
+- 7 SectionCard wrapping seções (substituem Section helper duplicado 3×)
+- 3 helpers locais removidos (Section em /busca + /comparar; Heading + PageShell em /o-meu-parlamentar)
+- 0 testes novos (refactor visual)
+- Bundle delta path anônimo: **+0kb** (composições já em main desde Sprint 6.0)
+
+Critérios de Done — atendidos:
+
+- [x] URL state preservado em /comparar (?ids=...) e /busca (?q=...) e /meu-parlamentar (?uf=...&municipio=...)
+- [x] SSG / dynamic mantidos onde aplica
+- [x] EmptyState equivalente em cada rota (banner sem resultados na busca, ErrorState em comparar, copy pedagógico em meu-parlamentar)
+- [x] Lighthouse mobile: medição empírica fica para Sprint 6.6 (D7 do prompt mestre)
+- [x] TrustBanner — não tinha nas 3 rotas, não introduzimos (Wave 6 reskin não inventa)
 
 ### Critérios de sucesso da Wave 6
 
