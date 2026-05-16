@@ -51,17 +51,17 @@ export default async function FeedIndexPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
       <header className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 sm:text-4xl">
+        <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
           Feeds RSS
         </h1>
-        <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 text-foreground-muted text-lg">
           Inscreva-se para receber atualizações de votações nominais por
           recorte.
         </p>
       </header>
 
       <section className="mb-12">
-        <p className="text-base text-zinc-700 dark:text-zinc-300">
+        <p className="text-base text-foreground">
           Os feeds seguem o padrão RSS 2.0. Cole a URL no seu leitor (Feedly,
           NetNewsWire, Inoreader, etc) para receber as últimas 20 votações mais
           recentes de cada recorte. Cache de 1 hora — atualização alinhada com o
@@ -116,7 +116,7 @@ function FeedGroup({
 }) {
   return (
     <section className="mb-10">
-      <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <h2 className="mb-4 font-medium text-foreground-muted text-sm uppercase tracking-wide">
         {title}
       </h2>
       <ul
@@ -129,22 +129,22 @@ function FeedGroup({
         {feeds.map((feed) => (
           <li key={feed.href}>
             <a
+              className="block rounded-lg border border-border bg-surface p-3 transition-colors duration-150 hover:border-brand/60 hover:bg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               href={feed.href}
-              className="block rounded-lg border border-zinc-200 bg-white p-3 transition-colors duration-150 hover:border-primary-300 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-primary-700 dark:hover:bg-primary-950"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                <span className="font-medium text-foreground text-sm">
                   {feed.label}
                 </span>
                 <span
                   aria-hidden
-                  className="font-mono text-xs text-zinc-400 dark:text-zinc-500"
+                  className="font-mono text-foreground-subtle text-xs"
                 >
                   RSS
                 </span>
               </div>
               {feed.hint ? (
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="mt-1 text-foreground-muted text-xs">
                   {feed.hint}
                 </p>
               ) : null}

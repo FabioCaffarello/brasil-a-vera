@@ -39,7 +39,7 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
           title="Encontre seus representantes"
           subtitle="Descubra quem te representa no Congresso Nacional a partir do seu estado."
         />
-        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+        <p className="mb-6 max-w-2xl text-foreground text-sm leading-relaxed">
           No Congresso Nacional,{' '}
           <strong>você é representado pelo seu estado inteiro</strong>.
           Deputados federais e senadores votam em nome de toda a bancada
@@ -66,11 +66,11 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
           title="Encontre seus representantes"
           subtitle={`Em ${nomeUfCompleto(uf)} (${uf}).`}
         />
-        <div className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="space-y-4 rounded-lg border border-border bg-surface p-5">
           <UfSelectFormInline selecionada={uf} />
           <MunicipioAutocomplete uf={uf} municipios={municipios} />
           {municipioParam && (
-            <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            <p className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
               &quot;{municipioParam}&quot; não consta como município de {uf}.
               Verifique a grafia ou selecione na lista.
             </p>
@@ -94,7 +94,7 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
       />
 
       {/* Copy pedagógico reforçando (Variante B — curta). */}
-      <p className="mb-8 max-w-2xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+      <p className="mb-8 max-w-2xl text-foreground text-sm leading-relaxed">
         Você vota em deputados federais e senadores que representam todo o seu
         estado — independente da cidade onde você mora. Vereadores e deputados
         estaduais ficam fora da plataforma.
@@ -102,15 +102,15 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
 
       <section className="mb-10">
         <header className="mb-4">
-          <h2 className="font-semibold text-2xl text-zinc-900 tracking-tight dark:text-zinc-100">
+          <h2 className="font-semibold text-2xl text-foreground tracking-tight">
             Deputados Federais ({deputados.length})
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-foreground-muted text-sm">
             Mandato pela Câmara dos Deputados.
           </p>
         </header>
         {deputados.length === 0 ? (
-          <p className="rounded-lg border border-zinc-200 bg-white p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+          <p className="rounded-lg border border-border bg-surface p-5 text-foreground-muted text-sm">
             Nenhum deputado federal ingerido para {uf}.
           </p>
         ) : (
@@ -126,15 +126,15 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
 
       <section className="mb-10">
         <header className="mb-4">
-          <h2 className="font-semibold text-2xl text-zinc-900 tracking-tight dark:text-zinc-100">
+          <h2 className="font-semibold text-2xl text-foreground tracking-tight">
             Senadores ({senadores.length})
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-1 text-foreground-muted text-sm">
             Mandato pelo Senado Federal.
           </p>
         </header>
         {senadores.length === 0 ? (
-          <p className="rounded-lg border border-zinc-200 bg-white p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
+          <p className="rounded-lg border border-border bg-surface p-5 text-foreground-muted text-sm">
             Nenhum senador ingerido para {uf}.
           </p>
         ) : (
@@ -149,8 +149,8 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
       </section>
 
       <Link
+        className="inline-flex min-h-[44px] items-center text-brand text-sm underline decoration-dotted underline-offset-2 hover:text-brand/80"
         href="/o-meu-parlamentar"
-        className="inline-flex min-h-[44px] items-center text-sm text-primary-700 underline decoration-dotted underline-offset-2 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-100"
       >
         ← Trocar de município ou estado
       </Link>
@@ -167,13 +167,11 @@ function PageShell({ children }: { children: React.ReactNode }) {
 function Heading({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="mb-6">
-      <h1 className="font-semibold text-3xl text-zinc-900 tracking-tight dark:text-zinc-100">
+      <h1 className="font-semibold text-3xl text-foreground tracking-tight">
         {title}
       </h1>
       {subtitle && (
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          {subtitle}
-        </p>
+        <p className="mt-2 text-foreground-muted text-sm">{subtitle}</p>
       )}
     </header>
   )

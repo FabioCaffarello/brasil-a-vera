@@ -77,21 +77,18 @@ export function MunicipioAutocomplete({ uf, municipios }: Props) {
   return (
     <div ref={containerRef} className="relative">
       <label
+        className="mb-1.5 block font-medium text-foreground text-sm"
         htmlFor={inputId}
-        className="mb-1.5 block font-medium text-sm text-zinc-700 dark:text-zinc-300"
       >
         Município
       </label>
       <input
-        id={inputId}
-        type="text"
-        autoComplete="off"
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={listboxId}
         aria-autocomplete="list"
-        placeholder="Comece a digitar o nome…"
-        value={query}
+        aria-controls={listboxId}
+        aria-expanded={open}
+        autoComplete="off"
+        className="min-h-[44px] w-full rounded-md border border-border-strong bg-background px-3 py-2 text-base text-foreground placeholder:text-foreground-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        id={inputId}
         onChange={(e) => {
           setQuery(e.target.value)
           setOpen(true)
@@ -99,31 +96,34 @@ export function MunicipioAutocomplete({ uf, municipios }: Props) {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        className="min-h-[44px] w-full rounded border border-zinc-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:border-zinc-600 dark:bg-zinc-800"
+        placeholder="Comece a digitar o nome…"
+        role="combobox"
+        type="text"
+        value={query}
       />
       {open && matches.length > 0 && (
         <div
+          aria-label={`Municípios de ${uf}`}
+          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-surface shadow-md"
           id={listboxId}
           role="listbox"
-          aria-label={`Municípios de ${uf}`}
-          className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-zinc-200 bg-white shadow-md dark:border-zinc-700 dark:bg-zinc-900"
         >
           {matches.map((m, i) => (
             <div
-              key={m.id}
-              role="option"
-              tabIndex={-1}
               aria-selected={i === highlightIdx}
               className={`cursor-pointer px-3 py-2 text-sm ${
                 i === highlightIdx
-                  ? 'bg-primary-50 text-primary-900 dark:bg-primary-900 dark:text-primary-50'
-                  : 'text-zinc-800 dark:text-zinc-200'
+                  ? 'bg-brand/15 text-brand'
+                  : 'text-foreground'
               }`}
-              onMouseEnter={() => setHighlightIdx(i)}
+              key={m.id}
               onMouseDown={(e) => {
                 e.preventDefault()
                 navigate(m.nome)
               }}
+              onMouseEnter={() => setHighlightIdx(i)}
+              role="option"
+              tabIndex={-1}
             >
               {m.nome}
             </div>
@@ -131,11 +131,11 @@ export function MunicipioAutocomplete({ uf, municipios }: Props) {
         </div>
       )}
       {open && matches.length === 0 && query.trim().length > 0 && (
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-foreground-muted text-sm">
           Nenhum município de {uf} corresponde a &quot;{query}&quot;.
         </p>
       )}
-      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-2 text-foreground-muted text-xs">
         {municipios.length === 1
           ? `${uf} tem 1 município.`
           : `${uf} tem ${municipios.length} municípios.`}{' '}
