@@ -5,7 +5,6 @@ import { FidelidadeMediaBlock } from '@/components/partido/fidelidade-media'
 import { GastoBancadaBlock } from '@/components/partido/gasto-bancada'
 import { PartidoHeader } from '@/components/partido/header'
 import { TopTemasPartido } from '@/components/partido/top-temas'
-import { getPartidosDistintos } from '@/lib/queries/parlamentares'
 import {
   getFidelidadeInternaMedia,
   getGastoBancadaAno,
@@ -13,31 +12,18 @@ import {
   getTop5TemasPartido,
 } from '@/lib/queries/partidos'
 
-// SSG: lista de siglas no build (princípio 9). `revalidate` 6h espelha a
-// TTL de edge cache; páginas regeneram em background quando expira.
-export const revalidate = 21_600
-
-// Em CI (e em qualquer build que rode com DATABASE_URL placeholder), a query
-// falha. Retorna `[]` nesse caso — Next continua SSG mas pré-geração some;
-// primeira request gera on-demand e populá o cache via `revalidate`. Build
-// local com .env.local apontando ao DB real pré-gera todas as siglas.
-// Princípio 13 herdado do Wave 2.0: hipótese "build local = build CI" foi
-// falsificada por essa exata divergência de ambiente.
-export async function generateStaticParams() {
-  try {
-    const siglas = await getPartidosDistintos()
-    return siglas.map((sigla) => ({ sigla }))
-  } catch (err) {
-    console.warn(
-      JSON.stringify({
-        event: 'generate_static_params_failed',
-        route: '/partidos/[sigla]',
-        message: err instanceof Error ? err.message : String(err),
-      }),
-    )
-    return []
-  }
-}
+// Dynamic render — `auth()` no layout via <AuthSlot /> (Sprint 4.2 PR 1)
+// torna toda página dinâmica em runtime. O combo anterior (`revalidate`
+// constante + `generateStaticParams` retornando `[]` em build CI) crashou
+// no workerd com "An error occurred in the Server Components render" em
+// 100% das requests pós-merge do PR #152. Empíricamente confirmado em
+// `cf:preview` reproduzindo o build CI (placeholder DATABASE_URL).
+//
+// Caching server-side é feito por query via `cached(...)` em
+// src/lib/queries/partidos.ts (Workers caches.default API, TTL
+// `partidoOverview`). Edge HTML caching não é usado nesta rota — o ganho
+// vem de hits no cache de query, não de prerender.
+export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ sigla: string }>
