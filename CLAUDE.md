@@ -153,6 +153,27 @@ docs/
 - ADRs em `docs/future/adr/` representam visão de longo prazo, não compromisso.
   Não os trate como aceitos.
 
+## Operação multi-contribuidor (Wave 5+)
+
+Este projeto opera com roles (`engineer`, `designer`) a partir da Wave 5.
+A configuração do ecossistema `.claude/` está versionada e é a fonte de
+verdade. Quem opera Claude Code aqui:
+
+- Lê primeiro `.claude/README.md` (orientação geral).
+- Identifica seu role (default `designer`; engineer declara via
+  `export BAV_CLAUDE_ROLE=engineer` no shell rc).
+- Lê o onboarding correspondente em `.claude/docs/ONBOARDING-*.md`.
+
+Hooks em `.claude/hooks/` aplicam guard-rails por role automaticamente
+(matriz em `.claude/docs/ROLES.md`). CODEOWNERS em
+`.github/CODEOWNERS` define revisão obrigatória por área quando branch
+protection ligar "Require review from Code Owners" (ver
+`docs/contributing/BRANCH-PROTECTION.md`).
+
+Adições ao ecossistema (skill, hook, agent) seguem ADR-019: gargalo
+concreto observado antes da peça nova. Teste empírico em sessão real
+com output literal copiado para o PR.
+
 ## Notas
 
 Este é projeto solo (1 dev) mantido por doação. Otimizamos por baixo custo
