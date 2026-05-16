@@ -19,7 +19,7 @@
 
 ## Contexto
 
-A Wave 6 (`docs/wave-6/PROMPT-MESTRE.md`) inicia o reskin diagnóstico-dirigido
+A Wave 6 (`docs/product/PROMPT-MESTRE-WAVE-6.md`) inicia o reskin diagnóstico-dirigido
 do produto, portando a linguagem visual madura do protótipo do designer parceiro
 (`usernamette/vera-politica`) para a nossa stack RSC + tokens próprios.
 
@@ -208,7 +208,7 @@ Casos onde os 3 critérios EXPLICITAMENTE não concorrem (rejeitar de pronto):
 
 ## Referências
 
-- [`docs/wave-6/PROMPT-MESTRE.md`](../../wave-6/PROMPT-MESTRE.md) §1, §5, §6 —
+- [`docs/product/PROMPT-MESTRE-WAVE-6.md`](../../product/PROMPT-MESTRE-WAVE-6.md) §1, §5, §6 —
   prompt mestre Wave 6
 - [ADR-019 — Disciplina arquitetural sem gargalo](019-disciplina-arquitetural-sem-gargalo.md)
 - [ADR-021 — Design system shadcn curado](021-design-system-shadcn-curado.md) §Princípio 14

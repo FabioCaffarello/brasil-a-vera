@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.0 abre — Wave 6 "Frontend de Excelência (reskin diagnóstico-dirigido)" entra em execução; contrato vigente em `docs/wave-6/PROMPT-MESTRE.md`)
+> Última atualização: 2026-05-16 (Sprint 6.0 abre — Wave 6 "Frontend de Excelência (reskin diagnóstico-dirigido)" entra em execução; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
 > Status: accepted
 
 ---
@@ -905,7 +905,7 @@ Sem essas respostas calibradas em evidência empírica, a Wave 5 permanece em mo
 
 > **Pergunta validada**: "Conseguimos portar a linguagem visual madura do protótipo do designer parceiro (`usernamette/vera-politica`) para a nossa stack RSC + tokens próprios + queries server-side sem regredir performance, a11y, trust pyramid ou AuthSlot RSC anônimo zero-JS?"
 
-> **Contrato vigente**: [`docs/wave-6/PROMPT-MESTRE.md`](../wave-6/PROMPT-MESTRE.md). Releia §0, §1, §5, §6 a cada início de Sprint. Decisões D1-D11 fechadas em 2026-05-16.
+> **Contrato vigente**: [`docs/product/PROMPT-MESTRE-WAVE-6.md`](PROMPT-MESTRE-WAVE-6.md). Releia §0, §1, §5, §6 a cada início de Sprint. Decisões D1-D11 fechadas em 2026-05-16.
 
 A Wave 6 nasce em 2026-05-16, logo após o fechamento da Sprint 5.0 (`v0.5.0-claude-ecosystem`). A Wave 4 entregou a fundação do design system (tokens OKLCH + 10 primitivas + boundary import enforced); a Wave 5 entregou a infraestrutura de colaboração (`.claude/` ecossistema + governança `.github/`). **A Wave 6 é a primeira em que ambas as fundações se encontram em código de produto visível ao cidadão**, portando a linguagem visual madura do designer parceiro para a nossa stack.
 
@@ -914,7 +914,7 @@ A Wave 6 é deliberadamente **sem features novas de domínio** — toda a lógic
 ### Modo operacional (decisão D8 do prompt mestre)
 
 - Toda a Wave 6 é tocada pelo owner em role `engineer`.
-- Claude Code tem **autorização para abrir E mergear PRs sem checkpoint humano explícito**, condicionado às barreiras técnicas do [prompt mestre §6](../wave-6/PROMPT-MESTRE.md). PRs auto-merged recebem label `auto-merged-wave-6` para auditoria.
+- Claude Code tem **autorização para abrir E mergear PRs sem checkpoint humano explícito**, condicionado às barreiras técnicas do [prompt mestre §6](PROMPT-MESTRE-WAVE-6.md). PRs auto-merged recebem label `auto-merged-wave-6` para auditoria.
 - Felipe NÃO opera nesta wave. Refinamento do `ONBOARDING-DESIGNER.md` baseado em Wave 6 fica para abertura de Wave 7+.
 - Registro leve em `CLAUDE.md` (seção "Auto-merge — Wave 6"), sem ADR formal — o desvio é transitório, escopado e auditável.
 - Métrica honesta de PRs auto-merged + spot-check vai no release `v0.6.0-frontend-excellence`.

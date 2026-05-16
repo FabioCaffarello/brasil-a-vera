@@ -28,7 +28,7 @@ suficiente para a fase pública do produto: `--background`, `--surface`,
 `WCAG-AUDIT.md` e passa WCAG 2.1 AA empiricamente via `.local/wcag-check.ts`.
 
 A Wave 6 (reskin diagnóstico-dirigido,
-[prompt mestre §2.1](../../wave-6/PROMPT-MESTRE.md)) introduz um padrão
+[prompt mestre §2.1](../../product/PROMPT-MESTRE-WAVE-6.md)) introduz um padrão
 visual recorrente no protótipo do designer (`usernamette/vera-politica`):
 um **badge de contexto** com ícone `Sparkles` + kicker textual logo acima do
 H1 dos heros, e pequenos selos narrativos espalhados em cards (badge
@@ -298,7 +298,7 @@ dataviz). Esse caso vira issue específica.
 
 ## Referências
 
-- [`docs/wave-6/PROMPT-MESTRE.md`](../../wave-6/PROMPT-MESTRE.md) §2.1 —
+- [`docs/product/PROMPT-MESTRE-WAVE-6.md`](../../product/PROMPT-MESTRE-WAVE-6.md) §2.1 —
   inventário de tokens que designer tem e nós não
 - [ADR-021 — Design system shadcn curado](021-design-system-shadcn-curado.md)
 - [ADR-023 — Critérios para animação e revealing](023-criterios-de-animacao-e-revealing.md)

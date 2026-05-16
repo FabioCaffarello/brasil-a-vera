@@ -179,7 +179,7 @@ com output literal copiado para o PR.
 Durante a Wave 6 (Sprint 6.0–6.6), o owner em role `engineer`
 autoriza o Claude Code a abrir E mergear PRs sem aprovação humana
 externa, condicionado às barreiras técnicas detalhadas no prompt
-mestre Wave 6 §6 ([`docs/wave-6/PROMPT-MESTRE.md`](docs/wave-6/PROMPT-MESTRE.md)).
+mestre Wave 6 §6 ([`docs/product/PROMPT-MESTRE-WAVE-6.md`](docs/product/PROMPT-MESTRE-WAVE-6.md)).
 
 Aplicabilidade: apenas Wave 6, apenas owner, apenas PRs com label
 `auto-merged-wave-6`. Outros contribuidores e outras waves seguem
