@@ -4,10 +4,12 @@ interface Props {
   temas: TemaContagem[]
 }
 
+// Sprint 4.4 PR 1 commit 4/6 — refatorado para tokens semânticos.
+// Lista ordenada simples (tema + contagem tabular).
 export function TopTemasPartido({ temas }: Props) {
   if (temas.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-foreground-muted text-sm">
         Nenhuma proposição autorada por membros desta bancada na base atual.
       </p>
     )
@@ -17,11 +19,11 @@ export function TopTemasPartido({ temas }: Props) {
     <ol className="space-y-2">
       {temas.map((t) => (
         <li
-          key={t.nomeTema}
           className="flex items-center justify-between gap-3 text-sm"
+          key={t.nomeTema}
         >
-          <span className="text-zinc-800 dark:text-zinc-200">{t.nomeTema}</span>
-          <span className="font-medium tabular-nums text-zinc-500 dark:text-zinc-400">
+          <span className="text-foreground">{t.nomeTema}</span>
+          <span className="font-medium tabular-nums text-foreground-muted">
             {t.contagem}
           </span>
         </li>
