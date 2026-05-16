@@ -1,7 +1,7 @@
 # Roadmap
 
 > Brasil a Vera · Produto · v0.4.0
-> Última atualização: 2026-05-16 (Sprint 4.3 concluída — Perfil 360° do parlamentar com tokens semânticos, tag v0.4.3-profile-premium)
+> Última atualização: 2026-05-16 (Sprint 4.4 concluída — /partidos/[sigla] + /comparar + /busca reskinned; banner mantém v0.4.3-profile-premium)
 > Status: accepted
 
 ---
@@ -730,12 +730,57 @@ polimento.
 - Plano de otimização específico baseado em dado real (avatares, queries, HTML size)
 - Smoke probe de performance regression (opcional, depende de gargalo)
 
-### Wave 4.4 — Perfis de proposição, votação, partido + busca + comparar
+### Wave 4.4 — /partidos/[sigla] + /comparar + /busca (rotas restantes do Wave 4)
 
-> **Tag de release**: integrar em `v0.4.x`
-> **Status**: planejada
+> **Tag de release**: integrar em `v0.4.x` (sem tag intermediária — banner mantém `v0.4.3-profile-premium`)
+> **Status**: ✅ Concluída em 2026-05-16
+> **Duração real**: 1 dia (4 PRs sequenciais)
 
-Aplicação do design system às páginas restantes (proposição individual, votação individual, partido, busca, comparar). Padrão segue 4.2/4.3.
+**Por que quinto**: completa a aplicação do design system às 3 rotas restantes do Wave 4 — `/partidos/[sigla]` (perfil do partido), `/comparar` (comparativo lado-a-lado 2-3 parlamentares), `/busca` (busca cruzada). Proposições e votações individuais (`/proposicoes/[tipo]` e `/votacoes/[id]`) já tinham sido reskinned na Sprint 4.2 — escopo desta sprint foi precificado em 1 dia.
+
+#### PRs entregues
+
+| PR | Conteúdo |
+|---|---|
+| [#166](https://github.com/FabioCaffarello/brasil-a-vera/pull/166) | `/partidos/[sigla]` — 1 page + 5 sub-componentes (`partido/header`, `bancada-list` com focus ring + hover affordance, `fidelidade-media` com 3 limiares semânticos, `top-temas`, `gasto-bancada`). 6 commits. |
+| [#167](https://github.com/FabioCaffarello/brasil-a-vera/pull/167) | `/comparar` — 1 page + 2 sub-componentes (`parlamentares-grid` 2-3 colunas, `concordancia-matrix` com 3 limiares — 4ª rota a herdar o padrão). ErrorState amber → warning subtle (D4 herdada). 3 commits. |
+| [#168](https://github.com/FabioCaffarello/brasil-a-vera/pull/168) | `/busca` — `search-form` migrado para primitivas Input + Button (Server Component compatíveis; Label sr-only nativo preservado por decisão deliberada). Banner "match exato" emerald → success subtle. Bundle gzipped reduzido ~20 KB. 2 commits. |
+| [#169](https://github.com/FabioCaffarello/brasil-a-vera/pull/169) | Este PR — fechamento (ROADMAP atualizado). |
+
+#### Decisões aplicadas durante a sprint
+
+- **D1 — Limiares de cor para % uniformizados em 4 rotas** Mesma escala `success`/`foreground`/`warning` agora em: alinhamento individual (Sprint 4.3), Top 5 afinidade (Sprint 4.3), fidelidade interna média (esta sprint), concordância entre pares (esta sprint). Cidadão lê a mesma faixa visual em qualquer % de fidelidade/alinhamento.
+- **D2 — ErrorState amber → warning subtle** (D4 herdada Sprint 4.3) Caixa "Comparativo indisponível" em `/comparar` ganha mesmo tratamento de `ParesContraditorios` e box de "amostra insuficiente". Erros guiados (instrução clara de uso) merecem warning, não destructive.
+- **D3 — Banner "match exato" emerald → success subtle** Descoberta positiva em `/busca` (referência canônica detectada → atalho oferecido) ganha token semântico `success`. Texto principal em `text-foreground` (legibilidade); apenas a ref acionável em `text-success` (call to action sem ser invasivo).
+- **D4 — Input + Button primitives no SearchForm** Server Component compatíveis (não criam boundary client). Bundle reduzido ~20 KB (search-form deixa de inline as classes primary-XXX em favor de Button já bundled).
+- **D5 — Label nativo `sr-only` preservado** NÃO migrar para `<Label>` primitive (Radix `'use client'`) — labels visualmente escondidas não se beneficiam dos extras (click ativa input, peer-disabled tracking).
+- **D6 — Header variant da SearchForm com width animation** Comportamento da Navbar (`w-32 focus:w-48 sm:w-48 sm:focus:w-64`) preservado via className override no Input.
+- **D7 — Sem tag intermediária** Banner mantém `v0.4.3-profile-premium`. Tag `v0.4.x` final consolidará 4.4 + 4.5 + 4.6.
+
+#### Critérios de Done — atendidos
+
+- [x] Páginas mantém arquitetura RSC e queries — apenas apresentação alterada
+- [x] `/comparar`: 4 cenários do ErrorState preservados (validação UUID, mínimo 2, máximo 3, ID inexistente)
+- [x] `/busca`: 3 variantes preservadas (sem query, query < 2 chars, com resultados); search-form GET sem JS client
+- [x] `/partidos/[sigla]`: `dynamic = 'force-dynamic'` preservado (fix #157)
+- [x] 364 testes verdes ao longo dos 4 PRs
+- [x] Worker bundle gzipped: 2.19 MB (vs 2.21 MB pré-sprint — leve redução em PR 3 via primitivas)
+- [x] Escala de cor para % uniforme em 4 rotas (alinhamento/fidelidade/afinidade/concordância)
+
+#### Carryover para Sprint 4.5
+
+Sprint 4.5 — Minha área (autenticada). Pré-requisitos da sprint (mantidos):
+- Definir o que persistir e schema de `usuario_acompanhamento`
+- ADR específico sobre persistência multi-tenant LGPD-aware antes de criar a tabela
+- Decisão D7 (`auth.protect()` em `/minha-area/*`) — middleware já está expandido (Sprint 4.2 PR 1), falta apenas habilitar proteção quando rotas privadas existirem
+
+Sem carryover técnico do reskin — Wave 4.4 fecha o ciclo de reskinning de rotas públicas existentes. Próximas rotas privadas serão construídas já com tokens semânticos desde o início.
+
+#### Carryover para Sprint 4.6 (mantido da Sprint 4.3)
+
+- Validação Lighthouse mobile (LCP ≤ 2.5s + scores ≥ 95/100) — D7 Sprint 4.3
+- Plano de otimização específico baseado em dado real (avatares, queries, HTML size)
+- Smoke probe de performance regression (opcional, depende de gargalo)
 
 ### Wave 4.5 — Minha área (autenticada)
 
