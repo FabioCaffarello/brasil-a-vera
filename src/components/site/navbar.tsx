@@ -5,56 +5,71 @@ import { SearchForm } from '@/components/busca/search-form'
 
 import { AuthSlot } from './auth-slot'
 import { NavLinks } from './nav-links'
+import { NavMobile } from './nav-mobile'
 
 /**
- * Navbar — Sprint 6.1 PR 1 (Wave 6, reskin shell).
+ * Navbar — Wave 6 navbar reskin (pós Sprint 6.1).
  *
- * Mudanças vs Sprint 4.6:
- * - Sticky com `glass-strong` backdrop (ADR-024 utilitário Sprint 6.0)
- * - Logo gráfico com `bg-gradient-primary` (ADR-024) + ícone Eye lucide
- *   (transparência cívica)
- * - Lista de links extraída em `<NavLinks />` client component pequeno
- *   (`'use client'`) para suportar active state via `usePathname`. Mantém
- *   AuthSlot + SearchForm como RSC — zero-JS Clerk anônimo preservado
+ * Shell:
+ * - Sticky com backdrop `glass-strong` (ADR-024).
+ * - Altura fixa `h-16` (64px) — presença visual + alvo de toque
+ *   confortável no mobile (mobile trigger 36px com padding).
+ * - Hairline `border-white/[0.08]` em vez do par redundante
+ *   `glass-strong + border-border` (glass-strong já injeta border 1px).
+ * - `relative` para ancorar `<NavMobile />` painel `absolute top-full`.
  *
- * Auth (intocada vs Sprint 4.2):
+ * Logo:
+ * - Quadrado gradient (primary→accent ADR-024) + Eye lucide (metáfora
+ *   de transparência cívica). Hover ganha micro lift (scale 1.05) e
+ *   shadow-glow já vem do utilitário Wave 6.
+ * - Wordmark "Brasil à Vera" com `-tracking-tight` para densidade.
+ *
+ * Cluster direito (decisão pós-spike: manter cluster, não centralizar):
+ *   [NavLinks desktop] [SearchForm header] [AuthSlot] [NavMobile trigger]
+ *
+ * Mobile (< md):
+ * - NavLinks e SearchForm escondidos (cada um decide via classe própria).
+ * - NavMobile renderiza trigger hambúrguer + painel embutido full-width.
+ *
+ * Auth (preservada vs Sprint 4.2):
  * - `<AuthSlot />` RSC decide via `auth()`:
- *   - Anônimo: link estático `<a href="/sign-in">` (zero JS Clerk)
+ *   - Anônimo: `<Button variant="outline" asChild>` (zero JS Clerk)
  *   - Autenticado: `<AuthIslandLoader />` lazy via next/dynamic
  *
- * A11y mantida: <nav aria-label="Principal">, skip-link em layout.tsx,
- * focus rings via `ring-ring` semântico.
+ * A11y:
+ * - <nav aria-label="Principal"> landmark único.
+ * - Skip-link em layout.tsx (#conteudo).
+ * - Focus rings via `ring-ring` semântico.
  *
- * ADRs consumidos: 021 (boundary import — navbar é consumer de DS via
- * primitiva nenhuma direta + composições zero — pure layout/site), 022
- * (Clerk pattern AuthSlot), 023 (CSS only transition), 024 (utilitários
- * --gradient-primary + .glass-strong).
+ * ADRs consumidos: 021 (boundary), 022 (Clerk pattern), 023 (CSS only
+ * transitions), 024 (--gradient-primary + .glass-strong).
  */
 export function Navbar() {
   return (
-    <header className="glass-strong sticky top-0 z-30 border-border border-b">
+    <header className="glass-strong sticky top-0 z-30 border-white/[0.08] border-b">
       <nav
         aria-label="Principal"
-        className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3"
+        className="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:gap-6"
       >
         <Link
-          className="flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="group flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           href="/"
         >
           <span
             aria-hidden="true"
-            className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-primary shadow-glow"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary shadow-glow ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-[1.04] group-active:scale-95"
           >
-            <Eye className="h-4 w-4 text-white" />
+            <Eye className="h-[18px] w-[18px] text-white" />
           </span>
-          <span className="font-semibold tracking-tight text-foreground">
+          <span className="-tracking-tight font-semibold text-[15px] text-foreground">
             Brasil à Vera
           </span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-3">
           <NavLinks />
           <SearchForm variant="header" />
           <AuthSlot />
+          <NavMobile />
         </div>
       </nav>
     </header>
