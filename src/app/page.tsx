@@ -1,4 +1,11 @@
-import { ArrowRight, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock,
+  FileText,
+  Sparkles,
+  Users,
+  Vote,
+} from 'lucide-react'
 import Link from 'next/link'
 
 import { CardMeuParlamentar } from '@/components/home/card-meu-parlamentar'
@@ -95,18 +102,25 @@ export default async function Home() {
             aria-label="Métricas do Brasil à Vera"
             items={[
               {
+                icon: <Users className="h-6 w-6" />,
                 label: 'Parlamentares',
                 value: formatNumeroAbreviado(stats.totalParlamentares),
               },
               {
+                icon: <FileText className="h-6 w-6" />,
                 label: 'Proposições',
                 value: formatNumeroAbreviado(stats.totalProposicoes),
               },
               {
+                icon: <Vote className="h-6 w-6" />,
                 label: 'Votações',
                 value: formatNumeroAbreviado(stats.totalVotacoes),
               },
-              { label: 'Atualização', value: 'Diária' },
+              {
+                icon: <Clock className="h-6 w-6" />,
+                label: 'Atualização',
+                value: 'Diária',
+              },
             ]}
           />
         }

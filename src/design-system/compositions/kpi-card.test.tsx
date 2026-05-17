@@ -81,4 +81,53 @@ describe('KpiCard composition', () => {
     expect(html).not.toMatch(/text-black\b/)
     expect(html).not.toMatch(/border-gray-\d/)
   })
+
+  it('renderiza icon quando fornecido (em container aria-hidden)', () => {
+    render(
+      <KpiCard
+        items={[
+          {
+            icon: <span data-testid="my-icon">★</span>,
+            label: 'Com icon',
+            value: '1',
+          },
+        ]}
+      />,
+    )
+    const icon = screen.getByTestId('my-icon')
+    expect(icon.textContent).toBe('★')
+    // wrapper do icon deve ser aria-hidden (icon é decorativo;
+    // label+value carregam significado para SR)
+    const wrapper = icon.parentElement
+    expect(wrapper?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('omite container de icon quando ausente (sem espaço reservado)', () => {
+    const { container } = render(
+      <KpiCard items={[{ label: 'Sem icon', value: '1' }]} />,
+    )
+    // não pode haver div aria-hidden=true (que envolveria o icon)
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('aceita hint como ReactNode complexo (não apenas string)', () => {
+    render(
+      <KpiCard
+        items={[
+          {
+            hint: (
+              <span data-testid="hint-node">
+                <strong>L1</strong> · Câmara
+              </span>
+            ),
+            label: 'Com hint ReactNode',
+            value: '513',
+          },
+        ]}
+      />,
+    )
+    const hint = screen.getByTestId('hint-node')
+    expect(hint.querySelector('strong')?.textContent).toBe('L1')
+    expect(hint.textContent).toBe('L1 · Câmara')
+  })
 })

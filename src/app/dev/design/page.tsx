@@ -1,9 +1,12 @@
 import {
+  Clock,
   Database,
+  FileText,
   Inbox,
   Sparkles,
   TrendingDown,
   TrendingUp,
+  Users,
   Vote,
 } from 'lucide-react'
 
@@ -612,10 +615,26 @@ export default function DesignSystemPage() {
                 <KpiCard
                   aria-label="Métricas do Brasil à Vera (showcase)"
                   items={[
-                    { label: 'Deputados', value: '513' },
-                    { label: 'Proposições', value: '+250k' },
-                    { label: 'Votações', value: '+30k' },
-                    { label: 'Atualização', value: 'Diária' },
+                    {
+                      icon: <Users className="h-6 w-6" />,
+                      label: 'Parlamentares',
+                      value: '513',
+                    },
+                    {
+                      icon: <FileText className="h-6 w-6" />,
+                      label: 'Proposições',
+                      value: '+250k',
+                    },
+                    {
+                      icon: <Vote className="h-6 w-6" />,
+                      label: 'Votações',
+                      value: '+30k',
+                    },
+                    {
+                      icon: <Clock className="h-6 w-6" />,
+                      label: 'Atualização',
+                      value: 'Diária',
+                    },
                   ]}
                 />
               }
@@ -657,10 +676,26 @@ export default function DesignSystemPage() {
                 <KpiCard
                   aria-label="Métricas do Brasil à Vera (showcase plain+center)"
                   items={[
-                    { label: 'Parlamentares', value: '513' },
-                    { label: 'Proposições', value: '+250k' },
-                    { label: 'Votações', value: '+30k' },
-                    { label: 'Atualização', value: 'Diária' },
+                    {
+                      icon: <Users className="h-6 w-6" />,
+                      label: 'Parlamentares',
+                      value: '513',
+                    },
+                    {
+                      icon: <FileText className="h-6 w-6" />,
+                      label: 'Proposições',
+                      value: '+250k',
+                    },
+                    {
+                      icon: <Vote className="h-6 w-6" />,
+                      label: 'Votações',
+                      value: '+30k',
+                    },
+                    {
+                      icon: <Clock className="h-6 w-6" />,
+                      label: 'Atualização',
+                      value: 'Diária',
+                    },
                   ]}
                 />
               }
@@ -733,28 +768,74 @@ export default function DesignSystemPage() {
         <div className="space-y-4">
           <h3 className="font-medium text-foreground text-lg">KpiCard</h3>
           <p className="text-foreground-muted text-sm">
-            Card de KPIs em <code>surface-elevated</code> do spike PR do hero
-            gradient-glow. Diferente de <code>KpiStrip</code>: valores em escala
-            maior (<code>text-3xl</code> → <code>text-5xl</code>), surface
-            elevada para destacar contra o hero, layout fixo em 4 colunas md+.
-            Aceita 2-6 itens; consumer pré-formata <code>value</code>{' '}
-            (composição não chama formatadores).
+            Card de KPIs em <code>surface-elevated</code>. Diferente de{' '}
+            <code>KpiStrip</code>: ícone top → value → label → hint em vertical
+            com ritmo uniforme, type scale calibrada para densidade 4-col (
+            <code>text-2xl</code> → <code>text-3xl</code>), whitespace gutters
+            (sem <code>divide-x</code>). Props por item:{' '}
+            <code>icon?: ReactNode</code>, <code>label</code>,{' '}
+            <code>value</code>, <code>hint?: ReactNode</code>. Consumer
+            pré-formata <code>value</code>; composição não chama formatadores
+            nem conhece domínio.
           </p>
 
-          {/* Variante 4 itens — espelha o hero da home */}
+          {/* Variante 4 itens com ícones — espelha o hero da home */}
           <KpiCard
-            aria-label="Métricas do Brasil à Vera (showcase 4 itens)"
+            aria-label="Métricas do Brasil à Vera (showcase 4 itens com ícones)"
             items={[
-              { label: 'Deputados', value: '513' },
-              { label: 'Proposições', value: '+250k' },
-              { label: 'Votações', value: '+30k' },
-              { label: 'Atualização', value: 'Diária' },
+              {
+                icon: <Users className="h-6 w-6" />,
+                label: 'Parlamentares',
+                value: '513',
+              },
+              {
+                icon: <FileText className="h-6 w-6" />,
+                label: 'Proposições',
+                value: '+250k',
+              },
+              {
+                icon: <Vote className="h-6 w-6" />,
+                label: 'Votações',
+                value: '+30k',
+              },
+              {
+                icon: <Clock className="h-6 w-6" />,
+                label: 'Atualização',
+                value: 'Diária',
+              },
             ]}
           />
 
-          {/* Variante 2 itens com hint opcional */}
+          {/* Variante 3 itens com hint como DataBadge — demonstra
+              ReactNode no slot hint (consumer escolhe o shape). */}
           <KpiCard
-            aria-label="Métricas com hint"
+            aria-label="Métricas com hint DataBadge (trust level)"
+            items={[
+              {
+                hint: <DataBadge label="L1" source="Câmara" tone="success" />,
+                icon: <Users className="h-6 w-6" />,
+                label: 'Parlamentares',
+                value: '513',
+              },
+              {
+                hint: <DataBadge label="L2" source="análise" tone="brand" />,
+                icon: <TrendingUp className="h-6 w-6" />,
+                label: 'Alinhamento',
+                value: '87%',
+              },
+              {
+                hint: <DataBadge label="L3" source="modelo" tone="accent" />,
+                icon: <Vote className="h-6 w-6" />,
+                label: 'Coerência',
+                value: '0,84',
+              },
+            ]}
+          />
+
+          {/* Variante 2 itens com hint string — demonstra fallback ao
+              shape mais simples (string ainda é ReactNode válido). */}
+          <KpiCard
+            aria-label="Métricas com hint string"
             items={[
               { label: 'Alinhamento', value: '87%', hint: 'L3 · análise' },
               { label: 'Votos analisados', value: '124', hint: 'últimos 30d' },

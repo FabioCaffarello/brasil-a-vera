@@ -1,7 +1,17 @@
+import type { ReactNode } from 'react'
+
 import { cn } from '@/lib/cn'
 
 export type KpiCardItem = {
-  /** Label curta abaixo do valor (ex: "Deputados Federais"). */
+  /**
+   * Ícone acima do valor (geralmente `lucide-react`, ex: `<Users>`,
+   * `<FileText>`, `<Vote>`, `<Clock>`). Quando usado, recomenda-se
+   * aplicar a todos os items do mesmo card — a consistência da
+   * "linha de ícones" é o que entrega o ganho de scan visual. Item
+   * sem ícone renderiza sem o container (sem espaço reservado).
+   */
+  icon?: ReactNode
+  /** Label curta abaixo do valor (ex: "Parlamentares"). */
   label: string
   /**
    * Valor principal pré-formatado pelo consumer. A composição NÃO
@@ -10,8 +20,13 @@ export type KpiCardItem = {
    * a `formatNumeroAbreviado` ou Intl.NumberFormat).
    */
   value: string
-  /** Microcopia opcional (ex: trust level, frequência, fonte). */
-  hint?: string
+  /**
+   * Slot livre abaixo do label — trust badge, fonte, delta de
+   * tendência, etc. Consumer controla o shape: pode ser string
+   * crua, `<DataBadge>`, span estilizado, ou qualquer ReactNode.
+   * Renderizado com `text-xs` (legível, não-decorativo).
+   */
+  hint?: ReactNode
 }
 
 export type KpiCardProps = {
@@ -26,19 +41,25 @@ export type KpiCardProps = {
  * KpiCard — composição da Wave 6 (Sprint 6.0 spike PR).
  *
  * Card de KPIs em surface elevated, otimizado para o hero da home.
- * Diferente de `KpiStrip` em três pontos:
+ * Diferente de `KpiStrip` em quatro pontos:
  *
  * - Surface elevada (`bg-surface-elevated`) — destacado contra o hero.
- * - Valores em escala maior (`text-3xl` → `text-5xl` desktop) — peso
- *   narrativo de "métrica de produto", não chip de meta.
- * - Layout fixo em 4 colunas md+ (cap implícito via `grid-cols-4`).
+ * - Icon top → value → label → hint em vertical com ritmo uniforme
+ *   (vs strip horizontal). Ícone anchora cada KPI visualmente.
+ * - Type scale calibrada para densidade 4-col (`text-2xl` →
+ *   `text-3xl` no sm+), evitando o salto brutal para `text-5xl`.
+ * - Whitespace gutters (`gap-x`) em vez de `divide-x` — leitura
+ *   menos fragmentada, padrão moderno para data cards.
  *
  * Server Component. Sem state. Sem domínio (consumer pré-formata o
- * valor). Token-driven — zero hardcode de cor (ADR-021).
+ * valor; consumer escolhe ícones e shape do hint). Token-driven —
+ * zero hardcode de cor (ADR-021).
  *
  * Acessibilidade: `<ul>/<li>` semantic + `role="list"` explícito no
  * `<ul>` para preservar anúncio em Safari/VoiceOver após o reset
  * `list-style: none` do Tailwind v4 preflight (issue conhecida).
+ * Ícones decorativos (`aria-hidden`) — label + value já carregam o
+ * significado para screen readers.
  */
 export function KpiCard({
   items,
@@ -50,26 +71,34 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-surface-elevated px-6 py-5 sm:py-6',
+        'rounded-2xl border border-border bg-surface-elevated px-6 py-6 sm:py-8',
         className,
       )}
     >
       <ul
         aria-label={ariaLabel}
-        className="grid grid-cols-2 gap-y-6 sm:grid-cols-4 sm:gap-y-0 sm:divide-x sm:divide-border"
+        className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 sm:gap-x-6 sm:gap-y-0"
         // biome-ignore lint/a11y/noRedundantRoles: role="list" redundante intencional. Tailwind v4 preflight aplica `list-style: none` no <ul>, o que faz Safari/VoiceOver deixar de anunciar a lista (issue bem documentada). Apple recomenda explicitamente `role="list"` para restaurar o anúncio.
         role="list"
       >
         {items.map((item) => (
-          <li className="px-2 text-center sm:px-4" key={item.label}>
-            <div className="font-semibold text-3xl text-foreground tabular-nums sm:text-4xl md:text-5xl">
+          <li
+            className="flex flex-col items-center gap-2 px-2 text-center sm:px-4"
+            key={item.label}
+          >
+            {item.icon ? (
+              <div aria-hidden="true" className="text-foreground-muted">
+                {item.icon}
+              </div>
+            ) : null}
+            <div className="font-semibold text-2xl text-foreground tabular-nums sm:text-3xl">
               {item.value}
             </div>
-            <div className="mt-1 font-medium text-foreground-muted text-xs sm:text-sm">
+            <div className="font-medium text-foreground-muted text-sm">
               {item.label}
             </div>
             {item.hint ? (
-              <div className="mt-0.5 text-[10px] text-foreground-muted/70">
+              <div className="mt-1 text-foreground-muted text-xs">
                 {item.hint}
               </div>
             ) : null}
