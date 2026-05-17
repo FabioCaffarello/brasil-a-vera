@@ -55,6 +55,11 @@ Thumbs.db
 # vercel (não usamos, mas guarda contra `vercel link` acidental)
 /.vercel/
 
+# repos externos clonados localmente para consulta arquitetural / inspiração
+# (ex: protótipo do designer, referência de stack). Nunca devem entrar no
+# grafo de tipos (tsconfig.exclude), no lint (biome.json) ou no histórico.
+/reference/
+
 # claude code — versionamento parcial (Wave 5 Sprint 5.0)
 # O ecossistema .claude/ é versionado como infraestrutura de time
 # (settings.json, agents/, skills/, hooks/, docs/, README.md).
