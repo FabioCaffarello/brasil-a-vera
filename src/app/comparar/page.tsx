@@ -103,6 +103,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
+        align="center"
         description={
           hasInvalid
             ? 'Alguns IDs fornecidos não eram UUIDs válidos e foram ignorados.'
@@ -112,6 +113,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
           <DataBadge
             icon={<Columns3 className="h-3 w-3" />}
             label="Comparativo"
+            source="L1 · oficial"
             tone="accent"
           />
         }

@@ -1,10 +1,10 @@
-import { SearchX } from 'lucide-react'
+import { SearchX, Users } from 'lucide-react'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
-import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -50,17 +50,21 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
+        align="center"
         description="Deputados federais (Câmara) e senadores (Senado) em exercício na legislatura atual."
+        kicker={
+          <DataBadge
+            icon={<Users className="h-3 w-3" />}
+            label="L1"
+            source="Câmara + Senado"
+            tone="accent"
+          />
+        }
         title="Parlamentares"
-        variant="gradient"
+        variant="plain"
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <TrustBanner
-          level="L1"
-          message="Dados oficiais da Câmara e do Senado, sem transformação."
-        />
-
         <Filtros partidos={partidos} selecionado={filtros} ufs={ufs} />
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">

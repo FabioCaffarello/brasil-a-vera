@@ -28,16 +28,18 @@ export default async function BuscaPage({ searchParams }: PageProps) {
     return (
       <>
         <HeroSection
+          align="center"
           description="Pesquise por nome de parlamentar, palavra na ementa de uma proposição, descrição de votação ou referência canônica (ex.: 'PL 1234/2025')."
           kicker={
             <DataBadge
               icon={<Search className="h-3 w-3" />}
               label="Busca cruzada"
+              source="L1 · 2 fontes"
               tone="accent"
             />
           }
           title="Buscar"
-          variant="gradient"
+          variant="plain"
         />
         <div className="mx-auto max-w-3xl px-4 pb-12">
           <SearchForm variant="page" />
@@ -49,7 +51,19 @@ export default async function BuscaPage({ searchParams }: PageProps) {
   if (query.length < 2) {
     return (
       <>
-        <HeroSection title="Buscar" variant="plain" />
+        <HeroSection
+          align="center"
+          kicker={
+            <DataBadge
+              icon={<Search className="h-3 w-3" />}
+              label="Busca cruzada"
+              source="L1 · 2 fontes"
+              tone="accent"
+            />
+          }
+          title="Buscar"
+          variant="plain"
+        />
         <div className="mx-auto max-w-3xl space-y-4 px-4 pb-12">
           <SearchForm defaultValue={query} variant="page" />
           <p className="text-foreground-muted text-sm">
@@ -68,7 +82,19 @@ export default async function BuscaPage({ searchParams }: PageProps) {
 
   return (
     <>
-      <HeroSection title={`Resultados para "${query}"`} variant="plain" />
+      <HeroSection
+        align="center"
+        kicker={
+          <DataBadge
+            icon={<Search className="h-3 w-3" />}
+            label="Busca cruzada"
+            source="L1 · 2 fontes"
+            tone="accent"
+          />
+        }
+        title={`Resultados para "${query}"`}
+        variant="plain"
+      />
 
       <div className="mx-auto max-w-5xl space-y-6 px-4 pb-8">
         <SearchForm defaultValue={query} variant="page" />
