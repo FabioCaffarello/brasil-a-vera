@@ -539,11 +539,12 @@ export default function DesignSystemPage() {
           <p className="text-foreground-muted text-sm">
             Hero configurável da Sprint 6.0 PR 3. Props: <code>kicker</code>,{' '}
             <code>title</code>, <code>description</code>, <code>actions</code>,{' '}
-            <code>kpis</code>, <code>variant</code> (<code>gradient</code> |{' '}
-            <code>gradient-glow</code> | <code>plain</code>). Consome
-            utilitários <code>.bg-hero</code>, <code>.grid-bg</code>,{' '}
-            <code>.text-gradient</code> (ADR-024) e — na variante{' '}
-            <code>gradient-glow</code> — <code>.hero-glow*</code> +{' '}
+            <code>kpis</code>, <code>meta</code>, <code>variant</code> (
+            <code>gradient</code> | <code>gradient-glow</code> |{' '}
+            <code>plain</code>), <code>align</code> (<code>start</code> |{' '}
+            <code>center</code>). Consome utilitários <code>.bg-hero</code>,{' '}
+            <code>.grid-bg</code>, <code>.text-gradient</code> (ADR-024) e — na
+            variante <code>gradient-glow</code> — <code>.hero-glow*</code> +{' '}
             <code>.hero-stagger</code> com <code>@keyframes</code> +{' '}
             <code>@starting-style</code> (ADR-023, sem framer-motion).
           </p>
@@ -626,6 +627,52 @@ export default function DesignSystemPage() {
                 </>
               }
               variant="gradient-glow"
+            />
+          </div>
+
+          {/* Variante 5: plain + align="center" — espelha a home.
+              Demonstração da prop `align`: sem fundo decorativo, todos
+              os slots (kicker, h1, description, actions, kpis, meta)
+              centralizados. Combinação escolhida para a home após
+              avaliar gradient-glow. */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              actions={
+                <>
+                  <Button>Explorar parlamentares</Button>
+                  <Button variant="ghost">Ver proposições</Button>
+                </>
+              }
+              align="center"
+              description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
+              kicker={
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Dados oficiais"
+                  source="Câmara dos Deputados"
+                  tone="accent"
+                />
+              }
+              kpis={
+                <KpiCard
+                  aria-label="Métricas do Brasil à Vera (showcase plain+center)"
+                  items={[
+                    { label: 'Parlamentares', value: '513' },
+                    { label: 'Proposições', value: '+250k' },
+                    { label: 'Votações', value: '+30k' },
+                    { label: 'Atualização', value: 'Diária' },
+                  ]}
+                />
+              }
+              meta={
+                <>
+                  <DataBadge label="Dados oficiais" />
+                  <DataBadge label="Atualização diária" />
+                  <DataBadge label="API pública" />
+                </>
+              }
+              title="Transparência política sem ruído."
+              variant="plain"
             />
           </div>
         </div>

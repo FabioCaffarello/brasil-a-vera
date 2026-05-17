@@ -59,10 +59,13 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO premium — variant gradient-glow (3 blobs animados +
-          accent line + stagger reveal, 100% CSS, ADR-023). KPIs reais
-          via getPublicStats(); meta pills no rodapé reforçam a
-          procedência dos dados sem misturar com os números. */}
+      {/* HERO minimalista — variant `plain` (fundo escuro só,
+          sem grid nem blobs) + align `center` (slogan, CTAs e
+          KpiCard centralizados). Decisão visual após avaliar o
+          gradient-glow: equilíbrio simétrico em fundo limpo carrega
+          a hierarquia melhor que decoração concorrendo com o
+          conteúdo. KPIs reais via getPublicStats(); meta pills
+          reforçam procedência sem misturar com os números. */}
       <HeroSection
         actions={
           <>
@@ -77,6 +80,7 @@ export default async function Home() {
             </Button>
           </>
         }
+        align="center"
         description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
         kicker={
           <DataBadge
@@ -114,7 +118,7 @@ export default async function Home() {
           </>
         }
         title="Transparência política sem ruído."
-        variant="gradient-glow"
+        variant="plain"
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">

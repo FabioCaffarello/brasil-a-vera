@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 export type HeroVariant = 'gradient' | 'gradient-glow' | 'plain'
+export type HeroAlign = 'start' | 'center'
 
 type HeroSectionProps = {
   /**
@@ -39,6 +40,16 @@ type HeroSectionProps = {
    * - `'plain'`: hero limpo, consumer controla background.
    */
   variant?: HeroVariant
+  /**
+   * Alinhamento horizontal do conteúdo interno (kicker, h1,
+   * description, actions). Default `'start'` (esquerda) — preserva
+   * consumers existentes (busca, comparar, meu-parlamentar, perfil).
+   * `'center'` centraliza tudo — combina bem com `variant='plain'`
+   * em heros minimalistas onde a ausência de fundo decorativo pede
+   * equilíbrio simétrico. O slot `meta` é sempre centralizado,
+   * independente desta prop.
+   */
+  align?: HeroAlign
   className?: string
 }
 
@@ -69,10 +80,12 @@ export function HeroSection({
   kpis,
   meta,
   variant = 'gradient',
+  align = 'start',
   className,
 }: HeroSectionProps) {
   const isGradient = variant === 'gradient' || variant === 'gradient-glow'
   const isGlow = variant === 'gradient-glow'
+  const isCenter = align === 'center'
   return (
     <section
       className={cn(
@@ -100,9 +113,17 @@ export function HeroSection({
         </>
       ) : null}
       <div
-        className={cn('relative mx-auto max-w-3xl', isGlow && 'hero-stagger')}
+        className={cn(
+          'relative mx-auto max-w-3xl',
+          isCenter && 'text-center',
+          isGlow && 'hero-stagger',
+        )}
       >
-        {kicker ? <div className="mb-4">{kicker}</div> : null}
+        {kicker ? (
+          <div className={cn('mb-4', isCenter && 'flex justify-center')}>
+            {kicker}
+          </div>
+        ) : null}
         <h1 className="text-balance font-semibold text-4xl tracking-tight sm:text-5xl md:text-6xl">
           {isGradient ? <span className="text-gradient">{title}</span> : title}
         </h1>
@@ -110,7 +131,12 @@ export function HeroSection({
           <p className="mt-6 text-foreground-muted text-lg">{description}</p>
         ) : null}
         {actions ? (
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div
+            className={cn(
+              'mt-8 flex flex-wrap items-center gap-3',
+              isCenter && 'justify-center',
+            )}
+          >
             {actions}
           </div>
         ) : null}

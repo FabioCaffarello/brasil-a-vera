@@ -187,6 +187,47 @@ describe('HeroSection composition', () => {
     })
   })
 
+  describe('prop align', () => {
+    it('default (align ausente) NÃO aplica text-center nem justify-center', () => {
+      const { container } = render(
+        <HeroSection actions={<button type="button">x</button>} title="x" />,
+      )
+      const heading = container.querySelector('h1')
+      const wrapper = heading?.parentElement
+      expect(wrapper?.className).not.toContain('text-center')
+      // wrapper de actions (única .mt-8.flex.flex-wrap quando meta ausente)
+      // não deve receber justify-center
+      const actionsDiv = container.querySelector('.mt-8.flex.flex-wrap')
+      expect(actionsDiv?.className).not.toContain('justify-center')
+    })
+
+    it('align="center" aplica text-center no wrapper interno', () => {
+      const { container } = render(<HeroSection align="center" title="x" />)
+      const heading = container.querySelector('h1')
+      const wrapper = heading?.parentElement
+      expect(wrapper?.className).toContain('text-center')
+    })
+
+    it('align="center" centraliza wrapper de kicker e actions', () => {
+      const { container } = render(
+        <HeroSection
+          actions={<button type="button">CTA</button>}
+          align="center"
+          kicker={<span>k</span>}
+          title="x"
+        />,
+      )
+      // kicker wrapper vira flex justify-center
+      const heading = container.querySelector('h1')
+      const kickerWrapper = heading?.previousElementSibling as HTMLElement
+      expect(kickerWrapper.className).toContain('flex')
+      expect(kickerWrapper.className).toContain('justify-center')
+      // actions wrapper ganha justify-center
+      const actionsDiv = container.querySelector('.mt-8.flex.flex-wrap')
+      expect(actionsDiv?.className).toContain('justify-center')
+    })
+  })
+
   describe('slot meta', () => {
     it('renderiza meta quando fornecido', () => {
       render(
