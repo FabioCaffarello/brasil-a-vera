@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { HeroSection } from './hero-section'
+import { HeroSection, type HeroVariant } from './hero-section'
+
+// Smoke type-import — garante que HeroVariant é exportado e
+// consumível por consumers que precisem tipar uma variável de
+// variant (ex: Sprint 6.4 com variant condicional vinda de query).
+const _heroVariantSmoke: HeroVariant = 'gradient-glow'
+void _heroVariantSmoke
 
 describe('HeroSection composition', () => {
   it('renderiza título como h1', () => {
@@ -38,6 +44,26 @@ describe('HeroSection composition', () => {
   it('renderiza kicker quando fornecido', () => {
     render(<HeroSection kicker="Wave 6" title="Frontend" />)
     expect(screen.getByText('Wave 6')).toBeDefined()
+  })
+
+  it('renderiza kicker em wrapper apenas de spacing — sem pill, sem border', () => {
+    render(
+      <HeroSection
+        kicker={<span data-testid="kicker-node">Wave 6</span>}
+        title="Frontend"
+      />,
+    )
+    const heading = screen.getByRole('heading', { level: 1 })
+    const wrapper = heading.previousElementSibling as HTMLElement | null
+    expect(wrapper).not.toBeNull()
+    // wrapper só tem spacing (mb-4); sem styling de pill aplicado
+    // pela composição (consumer é responsável pelo shape)
+    expect(wrapper?.className).toContain('mb-4')
+    expect(wrapper?.className).not.toMatch(/rounded-full/)
+    expect(wrapper?.className).not.toMatch(/border-border/)
+    expect(wrapper?.className).not.toMatch(/bg-surface/)
+    // o nó cru do consumer renderiza dentro
+    expect(screen.getByTestId('kicker-node').textContent).toBe('Wave 6')
   })
 
   it('não renderiza kicker quando ausente (sem container vazio)', () => {
@@ -158,6 +184,43 @@ describe('HeroSection composition', () => {
       // O container de kpis tem `.mt-10` — garantir que não há div vazia
       const emptyMt10 = container.querySelector('.mt-10:empty')
       expect(emptyMt10).toBeNull()
+    })
+  })
+
+  describe('slot meta', () => {
+    it('renderiza meta quando fornecido', () => {
+      render(
+        <HeroSection
+          meta={<span data-testid="meta-pill">Dados oficiais</span>}
+          title="Com meta"
+        />,
+      )
+      expect(screen.getByTestId('meta-pill').textContent).toBe('Dados oficiais')
+    })
+
+    it('renderiza meta APÓS kpis no DOM order', () => {
+      const { container } = render(
+        <HeroSection
+          kpis={<span data-testid="kpi">k</span>}
+          meta={<span data-testid="meta">m</span>}
+          title="Order"
+        />,
+      )
+      const kpi = container.querySelector('[data-testid="kpi"]')
+      const meta = container.querySelector('[data-testid="meta"]')
+      const pos = kpi?.compareDocumentPosition(meta as Node)
+      // Node.DOCUMENT_POSITION_FOLLOWING === 4 — meta vem depois de kpi
+      expect(pos && pos & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('não cria container de meta quando ausente', () => {
+      const { container } = render(<HeroSection title="Sem meta" />)
+      // Wrapper do meta tem classes específicas (justify-center gap-2);
+      // garantir que nenhum div com `justify-center` existe sem filhos
+      const all = container.querySelectorAll('.justify-center')
+      for (const el of Array.from(all)) {
+        expect(el.children.length).toBeGreaterThan(0)
+      }
     })
   })
 })
