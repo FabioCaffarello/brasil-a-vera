@@ -219,15 +219,18 @@
       linear-gradient(oklch(1 0 0 / 0.04) 1px, transparent 1px),
       linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 1px);
     background-size: 48px 48px;
-    mask-image: radial-gradient(
-      ellipse 60% 50% at 50% 0%,
-      #000 30%,
-      transparent 80%
-    );
+    /* Fade linear vertical em vez de mask radial: escala previsível
+       em heros de altura variável (mobile vs desktop) e elimina
+       "listras" no cutoff que a elipse radial criava quando o hero
+       passava ~50% de altura do viewport. */
+    mask-image: linear-gradient(180deg, #000 0%, #000 60%, transparent 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.7 0.02 260));
+    /* Stop final em lightness ≥ 0.9: mantém efeito de "soft fade"
+       sem que a metade inferior do glyph desapareça contra o
+       --background dark em headings grandes (text-6xl). */
+    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.92 0.005 260));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
