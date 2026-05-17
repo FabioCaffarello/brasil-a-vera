@@ -12,9 +12,9 @@ import {
 } from './_components/typography'
 
 export const metadata: Metadata = {
-  title: 'Documentação — Brasil a Vera',
+  title: 'Documentação — Brasil à Vera',
   description:
-    'Guia do Brasil a Vera: pirâmide de confiança, como ler um perfil, glossário do processo legislativo e fontes de dados.',
+    'Guia do Brasil à Vera: pirâmide de confiança, como ler um perfil, glossário do processo legislativo e fontes de dados.',
 }
 
 // Hub /docs — entrada da seção de documentação. Sub-páginas em rotas
@@ -57,7 +57,7 @@ export default function DocsHub() {
         subtitle="Guia para visitantes, contribuidores e desenvolvedores curiosos."
       />
 
-      <Section title="O que é o Brasil a Vera">
+      <Section title="O que é o Brasil à Vera">
         <P>
           Plataforma open source de transparência política brasileira, mantida
           por doação e projetada para ter custo operacional próximo de zero. O

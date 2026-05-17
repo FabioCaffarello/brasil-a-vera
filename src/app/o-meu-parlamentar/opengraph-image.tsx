@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og'
 import { BrandFooter, OG_CONTENT_TYPE, OG_SIZE } from '@/lib/og/chrome'
 
 export const alt =
-  'Encontre os parlamentares que representam seu estado e município — Brasil a Vera'
+  'Encontre os parlamentares que representam seu estado e município — Brasil à Vera'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
@@ -51,7 +51,7 @@ export default function OgMeuParlamentar() {
               marginBottom: '20px',
             }}
           >
-            Brasil a Vera · Quem te representa
+            Brasil à Vera · Quem te representa
           </div>
           <div
             style={{

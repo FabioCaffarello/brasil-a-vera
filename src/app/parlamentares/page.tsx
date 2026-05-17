@@ -15,7 +15,7 @@ import {
 } from '@/lib/queries/parlamentares'
 
 export const metadata = {
-  title: 'Parlamentares — Brasil a Vera',
+  title: 'Parlamentares — Brasil à Vera',
   description:
     'Deputados federais e senadores em exercício, filtráveis por casa, partido e UF.',
 }

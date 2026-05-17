@@ -5,7 +5,7 @@ import { BrandFooter, OG_CONTENT_TYPE, OG_SIZE } from '@/lib/og/chrome'
 import { getPublicStats } from '@/lib/queries/stats-public'
 
 export const alt =
-  'Proposições — Brasil a Vera, projetos de lei, PECs e medidas provisórias em tramitação'
+  'Proposições — Brasil à Vera, projetos de lei, PECs e medidas provisórias em tramitação'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
@@ -53,7 +53,7 @@ export default async function OgProposicoesList() {
               marginBottom: '20px',
             }}
           >
-            Brasil a Vera · Listagem
+            Brasil à Vera · Listagem
           </div>
           <div
             style={{

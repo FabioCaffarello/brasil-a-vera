@@ -12,7 +12,7 @@ import { formatProposicaoRef } from '@/lib/format'
 import { busca } from '@/lib/queries/busca'
 
 export const metadata = {
-  title: 'Buscar — Brasil a Vera',
+  title: 'Buscar — Brasil à Vera',
 }
 
 interface PageProps {

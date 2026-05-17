@@ -36,11 +36,11 @@ export async function generateMetadata({ params }: PageProps) {
   const feedHref = `/feed/votacoes/partido/${encodeURIComponent(siglaUpper)}`
   if (overview.totalParlamentares === 0) {
     return {
-      title: `${siglaUpper} — Brasil a Vera`,
+      title: `${siglaUpper} — Brasil à Vera`,
       alternates: { types: { 'application/rss+xml': feedHref } },
     }
   }
-  const title = `${overview.sigla} — Brasil a Vera`
+  const title = `${overview.sigla} — Brasil à Vera`
   const description = overview.nomeOficial
     ? `${overview.nomeOficial}. ${overview.totalParlamentares} parlamentares.`
     : `${overview.totalParlamentares} parlamentares.`

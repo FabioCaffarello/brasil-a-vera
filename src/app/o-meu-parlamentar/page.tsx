@@ -17,7 +17,7 @@ import {
 import { listParlamentares } from '@/lib/queries/parlamentares'
 
 export const metadata = {
-  title: 'Meus representantes — Brasil a Vera',
+  title: 'Meus representantes — Brasil à Vera',
   description:
     'Encontre os deputados federais e senadores que representam o seu estado no Congresso Nacional.',
 }

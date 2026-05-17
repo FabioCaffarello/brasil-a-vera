@@ -82,16 +82,16 @@ export default async function Home() {
           <DataBadge
             icon={<Sparkles className="h-3 w-3" />}
             label="Dados oficiais"
-            source="Câmara dos Deputados"
+            source=""
             tone="accent"
           />
         }
         kpis={
           <KpiCard
-            aria-label="Métricas do Brasil a Vera"
+            aria-label="Métricas do Brasil à Vera"
             items={[
               {
-                label: 'Deputados',
+                label: 'Parlamentares',
                 value: formatNumeroAbreviado(stats.totalParlamentares),
               },
               {
@@ -151,7 +151,7 @@ export default async function Home() {
             Mantém âncora #piramide-confianca para TrustBadge tooltip. */}
         <SectionCard
           id="piramide-confianca"
-          subtitle="Todo dado exibido no Brasil a Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
+          subtitle="Todo dado exibido no Brasil à Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
           title="Pirâmide de Confiança"
         >
           <ul className="space-y-4">

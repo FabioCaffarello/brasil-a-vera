@@ -38,11 +38,11 @@ function parseParams(
 export async function generateMetadata({ params }: PageProps) {
   const raw = await params
   const parsed = parseParams(raw)
-  if (!parsed) return { title: 'Proposição — Brasil a Vera' }
+  if (!parsed) return { title: 'Proposição — Brasil à Vera' }
   const p = await getProposicaoByChave(parsed.tipo, parsed.numero, parsed.ano)
-  if (!p) return { title: 'Proposição — Brasil a Vera' }
+  if (!p) return { title: 'Proposição — Brasil à Vera' }
   const ref = formatProposicaoRef(p.tipo, p.numero, p.ano)
-  const title = `${ref} — Brasil a Vera`
+  const title = `${ref} — Brasil à Vera`
   const description = p.ementa.slice(0, 200)
   return {
     title,

@@ -8,7 +8,7 @@ import { SectionCard } from '@/design-system/compositions/section-card'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
 
 export const metadata = {
-  title: 'Comparar parlamentares — Brasil a Vera',
+  title: 'Comparar parlamentares — Brasil à Vera',
   description: 'Compara 2-3 parlamentares lado a lado.',
 }
 

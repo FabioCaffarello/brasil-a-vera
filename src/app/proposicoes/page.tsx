@@ -17,7 +17,7 @@ import {
 } from '@/lib/queries/proposicoes'
 
 export const metadata = {
-  title: 'Proposições — Brasil a Vera',
+  title: 'Proposições — Brasil à Vera',
   description:
     'Projetos de lei, PECs, medidas provisórias e demais proposições legislativas em tramitação na Câmara e no Senado.',
 }
@@ -77,7 +77,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
-        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil a Vera. Resultados ordenados por ano e número, mais recentes primeiro."
+        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil à Vera. Resultados ordenados por ano e número, mais recentes primeiro."
         title="Proposições"
         variant="gradient"
       />

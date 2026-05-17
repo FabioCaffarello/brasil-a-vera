@@ -5,7 +5,7 @@ import { BrandFooter, OG_CONTENT_TYPE, OG_SIZE } from '@/lib/og/chrome'
 import { getPublicStats } from '@/lib/queries/stats-public'
 
 export const alt =
-  'Parlamentares — Brasil a Vera, deputados federais e senadores em exercício'
+  'Parlamentares — Brasil à Vera, deputados federais e senadores em exercício'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
@@ -56,7 +56,7 @@ export default async function OgParlamentaresList() {
               marginBottom: '20px',
             }}
           >
-            Brasil a Vera · Listagem
+            Brasil à Vera · Listagem
           </div>
           <div
             style={{

@@ -10,9 +10,9 @@ import {
 } from '../_components/typography'
 
 export const metadata: Metadata = {
-  title: 'Fontes e cadência — Brasil a Vera',
+  title: 'Fontes e cadência — Brasil à Vera',
   description:
-    'Quais APIs alimentam o Brasil a Vera, com que frequência ingerem dados, cobertura temporal e limitações conhecidas.',
+    'Quais APIs alimentam o Brasil à Vera, com que frequência ingerem dados, cobertura temporal e limitações conhecidas.',
 }
 
 // Conteúdo derivado de docs/architecture/DATA-SOURCES.md e
@@ -87,7 +87,7 @@ export default function FontesPage() {
     <>
       <DocsHeader
         title="Fontes e cadência"
-        subtitle="De onde vem cada dado e com que frequência o Brasil a Vera atualiza."
+        subtitle="De onde vem cada dado e com que frequência o Brasil à Vera atualiza."
       />
 
       <Section title="Princípio de rastreabilidade">
@@ -167,7 +167,7 @@ export default function FontesPage() {
 
       <Section title="Cobertura temporal">
         <P>
-          O Brasil a Vera cobre as <strong>legislaturas 56 e 57</strong>{' '}
+          O Brasil à Vera cobre as <strong>legislaturas 56 e 57</strong>{' '}
           (2019–2026). Legislaturas anteriores estão fora do escopo por agora —
           os dados existem nas fontes oficiais, mas a ingestão histórica seria
           custosa em tempo e armazenamento sem demanda empírica clara.
@@ -209,7 +209,7 @@ export default function FontesPage() {
       <Section title="Tempo entre o fato e a plataforma">
         <P>
           Entre o momento em que um parlamentar vota uma matéria e o momento em
-          que esse voto aparece no Brasil a Vera, há duas latências em série:
+          que esse voto aparece no Brasil à Vera, há duas latências em série:
         </P>
         <Ul>
           <Li>
@@ -218,7 +218,7 @@ export default function FontesPage() {
             semanas. TSE publica bulk só pós-eleição.
           </Li>
           <Li>
-            <strong>Latência do cron de ingestão</strong>: o Brasil a Vera lê a
+            <strong>Latência do cron de ingestão</strong>: o Brasil à Vera lê a
             fonte oficial em janelas pré-definidas (ver cadência acima). No pior
             caso de votações, são até 6 horas entre o registro na fonte e a
             aparição no site.

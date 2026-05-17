@@ -15,7 +15,7 @@ import {
 } from '@/lib/queries/votacoes'
 
 export const metadata = {
-  title: 'Votações — Brasil a Vera',
+  title: 'Votações — Brasil à Vera',
   description:
     'Votações em plenário e comissões na Câmara e no Senado. Filtros por casa, ano e resultado.',
   alternates: {

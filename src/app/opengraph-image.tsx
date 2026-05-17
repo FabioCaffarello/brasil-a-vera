@@ -4,7 +4,7 @@ import { BrandFooter, OG_CONTENT_TYPE, OG_SIZE } from '@/lib/og/chrome'
 import { getPublicStats } from '@/lib/queries/stats-public'
 
 export const alt =
-  'Brasil a Vera — plataforma open-source de transparência política brasileira'
+  'Brasil à Vera — plataforma open-source de transparência política brasileira'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
@@ -73,7 +73,7 @@ export default async function OgRoot() {
               letterSpacing: '-0.02em',
             }}
           >
-            Brasil a Vera
+            Brasil à Vera
           </div>
           <div
             style={{

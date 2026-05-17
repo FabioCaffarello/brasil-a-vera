@@ -23,7 +23,7 @@ export function PartidoHeader({
       <p className="text-foreground-muted text-sm">
         {totalParlamentares === 0
           ? 'Nenhum parlamentar atualmente filiado nesta sigla.'
-          : `${totalParlamentares} ${totalParlamentares === 1 ? 'parlamentar' : 'parlamentares'} no Brasil a Vera.`}
+          : `${totalParlamentares} ${totalParlamentares === 1 ? 'parlamentar' : 'parlamentares'} no Brasil à Vera.`}
       </p>
     </header>
   )

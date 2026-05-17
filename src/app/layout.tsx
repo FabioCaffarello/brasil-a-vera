@@ -5,7 +5,7 @@ import { Footer } from '@/components/site/footer'
 import { Navbar } from '@/components/site/navbar'
 import './globals.css'
 
-// Inter — tipografia principal do Brasil a Vera a partir da Sprint 4.1.
+// Inter — tipografia principal do Brasil à Vera a partir da Sprint 4.1.
 // Substitui Geist Sans (que servia desde a Wave 1). Razão:
 // - Inter é otimizada para corpo de texto longo (interfaces densas, dados)
 // - Padrão de facto em design systems modernos (Vercel, Linear, Stripe)
@@ -43,17 +43,17 @@ const SITE_URL =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Brasil a Vera — Transparência Legislativa',
+  title: 'Brasil à Vera — Transparência Legislativa',
   description: 'Plataforma open-source de transparência legislativa brasileira',
   openGraph: {
-    title: 'Brasil a Vera',
+    title: 'Brasil à Vera',
     description: 'Você escolheu quem te representa. Agora veja o que ele faz.',
     locale: 'pt_BR',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Brasil a Vera',
+    title: 'Brasil à Vera',
     description: 'Você escolheu quem te representa. Agora veja o que ele faz.',
   },
 }

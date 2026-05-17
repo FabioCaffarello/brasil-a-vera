@@ -10,7 +10,7 @@ import {
 import { getParlamentarById } from '@/lib/queries/parlamentares'
 
 export const alt =
-  'Parlamentar — Brasil a Vera, plataforma de transparência política'
+  'Parlamentar — Brasil à Vera, plataforma de transparência política'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 

@@ -33,9 +33,9 @@ describe('KpiCard composition', () => {
   })
 
   it('aplica aria-label customizado quando fornecido', () => {
-    render(<KpiCard aria-label="Métricas do Brasil a Vera" items={baseItems} />)
+    render(<KpiCard aria-label="Métricas do Brasil à Vera" items={baseItems} />)
     const list = screen.getByRole('list', {
-      name: 'Métricas do Brasil a Vera',
+      name: 'Métricas do Brasil à Vera',
     })
     expect(list).toBeDefined()
   })

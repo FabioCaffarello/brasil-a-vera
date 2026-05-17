@@ -74,7 +74,7 @@ export default function DesignSystemPage() {
     <main className="mx-auto max-w-6xl space-y-12 px-6 py-12">
       <header className="space-y-2">
         <h1 className="font-semibold text-3xl tracking-tight">
-          Design System — Brasil a Vera
+          Design System — Brasil à Vera
         </h1>
         <p className="text-foreground-muted">
           Rota interna não-indexável. Renderiza as 10 primitivas Tier 1 + tokens
@@ -559,7 +559,7 @@ export default function DesignSystemPage() {
                   tone="accent"
                 />
               }
-              title="Brasil a Vera"
+              title="Brasil à Vera"
               description="Plataforma de transparência política brasileira. Você escolheu quem te representa. Agora veja o que ele faz."
               actions={
                 <>
@@ -609,7 +609,7 @@ export default function DesignSystemPage() {
               }
               kpis={
                 <KpiCard
-                  aria-label="Métricas do Brasil a Vera (showcase)"
+                  aria-label="Métricas do Brasil à Vera (showcase)"
                   items={[
                     { label: 'Deputados', value: '513' },
                     { label: 'Proposições', value: '+250k' },
@@ -696,7 +696,7 @@ export default function DesignSystemPage() {
 
           {/* Variante 4 itens — espelha o hero da home */}
           <KpiCard
-            aria-label="Métricas do Brasil a Vera (showcase 4 itens)"
+            aria-label="Métricas do Brasil à Vera (showcase 4 itens)"
             items={[
               { label: 'Deputados', value: '513' },
               { label: 'Proposições', value: '+250k' },
