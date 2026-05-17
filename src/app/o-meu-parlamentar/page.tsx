@@ -17,7 +17,7 @@ import {
 import { listParlamentares } from '@/lib/queries/parlamentares'
 
 export const metadata = {
-  title: 'Meus representantes — Brasil a Vera',
+  title: 'Meus representantes — Brasil à Vera',
   description:
     'Encontre os deputados federais e senadores que representam o seu estado no Congresso Nacional.',
 }
@@ -40,16 +40,18 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
     return (
       <>
         <HeroSection
+          align="center"
           description="Descubra quem te representa no Congresso Nacional a partir do seu estado."
           kicker={
             <DataBadge
               icon={<MapPin className="h-3 w-3" />}
               label="Porta de entrada cívica"
+              source="L1 · UF"
               tone="accent"
             />
           }
           title="Encontre seus representantes"
-          variant="gradient"
+          variant="plain"
         />
         <div className="mx-auto max-w-4xl px-4 pb-8">
           <p className="mb-6 max-w-2xl text-foreground text-sm leading-relaxed">
@@ -77,7 +79,16 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
     return (
       <>
         <HeroSection
+          align="center"
           description={`Em ${nomeUfCompleto(uf)} (${uf}).`}
+          kicker={
+            <DataBadge
+              icon={<MapPin className="h-3 w-3" />}
+              label="Porta de entrada cívica"
+              source="L1 · UF"
+              tone="accent"
+            />
+          }
           title="Encontre seus representantes"
           variant="plain"
         />
@@ -106,7 +117,16 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
+        align="center"
         description={`${deputados.length} ${deputados.length === 1 ? 'deputado federal' : 'deputados federais'} e ${senadores.length} ${senadores.length === 1 ? 'senador' : 'senadores'} pelo ${nomeUfCompleto(uf)}.`}
+        kicker={
+          <DataBadge
+            icon={<MapPin className="h-3 w-3" />}
+            label="Porta de entrada cívica"
+            source={`L1 · ${uf}`}
+            tone="accent"
+          />
+        }
         title={`Seus representantes em ${municipioValido.nome}, ${uf}`}
         variant="plain"
       />

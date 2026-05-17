@@ -32,9 +32,9 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
   const parlamentar = await getParlamentarById(id)
-  if (!parlamentar) return { title: 'Parlamentar — Brasil a Vera' }
+  if (!parlamentar) return { title: 'Parlamentar — Brasil à Vera' }
   const cargo = parlamentar.casa === 'CAMARA' ? 'Deputado Federal' : 'Senador'
-  const title = `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — Brasil a Vera`
+  const title = `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — Brasil à Vera`
   const description = `${cargo} pelo ${parlamentar.partidoSigla}/${parlamentar.uf}. O que vota, propõe e gasta.`
   return {
     title,
@@ -207,7 +207,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         <SectionCard
           className="scroll-mt-28"
           id="proposicoes"
-          subtitle="Limitado às proposições já ingeridas no Brasil a Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
+          subtitle="Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
           title="Proposições onde é autor ou coautor"
         >
           <ProposicoesAutor proposicoes={proposicoes} />

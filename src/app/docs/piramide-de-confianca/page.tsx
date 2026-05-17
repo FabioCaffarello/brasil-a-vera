@@ -13,9 +13,9 @@ import {
 } from '../_components/typography'
 
 export const metadata: Metadata = {
-  title: 'Pirâmide de Confiança — Brasil a Vera',
+  title: 'Pirâmide de Confiança — Brasil à Vera',
   description:
-    'Os quatro níveis (L1, L2, L3, L4) que classificam todo dado exibido no Brasil a Vera, com exemplos e como reconhecer cada um.',
+    'Os quatro níveis (L1, L2, L3, L4) que classificam todo dado exibido no Brasil à Vera, com exemplos e como reconhecer cada um.',
 }
 
 type LevelCard = {
@@ -62,7 +62,7 @@ const LEVELS: LevelCard[] = [
     example:
       '"Estimativa de alinhamento ideológico de X com pauta governista" — modelo treinado sobre histórico de votos com viés explícito.',
     howToRead:
-      'Quando estiver disponível, virá sob sub-marca "Brasil a Vera Labs" com identidade visual distinta. Nenhum dado L4 aparece hoje na plataforma.',
+      'Quando estiver disponível, virá sob sub-marca "Brasil à Vera Labs" com identidade visual distinta. Nenhum dado L4 aparece hoje na plataforma.',
   },
 ]
 
@@ -71,12 +71,12 @@ export default function PiramideDeConfianca() {
     <>
       <DocsHeader
         title="Pirâmide de Confiança"
-        subtitle="Como o Brasil a Vera classifica cada dado que exibe."
+        subtitle="Como o Brasil à Vera classifica cada dado que exibe."
       />
 
       <Section title="O princípio">
         <P>
-          Todo dado exibido no Brasil a Vera carrega um{' '}
+          Todo dado exibido no Brasil à Vera carrega um{' '}
           <em>nível de confiança</em> explícito. A regra é simples:{' '}
           <strong>fatos brutos</strong> aparecem separados de{' '}
           <strong>análises derivadas</strong>, e nenhum número aparece sem que o
@@ -129,7 +129,7 @@ export default function PiramideDeConfianca() {
         </P>
         <P>
           A pirâmide é a estrutura que evita essa confusão. L1 é o que a Câmara
-          publicou. L2 é o que o Brasil a Vera calculou com fórmula aberta. L3
+          publicou. L2 é o que o Brasil à Vera calculou com fórmula aberta. L3
           envolve escolhas editoriais (que ficam documentadas). L4, quando
           existir, virá em sub-marca separada.
         </P>

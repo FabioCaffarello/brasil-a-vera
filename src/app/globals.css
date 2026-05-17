@@ -219,15 +219,18 @@
       linear-gradient(oklch(1 0 0 / 0.04) 1px, transparent 1px),
       linear-gradient(90deg, oklch(1 0 0 / 0.04) 1px, transparent 1px);
     background-size: 48px 48px;
-    mask-image: radial-gradient(
-      ellipse 60% 50% at 50% 0%,
-      #000 30%,
-      transparent 80%
-    );
+    /* Fade linear vertical em vez de mask radial: escala previsível
+       em heros de altura variável (mobile vs desktop) e elimina
+       "listras" no cutoff que a elipse radial criava quando o hero
+       passava ~50% de altura do viewport. */
+    mask-image: linear-gradient(180deg, #000 0%, #000 60%, transparent 100%);
   }
 
   .text-gradient {
-    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.7 0.02 260));
+    /* Stop final em lightness ≥ 0.9: mantém efeito de "soft fade"
+       sem que a metade inferior do glyph desapareça contra o
+       --background dark em headings grandes (text-6xl). */
+    background: linear-gradient(180deg, oklch(0.99 0 0), oklch(0.92 0.005 260));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -276,6 +279,153 @@
   .bg-gradient-primary {
     background-image: linear-gradient(135deg, var(--primary), var(--accent));
   }
+
+  /* Wave 6 spike — multi-glow do hero gradient-glow (ADR-023: 100% CSS).
+     `.hero-glow` é container relative; cada blob é absolute filho.
+     prefers-reduced-motion: override global em §6 zera duration/iterations
+     automaticamente — sem código adicional aqui. */
+  .hero-glow {
+    position: relative;
+  }
+
+  .hero-glow__blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(96px);
+    pointer-events: none;
+    will-change: opacity;
+  }
+
+  .hero-glow__blob--brand {
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 24rem;
+    height: 24rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklch, var(--primary) 35%, transparent),
+      transparent 70%
+    );
+    animation: hero-glow-pulse-a 4s ease-in-out infinite;
+  }
+
+  .hero-glow__blob--accent {
+    inset-block-start: 5rem;
+    inset-inline-end: 0;
+    width: 20rem;
+    height: 20rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklch, var(--accent) 35%, transparent),
+      transparent 70%
+    );
+    animation: hero-glow-pulse-b 5s ease-in-out infinite;
+  }
+
+  .hero-glow__blob--accent-bottom {
+    inset-block-end: 0;
+    inset-inline-end: 8rem;
+    width: 18rem;
+    height: 18rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklch, var(--accent) 25%, transparent),
+      transparent 70%
+    );
+    animation: hero-glow-pulse-c 6.5s ease-in-out infinite;
+  }
+
+  .hero-glow__accent-line {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-start: 50%;
+    height: 1px;
+    width: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--accent),
+      transparent
+    );
+    animation: hero-glow-line 3s ease-in-out infinite;
+  }
+
+  /* Stagger reveal via @starting-style + transition-delay por :nth-child.
+     Substitui equivalente framer-motion (variants + staggerChildren) com
+     zero JS. Browser support 2026-05: Chromium 117+, Safari 17.5+, Firefox
+     129+ (caniuse ~92%). Fallback gracioso: elementos aparecem direto sem
+     animação em browsers antigos. */
+  .hero-stagger > * {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 700ms ease-out,
+      transform 700ms ease-out;
+  }
+  .hero-stagger > *:nth-child(1) {
+    transition-delay: 200ms;
+  }
+  .hero-stagger > *:nth-child(2) {
+    transition-delay: 350ms;
+  }
+  .hero-stagger > *:nth-child(3) {
+    transition-delay: 500ms;
+  }
+  .hero-stagger > *:nth-child(4) {
+    transition-delay: 650ms;
+  }
+  .hero-stagger > *:nth-child(5) {
+    transition-delay: 800ms;
+  }
+}
+
+/* ---------- 5b. @keyframes + @starting-style do hero gradient-glow ----------
+   Fora de @layer utilities porque @keyframes / @starting-style não são
+   utilities. Durações deliberadamente ímpares (4s, 5s, 6.5s, 3s) para
+   evitar sincronização visual entre os 3 blobs — efeito menos mecânico. */
+@keyframes hero-glow-pulse-a {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+@keyframes hero-glow-pulse-b {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes hero-glow-pulse-c {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes hero-glow-line {
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@starting-style {
+  .hero-stagger > * {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
 }
 
 /* ---------- 6. WCAG 2.3.3 — prefers-reduced-motion (preservado) ----------
@@ -283,6 +433,7 @@
    do Tailwind (transition-*, animate-*) que vencem por especificidade em
    outras condições. Padrão recomendado pelo The A11y Project. */
 @media (prefers-reduced-motion: reduce) {
+  /* biome-ignore lint/style/noDescendingSpecificity: override universal intencional. Usa `!important` em todas as propriedades para vencer seletores de maior especificidade (ex: `.hero-stagger > *` em §5) independentemente da ordem. */
   *,
   *::before,
   *::after {

@@ -47,7 +47,7 @@ function normalizeVoto(value: string | undefined): TipoVoto | undefined {
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
   const v = await getVotacaoById(id)
-  if (!v) return { title: 'Votação — Brasil a Vera' }
+  if (!v) return { title: 'Votação — Brasil à Vera' }
   const title = `Votação — ${v.descricao.slice(0, 80)}`
   const description = v.descricao.slice(0, 200)
   return {

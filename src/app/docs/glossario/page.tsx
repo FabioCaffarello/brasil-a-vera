@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { DocsHeader, ExternalLink, P, Section } from '../_components/typography'
 
 export const metadata: Metadata = {
-  title: 'Glossário — Brasil a Vera',
+  title: 'Glossário — Brasil à Vera',
   description:
     'Termos do processo legislativo brasileiro com linguagem acessível ao lado da definição técnica.',
 }

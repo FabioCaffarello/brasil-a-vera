@@ -1,4 +1,11 @@
-import { ArrowRight, Sparkles } from 'lucide-react'
+import {
+  ArrowRight,
+  Clock,
+  FileText,
+  Sparkles,
+  Users,
+  Vote,
+} from 'lucide-react'
 import Link from 'next/link'
 
 import { CardMeuParlamentar } from '@/components/home/card-meu-parlamentar'
@@ -8,8 +15,10 @@ import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { Button } from '@/design-system/primitives/button'
+import { formatNumeroAbreviado } from '@/lib/format-number'
 import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'
 import type { TrustLevel } from '@/shared/trust'
@@ -57,33 +66,73 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO premium — Sprint 6.1 PR 3 (Wave 6). Consome composição
-          HeroSection (gradient variant) com kicker DataBadge accent +
-          duplo CTA. Full-width — gradient .bg-hero + .grid-bg estendem
-          até as bordas. */}
+      {/* HERO minimalista — variant `plain` (fundo escuro só,
+          sem grid nem blobs) + align `center` (slogan, CTAs e
+          KpiCard centralizados). Decisão visual após avaliar o
+          gradient-glow: equilíbrio simétrico em fundo limpo carrega
+          a hierarquia melhor que decoração concorrendo com o
+          conteúdo. KPIs reais via getPublicStats(); meta pills
+          reforçam procedência sem misturar com os números. */}
       <HeroSection
         actions={
           <>
             <Button asChild>
-              <Link href="/o-meu-parlamentar">
-                Encontrar meus representantes
+              <Link href="/parlamentares">
+                Explorar parlamentares
                 <ArrowRight aria-hidden className="ml-2 size-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline">
-              <Link href="/parlamentares">Explorar parlamentares</Link>
+            <Button asChild variant="ghost">
+              <Link href="/proposicoes">Ver proposições</Link>
             </Button>
           </>
         }
-        description="Você escolheu quem te representa. Agora veja o que ele faz."
+        align="center"
+        description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
         kicker={
           <DataBadge
             icon={<Sparkles className="h-3 w-3" />}
-            label="Transparência cívica"
+            label="Dados oficiais"
+            source=""
             tone="accent"
           />
         }
-        title="Brasil a Vera"
+        kpis={
+          <KpiCard
+            aria-label="Métricas do Brasil à Vera"
+            items={[
+              {
+                icon: <Users className="h-6 w-6" />,
+                label: 'Parlamentares',
+                value: formatNumeroAbreviado(stats.totalParlamentares),
+              },
+              {
+                icon: <FileText className="h-6 w-6" />,
+                label: 'Proposições',
+                value: formatNumeroAbreviado(stats.totalProposicoes),
+              },
+              {
+                icon: <Vote className="h-6 w-6" />,
+                label: 'Votações',
+                value: formatNumeroAbreviado(stats.totalVotacoes),
+              },
+              {
+                icon: <Clock className="h-6 w-6" />,
+                label: 'Atualização',
+                value: 'Diária',
+              },
+            ]}
+          />
+        }
+        meta={
+          <>
+            <DataBadge label="Dados oficiais" />
+            <DataBadge label="Atualização diária" />
+            <DataBadge label="API pública" />
+          </>
+        }
+        title="Transparência política sem ruído."
+        variant="plain"
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">
@@ -120,7 +169,7 @@ export default async function Home() {
             Mantém âncora #piramide-confianca para TrustBadge tooltip. */}
         <SectionCard
           id="piramide-confianca"
-          subtitle="Todo dado exibido no Brasil a Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
+          subtitle="Todo dado exibido no Brasil à Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
           title="Pirâmide de Confiança"
         >
           <ul className="space-y-4">

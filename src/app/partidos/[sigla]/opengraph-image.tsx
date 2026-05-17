@@ -9,7 +9,7 @@ import {
 } from '@/lib/og/chrome'
 import { getPartidoOverview } from '@/lib/queries/partidos'
 
-export const alt = 'Partido — Brasil a Vera, transparência política'
+export const alt = 'Partido — Brasil à Vera, transparência política'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 

@@ -48,7 +48,7 @@ export function Navbar() {
             <Eye className="h-4 w-4 text-white" />
           </span>
           <span className="font-semibold tracking-tight text-foreground">
-            Brasil a Vera
+            Brasil à Vera
           </span>
         </Link>
         <div className="flex items-center gap-3">

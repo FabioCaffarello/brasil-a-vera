@@ -10,7 +10,7 @@ import {
 } from '@/lib/og/chrome'
 import { getVotacaoById } from '@/lib/queries/votacoes'
 
-export const alt = 'Votação nominal — Brasil a Vera, transparência política'
+export const alt = 'Votação nominal — Brasil à Vera, transparência política'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 

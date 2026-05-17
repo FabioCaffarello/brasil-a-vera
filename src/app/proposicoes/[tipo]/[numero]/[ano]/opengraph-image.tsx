@@ -14,7 +14,7 @@ import {
   type TipoProposicao,
 } from '@/lib/queries/proposicoes'
 
-export const alt = 'Proposição — Brasil a Vera, transparência política'
+export const alt = 'Proposição — Brasil à Vera, transparência política'
 export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 

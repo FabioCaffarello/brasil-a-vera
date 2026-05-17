@@ -1,10 +1,10 @@
-import { SearchX } from 'lucide-react'
+import { FileText, SearchX } from 'lucide-react'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
-import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -17,7 +17,7 @@ import {
 } from '@/lib/queries/proposicoes'
 
 export const metadata = {
-  title: 'Proposições — Brasil a Vera',
+  title: 'Proposições — Brasil à Vera',
   description:
     'Projetos de lei, PECs, medidas provisórias e demais proposições legislativas em tramitação na Câmara e no Senado.',
 }
@@ -77,17 +77,21 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
-        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil a Vera. Resultados ordenados por ano e número, mais recentes primeiro."
+        align="center"
+        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil à Vera. Resultados ordenados por ano e número, mais recentes primeiro."
+        kicker={
+          <DataBadge
+            icon={<FileText className="h-3 w-3" />}
+            label="L1"
+            source="Câmara + Senado"
+            tone="accent"
+          />
+        }
         title="Proposições"
-        variant="gradient"
+        variant="plain"
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <TrustBanner
-          level="L1"
-          message="Proposições oficiais da Câmara e do Senado, sem transformação."
-        />
-
         <FiltrosProposicao
           anos={anos}
           selecionado={{

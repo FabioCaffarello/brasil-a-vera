@@ -5,7 +5,7 @@ import { getPartidosDistintos } from '@/lib/queries/parlamentares'
 import { getTemasDistintos } from '@/lib/rss/queries'
 
 export const metadata: Metadata = {
-  title: 'Feeds RSS — Brasil a Vera',
+  title: 'Feeds RSS — Brasil à Vera',
   description:
     'Inscreva-se em feeds RSS segmentados de votações: por casa, UF, partido ou tema.',
 }

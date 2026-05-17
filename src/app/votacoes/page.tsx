@@ -1,10 +1,10 @@
-import { SearchX } from 'lucide-react'
+import { SearchX, Vote } from 'lucide-react'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
-import { TrustBanner } from '@/components/trust-banner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
+import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
 import {
@@ -15,7 +15,7 @@ import {
 } from '@/lib/queries/votacoes'
 
 export const metadata = {
-  title: 'Votações — Brasil a Vera',
+  title: 'Votações — Brasil à Vera',
   description:
     'Votações em plenário e comissões na Câmara e no Senado. Filtros por casa, ano e resultado.',
   alternates: {
@@ -70,17 +70,21 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
   return (
     <>
       <HeroSection
+        align="center"
         description="Plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais."
+        kicker={
+          <DataBadge
+            icon={<Vote className="h-3 w-3" />}
+            label="L1"
+            source="Câmara + Senado"
+            tone="accent"
+          />
+        }
         title="Votações"
-        variant="gradient"
+        variant="plain"
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <TrustBanner
-          level="L1"
-          message="Votações oficiais da Câmara e do Senado, sem transformação."
-        />
-
         <FiltrosVotacao
           anos={anos}
           selecionado={{

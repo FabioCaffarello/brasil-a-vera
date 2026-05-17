@@ -1,9 +1,12 @@
 import {
+  Clock,
   Database,
+  FileText,
   Inbox,
   Sparkles,
   TrendingDown,
   TrendingUp,
+  Users,
   Vote,
 } from 'lucide-react'
 
@@ -13,6 +16,7 @@ import {
   FilterChips,
 } from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
@@ -73,7 +77,7 @@ export default function DesignSystemPage() {
     <main className="mx-auto max-w-6xl space-y-12 px-6 py-12">
       <header className="space-y-2">
         <h1 className="font-semibold text-3xl tracking-tight">
-          Design System — Brasil a Vera
+          Design System — Brasil à Vera
         </h1>
         <p className="text-foreground-muted">
           Rota interna não-indexável. Renderiza as 10 primitivas Tier 1 + tokens
@@ -538,24 +542,28 @@ export default function DesignSystemPage() {
           <p className="text-foreground-muted text-sm">
             Hero configurável da Sprint 6.0 PR 3. Props: <code>kicker</code>,{' '}
             <code>title</code>, <code>description</code>, <code>actions</code>,{' '}
-            <code>variant</code> (<code>gradient</code> | <code>plain</code>).
-            Consome utilitários <code>.bg-hero</code>, <code>.grid-bg</code>,{' '}
-            <code>.text-gradient</code> (ADR-024) na variante gradient.
+            <code>kpis</code>, <code>meta</code>, <code>variant</code> (
+            <code>gradient</code> | <code>gradient-glow</code> |{' '}
+            <code>plain</code>), <code>align</code> (<code>start</code> |{' '}
+            <code>center</code>). Consome utilitários <code>.bg-hero</code>,{' '}
+            <code>.grid-bg</code>, <code>.text-gradient</code> (ADR-024) e — na
+            variante <code>gradient-glow</code> — <code>.hero-glow*</code> +{' '}
+            <code>.hero-stagger</code> com <code>@keyframes</code> +{' '}
+            <code>@starting-style</code> (ADR-023, sem framer-motion).
           </p>
 
           {/* Variante 1: gradient completa */}
           <div className="overflow-hidden rounded-lg border border-border">
             <HeroSection
               kicker={
-                <>
-                  <Sparkles
-                    className="h-4 w-4 text-accent"
-                    aria-hidden="true"
-                  />
-                  <span>Wave 6 · Frontend de Excelência</span>
-                </>
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Wave 6"
+                  source="Frontend de Excelência"
+                  tone="accent"
+                />
               }
-              title="Brasil a Vera"
+              title="Brasil à Vera"
               description="Plataforma de transparência política brasileira. Você escolheu quem te representa. Agora veja o que ele faz."
               actions={
                 <>
@@ -577,6 +585,128 @@ export default function DesignSystemPage() {
               kicker="Sem gradient"
               title="Variante plain — consumer controla o background"
               description="Útil quando o consumer já carrega um background próprio (ex: dentro de outro container colorido)."
+              variant="plain"
+            />
+          </div>
+
+          {/* Variante 4: gradient-glow. Multi-glow + stagger reveal +
+              accent line, 100% CSS (ADR-023, sem framer-motion).
+              Espelha o shape da home: KpiCard em surface elevated no
+              slot `kpis` + 3 pills narrativas no slot `meta`. */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              kicker={
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Spike"
+                  source="Hero gradient-glow"
+                  tone="accent"
+                />
+              }
+              title="Transparência política sem ruído."
+              description="Variante gradient-glow: 3 blobs animados, accent line, stagger reveal — tudo via CSS (@keyframes + @starting-style). Zero JS extra vs ~50 kB gzip de framer-motion."
+              actions={
+                <>
+                  <Button>Explorar parlamentares</Button>
+                  <Button variant="ghost">Ver proposições</Button>
+                </>
+              }
+              kpis={
+                <KpiCard
+                  aria-label="Métricas do Brasil à Vera (showcase)"
+                  items={[
+                    {
+                      icon: <Users className="h-6 w-6" />,
+                      label: 'Parlamentares',
+                      value: '513',
+                    },
+                    {
+                      icon: <FileText className="h-6 w-6" />,
+                      label: 'Proposições',
+                      value: '+250k',
+                    },
+                    {
+                      icon: <Vote className="h-6 w-6" />,
+                      label: 'Votações',
+                      value: '+30k',
+                    },
+                    {
+                      icon: <Clock className="h-6 w-6" />,
+                      label: 'Atualização',
+                      value: 'Diária',
+                    },
+                  ]}
+                />
+              }
+              meta={
+                <>
+                  <DataBadge label="Dados oficiais" />
+                  <DataBadge label="Atualização diária" />
+                  <DataBadge label="API pública" />
+                </>
+              }
+              variant="gradient-glow"
+            />
+          </div>
+
+          {/* Variante 5: plain + align="center" — espelha a home.
+              Demonstração da prop `align`: sem fundo decorativo, todos
+              os slots (kicker, h1, description, actions, kpis, meta)
+              centralizados. Combinação escolhida para a home após
+              avaliar gradient-glow. */}
+          <div className="overflow-hidden rounded-lg border border-border">
+            <HeroSection
+              actions={
+                <>
+                  <Button>Explorar parlamentares</Button>
+                  <Button variant="ghost">Ver proposições</Button>
+                </>
+              }
+              align="center"
+              description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
+              kicker={
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Dados oficiais"
+                  source="Câmara dos Deputados"
+                  tone="accent"
+                />
+              }
+              kpis={
+                <KpiCard
+                  aria-label="Métricas do Brasil à Vera (showcase plain+center)"
+                  items={[
+                    {
+                      icon: <Users className="h-6 w-6" />,
+                      label: 'Parlamentares',
+                      value: '513',
+                    },
+                    {
+                      icon: <FileText className="h-6 w-6" />,
+                      label: 'Proposições',
+                      value: '+250k',
+                    },
+                    {
+                      icon: <Vote className="h-6 w-6" />,
+                      label: 'Votações',
+                      value: '+30k',
+                    },
+                    {
+                      icon: <Clock className="h-6 w-6" />,
+                      label: 'Atualização',
+                      value: 'Diária',
+                    },
+                  ]}
+                />
+              }
+              meta={
+                <>
+                  <DataBadge label="Dados oficiais" />
+                  <DataBadge label="Atualização diária" />
+                  <DataBadge label="API pública" />
+                </>
+              }
+              title="Transparência política sem ruído."
               variant="plain"
             />
           </div>
@@ -630,6 +760,85 @@ export default function DesignSystemPage() {
             items={[
               { label: 'Mandatos', value: '2' },
               { label: 'Comissões ativas', value: '4', tone: 'warning' },
+            ]}
+          />
+        </div>
+
+        {/* ----- KpiCard ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">KpiCard</h3>
+          <p className="text-foreground-muted text-sm">
+            Card de KPIs em <code>surface-elevated</code>. Diferente de{' '}
+            <code>KpiStrip</code>: ícone top → value → label → hint em vertical
+            com ritmo uniforme, type scale calibrada para densidade 4-col (
+            <code>text-2xl</code> → <code>text-3xl</code>), whitespace gutters
+            (sem <code>divide-x</code>). Props por item:{' '}
+            <code>icon?: ReactNode</code>, <code>label</code>,{' '}
+            <code>value</code>, <code>hint?: ReactNode</code>. Consumer
+            pré-formata <code>value</code>; composição não chama formatadores
+            nem conhece domínio.
+          </p>
+
+          {/* Variante 4 itens com ícones — espelha o hero da home */}
+          <KpiCard
+            aria-label="Métricas do Brasil à Vera (showcase 4 itens com ícones)"
+            items={[
+              {
+                icon: <Users className="h-6 w-6" />,
+                label: 'Parlamentares',
+                value: '513',
+              },
+              {
+                icon: <FileText className="h-6 w-6" />,
+                label: 'Proposições',
+                value: '+250k',
+              },
+              {
+                icon: <Vote className="h-6 w-6" />,
+                label: 'Votações',
+                value: '+30k',
+              },
+              {
+                icon: <Clock className="h-6 w-6" />,
+                label: 'Atualização',
+                value: 'Diária',
+              },
+            ]}
+          />
+
+          {/* Variante 3 itens com hint como DataBadge — demonstra
+              ReactNode no slot hint (consumer escolhe o shape). */}
+          <KpiCard
+            aria-label="Métricas com hint DataBadge (trust level)"
+            items={[
+              {
+                hint: <DataBadge label="L1" source="Câmara" tone="success" />,
+                icon: <Users className="h-6 w-6" />,
+                label: 'Parlamentares',
+                value: '513',
+              },
+              {
+                hint: <DataBadge label="L2" source="análise" tone="brand" />,
+                icon: <TrendingUp className="h-6 w-6" />,
+                label: 'Alinhamento',
+                value: '87%',
+              },
+              {
+                hint: <DataBadge label="L3" source="modelo" tone="accent" />,
+                icon: <Vote className="h-6 w-6" />,
+                label: 'Coerência',
+                value: '0,84',
+              },
+            ]}
+          />
+
+          {/* Variante 2 itens com hint string — demonstra fallback ao
+              shape mais simples (string ainda é ReactNode válido). */}
+          <KpiCard
+            aria-label="Métricas com hint string"
+            items={[
+              { label: 'Alinhamento', value: '87%', hint: 'L3 · análise' },
+              { label: 'Votos analisados', value: '124', hint: 'últimos 30d' },
             ]}
           />
         </div>

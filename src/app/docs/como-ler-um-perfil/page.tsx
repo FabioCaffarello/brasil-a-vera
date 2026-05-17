@@ -11,9 +11,9 @@ import {
 } from '../_components/typography'
 
 export const metadata: Metadata = {
-  title: 'Como ler um perfil — Brasil a Vera',
+  title: 'Como ler um perfil — Brasil à Vera',
   description:
-    'O que cada seção do perfil parlamentar mostra, o que ainda não cobre, e como interpretar os números do Brasil a Vera.',
+    'O que cada seção do perfil parlamentar mostra, o que ainda não cobre, e como interpretar os números do Brasil à Vera.',
 }
 
 // Conteúdo derivado das tarefas do Sprint 3.0/3.0.5/3.1 que recalibraram
@@ -148,7 +148,7 @@ export default function ComoLerUmPerfil() {
           Proposições onde o parlamentar consta como autor ou coautor, ordenadas
           por data de apresentação. Sigla, número e ementa reproduzidos da fonte
           oficial. <em>Ementa</em> é o resumo formal do projeto — não
-          interpretação do Brasil a Vera.
+          interpretação do Brasil à Vera.
         </P>
       </Section>
 
@@ -206,7 +206,7 @@ export default function ComoLerUmPerfil() {
         </P>
         <P>
           Mostrar um número ruim com cara de número bom é pior do que mostrar um
-          vazio. O Brasil a Vera optou pelo vazio.
+          vazio. O Brasil à Vera optou pelo vazio.
         </P>
       </Section>
     </>

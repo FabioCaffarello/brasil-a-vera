@@ -1,4 +1,4 @@
-// Chrome compartilhado dos cards OpenGraph. Todos os cards do Brasil a Vera
+// Chrome compartilhado dos cards OpenGraph. Todos os cards do Brasil à Vera
 // compartilham um rodapé com a identidade da plataforma e o slogan.
 //
 // Constraints do satori (engine do next/og):
@@ -24,7 +24,7 @@ export function BrandFooter() {
         fontSize: '20px',
       }}
     >
-      <span style={{ fontWeight: 600 }}>Brasil a Vera</span>
+      <span style={{ fontWeight: 600 }}>Brasil à Vera</span>
       <span style={{ color: '#a1a1aa' }}>
         Você escolheu quem te representa. Agora veja o que ele faz.
       </span>
@@ -60,7 +60,7 @@ export function fallbackOg(label: string): ImageResponse {
           marginTop: '16px',
         }}
       >
-        Brasil a Vera
+        Brasil à Vera
       </div>
     </div>,
     OG_SIZE,
