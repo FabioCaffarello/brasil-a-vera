@@ -13,6 +13,7 @@ import {
   FilterChips,
 } from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
@@ -551,13 +552,12 @@ export default function DesignSystemPage() {
           <div className="overflow-hidden rounded-lg border border-border">
             <HeroSection
               kicker={
-                <>
-                  <Sparkles
-                    className="h-4 w-4 text-accent"
-                    aria-hidden="true"
-                  />
-                  <span>Wave 6 · Frontend de Excelência</span>
-                </>
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Wave 6"
+                  source="Frontend de Excelência"
+                  tone="accent"
+                />
               }
               title="Brasil a Vera"
               description="Plataforma de transparência política brasileira. Você escolheu quem te representa. Agora veja o que ele faz."
@@ -585,39 +585,45 @@ export default function DesignSystemPage() {
             />
           </div>
 
-          {/* Variante 4: gradient-glow (spike PR #223). Multi-glow + stagger
-              reveal + accent line, 100% CSS (ADR-023, sem framer-motion).
-              Aceita o slot `kpis` para badges narrativos abaixo das actions. */}
+          {/* Variante 4: gradient-glow. Multi-glow + stagger reveal +
+              accent line, 100% CSS (ADR-023, sem framer-motion).
+              Espelha o shape da home: KpiCard em surface elevated no
+              slot `kpis` + 3 pills narrativas no slot `meta`. */}
           <div className="overflow-hidden rounded-lg border border-border">
             <HeroSection
               kicker={
-                <>
-                  <Sparkles
-                    aria-hidden="true"
-                    className="h-4 w-4 text-accent"
-                  />
-                  <span>Spike — Hero gradient-glow</span>
-                </>
+                <DataBadge
+                  icon={<Sparkles className="h-3 w-3" />}
+                  label="Spike"
+                  source="Hero gradient-glow"
+                  tone="accent"
+                />
               }
-              title="Transparência política sem ruído"
+              title="Transparência política sem ruído."
               description="Variante gradient-glow: 3 blobs animados, accent line, stagger reveal — tudo via CSS (@keyframes + @starting-style). Zero JS extra vs ~50 kB gzip de framer-motion."
               actions={
                 <>
                   <Button>Explorar parlamentares</Button>
-                  <Button variant="outline">Ver proposições</Button>
+                  <Button variant="ghost">Ver proposições</Button>
                 </>
               }
               kpis={
-                <div className="flex flex-wrap gap-2">
-                  <DataBadge label="513 deputados" source="L1" tone="brand" />
-                  <DataBadge label="Proposições rastreadas" source="L1" />
-                  <DataBadge label="Votações analisadas" source="L1" />
-                  <DataBadge
-                    icon={<Sparkles className="h-3 w-3" />}
-                    label="Atualização diária"
-                    tone="accent"
-                  />
-                </div>
+                <KpiCard
+                  aria-label="Métricas do Brasil a Vera (showcase)"
+                  items={[
+                    { label: 'Deputados', value: '513' },
+                    { label: 'Proposições', value: '+250k' },
+                    { label: 'Votações', value: '+30k' },
+                    { label: 'Atualização', value: 'Diária' },
+                  ]}
+                />
+              }
+              meta={
+                <>
+                  <DataBadge label="Dados oficiais" />
+                  <DataBadge label="Atualização diária" />
+                  <DataBadge label="API pública" />
+                </>
               }
               variant="gradient-glow"
             />
@@ -672,6 +678,39 @@ export default function DesignSystemPage() {
             items={[
               { label: 'Mandatos', value: '2' },
               { label: 'Comissões ativas', value: '4', tone: 'warning' },
+            ]}
+          />
+        </div>
+
+        {/* ----- KpiCard ----- */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-foreground text-lg">KpiCard</h3>
+          <p className="text-foreground-muted text-sm">
+            Card de KPIs em <code>surface-elevated</code> do spike PR do hero
+            gradient-glow. Diferente de <code>KpiStrip</code>: valores em escala
+            maior (<code>text-3xl</code> → <code>text-5xl</code>), surface
+            elevada para destacar contra o hero, layout fixo em 4 colunas md+.
+            Aceita 2-6 itens; consumer pré-formata <code>value</code>{' '}
+            (composição não chama formatadores).
+          </p>
+
+          {/* Variante 4 itens — espelha o hero da home */}
+          <KpiCard
+            aria-label="Métricas do Brasil a Vera (showcase 4 itens)"
+            items={[
+              { label: 'Deputados', value: '513' },
+              { label: 'Proposições', value: '+250k' },
+              { label: 'Votações', value: '+30k' },
+              { label: 'Atualização', value: 'Diária' },
+            ]}
+          />
+
+          {/* Variante 2 itens com hint opcional */}
+          <KpiCard
+            aria-label="Métricas com hint"
+            items={[
+              { label: 'Alinhamento', value: '87%', hint: 'L3 · análise' },
+              { label: 'Votos analisados', value: '124', hint: 'últimos 30d' },
             ]}
           />
         </div>

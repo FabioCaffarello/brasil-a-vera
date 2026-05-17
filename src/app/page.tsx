@@ -8,6 +8,7 @@ import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { Button } from '@/design-system/primitives/button'
 import { formatNumeroAbreviado } from '@/lib/format-number'
@@ -58,56 +59,61 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO premium — spike PR #223. Consome HeroSection com
-          variant="gradient-glow": 3 blobs animados + accent line + stagger
-          reveal, 100% CSS (ADR-023). KPIs reais via getPublicStats(), cada
-          número com DataBadge carregando trust_level (princípio 3 do
-          CLAUDE.md + slogan da Pirâmide de Confiança logo abaixo). */}
+      {/* HERO premium — variant gradient-glow (3 blobs animados +
+          accent line + stagger reveal, 100% CSS, ADR-023). KPIs reais
+          via getPublicStats(); meta pills no rodapé reforçam a
+          procedência dos dados sem misturar com os números. */}
       <HeroSection
         actions={
           <>
             <Button asChild>
-              <Link href="/o-meu-parlamentar">
-                Encontrar meus representantes
+              <Link href="/parlamentares">
+                Explorar parlamentares
                 <ArrowRight aria-hidden className="ml-2 size-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline">
-              <Link href="/parlamentares">Explorar parlamentares</Link>
+            <Button asChild variant="ghost">
+              <Link href="/proposicoes">Ver proposições</Link>
             </Button>
           </>
         }
-        description="Você escolheu quem te representa. Agora veja o que ele faz."
+        description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
         kicker={
           <DataBadge
             icon={<Sparkles className="h-3 w-3" />}
-            label="Transparência cívica"
+            label="Dados oficiais"
+            source="Câmara dos Deputados"
             tone="accent"
           />
         }
         kpis={
-          <div className="flex flex-wrap gap-2">
-            <DataBadge
-              label={`${formatNumeroAbreviado(stats.totalParlamentares)} parlamentares`}
-              source="L1"
-              tone="brand"
-            />
-            <DataBadge
-              label={`${formatNumeroAbreviado(stats.totalProposicoes)} proposições`}
-              source="L1"
-            />
-            <DataBadge
-              label={`${formatNumeroAbreviado(stats.totalVotacoes)} votações`}
-              source="L1"
-            />
-            <DataBadge
-              icon={<Sparkles className="h-3 w-3" />}
-              label="Atualização diária"
-              tone="accent"
-            />
-          </div>
+          <KpiCard
+            aria-label="Métricas do Brasil a Vera"
+            items={[
+              {
+                label: 'Deputados',
+                value: formatNumeroAbreviado(stats.totalParlamentares),
+              },
+              {
+                label: 'Proposições',
+                value: formatNumeroAbreviado(stats.totalProposicoes),
+              },
+              {
+                label: 'Votações',
+                value: formatNumeroAbreviado(stats.totalVotacoes),
+              },
+              { label: 'Atualização', value: 'Diária' },
+            ]}
+          />
         }
-        title="Brasil a Vera"
+        meta={
+          <>
+            <DataBadge label="Dados oficiais" />
+            <DataBadge label="Atualização diária" />
+            <DataBadge label="API pública" />
+          </>
+        }
+        title="Transparência política sem ruído."
         variant="gradient-glow"
       />
 
