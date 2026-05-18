@@ -1,6 +1,7 @@
 import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 
+import { ApoioPartidoChart } from '@/components/proposicao/apoio-partido-chart-client'
 import { AutoresList } from '@/components/proposicao/autores-list'
 import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
 import { FooterCrossLinks } from '@/components/proposicao/footer-cross-links'
@@ -21,6 +22,7 @@ import { decodeCursor } from '@/lib/cursor'
 import { formatProposicaoRef } from '@/lib/format'
 import { CursorTramitacaoV1 } from '@/lib/queries/cursor-schemas'
 import {
+  getApoioPorPartido,
   getAutoresByProposicao,
   getProposicaoByChave,
   getTemasByProposicao,
@@ -186,19 +188,21 @@ export default async function ProposicaoDetalhePage({
   const votacoesResultado = normalizeVotacoesResultado(sp.vot_resultado)
   const votacoesCasa = normalizeVotacoesCasa(sp.vot_casa)
 
-  const [temas, autores, votacoes, tramitacaoPage, stats] = await Promise.all([
-    getTemasByProposicao(proposicao.id),
-    getAutoresByProposicao(proposicao.id),
-    getVotacoesByProposicao(proposicao.id, {
-      resultado: votacoesResultado,
-      casa: votacoesCasa,
-    }),
-    getTramitacaoByProposicao(proposicao.id, {
-      cursor: cursorTramitacao,
-      filtro: tramitacaoFiltro,
-    }),
-    getProposicaoStats(proposicao.id),
-  ])
+  const [temas, autores, votacoes, tramitacaoPage, stats, apoioPartido] =
+    await Promise.all([
+      getTemasByProposicao(proposicao.id),
+      getAutoresByProposicao(proposicao.id),
+      getVotacoesByProposicao(proposicao.id, {
+        resultado: votacoesResultado,
+        casa: votacoesCasa,
+      }),
+      getTramitacaoByProposicao(proposicao.id, {
+        cursor: cursorTramitacao,
+        filtro: tramitacaoFiltro,
+      }),
+      getProposicaoStats(proposicao.id),
+      getApoioPorPartido(proposicao.id),
+    ])
 
   // Wave 8 Sprint 8.2 PR1 — 4 slots narrativos do KpiStrip do detalhe.
   // Pura: rodada 2 §Decisões resolvidas #1 + §Contratos de fallback.
@@ -408,7 +412,10 @@ export default async function ProposicaoDetalhePage({
           <AccordionTrigger className="font-semibold text-base">
             Autores
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent className="space-y-4">
+            {apoioPartido.length > 0 ? (
+              <ApoioPartidoChart data={apoioPartido} />
+            ) : null}
             <AutoresList autores={autores} />
           </AccordionContent>
         </AccordionItem>
@@ -459,7 +466,12 @@ export default async function ProposicaoDetalhePage({
           subtitle="Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome."
           title="Autores"
         >
-          <AutoresList autores={autores} />
+          <div className="space-y-4">
+            {apoioPartido.length > 0 ? (
+              <ApoioPartidoChart data={apoioPartido} />
+            ) : null}
+            <AutoresList autores={autores} />
+          </div>
         </SectionCard>
 
         <SectionCard

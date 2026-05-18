@@ -15,8 +15,15 @@ import dynamic from 'next/dynamic'
  * — ou seja, quando o usuário visita `/parlamentares/[id]`. Não impacta
  * o path anônimo (home, listagem, busca).
  */
+// Wave 8 Sprint 8.4 PR2 — redirecionado de './gastos-chart' direto para
+// o bundle compartilhado '@/components/charts/recharts-bundle'. Mesmo
+// componente renderizado; muda só o resolver do dynamic para que
+// Turbopack agrupe Recharts em chunk único compartilhado com o
+// ApoioPartidoChart (Wave 8). Antes da mudança: cada wrapper criava
+// chunk próprio de Recharts (~62 kB gzip duplicado).
 export const GastosChart = dynamic(
-  () => import('./gastos-chart').then((m) => m.GastosChart),
+  () =>
+    import('@/components/charts/recharts-bundle').then((m) => m.GastosChart),
   {
     ssr: false,
     loading: () => (
