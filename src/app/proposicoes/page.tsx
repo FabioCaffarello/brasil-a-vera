@@ -12,6 +12,7 @@ import { formatNumeroAbreviado } from '@/lib/format-number'
 import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
+  getTemasDistintos,
   listProposicoes,
   ORDENS_PROPOSICAO,
   type OrdemProposicao,
@@ -57,6 +58,12 @@ function normalizeAno(value: string | undefined): number | undefined {
   return Number.isInteger(n) && n > 1900 && n < 2100 ? n : undefined
 }
 
+function normalizeTema(value: string | undefined): number | undefined {
+  if (!value) return undefined
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : undefined
+}
+
 function normalizeQ(value: string | undefined): string | undefined {
   const trimmed = value?.trim()
   return trimmed && trimmed.length > 0 ? trimmed : undefined
@@ -76,6 +83,7 @@ interface PageProps {
     tipo?: string
     ano?: string
     situacao?: string
+    tema?: string
     q?: string
     ordem?: string
   }>
@@ -87,14 +95,16 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
     tipo: normalizeTipo(params.tipo),
     ano: normalizeAno(params.ano),
     situacao: normalizeSituacao(params.situacao),
+    tema: normalizeTema(params.tema),
     q: normalizeQ(params.q),
     ordem: normalizeOrdem(params.ordem),
   }
 
   const LIMITE = 50
-  const [proposicoes, anos, stats] = await Promise.all([
+  const [proposicoes, anos, temas, stats] = await Promise.all([
     listProposicoes(filtros, LIMITE),
     getAnosDistintos(),
+    getTemasDistintos(),
     getEstatisticasGlobaisProposicoes(),
   ])
 
@@ -152,9 +162,11 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             tipo: params.tipo,
             ano: params.ano,
             situacao: params.situacao,
+            tema: params.tema,
             q: params.q,
             ordem: params.ordem,
           }}
+          temas={temas}
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
@@ -170,6 +182,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
                   tipo: filtros.tipo ?? '',
                   ano: filtros.ano ? String(filtros.ano) : '',
                   situacao: filtros.situacao ?? '',
+                  tema: filtros.tema ? String(filtros.tema) : '',
                   q: filtros.q ?? '',
                 }).filter(([, v]) => v !== ''),
               ).toString()}`}

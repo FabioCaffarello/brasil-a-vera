@@ -50,10 +50,24 @@ export interface FiltrosProposicao {
   tipo?: TipoProposicao
   ano?: number
   situacao?: SituacaoProposicao
+  /** Código de tema (proposicao_tema.codigo_tema). */
+  tema?: number
   /** Busca livre: dígitos puros → match exato em numero; texto → ILIKE em ementa. */
   q?: string
   /** Ordem de exibição; default 'recente'. */
   ordem?: OrdemProposicao
+}
+
+// Subquery EXISTS para filtrar proposições por tema sem inflar o
+// SELECT com JOIN. Proposição pode ter múltiplos temas; EXISTS retorna
+// uma linha apenas quando há pelo menos uma correspondência.
+function whereForTema(tema: number | undefined) {
+  if (!tema) return undefined
+  return sql`EXISTS (
+    SELECT 1 FROM proposicoes.proposicao_tema pt
+    WHERE pt.proposicao_id = ${proposicao.id}
+      AND pt.codigo_tema = ${tema}
+  )`
 }
 
 // Aplica o filtro de busca livre (`q`): se for apenas dígitos, vira match
@@ -80,6 +94,8 @@ export async function listProposicoes(
   if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
   if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
   if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
+  const temaClause = whereForTema(filtros.tema)
+  if (temaClause) where.push(temaClause)
   const qClause = whereForQ(filtros.q)
   if (qClause) where.push(qClause)
 
@@ -252,6 +268,8 @@ export async function countProposicoes(
   if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
   if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
   if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
+  const temaClause = whereForTema(filtros.tema)
+  if (temaClause) where.push(temaClause)
   const qClause = whereForQ(filtros.q)
   if (qClause) where.push(qClause)
 
@@ -268,4 +286,36 @@ export async function getAnosDistintos(): Promise<number[]> {
     .from(proposicao)
     .orderBy(desc(proposicao.ano))
   return rows.map((r) => r.ano)
+}
+
+export interface TemaDistinto {
+  codigo: number
+  nome: string
+}
+
+// Catálogo de temas distintos para o Combobox da listagem (Wave 8 Sprint
+// 8.1 PR3). DISTINCT ON garante uma linha por codigo_tema (ordem
+// alfabética por nome para escolher o nome canônico — o mesmo codigo
+// pode aparecer com grafias ligeiramente diferentes em sources Câmara
+// vs Senado). ORDER BY final pelo nome para apresentação amigável.
+//
+// Cache com TTL alto: catálogo de temas legislativos muda raramente
+// (novos temas só quando a Câmara/Senado cataloga uma nova categoria).
+export async function getTemasDistintos(): Promise<TemaDistinto[]> {
+  return cached(
+    'proposicoes:temas_distintos',
+    TTL.proposicoesStatsGlobais,
+    async () => {
+      const rows = await db.execute(sql`
+        SELECT DISTINCT ON (codigo_tema)
+          codigo_tema AS codigo,
+          nome_tema AS nome
+        FROM proposicoes.proposicao_tema
+        ORDER BY codigo_tema, nome_tema ASC
+      `)
+      return (rows.rows as { codigo: number; nome: string }[])
+        .map((r) => ({ codigo: Number(r.codigo), nome: String(r.nome) }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    },
+  )
 }
