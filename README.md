@@ -3,12 +3,13 @@
 > **Você escolheu quem te representa. Agora veja o que ele faz.**
 
 ![Status](https://img.shields.io/badge/status-Wave%203%20em%20andamento%20%E2%80%94%20estabilizado-green)
-![License](https://img.shields.io/badge/license-Apache--2.0-blue)
+![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange)
 ![Node](https://img.shields.io/badge/node-22-green)
 
-Plataforma open source de transparência política brasileira. Consolida dados
-públicos do Legislativo (Câmara, Senado, TSE, Portal da Transparência) em uma
-interface acessível para qualquer cidadão.
+Plataforma de transparência política brasileira com código publicamente
+auditável (source-available). Consolida dados públicos do Legislativo
+(Câmara, Senado, TSE, Portal da Transparência) em uma interface acessível
+para qualquer cidadão.
 
 ## O que é?
 
@@ -68,8 +69,15 @@ Lista completa em [CLAUDE.md](CLAUDE.md).
 
 ## Como contribuir
 
-Leia o [Guia de Contribuição](docs/contributing/CONTRIBUTING.md) antes de
-abrir uma PR. Padrões adicionais em
+> **Contribuições externas via PR estão fechadas.** Apenas membros do projeto
+> podem abrir pull requests; PRs de outras origens são fechados automaticamente
+> (ver [ADR-027](docs/architecture/ADR/027-licenca-polyform-noncommercial.md)).
+> Bug reports, sugestões de feature e correções de dado incorreto seguem por
+> [issue](https://github.com/FabioCaffarello/brasil-a-vera/issues/new) —
+> qualquer pessoa pode abrir.
+
+Leia o [Guia de Contribuição](docs/contributing/CONTRIBUTING.md) para o fluxo
+completo. Padrões adicionais em
 [CODE-STYLE.md](docs/contributing/CODE-STYLE.md) e
 [COMMIT-CONVENTION.md](docs/contributing/COMMIT-CONVENTION.md).
 
@@ -93,6 +101,11 @@ detalhe dos sprints entregues e próximos.
 
 ## Licença
 
-Distribuído sob a [Licença Apache 2.0](LICENSE). Você pode usar, modificar e
-redistribuir o código livremente, inclusive comercialmente, desde que mantenha
-os avisos de copyright e licença.
+Distribuído sob a [PolyForm Noncommercial License 1.0.0](LICENSE). O código é
+publicamente auditável — cidadãos podem inspecionar a metodologia, contribuidores
+convidados podem estudar e modificar — mas **uso comercial não é permitido sem
+autorização expressa**. Fork via GitHub TOS continua permitido para estudo,
+pesquisa, uso pessoal e contribuição.
+
+Motivação e alternativas consideradas em
+[ADR-027](docs/architecture/ADR/027-licenca-polyform-noncommercial.md).

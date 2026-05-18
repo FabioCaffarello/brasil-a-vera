@@ -7,7 +7,7 @@
 
 ## Sumário
 
-Este repositório contém a documentação completa do Brasil a Vera, uma plataforma open-source de transparência legislativa que unifica dados públicos de múltiplas fontes oficiais (Câmara dos Deputados, Senado Federal, TSE, Portal da Transparência) para dar visibilidade ao que parlamentares brasileiros votam, propõem e gastam.
+Este repositório contém a documentação completa do Brasil a Vera, uma plataforma de transparência legislativa com código publicamente auditável (PolyForm Noncommercial 1.0.0) que unifica dados públicos de múltiplas fontes oficiais (Câmara dos Deputados, Senado Federal, TSE, Portal da Transparência) para dar visibilidade ao que parlamentares brasileiros votam, propõem e gastam.
 
 Três capacidades diferenciadoras:
 

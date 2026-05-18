@@ -62,7 +62,7 @@ graph TB
 |----------|-----------|
 | **Definição** | Cálculos determinísticos sobre dados L1. Reproduzíveis por qualquer pessoa. |
 | **Exemplo** | "Dep. X votou 73% alinhado com o governo em 2025" |
-| **Salvaguarda** | Fórmula publicada e open-source no repositório |
+| **Salvaguarda** | Fórmula publicada e auditável no repositório |
 | **Cálculos** | Índice de coerência, alinhamento governo/oposição, métricas de centralidade do grafo |
 | **Bounded contexts** | Coerência (índice), Grafo Legislativo (centralidade, pesos) |
 
