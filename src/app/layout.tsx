@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from 'next/font/google'
 
 import { Footer } from '@/components/site/footer'
 import { Navbar } from '@/components/site/navbar'
+import { Toaster } from '@/design-system/primitives/sonner'
 import './globals.css'
 
 // Inter — tipografia principal do Brasil à Vera a partir da Sprint 4.1.
@@ -107,6 +108,9 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        {/* Toaster global (Wave 7 Sprint 7.2 PR3) — habilita toast em
+            qualquer rota. Hardcoded theme="dark" no primitive (sonner.tsx). */}
+        <Toaster />
       </body>
     </html>
   )

@@ -77,7 +77,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           />
         }
         title="Parlamentares"
-        variant="gradient"
+        variant="plain"
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
