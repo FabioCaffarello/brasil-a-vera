@@ -132,7 +132,18 @@ export function VotosRecentes({
                   >
                     {style.label}
                   </span>
-                  <p className="text-foreground text-sm">{v.descricao}</p>
+                  <p className="text-sm">
+                    {/* Wave 7 polish: descrição vira link para o detalhe
+                        da votação. /votacoes/[id] mostra o resultado
+                        completo + link para a proposição se houver — UX
+                        cívica natural sem precisar adivinhar a rota. */}
+                    <Link
+                      className="text-foreground decoration-dotted underline-offset-2 hover:text-foreground-muted hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      href={`/votacoes/${v.votacaoId}`}
+                    >
+                      {v.descricao}
+                    </Link>
+                  </p>
                 </div>
               </li>
             )
@@ -141,9 +152,15 @@ export function VotosRecentes({
       )}
 
       {proximaPaginaHref ? (
+        // id ancora o próprio "Mostrar mais" — o href aponta para esse
+        // mesmo id, garantindo que após carregar a próxima página o
+        // navegador rola até o NOVO botão (que está no mesmo offset
+        // visual). Usuário continua perto de onde estava em vez de
+        // saltar para o topo da seção.
         <a
           className="block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           href={proximaPaginaHref}
+          id="mostrar-mais-votos"
         >
           Mostrar mais
         </a>

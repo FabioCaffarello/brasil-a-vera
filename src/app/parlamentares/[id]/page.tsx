@@ -245,7 +245,9 @@ export default async function ParlamentarPerfilPage({
         parlamentar.id,
         sp,
         { votos_after: votosPage.nextCursor },
-        '#votos',
+        // Anchor no próprio botão (que existe na próxima página também)
+        // mantém scroll position visual em vez de saltar pro topo da seção.
+        '#mostrar-mais-votos',
       )
     : null
 
@@ -273,7 +275,7 @@ export default async function ParlamentarPerfilPage({
         parlamentar.id,
         sp,
         { propos_after: proposicoesPage.nextCursor },
-        '#proposicoes',
+        '#mostrar-mais-propos',
       )
     : null
 
