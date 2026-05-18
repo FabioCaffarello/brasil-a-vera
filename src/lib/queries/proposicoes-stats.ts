@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import {
@@ -6,7 +6,11 @@ import {
   type MedianaTipo,
 } from '@/modules/proposicoes/domain/mediana-amostra'
 import { db } from '@/shared/db'
-import { proposicao, tramitacao } from '@/shared/db/schema'
+import {
+  estatisticaProposicaoAgregada,
+  proposicao,
+  tramitacao,
+} from '@/shared/db/schema'
 import type { TipoProposicao } from './proposicoes'
 
 // Re-export para consumers do query layer (script seed, UI) — evita que
@@ -134,4 +138,63 @@ export async function computeMedianaDiasPorTipo(): Promise<
     map.set(tipo, decideMediana(amostra, mediana))
   }
   return map
+}
+
+// ---------------------------------------------------------------------------
+// Stats por proposição — consumido pelo KpiStrip v2 do detalhe
+// (Wave 8 Sprint 8.2 PR1).
+//
+// Retorna a linha agregada inteira (ou null se a proposição não tem row
+// na agregada — seed ainda não rodou ou row órfã). UI cai em fallback
+// honesto (P2) quando null: cada slot mostra "dado indisponível" subtle
+// em vez de números falsos.
+// ---------------------------------------------------------------------------
+
+export interface ProposicaoStats {
+  diasEmTramitacao: number
+  diasDesdeUltimaTramitacao: number | null
+  nAutores: number
+  nPartidosAutores: number
+  nUfsAutores: number
+  nVotacoes: number
+  nVotacoesAprovadas: number
+  nVotacoesRejeitadas: number
+  nEventosTramitacao: number
+  ultimoOrgao: string | null
+  aprovadaEmAlgumaCasa: boolean
+  medianaDiasTipoReferencia: number | null
+}
+
+export async function getProposicaoStats(
+  proposicaoId: string,
+): Promise<ProposicaoStats | null> {
+  return cached(
+    `proposicao:stats:${proposicaoId}`,
+    TTL.proposicaoEmTramitacao,
+    async () => {
+      const rows = await db
+        .select({
+          diasEmTramitacao: estatisticaProposicaoAgregada.diasEmTramitacao,
+          diasDesdeUltimaTramitacao:
+            estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao,
+          nAutores: estatisticaProposicaoAgregada.nAutores,
+          nPartidosAutores: estatisticaProposicaoAgregada.nPartidosAutores,
+          nUfsAutores: estatisticaProposicaoAgregada.nUfsAutores,
+          nVotacoes: estatisticaProposicaoAgregada.nVotacoes,
+          nVotacoesAprovadas: estatisticaProposicaoAgregada.nVotacoesAprovadas,
+          nVotacoesRejeitadas:
+            estatisticaProposicaoAgregada.nVotacoesRejeitadas,
+          nEventosTramitacao: estatisticaProposicaoAgregada.nEventosTramitacao,
+          ultimoOrgao: estatisticaProposicaoAgregada.ultimoOrgao,
+          aprovadaEmAlgumaCasa:
+            estatisticaProposicaoAgregada.aprovadaEmAlgumaCasa,
+          medianaDiasTipoReferencia:
+            estatisticaProposicaoAgregada.medianaDiasTipoReferencia,
+        })
+        .from(estatisticaProposicaoAgregada)
+        .where(eq(estatisticaProposicaoAgregada.proposicaoId, proposicaoId))
+        .limit(1)
+      return rows[0] ?? null
+    },
+  )
 }
