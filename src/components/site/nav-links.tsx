@@ -11,7 +11,6 @@ type NavLink = {
 }
 
 export const NAV_LINKS: NavLink[] = [
-  { href: '/o-meu-parlamentar', label: 'Meu parlamentar' },
   { href: '/parlamentares', label: 'Parlamentares' },
   { href: '/proposicoes', label: 'Proposições' },
   { href: '/votacoes', label: 'Votações' },
@@ -31,10 +30,7 @@ export function isNavLinkActive(pathname: string | null, href: string) {
  *   (substitui bg-surface-elevated que sumia no glass shell)
  * - Idle: text-foreground-muted, hover text-foreground com fill leve
  *
- * Todos os links têm peso visual uniforme — sem diferenciação por
- * "porta de entrada cívica". Decisão explícita do owner durante o QA
- * pós-spike navbar: dotinho + text-brand no "Meu parlamentar" parecia
- * bug, não recurso.
+ * Todos os links têm peso visual uniforme — sem diferenciação por área.
  *
  * Active = pathname começa com href (ou exatamente "/" para home).
  * aria-current="page" (WCAG 2.4.8 / 4.1.2).

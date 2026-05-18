@@ -16,29 +16,12 @@ describe('NavLinks', () => {
     mockedPathname.mockReturnValue('/')
   })
 
-  it('renderiza os 5 links principais', () => {
+  it('renderiza os 4 links principais', () => {
     render(<NavLinks />)
-    expect(screen.getByRole('link', { name: 'Meu parlamentar' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Parlamentares' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Proposições' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Votações' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Docs' })).toBeDefined()
-  })
-
-  it('"Meu parlamentar" tem href /o-meu-parlamentar', () => {
-    render(<NavLinks />)
-    expect(
-      screen
-        .getByRole('link', { name: 'Meu parlamentar' })
-        .getAttribute('href'),
-    ).toBe('/o-meu-parlamentar')
-  })
-
-  it('marca link active com aria-current=page quando pathname=/o-meu-parlamentar', () => {
-    mockedPathname.mockReturnValue('/o-meu-parlamentar')
-    render(<NavLinks />)
-    const active = screen.getByRole('link', { name: 'Meu parlamentar' })
-    expect(active.getAttribute('aria-current')).toBe('page')
   })
 
   it('marca link active quando pathname é sub-rota (/parlamentares/123)', () => {
@@ -60,26 +43,19 @@ describe('NavLinks', () => {
   it('todos os links idle têm tratamento neutro (text-foreground-muted, sem text-brand)', () => {
     mockedPathname.mockReturnValue('/votacoes')
     render(<NavLinks />)
-    const meuPar = screen.getByRole('link', { name: 'Meu parlamentar' })
+    const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
     const docs = screen.getByRole('link', { name: 'Docs' })
-    expect(meuPar.className).toContain('text-foreground-muted')
-    expect(meuPar.className).not.toContain('text-brand')
+    expect(parlamentares.className).toContain('text-foreground-muted')
+    expect(parlamentares.className).not.toContain('text-brand')
     expect(docs.className).toContain('text-foreground-muted')
   })
 
   it('link active tem bg-foreground/10 + ring-foreground/10 (uniforme para todos)', () => {
-    mockedPathname.mockReturnValue('/o-meu-parlamentar')
+    mockedPathname.mockReturnValue('/parlamentares')
     render(<NavLinks />)
-    const meuPar = screen.getByRole('link', { name: 'Meu parlamentar' })
-    expect(meuPar.className).toContain('bg-foreground/10')
-    expect(meuPar.className).toContain('ring-foreground/10')
-  })
-
-  it('"Meu parlamentar" não tem nenhum indicador visual diferenciado (dot)', () => {
-    render(<NavLinks />)
-    const meuPar = screen.getByRole('link', { name: 'Meu parlamentar' })
-    // Texto puro, sem span filho aria-hidden
-    expect(meuPar.querySelectorAll('span[aria-hidden]').length).toBe(0)
+    const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
+    expect(parlamentares.className).toContain('bg-foreground/10')
+    expect(parlamentares.className).toContain('ring-foreground/10')
   })
 
   it('todos os links têm focus ring via token --ring', () => {
@@ -112,8 +88,8 @@ describe('isNavLinkActive', () => {
 })
 
 describe('NAV_LINKS', () => {
-  it('exporta 5 entradas, todas sem flag brand', () => {
-    expect(NAV_LINKS).toHaveLength(5)
+  it('exporta 4 entradas, todas sem flag brand', () => {
+    expect(NAV_LINKS).toHaveLength(4)
     for (const link of NAV_LINKS) {
       expect(link).not.toHaveProperty('brand')
     }

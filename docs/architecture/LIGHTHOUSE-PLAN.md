@@ -57,7 +57,6 @@ As 6 rotas da auditoria original. Confirmação se mudou:
 
 - [ ] `/votacoes` (listing — não estava no baseline)
 - [ ] `/proposicoes/[tipo]/[numero]/[ano]` (detail — Sprint 4.2; escolher PL recente)
-- [ ] `/o-meu-parlamentar?uf=SP&municipio=Sao Paulo` (Sprint 4.6 — fluxo cívico completo)
 - [ ] `/docs` (hub — Sprint 4.6)
 - [ ] `/docs/piramide-de-confianca` (4 cards + 4 TrustBadges)
 - [ ] `/busca?q=lula` (Sprint 4.4 — search + resultados)
@@ -140,9 +139,9 @@ Investigar **causa raiz** via DevTools → Performance → Insights:
    — bundle CSS final deve ser pequeno. Confirmar em DevTools tab Network.
 
 4. **Query DB**: rotas com `dynamic = 'force-dynamic'` (`/partidos/[sigla]`,
-   `/o-meu-parlamentar`, `/feed`) dependem de query Neon — TTL do cache
-   `partidoOverview` está documentado em `src/lib/queries/partidos.ts`,
-   mas cold start do Neon pode adicionar 200-500ms.
+   `/feed`) dependem de query Neon — TTL do cache `partidoOverview` está
+   documentado em `src/lib/queries/partidos.ts`, mas cold start do Neon
+   pode adicionar 200-500ms.
 
 ### Cenário 2: Performance score < 95
 
