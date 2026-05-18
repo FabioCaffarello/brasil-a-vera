@@ -38,6 +38,7 @@ import {
   getParlamentarById,
   getProposicoesAutoradas,
   getTop5Afinidade,
+  getVotosDistribuicao,
   getVotosRecentes,
   VOTOS_ALINHAMENTOS,
   VOTOS_PERIODOS,
@@ -139,6 +140,7 @@ export default async function ParlamentarPerfilPage({
   const anoCorrente = new Date().getFullYear()
   const [
     votosPage,
+    votosDistribuicao,
     proposicoes,
     gastos,
     afinidades,
@@ -149,6 +151,10 @@ export default async function ParlamentarPerfilPage({
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
+      periodo: periodoVotos,
+      alinhamento: alinhamentoVotos,
+    }),
+    getVotosDistribuicao(parlamentar.id, {
       periodo: periodoVotos,
       alinhamento: alinhamentoVotos,
     }),
@@ -359,6 +365,7 @@ export default async function ParlamentarPerfilPage({
             <VotosRecentes
               votos={votos}
               filtros={votosFiltros}
+              distribuicao={votosDistribuicao}
               buildFiltroHref={buildVotosFiltroHref}
               proximaPaginaHref={votosProximaPaginaHref}
             />
@@ -446,6 +453,7 @@ export default async function ParlamentarPerfilPage({
           <VotosRecentes
             votos={votos}
             filtros={votosFiltros}
+            distribuicao={votosDistribuicao}
             buildFiltroHref={buildVotosFiltroHref}
             proximaPaginaHref={votosProximaPaginaHref}
           />

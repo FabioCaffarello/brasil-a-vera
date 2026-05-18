@@ -784,3 +784,95 @@ export async function getComparacoesCasa(
     },
   )
 }
+
+export interface VotosDistribuicao {
+  sim: number
+  nao: number
+  abstencao: number
+  ausente: number
+  obstrucao: number
+  /** Soma dos 5 acima — base do cálculo de percentual no UI. */
+  total: number
+}
+
+// Distribuição de votos por tipo (Wave 7 Sprint 7.3 PR2 — barra CSS-only
+// no header da SectionCard "Votos recentes"). Aplica os mesmos filtros
+// que getVotosRecentes (periodo + alinhamento) para refletir o subconjunto
+// que o usuário está vendo.
+//
+// AUSENTE e OBSTRUCAO entram na resposta mas o consumer (componente UI)
+// renderiza só SIM/NAO/ABSTENCAO na barra — handoff lista 3 categorias.
+// Caller pode usar os campos extras se quiser uma vista mais granular
+// no futuro.
+export async function getVotosDistribuicao(
+  parlamentarId: string,
+  opts: Pick<VotosRecentesOpts, 'periodo' | 'alinhamento'> = {},
+): Promise<VotosDistribuicao> {
+  const periodo = opts.periodo ?? 'all'
+  const alinhamento = opts.alinhamento ?? 'todos'
+
+  const whereClauses = [eq(votoNominal.parlamentarId, parlamentarId)]
+  if (periodo !== 'all') {
+    const interval =
+      periodo === '30d'
+        ? '30 days'
+        : periodo === '90d'
+          ? '90 days'
+          : '12 months'
+    whereClauses.push(sql`${votacao.dataHora} >= now() - ${interval}::interval`)
+  }
+  if (alinhamento === 'alinhado') {
+    whereClauses.push(
+      sql`${votoNominal.voto} != 'AUSENTE' AND orientacao_bancada.orientacao != 'LIBERADO' AND ${votoNominal.voto}::text = orientacao_bancada.orientacao::text`,
+    )
+  } else if (alinhamento === 'divergente') {
+    whereClauses.push(
+      sql`${votoNominal.voto} != 'AUSENTE' AND orientacao_bancada.orientacao != 'LIBERADO' AND ${votoNominal.voto}::text != orientacao_bancada.orientacao::text`,
+    )
+  }
+
+  const rows = await db
+    .select({
+      voto: votoNominal.voto,
+      n: count(votoNominal.id),
+    })
+    .from(votoNominal)
+    .innerJoin(votacao, eq(votacao.id, votoNominal.votacaoId))
+    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+    .leftJoin(
+      sql`votacoes.orientacao_bancada`,
+      sql`orientacao_bancada.votacao_id = ${votoNominal.votacaoId} AND orientacao_bancada.partido_sigla = ${parlamentar.partidoSigla}`,
+    )
+    .where(and(...whereClauses))
+    .groupBy(votoNominal.voto)
+
+  const acc: VotosDistribuicao = {
+    sim: 0,
+    nao: 0,
+    abstencao: 0,
+    ausente: 0,
+    obstrucao: 0,
+    total: 0,
+  }
+  for (const r of rows) {
+    switch (r.voto) {
+      case 'SIM':
+        acc.sim = r.n
+        break
+      case 'NAO':
+        acc.nao = r.n
+        break
+      case 'ABSTENCAO':
+        acc.abstencao = r.n
+        break
+      case 'AUSENTE':
+        acc.ausente = r.n
+        break
+      case 'OBSTRUCAO':
+        acc.obstrucao = r.n
+        break
+    }
+    acc.total += r.n
+  }
+  return acc
+}

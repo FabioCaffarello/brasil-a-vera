@@ -7,6 +7,7 @@ import {
 import { formatDataBR, getTipoVotoStyle } from '@/lib/format'
 import type {
   VotosAlinhamentoFilter,
+  VotosDistribuicao,
   VotosPeriodoFilter,
 } from '@/lib/queries/parlamentares'
 
@@ -27,6 +28,8 @@ export interface VotosRecentesFiltros {
 interface Props {
   votos: Voto[]
   filtros: VotosRecentesFiltros
+  /** Distribuição agregada dos votos (mesmos filtros aplicados). */
+  distribuicao: VotosDistribuicao
   /**
    * Constrói o href trocando apenas o filtro especificado, preservando
    * os demais filtros mini de votos. Recebe `null` para resetar.
@@ -59,11 +62,13 @@ const ALINHAMENTO_LABEL: Record<VotosAlinhamentoFilter, string> = {
 export function VotosRecentes({
   votos,
   filtros,
+  distribuicao,
   buildFiltroHref,
   proximaPaginaHref,
 }: Props) {
   return (
     <div className="space-y-3">
+      <DistribuicaoBar distribuicao={distribuicao} />
       <div className="space-y-2">
         <FilterChips label="Período">
           {(['all', '30d', '90d', '12m'] as VotosPeriodoFilter[]).map((p) => (
@@ -143,6 +148,71 @@ export function VotosRecentes({
           Mostrar mais
         </a>
       ) : null}
+    </div>
+  )
+}
+
+// Barra de distribuição de voto (Wave 7 Sprint 7.3 PR2 — CSS-only,
+// sem JS). Renderiza 3 categorias do handoff (SIM/NÃO/Abstenção) com
+// tokens semânticos: success/destructive/warning a 30% de opacidade.
+// AUSENTE e OBSTRUCAO entram no `total` para cálculo de % mas não
+// renderizam segmento — handoff cravou 3 categorias.
+//
+// Honestidade do dado: se total == 0 (sem votos no filtro), não
+// renderiza nada — barra vazia seria visualmente confusa.
+function DistribuicaoBar({
+  distribuicao,
+}: {
+  distribuicao: VotosDistribuicao
+}) {
+  if (distribuicao.total === 0) return null
+
+  const pct = (n: number) => Math.round((n / distribuicao.total) * 100)
+  const pctSim = pct(distribuicao.sim)
+  const pctNao = pct(distribuicao.nao)
+  const pctAbs = pct(distribuicao.abstencao)
+
+  return (
+    <div>
+      <div
+        aria-hidden
+        className="flex h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated"
+      >
+        {pctSim > 0 ? (
+          <div
+            className="h-full bg-success/30"
+            style={{ width: `${pctSim}%` }}
+          />
+        ) : null}
+        {pctNao > 0 ? (
+          <div
+            className="h-full bg-destructive/30"
+            style={{ width: `${pctNao}%` }}
+          />
+        ) : null}
+        {pctAbs > 0 ? (
+          <div
+            className="h-full bg-warning/30"
+            style={{ width: `${pctAbs}%` }}
+          />
+        ) : null}
+      </div>
+      <p className="mt-1.5 text-foreground-muted text-xs">
+        <span className="font-medium text-success">{pctSim}% SIM</span>
+        {' · '}
+        <span className="font-medium text-destructive">{pctNao}% NÃO</span>
+        {' · '}
+        <span className="font-medium text-warning">{pctAbs}% Abstenção</span>
+        {distribuicao.ausente + distribuicao.obstrucao > 0 ? (
+          <>
+            {' · '}
+            <span className="text-foreground-subtle">
+              {pct(distribuicao.ausente + distribuicao.obstrucao)}% Ausência/
+              Obstrução
+            </span>
+          </>
+        ) : null}
+      </p>
     </div>
   )
 }
