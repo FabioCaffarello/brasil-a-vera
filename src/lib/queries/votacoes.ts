@@ -75,29 +75,37 @@ export async function listVotacoes(filtros: FiltrosVotacao = {}, limit = 50) {
 }
 
 export async function getVotacaoById(id: string) {
-  const rows = await db
-    .select()
-    .from(votacao)
-    .where(eq(votacao.id, id))
-    .limit(1)
-  return rows[0] ?? null
+  return cached(`votacoes:byid:${id}`, TTL.votacaoHistorica, async () => {
+    const rows = await db
+      .select()
+      .from(votacao)
+      .where(eq(votacao.id, id))
+      .limit(1)
+    return rows[0] ?? null
+  })
 }
 
 export async function getProposicaoVinculada(proposicaoId: string | null) {
   if (!proposicaoId) return null
-  const rows = await db
-    .select({
-      id: proposicao.id,
-      tipo: proposicao.tipo,
-      numero: proposicao.numero,
-      ano: proposicao.ano,
-      ementa: proposicao.ementa,
-      situacao: proposicao.situacao,
-    })
-    .from(proposicao)
-    .where(eq(proposicao.id, proposicaoId))
-    .limit(1)
-  return rows[0] ?? null
+  return cached(
+    `votacoes:proposicao-vinculada:${proposicaoId}`,
+    TTL.votacaoHistorica,
+    async () => {
+      const rows = await db
+        .select({
+          id: proposicao.id,
+          tipo: proposicao.tipo,
+          numero: proposicao.numero,
+          ano: proposicao.ano,
+          ementa: proposicao.ementa,
+          situacao: proposicao.situacao,
+        })
+        .from(proposicao)
+        .where(eq(proposicao.id, proposicaoId))
+        .limit(1)
+      return rows[0] ?? null
+    },
+  )
 }
 
 export interface VotoIndividual {
@@ -109,26 +117,36 @@ export interface VotoIndividual {
   parlamentarUf: string
 }
 
+// Lista de votos individuais de uma votação. Quando `filtros.voto` é
+// passado, query roda direto sem cache (path raro, deprecated após
+// Sprint 9.2 quando filtro migra para client-side — D7). Caso sem
+// filtro é o único cacheável: lista completa de 1 votação cabe num
+// payload pequeno e cresce zero após fechamento da sessão.
 export async function getVotosByVotacao(
   votacaoId: string,
   filtros: { voto?: TipoVoto } = {},
 ): Promise<VotoIndividual[]> {
-  const where = [eq(votoNominal.votacaoId, votacaoId)]
-  if (filtros.voto) where.push(eq(votoNominal.voto, filtros.voto))
+  const loader = async () => {
+    const where = [eq(votoNominal.votacaoId, votacaoId)]
+    if (filtros.voto) where.push(eq(votoNominal.voto, filtros.voto))
 
-  return db
-    .select({
-      id: votoNominal.id,
-      voto: votoNominal.voto,
-      parlamentarId: parlamentar.id,
-      parlamentarNome: parlamentar.nome,
-      parlamentarPartidoSigla: parlamentar.partidoSigla,
-      parlamentarUf: parlamentar.uf,
-    })
-    .from(votoNominal)
-    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
-    .where(and(...where))
-    .orderBy(asc(parlamentar.partidoSigla), asc(parlamentar.nome))
+    return db
+      .select({
+        id: votoNominal.id,
+        voto: votoNominal.voto,
+        parlamentarId: parlamentar.id,
+        parlamentarNome: parlamentar.nome,
+        parlamentarPartidoSigla: parlamentar.partidoSigla,
+        parlamentarUf: parlamentar.uf,
+      })
+      .from(votoNominal)
+      .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+      .where(and(...where))
+      .orderBy(asc(parlamentar.partidoSigla), asc(parlamentar.nome))
+  }
+
+  if (filtros.voto) return loader()
+  return cached(`votacoes:votos:${votacaoId}`, TTL.votacaoHistorica, loader)
 }
 
 export interface ResumoPorPartido {
@@ -146,37 +164,43 @@ export interface ResumoPorPartido {
 export async function getVotosResumoPorPartido(
   votacaoId: string,
 ): Promise<ResumoPorPartido[]> {
-  const rows = await db
-    .select({
-      partidoSigla: parlamentar.partidoSigla,
-      voto: votoNominal.voto,
-      n: count(votoNominal.id),
-    })
-    .from(votoNominal)
-    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
-    .where(eq(votoNominal.votacaoId, votacaoId))
-    .groupBy(parlamentar.partidoSigla, votoNominal.voto)
+  return cached(
+    `votacoes:resumo-partido:${votacaoId}`,
+    TTL.votacaoHistorica,
+    async () => {
+      const rows = await db
+        .select({
+          partidoSigla: parlamentar.partidoSigla,
+          voto: votoNominal.voto,
+          n: count(votoNominal.id),
+        })
+        .from(votoNominal)
+        .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+        .where(eq(votoNominal.votacaoId, votacaoId))
+        .groupBy(parlamentar.partidoSigla, votoNominal.voto)
 
-  const mapa = new Map<string, ResumoPorPartido>()
-  for (const r of rows) {
-    const existing = mapa.get(r.partidoSigla) ?? {
-      partidoSigla: r.partidoSigla,
-      sim: 0,
-      nao: 0,
-      abstencao: 0,
-      ausente: 0,
-      obstrucao: 0,
-      total: 0,
-    }
-    if (r.voto === 'SIM') existing.sim = r.n
-    else if (r.voto === 'NAO') existing.nao = r.n
-    else if (r.voto === 'ABSTENCAO') existing.abstencao = r.n
-    else if (r.voto === 'AUSENTE') existing.ausente = r.n
-    else if (r.voto === 'OBSTRUCAO') existing.obstrucao = r.n
-    existing.total += r.n
-    mapa.set(r.partidoSigla, existing)
-  }
-  return Array.from(mapa.values()).sort((a, b) => b.total - a.total)
+      const mapa = new Map<string, ResumoPorPartido>()
+      for (const r of rows) {
+        const existing = mapa.get(r.partidoSigla) ?? {
+          partidoSigla: r.partidoSigla,
+          sim: 0,
+          nao: 0,
+          abstencao: 0,
+          ausente: 0,
+          obstrucao: 0,
+          total: 0,
+        }
+        if (r.voto === 'SIM') existing.sim = r.n
+        else if (r.voto === 'NAO') existing.nao = r.n
+        else if (r.voto === 'ABSTENCAO') existing.abstencao = r.n
+        else if (r.voto === 'AUSENTE') existing.ausente = r.n
+        else if (r.voto === 'OBSTRUCAO') existing.obstrucao = r.n
+        existing.total += r.n
+        mapa.set(r.partidoSigla, existing)
+      }
+      return Array.from(mapa.values()).sort((a, b) => b.total - a.total)
+    },
+  )
 }
 
 // Counter para honestidade de truncagem no export CSV (Sprint 3.0). Mesmas
