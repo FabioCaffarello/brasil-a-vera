@@ -73,6 +73,11 @@ export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
         urlFoto: parlamentar.urlFoto,
         legislatura: parlamentar.legislatura,
         sourceUrl: parlamentar.sourceUrl,
+        // Agregado (Sprint 7.0 PR1 / 7.1 PR4) — consumido pelo
+        // ParlamentarCard v2 para barra de alinhamento + texto de amostra.
+        // Pode ser null quando ainda não rodou o seed para esta linha.
+        pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
+        votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
       })
       .from(parlamentar)
       .leftJoin(
