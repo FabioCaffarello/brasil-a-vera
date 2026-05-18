@@ -258,3 +258,225 @@ export async function getUfsDistintos(): Promise<string[]> {
     .orderBy(parlamentar.uf)
   return rows.map((r) => r.uf)
 }
+
+export interface AlinhamentoMensalPoint {
+  /** YYYY-MM (ex.: "2026-04"). */
+  mes: string
+  /** % de alinhamento no mês (0-100, arredondado). null se total = 0. */
+  percentual: number | null
+  /** Votações comparáveis no mês (exclui AUSENTE e LIBERADO). */
+  total: number
+}
+
+// Série mensal de alinhamento com a bancada (Wave 7 Sprint 7.0 PR4 — fonte
+// de dado para o sparkline em src/components/parlamentar/alinhamento.tsx).
+// Aplica os mesmos filtros de src/modules/parlamentares/domain/alinhamento.ts:
+// exclui voto AUSENTE e orientacao LIBERADO. Comparação via cast text.
+//
+// Janela default 12 meses fixa o eixo temporal do sparkline. Meses sem voto
+// não aparecem na série — UI lida com lacunas (não preenche com zeros).
+export async function getAlinhamentoMensal(
+  parlamentarId: string,
+  meses = 12,
+): Promise<AlinhamentoMensalPoint[]> {
+  return cached(
+    `parlamentar:alinhamento_mensal:${parlamentarId}:m=${meses}`,
+    TTL.alinhamentoPartidario,
+    async () => {
+      type Row = { mes: string; total: number; alinhados: number }
+      const result = await db.execute(sql`
+        SELECT
+          to_char(${votacao.dataHora}, 'YYYY-MM') AS mes,
+          COUNT(*) FILTER (
+            WHERE ${votoNominal.voto} != 'AUSENTE'
+              AND ob.orientacao != 'LIBERADO'
+          )::int AS total,
+          COUNT(*) FILTER (
+            WHERE ${votoNominal.voto} != 'AUSENTE'
+              AND ob.orientacao != 'LIBERADO'
+              AND ${votoNominal.voto}::text = ob.orientacao::text
+          )::int AS alinhados
+        FROM ${votoNominal}
+        JOIN ${votacao} ON ${votacao.id} = ${votoNominal.votacaoId}
+        JOIN ${parlamentar} ON ${parlamentar.id} = ${votoNominal.parlamentarId}
+        JOIN votacoes.orientacao_bancada ob
+          ON ob.votacao_id = ${votoNominal.votacaoId}
+          AND ob.partido_sigla = ${parlamentar.partidoSigla}
+        WHERE ${votoNominal.parlamentarId} = ${parlamentarId}
+          AND ${votacao.dataHora} >= now() - (${meses} || ' months')::interval
+        GROUP BY 1
+        ORDER BY 1
+      `)
+
+      // db.execute retorna shape diferente por driver (Neon serverless tem
+      // .rows; Neon HTTP retorna array direto). Normaliza ambos.
+      const rows = (
+        Array.isArray(result)
+          ? result
+          : ((result as unknown as { rows: Row[] }).rows ?? [])
+      ) as Row[]
+
+      return rows
+        .filter((r) => r.total > 0)
+        .map((r) => ({
+          mes: r.mes,
+          total: r.total,
+          percentual: Math.round((r.alinhados / r.total) * 100),
+        }))
+    },
+  )
+}
+
+export interface GastoMensalPoint {
+  /** YYYY-MM (ex.: "2026-04"). */
+  mes: string
+  /** Gasto do parlamentar no mês (BRL, fixed 2). 0 se sem registros. */
+  valor: string
+  /** Mediana de gasto entre parlamentares da mesma casa nesse mês. 0 se vazio. */
+  medianaCasa: string
+}
+
+// Série mensal de gasto do parlamentar comparada com a mediana mensal da casa
+// (Wave 7 Sprint 7.0 PR4 — fonte do gráfico de linha em /parlamentares/[id]
+// Sprint 7.4). Gera 12 meses do ano (Jan-Dez) mesmo quando o parlamentar não
+// teve gasto registrado no mês — UI plota linha contínua com zeros.
+//
+// Mediana é calculada SOBRE os parlamentares com gasto no mês (não inclui
+// "0" implícito de quem não gastou) — interpretação editorial: o sinal
+// cívico é "entre quem gastou, em que faixa este parlamentar está?".
+export async function getGastosMensalMedianaCasa(
+  parlamentarId: string,
+  ano: number,
+): Promise<GastoMensalPoint[]> {
+  return cached(
+    `parlamentar:gasto_mensal:${parlamentarId}:ano=${ano}`,
+    TTL.gastoAnoCorrente,
+    async () => {
+      type Row = { mes: string; valor: string; mediana_casa: string }
+      const result = await db.execute(sql`
+        WITH meses AS (
+          SELECT to_char(d, 'YYYY-MM') AS mes
+          FROM generate_series(
+            make_date(${ano}, 1, 1),
+            make_date(${ano}, 12, 1),
+            interval '1 month'
+          ) AS d
+        ),
+        casa_alvo AS (
+          SELECT casa FROM ${parlamentar} WHERE id = ${parlamentarId}
+        ),
+        gasto_parlamentar_mes AS (
+          SELECT
+            to_char(${gasto.dataEmissao}, 'YYYY-MM') AS mes,
+            SUM(${gasto.valor})::numeric(14, 2) AS valor
+          FROM ${gasto}
+          WHERE ${gasto.parlamentarId} = ${parlamentarId}
+            AND EXTRACT(YEAR FROM ${gasto.dataEmissao}) = ${ano}
+          GROUP BY 1
+        ),
+        gasto_casa_mes AS (
+          SELECT
+            to_char(g.data_emissao, 'YYYY-MM') AS mes,
+            g.parlamentar_id,
+            SUM(g.valor) AS valor
+          FROM gastos.gasto g
+          JOIN ${parlamentar} p ON p.id = g.parlamentar_id
+          WHERE p.casa = (SELECT casa FROM casa_alvo)
+            AND EXTRACT(YEAR FROM g.data_emissao) = ${ano}
+          GROUP BY 1, 2
+        ),
+        mediana_casa_mes AS (
+          SELECT
+            mes,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY valor)::numeric(14, 2) AS mediana
+          FROM gasto_casa_mes
+          GROUP BY mes
+        )
+        SELECT
+          m.mes,
+          COALESCE(gpm.valor, 0)::text AS valor,
+          COALESCE(mcm.mediana, 0)::text AS mediana_casa
+        FROM meses m
+        LEFT JOIN gasto_parlamentar_mes gpm ON gpm.mes = m.mes
+        LEFT JOIN mediana_casa_mes mcm ON mcm.mes = m.mes
+        ORDER BY m.mes
+      `)
+
+      const rows = (
+        Array.isArray(result)
+          ? result
+          : ((result as unknown as { rows: Row[] }).rows ?? [])
+      ) as Row[]
+
+      return rows.map((r) => ({
+        mes: r.mes,
+        valor: r.valor,
+        medianaCasa: r.mediana_casa,
+      }))
+    },
+  )
+}
+
+export interface FornecedorTop {
+  /** CNPJ/CPF do fornecedor, ou string vazia se sem cadastro. */
+  cnpj: string
+  /** Nome do fornecedor (último registrado quando há variantes). */
+  nome: string
+  /** Total gasto com o fornecedor no ano (BRL, fixed 2, como string). */
+  total: string
+  /** Quantidade de registros (notas/recibos) agrupados. */
+  registros: number
+}
+
+// Top N fornecedores por valor total no ano (Wave 7 Sprint 7.0 PR4 — fonte
+// para o "drill-down de gastos" em /parlamentares/[id] Sprint 7.4).
+//
+// Agrupa por COALESCE(cnpj, nome) — CNPJ é a chave forte; quando ausente
+// (gastos antigos da Câmara, gastos do Senado sem cadastro), fallback no
+// nome. MAX(nome) escolhe o último registrado quando há variantes.
+//
+// Limite default 5 alinha com o card "Top 5 fornecedores" da spec
+// docs/features/PARLAMENTAR-360.md.
+export async function getGastosTopFornecedores(
+  parlamentarId: string,
+  ano: number,
+  limit = 5,
+): Promise<FornecedorTop[]> {
+  return cached(
+    `parlamentar:top_fornecedores:${parlamentarId}:ano=${ano}:lim=${limit}`,
+    TTL.gastoAnoCorrente,
+    async () => {
+      // Agrupamos por COALESCE(cnpj, nome) para tratar como mesma entidade
+      // os registros sem CNPJ que compartilham o nome. SELECT usa MAX em
+      // ambas as colunas individuais (Postgres exige que não-agrupadas
+      // estejam dentro de agregado) — MAX devolve o valor único quando há
+      // só um, e o lexicograficamente maior quando há variantes.
+      const rows = await db
+        .select({
+          cnpj: sql<string | null>`MAX(${gasto.fornecedorCnpjCpf})`.as('cnpj'),
+          nome: sql<string>`MAX(${gasto.fornecedorNome})`.as('nome'),
+          total: sum(gasto.valor),
+          registros: count(gasto.id),
+        })
+        .from(gasto)
+        .where(
+          and(
+            eq(gasto.parlamentarId, parlamentarId),
+            sql`EXTRACT(YEAR FROM ${gasto.dataEmissao}) = ${ano}`,
+          ),
+        )
+        .groupBy(
+          sql`COALESCE(${gasto.fornecedorCnpjCpf}, ${gasto.fornecedorNome})`,
+        )
+        .orderBy(desc(sum(gasto.valor)))
+        .limit(limit)
+
+      return rows.map((r) => ({
+        cnpj: r.cnpj ?? '',
+        nome: r.nome,
+        total: r.total ?? '0',
+        registros: r.registros,
+      }))
+    },
+  )
+}
