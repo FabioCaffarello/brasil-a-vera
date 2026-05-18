@@ -64,11 +64,13 @@ export async function GET(request: Request) {
       q: url.searchParams.get('q')?.trim() || undefined,
     }
 
-    const [rows, total] = await Promise.all([
-      listProposicoes(filtros, LIMITE_EXPORT),
+    const [page, total] = await Promise.all([
+      // Wave 8 Sprint 8.1 PR5 — nova assinatura { rows, nextCursor }.
+      // Export ignora nextCursor (limit alto = 1000 cobre o caso típico).
+      listProposicoes(filtros, { limit: LIMITE_EXPORT }),
       countProposicoes(filtros),
     ])
-    const csv = toCsv(rows, [
+    const csv = toCsv(page.rows, [
       { header: 'id', get: (r) => r.id },
       { header: 'tipo', get: (r) => r.tipo },
       { header: 'numero', get: (r) => r.numero },
@@ -82,7 +84,7 @@ export async function GET(request: Request) {
     return new Response(csv, {
       headers: csvResponseHeaders('proposicoes.csv', {
         total,
-        returned: rows.length,
+        returned: page.rows.length,
       }),
     })
   } catch {

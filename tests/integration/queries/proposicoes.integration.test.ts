@@ -38,7 +38,8 @@ describe('queries/proposicoes (integration)', () => {
   describe('listProposicoes', () => {
     it('retorna array vazio em DB vazio', async () => {
       const result = await listProposicoes()
-      expect(result).toEqual([])
+      expect(result.rows).toEqual([])
+      expect(result.nextCursor).toBeNull()
     })
 
     it('filtra por tipo', async () => {
@@ -50,8 +51,8 @@ describe('queries/proposicoes (integration)', () => {
         ])
 
       const result = await listProposicoes({ tipo: 'PL' })
-      expect(result).toHaveLength(1)
-      expect(result[0]?.tipo).toBe('PL')
+      expect(result.rows).toHaveLength(1)
+      expect(result.rows[0]?.tipo).toBe('PL')
     })
 
     it('ordena por desc(ano) e desc(numero)', async () => {
@@ -64,7 +65,7 @@ describe('queries/proposicoes (integration)', () => {
         ])
 
       const result = await listProposicoes()
-      expect(result.map((r) => `${r.ano}/${r.numero}`)).toEqual([
+      expect(result.rows.map((r) => `${r.ano}/${r.numero}`)).toEqual([
         '2026/100',
         '2026/5',
         '2025/10',
