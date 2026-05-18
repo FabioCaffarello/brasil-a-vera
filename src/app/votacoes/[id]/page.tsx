@@ -75,6 +75,8 @@ export default async function VotacaoPage({ params }: PageProps) {
             descricao: v.descricao,
             orgao: v.orgao,
             aprovada: v.aprovada,
+            votosSim: v.votosSim,
+            votosNao: v.votosNao,
             sourceUrl: v.sourceUrl,
             trustLevel: v.trustLevel,
           }}

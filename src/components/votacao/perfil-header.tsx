@@ -2,16 +2,19 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
+import { CompartilharVotacaoButton } from '@/components/votacao/compartilhar-button'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { formatDataHoraBR } from '@/lib/format'
 
 interface Props {
   votacao: {
-    casa: string
+    casa: 'CAMARA' | 'SENADO'
     dataHora: Date | string
     descricao: string
     orgao: string
     aprovada: boolean
+    votosSim: number
+    votosNao: number
     sourceUrl: string
     trustLevel: 'L1' | 'L2' | 'L3' | 'L4'
   }
@@ -71,6 +74,18 @@ export function PerfilVotacaoHeader({ votacao: v }: Props) {
           >
             Ver na fonte oficial ↗
           </a>
+        </div>
+
+        <div className="mt-4 pt-3">
+          <CompartilharVotacaoButton
+            votacao={{
+              descricao: v.descricao,
+              aprovada: v.aprovada,
+              votosSim: v.votosSim,
+              votosNao: v.votosNao,
+              casa: v.casa,
+            }}
+          />
         </div>
       </header>
     </div>
