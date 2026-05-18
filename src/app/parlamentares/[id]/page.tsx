@@ -31,7 +31,10 @@ import {
   getCoerenciaStats,
   getParesContraditorios,
 } from '@/lib/queries/coerencia'
-import { CursorVotosV1 } from '@/lib/queries/cursor-schemas'
+import {
+  CursorProposicoesV1,
+  CursorVotosV1,
+} from '@/lib/queries/cursor-schemas'
 import {
   getComparacoesCasa,
   getGastosResumo,
@@ -40,6 +43,10 @@ import {
   getTop5Afinidade,
   getVotosDistribuicao,
   getVotosRecentes,
+  PROPOSICAO_SITUACOES,
+  PROPOSICAO_TIPOS,
+  type ProposicaoSituacaoFilter,
+  type ProposicaoTipoFilter,
   VOTOS_ALINHAMENTOS,
   VOTOS_PERIODOS,
   type VotosAlinhamentoFilter,
@@ -61,6 +68,9 @@ interface PageProps {
     votos_after?: string
     votos_periodo?: string
     votos_alinhamento?: string
+    propos_after?: string
+    propos_tipo?: string
+    propos_situacao?: string
   }>
 }
 
@@ -78,6 +88,24 @@ function normalizeVotosAlinhamento(
 ): VotosAlinhamentoFilter | undefined {
   if (v && (VOTOS_ALINHAMENTOS as string[]).includes(v)) {
     return v as VotosAlinhamentoFilter
+  }
+  return undefined
+}
+
+function normalizeProposicaoTipo(
+  v: string | undefined,
+): ProposicaoTipoFilter | undefined {
+  if (v && (PROPOSICAO_TIPOS as string[]).includes(v)) {
+    return v as ProposicaoTipoFilter
+  }
+  return undefined
+}
+
+function normalizeProposicaoSituacao(
+  v: string | undefined,
+): ProposicaoSituacaoFilter | undefined {
+  if (v && (PROPOSICAO_SITUACOES as string[]).includes(v)) {
+    return v as ProposicaoSituacaoFilter
   }
   return undefined
 }
@@ -127,21 +155,34 @@ export default async function ParlamentarPerfilPage({
   const parlamentar = await getParlamentarById(id)
   if (!parlamentar) notFound()
 
-  // Cursor de votos (ADR-026): null = inválido → redirect 308 strip o param.
+  // Cursors (ADR-026): null = inválido → redirect 308 strip o param.
   const cursorVotos = decodeCursor(sp.votos_after, CursorVotosV1)
   if (cursorVotos === null) {
     permanentRedirect(
       buildPerfilHref(parlamentar.id, sp, { votos_after: null }, '#votos'),
     )
   }
+  const cursorPropos = decodeCursor(sp.propos_after, CursorProposicoesV1)
+  if (cursorPropos === null) {
+    permanentRedirect(
+      buildPerfilHref(
+        parlamentar.id,
+        sp,
+        { propos_after: null },
+        '#proposicoes',
+      ),
+    )
+  }
   const periodoVotos = normalizeVotosPeriodo(sp.votos_periodo)
   const alinhamentoVotos = normalizeVotosAlinhamento(sp.votos_alinhamento)
+  const tipoPropos = normalizeProposicaoTipo(sp.propos_tipo)
+  const situacaoPropos = normalizeProposicaoSituacao(sp.propos_situacao)
 
   const anoCorrente = new Date().getFullYear()
   const [
     votosPage,
     votosDistribuicao,
-    proposicoes,
+    proposicoesPage,
     gastos,
     afinidades,
     paresContraditorios,
@@ -158,7 +199,11 @@ export default async function ParlamentarPerfilPage({
       periodo: periodoVotos,
       alinhamento: alinhamentoVotos,
     }),
-    getProposicoesAutoradas(parlamentar.id, 5),
+    getProposicoesAutoradas(parlamentar.id, {
+      cursor: cursorPropos,
+      tipo: tipoPropos,
+      situacao: situacaoPropos,
+    }),
     getGastosResumo(parlamentar.id, anoCorrente),
     getTop5Afinidade(parlamentar.id),
     getParesContraditorios(parlamentar.id, 10),
@@ -192,6 +237,34 @@ export default async function ParlamentarPerfilPage({
         sp,
         { votos_after: votosPage.nextCursor },
         '#votos',
+      )
+    : null
+
+  const proposicoes = proposicoesPage.rows
+  const proposicoesFiltros = {
+    tipo: tipoPropos ?? 'todos',
+    situacao: situacaoPropos ?? 'todas',
+  } as const
+  const buildProposicoesFiltroHref = (
+    overrides: Record<string, string | null>,
+  ) => {
+    const mapped: Record<string, string | null> = {}
+    for (const [k, v] of Object.entries(overrides)) {
+      mapped[`propos_${k}`] = v
+    }
+    return buildPerfilHref(
+      parlamentar.id,
+      sp,
+      { ...mapped, propos_after: null },
+      '#proposicoes',
+    )
+  }
+  const proposicoesProximaPaginaHref = proposicoesPage.nextCursor
+    ? buildPerfilHref(
+        parlamentar.id,
+        sp,
+        { propos_after: proposicoesPage.nextCursor },
+        '#proposicoes',
       )
     : null
 
@@ -267,10 +340,10 @@ export default async function ParlamentarPerfilPage({
               value: proposicoes.length,
               hint: (
                 <>
-                  {proposicoes.length === 5 ? 'mostrando 5 mais recentes' : ''}
+                  {proposicoesPage.nextCursor ? 'primeira página' : ''}
                   {comparacoes.percentilProposicoesCasa !== null ? (
                     <>
-                      {proposicoes.length === 5 ? ' · ' : ''}
+                      {proposicoesPage.nextCursor ? ' · ' : ''}
                       <span className="text-foreground-subtle">
                         {formatPercentil(comparacoes.percentilProposicoesCasa)}{' '}
                         da {casaLabel(parlamentar.casa)}
@@ -395,7 +468,12 @@ export default async function ParlamentarPerfilPage({
             Proposições onde é autor ou coautor
           </AccordionTrigger>
           <AccordionContent>
-            <ProposicoesAutor proposicoes={proposicoes} />
+            <ProposicoesAutor
+              proposicoes={proposicoes}
+              filtros={proposicoesFiltros}
+              buildFiltroHref={buildProposicoesFiltroHref}
+              proximaPaginaHref={proposicoesProximaPaginaHref}
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -477,7 +555,12 @@ export default async function ParlamentarPerfilPage({
           subtitle="Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
           title="Proposições onde é autor ou coautor"
         >
-          <ProposicoesAutor proposicoes={proposicoes} />
+          <ProposicoesAutor
+            proposicoes={proposicoes}
+            filtros={proposicoesFiltros}
+            buildFiltroHref={buildProposicoesFiltroHref}
+            proximaPaginaHref={proposicoesProximaPaginaHref}
+          />
         </SectionCard>
 
         <SectionCard
