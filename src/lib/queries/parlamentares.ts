@@ -1,6 +1,7 @@
-import { and, count, desc, eq, sql, sum } from 'drizzle-orm'
+import { and, asc, count, desc, eq, ilike, sql, sum } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { estatisticaParlamentarAgregada } from '@/modules/parlamentares/domain/schema'
 import { db } from '@/shared/db'
 import {
   gasto,
@@ -13,20 +14,54 @@ import {
 
 export type Casa = 'CAMARA' | 'SENADO'
 
+export type OrdemListagem = 'nome' | 'alinhamento' | 'gasto' | 'proposicoes'
+
+export const ORDENS_LISTAGEM: OrdemListagem[] = [
+  'nome',
+  'alinhamento',
+  'gasto',
+  'proposicoes',
+]
+
 export interface FiltrosParlamentar {
   casa?: Casa
   partido?: string
   uf?: string
+  /** Busca por nome via ILIKE '%termo%'. Trim aplicado antes da query. */
+  q?: string
+  /** Ordenação. Default 'nome' ASC. */
+  ordem?: OrdemListagem
 }
 
 export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
-  const key = `parlamentares:list:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}`
+  const q = filtros.q?.trim()
+  const ordem = filtros.ordem ?? 'nome'
+
+  const key = `parlamentares:list:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}:q=${q ?? '_'}:ordem=${ordem}`
   return cached(key, TTL.listagemFiltrada, async () => {
     const whereClauses = []
     if (filtros.casa) whereClauses.push(eq(parlamentar.casa, filtros.casa))
     if (filtros.partido)
       whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
     if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
+    if (q) whereClauses.push(ilike(parlamentar.nome, `%${q}%`))
+
+    // Ordens não-nome dependem da tabela agregada (Sprint 7.0 PR1).
+    // LEFT JOIN preserva parlamentares sem agregado (recém-empossados,
+    // suplência atípica) — eles caem no fim via NULLS LAST + tiebreak
+    // por nome ASC para determinismo.
+    const orderBy = (() => {
+      switch (ordem) {
+        case 'alinhamento':
+          return sql`${estatisticaParlamentarAgregada.pctAlinhamento} DESC NULLS LAST, ${parlamentar.nome} ASC`
+        case 'gasto':
+          return sql`${estatisticaParlamentarAgregada.gastoTotalAno} DESC NULLS LAST, ${parlamentar.nome} ASC`
+        case 'proposicoes':
+          return sql`${estatisticaParlamentarAgregada.proposicoesCount} DESC NULLS LAST, ${parlamentar.nome} ASC`
+        default:
+          return asc(parlamentar.nome)
+      }
+    })()
 
     return db
       .select({
@@ -40,8 +75,12 @@ export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
         sourceUrl: parlamentar.sourceUrl,
       })
       .from(parlamentar)
+      .leftJoin(
+        estatisticaParlamentarAgregada,
+        eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+      )
       .where(whereClauses.length > 0 ? and(...whereClauses) : undefined)
-      .orderBy(parlamentar.nome)
+      .orderBy(orderBy)
   })
 }
 

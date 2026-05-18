@@ -6,6 +6,7 @@ import {
 } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 import { Label } from '@/design-system/primitives/label'
+import type { OrdemListagem } from '@/lib/queries/parlamentares'
 
 interface Props {
   partidos: string[]
@@ -14,11 +15,20 @@ interface Props {
     casa?: string
     partido?: string
     uf?: string
+    q?: string
+    ordem?: OrdemListagem
   }
 }
 
-const SELECT_CLASS =
+const INPUT_CLASS =
   'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
+const ORDEM_LABEL: Record<OrdemListagem, string> = {
+  nome: 'Nome (A→Z)',
+  alinhamento: 'Maior alinhamento',
+  gasto: 'Maior gasto',
+  proposicoes: 'Mais proposições',
+}
 
 /**
  * Helper interno: constrói href de filtro mantendo os outros filtros
@@ -27,6 +37,8 @@ const SELECT_CLASS =
  * Uso (Sprint 6.2 PR 1 — Wave 6):
  *   buildHref({ casa: 'CAMARA' }, { casa: 'SENADO' }) → '/parlamentares?casa=SENADO'
  *   buildHref({ casa: 'CAMARA', uf: 'SP' }, { casa: null }) → '/parlamentares?uf=SP'
+ *
+ * Wave 7 Sprint 7.1 PR2: preserva também q e ordem.
  */
 function buildHref(
   current: Props['selecionado'],
@@ -37,7 +49,7 @@ function buildHref(
     ...overrides,
   }
   const params = new URLSearchParams()
-  for (const key of ['casa', 'partido', 'uf'] as const) {
+  for (const key of ['casa', 'partido', 'uf', 'q', 'ordem'] as const) {
     const value = merged[key]
     if (value !== null && value !== undefined && value !== '') {
       params.set(key, value)
@@ -84,7 +96,22 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           <input name="casa" type="hidden" value={selecionado.casa} />
         ) : null}
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {/* Busca por nome (Sprint 7.1 PR2) — SSR puro, Enter submete. */}
+        <div className="flex flex-col gap-1">
+          <Label className="text-foreground-muted text-xs" htmlFor="filtro-q">
+            Buscar por nome
+          </Label>
+          <input
+            className={INPUT_CLASS}
+            defaultValue={selecionado.q ?? ''}
+            id="filtro-q"
+            name="q"
+            placeholder="Ex.: silva"
+            type="search"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <Label
               className="text-foreground-muted text-xs"
@@ -93,7 +120,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               Partido
             </Label>
             <select
-              className={SELECT_CLASS}
+              className={INPUT_CLASS}
               defaultValue={selecionado.partido ?? ''}
               id="filtro-partido"
               name="partido"
@@ -115,7 +142,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               UF
             </Label>
             <select
-              className={SELECT_CLASS}
+              className={INPUT_CLASS}
               defaultValue={selecionado.uf ?? ''}
               id="filtro-uf"
               name="uf"
@@ -124,6 +151,27 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
               {ufs.map((u) => (
                 <option key={u} value={u}>
                   {u}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label
+              className="text-foreground-muted text-xs"
+              htmlFor="filtro-ordem"
+            >
+              Ordenar por
+            </Label>
+            <select
+              className={INPUT_CLASS}
+              defaultValue={selecionado.ordem ?? 'nome'}
+              id="filtro-ordem"
+              name="ordem"
+            >
+              {(Object.keys(ORDEM_LABEL) as OrdemListagem[]).map((k) => (
+                <option key={k} value={k}>
+                  {ORDEM_LABEL[k]}
                 </option>
               ))}
             </select>
