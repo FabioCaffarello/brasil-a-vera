@@ -1,8 +1,13 @@
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import type {
+  OrientacaoBancada,
+  TipoVoto as TipoVotoDomain,
+} from '@/modules/votacoes/domain/disciplina'
 import { db } from '@/shared/db'
 import {
+  orientacao,
   parlamentar,
   proposicao,
   votacao,
@@ -243,4 +248,242 @@ export async function getVotacoesRecentes(
     )
     .orderBy(desc(votacao.dataHora))
     .limit(limit)
+}
+
+// =============================================================================
+// Wave 9 — queries de disciplina partidária e relacionadas (ADR-028)
+//
+// Todas cacheadas com TTL.votacaoHistorica (7 dias). Votações fechadas são
+// imutáveis no modelo de domínio (princípio 3 do CLAUDE.md), e o ADR-028
+// cravou essas chamadas como elegíveis para cache longo.
+// =============================================================================
+
+export interface OrientacaoPartido {
+  partidoSigla: string
+  orientacao: OrientacaoBancada
+}
+
+// Orientações de bancada para uma votação. Quando a tabela está vazia, a
+// votação não teve orientações registradas (votação simbólica, antiga, ou
+// quando o partido liberou bancada e isso não foi gravado). Caller decide
+// se renderiza seção condicional ou mostra empty state.
+export async function getOrientacoesByVotacao(
+  votacaoId: string,
+): Promise<OrientacaoPartido[]> {
+  const key = `votacoes:orientacoes:${votacaoId}`
+  return cached(key, TTL.votacaoHistorica, async () => {
+    const rows = await db
+      .select({
+        partidoSigla: orientacao.partidoSigla,
+        orientacao: orientacao.orientacao,
+      })
+      .from(orientacao)
+      .where(eq(orientacao.votacaoId, votacaoId))
+      .orderBy(asc(orientacao.partidoSigla))
+    return rows.map((r) => ({
+      partidoSigla: r.partidoSigla,
+      orientacao: r.orientacao as OrientacaoBancada,
+    }))
+  })
+}
+
+export interface DisciplinaPartidoRow {
+  partido: string
+  orientacao: OrientacaoBancada
+  seguiram: number
+  rebelaram: number
+  totalAtivo: number
+  pctDisciplina: number
+}
+
+// Disciplina partidária: para cada partido com orientação efetiva
+// (SIM/NAO/OBSTRUCAO; LIBERADO excluído), conta quantos parlamentares
+// seguiram a orientação vs. rebelaram.
+//
+// Denominador (totalAtivo) ignora AUSENTE e ABSTENCAO — só conta voto
+// "ativo" (SIM, NAO, OBSTRUCAO), espelhando a semântica de
+// `calcularDisciplinaPartido` em `domain/disciplina.ts`.
+//
+// SQL gera os agregados direto no Postgres (1 round-trip). Partidos sem
+// nenhum voto ativo são filtrados via HAVING — denominador zero é sinal
+// de "sem informação", não 100%.
+export async function getDisciplinaPartidariaPorVotacao(
+  votacaoId: string,
+): Promise<DisciplinaPartidoRow[]> {
+  const key = `votacoes:disciplina:${votacaoId}`
+  return cached(key, TTL.votacaoHistorica, async () => {
+    const result = await db.execute(sql`
+      SELECT
+        ob.partido_sigla AS partido,
+        ob.orientacao::text AS orientacao,
+        SUM(CASE WHEN vn.voto::text IN ('SIM','NAO','OBSTRUCAO') THEN 1 ELSE 0 END)::int AS total_ativo,
+        SUM(CASE WHEN vn.voto::text = ob.orientacao::text THEN 1 ELSE 0 END)::int AS seguiram
+      FROM votacoes.orientacao_bancada ob
+      JOIN parlamentares.parlamentar p ON p.partido_sigla = ob.partido_sigla
+      JOIN votacoes.voto_nominal vn ON vn.parlamentar_id = p.id AND vn.votacao_id = ob.votacao_id
+      WHERE ob.votacao_id = ${votacaoId}
+        AND ob.orientacao::text IN ('SIM','NAO','OBSTRUCAO')
+      GROUP BY ob.partido_sigla, ob.orientacao
+      HAVING SUM(CASE WHEN vn.voto::text IN ('SIM','NAO','OBSTRUCAO') THEN 1 ELSE 0 END) > 0
+      ORDER BY total_ativo DESC, ob.partido_sigla ASC
+    `)
+
+    return result.rows.map((r) => {
+      const seguiram = Number(r.seguiram)
+      const totalAtivo = Number(r.total_ativo)
+      return {
+        partido: String(r.partido),
+        orientacao: r.orientacao as OrientacaoBancada,
+        seguiram,
+        rebelaram: totalAtivo - seguiram,
+        totalAtivo,
+        pctDisciplina: (seguiram / totalAtivo) * 100,
+      }
+    })
+  })
+}
+
+export interface RebeldeRow {
+  parlamentarId: string
+  nome: string
+  partidoSigla: string
+  uf: string
+  votou: TipoVotoDomain
+  orientacao: OrientacaoBancada
+}
+
+// Rebeldes: parlamentares que votaram diferente da orientação do próprio
+// partido. Critério: orientação efetiva (SIM/NAO/OBSTRUCAO) + voto ativo
+// (SIM/NAO/OBSTRUCAO) divergente. AUSENTE/ABSTENCAO não caracterizam
+// rebeldia — mesma semântica de `isRebelde` em `domain/disciplina.ts`.
+export async function getRebeldesByVotacao(
+  votacaoId: string,
+): Promise<RebeldeRow[]> {
+  const key = `votacoes:rebeldes:${votacaoId}`
+  return cached(key, TTL.votacaoHistorica, async () => {
+    const result = await db.execute(sql`
+      SELECT
+        p.id AS parlamentar_id,
+        p.nome,
+        p.partido_sigla,
+        p.uf,
+        vn.voto::text AS votou,
+        ob.orientacao::text AS orientacao
+      FROM votacoes.orientacao_bancada ob
+      JOIN parlamentares.parlamentar p ON p.partido_sigla = ob.partido_sigla
+      JOIN votacoes.voto_nominal vn ON vn.parlamentar_id = p.id AND vn.votacao_id = ob.votacao_id
+      WHERE ob.votacao_id = ${votacaoId}
+        AND ob.orientacao::text IN ('SIM','NAO','OBSTRUCAO')
+        AND vn.voto::text IN ('SIM','NAO','OBSTRUCAO')
+        AND vn.voto::text != ob.orientacao::text
+      ORDER BY p.partido_sigla ASC, p.nome ASC
+    `)
+
+    return result.rows.map((r) => ({
+      parlamentarId: String(r.parlamentar_id),
+      nome: String(r.nome),
+      partidoSigla: String(r.partido_sigla),
+      uf: String(r.uf),
+      votou: r.votou as TipoVotoDomain,
+      orientacao: r.orientacao as OrientacaoBancada,
+    }))
+  })
+}
+
+export type RelacaoVotacao = 'mesma_proposicao' | 'mesmo_orgao_janela'
+
+export interface VotacaoRelacionada {
+  id: string
+  casa: Casa
+  dataHora: Date | string
+  descricao: string
+  aprovada: boolean
+  relacao: RelacaoVotacao
+}
+
+// Cross-links contextuais. Prioriza "mesma_proposicao" (mais relevante),
+// completa com "mesmo_orgao_janela" (±30 dias). Dedup garantido por
+// `id != votacaoId` na origem + filter no merge.
+export async function getVotacoesRelacionadas(
+  votacaoId: string,
+  limit = 4,
+): Promise<VotacaoRelacionada[]> {
+  const key = `votacoes:relacionadas:${votacaoId}:limit=${limit}`
+  return cached(key, TTL.votacaoHistorica, async () => {
+    const baseRows = await db
+      .select({
+        proposicaoId: votacao.proposicaoId,
+        orgao: votacao.orgao,
+        dataHora: votacao.dataHora,
+      })
+      .from(votacao)
+      .where(eq(votacao.id, votacaoId))
+      .limit(1)
+    const base = baseRows[0]
+    if (!base) return []
+
+    const projection = {
+      id: votacao.id,
+      casa: votacao.casa,
+      dataHora: votacao.dataHora,
+      descricao: votacao.descricao,
+      aprovada: votacao.aprovada,
+    }
+
+    const mesmaProposicaoPromise = base.proposicaoId
+      ? db
+          .select(projection)
+          .from(votacao)
+          .where(
+            and(
+              eq(votacao.proposicaoId, base.proposicaoId),
+              sql`${votacao.id} != ${votacaoId}`,
+            ),
+          )
+          .orderBy(desc(votacao.dataHora))
+          .limit(limit)
+      : Promise.resolve([])
+
+    const mesmoOrgaoPromise = db
+      .select(projection)
+      .from(votacao)
+      .where(
+        and(
+          eq(votacao.orgao, base.orgao),
+          sql`${votacao.id} != ${votacaoId}`,
+          sql`${votacao.dataHora} BETWEEN ${base.dataHora}::timestamptz - interval '30 days' AND ${base.dataHora}::timestamptz + interval '30 days'`,
+        ),
+      )
+      .orderBy(desc(votacao.dataHora))
+      .limit(limit * 2)
+
+    const [mesmaProposicao, mesmoOrgao] = await Promise.all([
+      mesmaProposicaoPromise,
+      mesmoOrgaoPromise,
+    ])
+
+    const idsJaIncluidos = new Set(mesmaProposicao.map((r) => r.id))
+    const mesmaProposicaoMarked: VotacaoRelacionada[] = mesmaProposicao.map(
+      (r) => ({
+        id: r.id,
+        casa: r.casa as Casa,
+        dataHora: r.dataHora,
+        descricao: r.descricao,
+        aprovada: r.aprovada,
+        relacao: 'mesma_proposicao',
+      }),
+    )
+    const mesmoOrgaoFiltered: VotacaoRelacionada[] = mesmoOrgao
+      .filter((r) => !idsJaIncluidos.has(r.id))
+      .map((r) => ({
+        id: r.id,
+        casa: r.casa as Casa,
+        dataHora: r.dataHora,
+        descricao: r.descricao,
+        aprovada: r.aprovada,
+        relacao: 'mesmo_orgao_janela',
+      }))
+
+    return [...mesmaProposicaoMarked, ...mesmoOrgaoFiltered].slice(0, limit)
+  })
 }
