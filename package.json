@@ -36,6 +36,7 @@
     "backfill:camara:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-votacao-proposicao.ts",
     "ingest:camara:gastos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/gastos.ts",
     "seed:agregados:parlamentar": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-parlamentar.ts",
+    "seed:agregados:proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-proposicao.ts",
     "smoke": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/smoke.ts",
     "budget:poll": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/neon-budget.ts",
     "prepare": "husky"
