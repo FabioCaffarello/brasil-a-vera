@@ -7,12 +7,14 @@ import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { Button } from '@/design-system/primitives/button'
+import { formatNumeroAbreviado } from '@/lib/format-number'
 import {
   type Casa,
   type FiltrosVotacao as Filtros,
   getAnosVotacaoDistintos,
   listVotacoes,
 } from '@/lib/queries/votacoes'
+import { getEstatisticasGlobaisVotacoes } from '@/lib/queries/votacoes-stats'
 
 export const metadata = {
   title: 'Votações — Brasil à Vera',
@@ -62,16 +64,25 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
   }
 
   const LIMITE = 50
-  const [votacoes, anos] = await Promise.all([
+  const [votacoes, anos, stats] = await Promise.all([
     listVotacoes(filtros, LIMITE),
     getAnosVotacaoDistintos(),
+    getEstatisticasGlobaisVotacoes(),
   ])
+
+  // Volume narrativo no hero (Wave 9 Sprint 9.1 PR1) — N votações desde
+  // AAAA quando há cobertura histórica conhecida; cai em fallback honesto
+  // quando o banco está vazio (caso de bootstrap, jamais em produção).
+  const descricaoNarrativa =
+    stats.total > 0 && stats.anoMaisAntigo
+      ? `${formatNumeroAbreviado(stats.total)} votações desde ${stats.anoMaisAntigo} em plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais.`
+      : 'Plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais.'
 
   return (
     <>
       <HeroSection
         align="center"
-        description="Plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais."
+        description={descricaoNarrativa}
         kicker={
           <DataBadge
             icon={<Vote className="h-3 w-3" />}
