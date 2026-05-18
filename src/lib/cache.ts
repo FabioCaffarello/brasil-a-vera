@@ -13,6 +13,11 @@ export const TTL = {
   // Wave 8 Sprint 8.0 PR2). Mesma cadência do cron de ingestão de
   // proposições — 6h é hora-redonda e alinhada com proposicaoEmTramitacao.
   proposicoesStatsGlobais: 21_600,
+  // Cross-links de proposições relacionadas no footer do detalhe (Wave 8
+  // Sprint 8.0 PR3, consumido em 8.2 PR5). 1h é mais curto que stats
+  // globais porque catálogo de autores muda mais frequentemente (proposições
+  // novas surgem diariamente e podem entrar nas listas top-5 por autor).
+  proposicoesRelacionadas: 3_600,
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
