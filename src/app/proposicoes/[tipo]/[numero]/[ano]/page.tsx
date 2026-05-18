@@ -2,6 +2,7 @@ import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 
 import { AutoresList } from '@/components/proposicao/autores-list'
+import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
 import { FooterCrossLinks } from '@/components/proposicao/footer-cross-links'
 import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
@@ -40,6 +41,10 @@ import {
 } from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
 import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
+import {
+  inferirMarcoAtual,
+  isSituacaoTerminalNegativa,
+} from '@/modules/proposicoes/domain/tramitacao-card'
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
@@ -202,6 +207,16 @@ export default async function ProposicaoDetalhePage({
     situacao: proposicao.situacao,
     stats,
   })
+
+  // Wave 8 Sprint 8.3 PR4 — Barra de progresso da tramitação (full).
+  // Só renderiza quando há orgao corrente — sem ele, a inferência de
+  // marco vira chute. Usa o mesmo helper inferirMarcoAtual do card
+  // (single source of truth via domain/tramitacao-card.ts).
+  const ultimoOrgao = stats?.ultimoOrgao ?? null
+  const barraMarcoAtual = ultimoOrgao
+    ? inferirMarcoAtual(ultimoOrgao, proposicao.situacao)
+    : null
+  const barraTerminalNegativo = isSituacaoTerminalNegativa(proposicao.situacao)
 
   // Wave 8 Sprint 8.3 PR1 — link "Mostrar mais" da tramitação.
   // Restantes só calculável na 1ª página COM filtro='todos' — agregado
@@ -367,7 +382,15 @@ export default async function ProposicaoDetalhePage({
           <AccordionTrigger className="font-semibold text-base">
             Tramitação
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent className="space-y-4">
+            {barraMarcoAtual !== null && ultimoOrgao !== null ? (
+              <BarraProgressoTramitacao
+                ariaLabel={`Tramitação em ${ultimoOrgao}`}
+                currentStep={barraMarcoAtual}
+                terminalNegativo={barraTerminalNegativo}
+                variant="full"
+              />
+            ) : null}
             <TramitacaoTimeline
               buildFiltroHref={buildTramitacaoFiltroHref}
               eventos={tramitacaoPage.rows}
@@ -459,11 +482,23 @@ export default async function ProposicaoDetalhePage({
           subtitle="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
           title="Tramitação"
         >
-          <TramitacaoTimeline
-            eventos={tramitacaoPage.rows}
-            mostrarMaisHref={tramitacaoMostrarMaisHref}
-            restantes={tramitacaoRestantes}
-          />
+          <div className="space-y-4">
+            {barraMarcoAtual !== null && ultimoOrgao !== null ? (
+              <BarraProgressoTramitacao
+                ariaLabel={`Tramitação em ${ultimoOrgao}`}
+                currentStep={barraMarcoAtual}
+                terminalNegativo={barraTerminalNegativo}
+                variant="full"
+              />
+            ) : null}
+            <TramitacaoTimeline
+              buildFiltroHref={buildTramitacaoFiltroHref}
+              eventos={tramitacaoPage.rows}
+              filtro={tramitacaoFiltro}
+              mostrarMaisHref={tramitacaoMostrarMaisHref}
+              restantes={tramitacaoRestantes}
+            />
+          </div>
         </SectionCard>
       </div>
 

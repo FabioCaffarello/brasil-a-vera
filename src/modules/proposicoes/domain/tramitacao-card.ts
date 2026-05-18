@@ -75,6 +75,19 @@ export const MARCOS_TRAMITACAO = [
 
 export type MarcoTramitacao = (typeof MARCOS_TRAMITACAO)[number]
 
+/** Conjunto de situações terminais "negativas" (fim do ciclo sem aprovação).
+ * Wave 8 Sprint 8.3 PR4 — usado tanto por ProposicaoCard (compact) quanto
+ * pela barra de progresso do detalhe (full) para colorir o segmento
+ * final em `destructive` quando o ciclo terminou mal. */
+export const SITUACOES_TERMINAIS_NEGATIVAS: ReadonlySet<string> = new Set([
+  'REJEITADA',
+  'ARQUIVADA',
+])
+
+export function isSituacaoTerminalNegativa(situacao: string): boolean {
+  return SITUACOES_TERMINAIS_NEGATIVAS.has(situacao)
+}
+
 /**
  * Mapeia o `ultimo_orgao` para a posição corrente na barra de 5 marcos.
  * Heurística por substring case-insensitive. Default 2 (Comissões) —
