@@ -7,8 +7,7 @@ import {
   Vote,
 } from 'lucide-react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-
+import { notFound, permanentRedirect } from 'next/navigation'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
@@ -25,12 +24,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/design-system/primitives/accordion'
+import { decodeCursor } from '@/lib/cursor'
 import { formatBRL } from '@/lib/format'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
 import {
   getCoerenciaStats,
   getParesContraditorios,
 } from '@/lib/queries/coerencia'
+import { CursorVotosV1 } from '@/lib/queries/cursor-schemas'
 import {
   getComparacoesCasa,
   getGastosResumo,
@@ -38,6 +39,10 @@ import {
   getProposicoesAutoradas,
   getTop5Afinidade,
   getVotosRecentes,
+  VOTOS_ALINHAMENTOS,
+  VOTOS_PERIODOS,
+  type VotosAlinhamentoFilter,
+  type VotosPeriodoFilter,
 } from '@/lib/queries/parlamentares'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
@@ -51,6 +56,50 @@ function formatPercentil(p: number): string {
 
 interface PageProps {
   params: Promise<{ id: string }>
+  searchParams: Promise<{
+    votos_after?: string
+    votos_periodo?: string
+    votos_alinhamento?: string
+  }>
+}
+
+function normalizeVotosPeriodo(
+  v: string | undefined,
+): VotosPeriodoFilter | undefined {
+  if (v && (VOTOS_PERIODOS as string[]).includes(v)) {
+    return v as VotosPeriodoFilter
+  }
+  return undefined
+}
+
+function normalizeVotosAlinhamento(
+  v: string | undefined,
+): VotosAlinhamentoFilter | undefined {
+  if (v && (VOTOS_ALINHAMENTOS as string[]).includes(v)) {
+    return v as VotosAlinhamentoFilter
+  }
+  return undefined
+}
+
+function buildPerfilHref(
+  parlamentarId: string,
+  searchParams: Record<string, string | undefined>,
+  overrides: Record<string, string | null | undefined>,
+  anchor?: string,
+): string {
+  const merged: Record<string, string | undefined | null> = {
+    ...searchParams,
+    ...overrides,
+  }
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(merged)) {
+    if (value !== null && value !== undefined && value !== '') {
+      params.set(key, String(value))
+    }
+  }
+  const qs = params.toString()
+  const suffix = `${qs ? `?${qs}` : ''}${anchor ?? ''}`
+  return `/parlamentares/${parlamentarId}${suffix}`
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -68,14 +117,28 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function ParlamentarPerfilPage({ params }: PageProps) {
+export default async function ParlamentarPerfilPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { id } = await params
+  const sp = await searchParams
   const parlamentar = await getParlamentarById(id)
   if (!parlamentar) notFound()
 
+  // Cursor de votos (ADR-026): null = inválido → redirect 308 strip o param.
+  const cursorVotos = decodeCursor(sp.votos_after, CursorVotosV1)
+  if (cursorVotos === null) {
+    permanentRedirect(
+      buildPerfilHref(parlamentar.id, sp, { votos_after: null }, '#votos'),
+    )
+  }
+  const periodoVotos = normalizeVotosPeriodo(sp.votos_periodo)
+  const alinhamentoVotos = normalizeVotosAlinhamento(sp.votos_alinhamento)
+
   const anoCorrente = new Date().getFullYear()
   const [
-    votos,
+    votosPage,
     proposicoes,
     gastos,
     afinidades,
@@ -84,7 +147,11 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     alinhamento,
     comparacoes,
   ] = await Promise.all([
-    getVotosRecentes(parlamentar.id, 10),
+    getVotosRecentes(parlamentar.id, {
+      cursor: cursorVotos,
+      periodo: periodoVotos,
+      alinhamento: alinhamentoVotos,
+    }),
     getProposicoesAutoradas(parlamentar.id, 5),
     getGastosResumo(parlamentar.id, anoCorrente),
     getTop5Afinidade(parlamentar.id),
@@ -93,6 +160,34 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     getAlinhamentoParlamentar(parlamentar.id),
     getComparacoesCasa(parlamentar.id),
   ])
+
+  const votos = votosPage.rows
+  const votosFiltros = {
+    periodo: periodoVotos ?? 'all',
+    alinhamento: alinhamentoVotos ?? 'todos',
+  } as const
+  const buildVotosFiltroHref = (overrides: Record<string, string | null>) => {
+    const mapped: Record<string, string | null> = {}
+    for (const [k, v] of Object.entries(overrides)) {
+      mapped[`votos_${k}`] = v
+    }
+    // Reset cursor ao mudar filtro — não faz sentido manter `votos_after`
+    // apontando pra dado que não casa com os filtros novos.
+    return buildPerfilHref(
+      parlamentar.id,
+      sp,
+      { ...mapped, votos_after: null },
+      '#votos',
+    )
+  }
+  const votosProximaPaginaHref = votosPage.nextCursor
+    ? buildPerfilHref(
+        parlamentar.id,
+        sp,
+        { votos_after: votosPage.nextCursor },
+        '#votos',
+      )
+    : null
 
   // KpiStrip values com fallback honesto (D1 do plano Sprint 6.3 — "—"
   // quando dados ausentes em vez de esconder o strip; mantém estrutura).
@@ -261,7 +356,12 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
             Votos recentes
           </AccordionTrigger>
           <AccordionContent>
-            <VotosRecentes votos={votos} />
+            <VotosRecentes
+              votos={votos}
+              filtros={votosFiltros}
+              buildFiltroHref={buildVotosFiltroHref}
+              proximaPaginaHref={votosProximaPaginaHref}
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -343,7 +443,12 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
           subtitle="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
           title="Votos recentes"
         >
-          <VotosRecentes votos={votos} />
+          <VotosRecentes
+            votos={votos}
+            filtros={votosFiltros}
+            buildFiltroHref={buildVotosFiltroHref}
+            proximaPaginaHref={votosProximaPaginaHref}
+          />
         </SectionCard>
 
         <SectionCard

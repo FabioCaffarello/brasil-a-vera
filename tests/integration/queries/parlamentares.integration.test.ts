@@ -18,11 +18,19 @@ import {
   proposicao,
   proposicaoAutor,
 } from '@/modules/proposicoes/domain/schema'
-import { votacao, votoNominal } from '@/modules/votacoes/domain/schema'
+import {
+  orientacao,
+  votacao,
+  votoNominal,
+} from '@/modules/votacoes/domain/schema'
 import { buildGasto } from '../fixtures/gastos'
 import { buildParlamentar } from '../fixtures/parlamentares'
 import { buildProposicao, buildProposicaoAutor } from '../fixtures/proposicoes'
-import { buildVotacao, buildVotoNominal } from '../fixtures/votacoes'
+import {
+  buildOrientacao,
+  buildVotacao,
+  buildVotoNominal,
+} from '../fixtures/votacoes'
 import { db } from '../setup/db'
 import { truncateAll } from '../setup/truncate'
 
@@ -83,8 +91,8 @@ describe('queries/parlamentares (integration)', () => {
     })
   })
 
-  describe('getVotosRecentes', () => {
-    it('ordena por dataHora desc e respeita limit', async () => {
+  describe('getVotosRecentes (Sprint 7.3 PR1 — cursor + filtros)', () => {
+    it('ordena por dataHora desc e retorna {rows, nextCursor: null} quando < page-size', async () => {
       const p = buildParlamentar()
       await db.insert(parlamentar).values(p)
 
@@ -112,10 +120,90 @@ describe('queries/parlamentares (integration)', () => {
         ),
       )
 
-      const result = await getVotosRecentes(p.id as string, 2)
-      expect(result).toHaveLength(2)
-      expect(result[0]?.descricao).toBe('V mais recente')
-      expect(result[1]?.descricao).toBe('V intermediária')
+      const { rows, nextCursor } = await getVotosRecentes(p.id as string)
+      expect(rows).toHaveLength(3)
+      expect(rows[0]?.descricao).toBe('V mais recente')
+      expect(rows[1]?.descricao).toBe('V intermediária')
+      expect(rows[2]?.descricao).toBe('V mais antiga')
+      expect(nextCursor).toBeNull()
+    })
+
+    it('retorna nextCursor != null quando há mais de 20 votos', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+
+      // 25 votações em datas distintas (mais antigas primeiro só pra teste)
+      const votacoes = Array.from({ length: 25 }, (_, i) =>
+        buildVotacao({
+          descricao: `Votação ${i + 1}`,
+          dataHora: new Date(
+            `2026-${String((i % 12) + 1).padStart(2, '0')}-01T${String(i).padStart(2, '0')}:00:00Z`,
+          ),
+        }),
+      )
+      await db.insert(votacao).values(votacoes)
+      await db.insert(votoNominal).values(
+        votacoes.map((v) =>
+          buildVotoNominal({
+            votacaoId: v.id as string,
+            parlamentarId: p.id as string,
+          }),
+        ),
+      )
+
+      const { rows, nextCursor } = await getVotosRecentes(p.id as string)
+      expect(rows).toHaveLength(20) // page-size fixo
+      expect(nextCursor).not.toBeNull()
+    })
+
+    it('filtra por alinhamento (alinhado / divergente)', async () => {
+      const p = buildParlamentar({ partidoSigla: 'PT' })
+      const v1 = buildVotacao({
+        descricao: 'V alinhada',
+        dataHora: new Date('2026-04-01T10:00:00Z'),
+      })
+      const v2 = buildVotacao({
+        descricao: 'V divergente',
+        dataHora: new Date('2026-04-02T10:00:00Z'),
+      })
+      await db.insert(parlamentar).values(p)
+      await db.insert(votacao).values([v1, v2])
+      await db.insert(orientacao).values([
+        buildOrientacao({
+          votacaoId: v1.id as string,
+          partidoSigla: 'PT',
+          orientacao: 'SIM',
+        }),
+        buildOrientacao({
+          votacaoId: v2.id as string,
+          partidoSigla: 'PT',
+          orientacao: 'NAO',
+        }),
+      ])
+      await db.insert(votoNominal).values([
+        buildVotoNominal({
+          votacaoId: v1.id as string,
+          parlamentarId: p.id as string,
+          voto: 'SIM', // alinhado
+        }),
+        buildVotoNominal({
+          votacaoId: v2.id as string,
+          parlamentarId: p.id as string,
+          voto: 'SIM', // divergente (orient era NAO)
+        }),
+      ])
+
+      const apenasAlinhados = await getVotosRecentes(p.id as string, {
+        alinhamento: 'alinhado',
+      })
+      expect(apenasAlinhados.rows).toHaveLength(1)
+      expect(apenasAlinhados.rows[0]?.descricao).toBe('V alinhada')
+
+      const apenasDivergentes = await getVotosRecentes(p.id as string, {
+        alinhamento: 'divergente',
+      })
+      expect(apenasDivergentes.rows).toHaveLength(1)
+      expect(apenasDivergentes.rows[0]?.descricao).toBe('V divergente')
     })
   })
 
