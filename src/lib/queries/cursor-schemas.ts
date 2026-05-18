@@ -22,3 +22,25 @@ export const CursorVotosV1 = z.object({
 })
 
 export type CursorVotosV1Payload = z.infer<typeof CursorVotosV1>
+
+/**
+ * Cursor de proposições autoradas em
+ * `/parlamentares/[id]?propos_after=`.
+ *
+ * ORDER BY: `proposicao.ano DESC, proposicao.numero DESC,
+ * proposicao.id DESC`.
+ *
+ * Payload:
+ * - `v=1`: versão atual
+ * - `a`: ano da proposição do último item da página
+ * - `n`: numero da proposição do último item
+ * - `id`: uuid v7 de `proposicao.id` do último item (tiebreaker)
+ */
+export const CursorProposicoesV1 = z.object({
+  v: z.literal(1),
+  a: z.number().int().min(1900).max(2200),
+  n: z.number().int().positive(),
+  id: z.string().uuid(),
+})
+
+export type CursorProposicoesV1Payload = z.infer<typeof CursorProposicoesV1>

@@ -207,8 +207,8 @@ describe('queries/parlamentares (integration)', () => {
     })
   })
 
-  describe('getProposicoesAutoradas', () => {
-    it('retorna proposições autoradas pelo parlamentar', async () => {
+  describe('getProposicoesAutoradas (Sprint 7.3 PR3 — cursor + filtros)', () => {
+    it('retorna {rows, nextCursor: null} quando < page-size', async () => {
       const p = buildParlamentar({ nome: 'Autor' })
       await db.insert(parlamentar).values(p)
 
@@ -227,11 +227,89 @@ describe('queries/parlamentares (integration)', () => {
         ),
       )
 
-      const result = await getProposicoesAutoradas(p.id as string, 5)
-      expect(result).toHaveLength(2)
+      const { rows, nextCursor } = await getProposicoesAutoradas(p.id as string)
+      expect(rows).toHaveLength(2)
       // Ordenação desc(ano), desc(numero): PEC 200/2026 vem antes de PL 100/2026
-      expect(result[0]?.numero).toBe(200)
-      expect(result[1]?.numero).toBe(100)
+      expect(rows[0]?.numero).toBe(200)
+      expect(rows[1]?.numero).toBe(100)
+      expect(nextCursor).toBeNull()
+    })
+
+    it('retorna nextCursor != null com 25 proposições', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      const props = Array.from({ length: 25 }, (_, i) =>
+        buildProposicao({ numero: 1000 + i, ano: 2026, tipo: 'PL' }),
+      )
+      await db.insert(proposicao).values(props)
+      await db.insert(proposicaoAutor).values(
+        props.map((prop) =>
+          buildProposicaoAutor({
+            proposicaoId: prop.id as string,
+            parlamentarId: p.id as string,
+            nome: 'Autor',
+          }),
+        ),
+      )
+
+      const { rows, nextCursor } = await getProposicoesAutoradas(p.id as string)
+      expect(rows).toHaveLength(20)
+      expect(nextCursor).not.toBeNull()
+    })
+
+    it('filtra por tipo + situacao', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(proposicao).values([
+        buildProposicao({
+          numero: 1,
+          ano: 2026,
+          tipo: 'PL',
+          situacao: 'TRAMITANDO',
+        }),
+        buildProposicao({
+          numero: 2,
+          ano: 2026,
+          tipo: 'PEC',
+          situacao: 'TRAMITANDO',
+        }),
+        buildProposicao({
+          numero: 3,
+          ano: 2026,
+          tipo: 'PL',
+          situacao: 'APROVADA',
+        }),
+      ])
+      // Buscar todas, autorar para o parlamentar
+      const allProps = await db.select().from(proposicao)
+      await db.insert(proposicaoAutor).values(
+        allProps.map((prop) =>
+          buildProposicaoAutor({
+            proposicaoId: prop.id,
+            parlamentarId: p.id as string,
+            nome: 'Autor',
+          }),
+        ),
+      )
+
+      const apenasPL = await getProposicoesAutoradas(p.id as string, {
+        tipo: 'PL',
+      })
+      expect(apenasPL.rows).toHaveLength(2)
+
+      const apenasAprovadas = await getProposicoesAutoradas(p.id as string, {
+        situacao: 'APROVADA',
+      })
+      expect(apenasAprovadas.rows).toHaveLength(1)
+      expect(apenasAprovadas.rows[0]?.numero).toBe(3)
+
+      // Combinar tipo + situacao
+      const pecTramitando = await getProposicoesAutoradas(p.id as string, {
+        tipo: 'PEC',
+        situacao: 'TRAMITANDO',
+      })
+      expect(pecTramitando.rows).toHaveLength(1)
+      expect(pecTramitando.rows[0]?.numero).toBe(2)
     })
   })
 

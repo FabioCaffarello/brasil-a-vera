@@ -2,7 +2,10 @@ import { and, asc, count, desc, eq, ilike, sql, sum } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
-import type { CursorVotosV1Payload } from '@/lib/queries/cursor-schemas'
+import type {
+  CursorProposicoesV1Payload,
+  CursorVotosV1Payload,
+} from '@/lib/queries/cursor-schemas'
 import { estatisticaParlamentarAgregada } from '@/modules/parlamentares/domain/schema'
 import { db } from '@/shared/db'
 import {
@@ -248,11 +251,109 @@ export async function getVotosRecentes(
   return { rows: pageRows as VotoRecenteRow[], nextCursor }
 }
 
+export type ProposicaoTipoFilter =
+  | 'todos'
+  | 'PL'
+  | 'PEC'
+  | 'PLP'
+  | 'MPV'
+  | 'PDC'
+  | 'PRC'
+export type ProposicaoSituacaoFilter =
+  | 'todas'
+  | 'TRAMITANDO'
+  | 'APROVADA'
+  | 'REJEITADA'
+  | 'ARQUIVADA'
+  | 'TRANSFORMADA_EM_NORMA'
+
+export const PROPOSICAO_TIPOS: ProposicaoTipoFilter[] = [
+  'todos',
+  'PL',
+  'PEC',
+  'PLP',
+  'MPV',
+  'PDC',
+  'PRC',
+]
+export const PROPOSICAO_SITUACOES: ProposicaoSituacaoFilter[] = [
+  'todas',
+  'TRAMITANDO',
+  'APROVADA',
+  'REJEITADA',
+  'ARQUIVADA',
+  'TRANSFORMADA_EM_NORMA',
+]
+
+/** Page-size fixo (ADR-026 §3). */
+export const PROPOSICOES_PAGE_SIZE = 20
+
+export interface ProposicoesAutoradasOpts {
+  cursor?: CursorProposicoesV1Payload
+  tipo?: ProposicaoTipoFilter
+  situacao?: ProposicaoSituacaoFilter
+}
+
+export interface ProposicaoAutoradaRow {
+  proposicaoId: string
+  tipo: string
+  numero: number
+  ano: number
+  ementa: string
+  situacao: string
+  tipoAutoria: string
+}
+
+export interface ProposicoesAutoradasResult {
+  rows: ProposicaoAutoradaRow[]
+  /** Token base64url do próximo cursor, ou null quando não há mais páginas. */
+  nextCursor: string | null
+}
+
+// Wave 7 Sprint 7.3 PR3 — refactor de getProposicoesAutoradas para
+// cursor pagination (ADR-026) + filtros mini de tipo e situação.
+//
+// Mudança breaking: assinatura `(parlamentarId, limit?)` → `(parlamentarId,
+// opts?)` retornando `{rows, nextCursor}`. Caller único em
+// src/app/parlamentares/[id]/page.tsx atualizado no mesmo PR.
+//
+// ORDER BY (ano DESC, numero DESC, proposicao_id DESC). Keyset pagination
+// via WHERE composto (tuple compare em 3 colunas, SQL puro). LIMIT N+1
+// para detectar nextCursor.
+//
+// Filtro `tema` (handoff) NÃO entrou: M:N com proposicao_tema +
+// cardinalidade alta (>200 temas distintos) exigiria combobox dedicado.
+// Reabrir em ADR futuro se demanda surgir.
 export async function getProposicoesAutoradas(
   parlamentarId: string,
-  limit = 5,
-) {
-  return db
+  opts: ProposicoesAutoradasOpts = {},
+): Promise<ProposicoesAutoradasResult> {
+  const cursor = opts.cursor
+  const tipo = opts.tipo ?? 'todos'
+  const situacao = opts.situacao ?? 'todas'
+
+  const whereClauses = [eq(proposicaoAutor.parlamentarId, parlamentarId)]
+
+  if (tipo !== 'todos') {
+    whereClauses.push(sql`${proposicao.tipo}::text = ${tipo}`)
+  }
+  if (situacao !== 'todas') {
+    whereClauses.push(sql`${proposicao.situacao}::text = ${situacao}`)
+  }
+
+  // Keyset pagination (ADR-026). Tuple compare em 3 colunas:
+  // (ano, numero, id) < (cursor.a, cursor.n, cursor.id).
+  if (cursor) {
+    whereClauses.push(
+      sql`(${proposicao.ano} < ${cursor.a}
+        OR (${proposicao.ano} = ${cursor.a} AND ${proposicao.numero} < ${cursor.n})
+        OR (${proposicao.ano} = ${cursor.a} AND ${proposicao.numero} = ${cursor.n} AND ${proposicao.id} < ${cursor.id}))`,
+    )
+  }
+
+  const limitPlusOne = PROPOSICOES_PAGE_SIZE + 1
+
+  const rows = await db
     .select({
       proposicaoId: proposicao.id,
       tipo: proposicao.tipo,
@@ -264,9 +365,27 @@ export async function getProposicoesAutoradas(
     })
     .from(proposicaoAutor)
     .innerJoin(proposicao, eq(proposicao.id, proposicaoAutor.proposicaoId))
-    .where(eq(proposicaoAutor.parlamentarId, parlamentarId))
-    .orderBy(desc(proposicao.ano), desc(proposicao.numero))
-    .limit(limit)
+    .where(and(...whereClauses))
+    .orderBy(desc(proposicao.ano), desc(proposicao.numero), desc(proposicao.id))
+    .limit(limitPlusOne)
+
+  const hasMore = rows.length > PROPOSICOES_PAGE_SIZE
+  const pageRows = hasMore ? rows.slice(0, PROPOSICOES_PAGE_SIZE) : rows
+
+  let nextCursor: string | null = null
+  if (hasMore) {
+    const last = pageRows[pageRows.length - 1]
+    if (last) {
+      nextCursor = encodeCursor({
+        v: 1 as const,
+        a: last.ano,
+        n: last.numero,
+        id: last.proposicaoId,
+      })
+    }
+  }
+
+  return { rows: pageRows as ProposicaoAutoradaRow[], nextCursor }
 }
 
 export interface GastoCategoria {
