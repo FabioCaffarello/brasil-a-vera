@@ -1,4 +1,12 @@
-import { FileText, Inbox, TrendingDown, Users, Vote } from 'lucide-react'
+import {
+  ArrowRight,
+  FileText,
+  Inbox,
+  TrendingDown,
+  Users,
+  Vote,
+} from 'lucide-react'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
@@ -395,6 +403,32 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
           />
         </SectionCard>
       </div>
+
+      {/* Footer cross-links (Wave 7 Sprint 7.2 PR5) — fecha o
+          cul-de-sac do perfil: depois de ler tudo, o Cidadão Consciente
+          tem 2 caminhos óbvios para continuar explorando: outros
+          parlamentares do mesmo partido ou da mesma UF. */}
+      <footer className="mt-8 border-border border-t pt-6">
+        <p className="text-foreground-muted text-sm">
+          Explorar mais parlamentares:
+        </p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <Link
+            className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={`/parlamentares?partido=${encodeURIComponent(parlamentar.partidoSigla)}`}
+          >
+            Ver outros do {parlamentar.partidoSigla}
+            <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+          </Link>
+          <Link
+            className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={`/parlamentares?uf=${parlamentar.uf}`}
+          >
+            Ver outros de {parlamentar.uf}
+            <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </footer>
     </div>
   )
 }
