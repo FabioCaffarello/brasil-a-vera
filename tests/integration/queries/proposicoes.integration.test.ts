@@ -188,16 +188,18 @@ describe('queries/proposicoes (integration)', () => {
       ])
 
       const result = await getTramitacaoByProposicao(p.id as string)
-      expect(result).toHaveLength(2)
-      expect(result[0]?.descricaoResumida).toBe('recente')
-      expect(result[1]?.descricaoResumida).toBe('antiga')
+      expect(result.rows).toHaveLength(2)
+      expect(result.rows[0]?.descricaoResumida).toBe('recente')
+      expect(result.rows[1]?.descricaoResumida).toBe('antiga')
+      expect(result.nextCursor).toBeNull()
     })
 
     it('retorna array vazio quando proposição não tem eventos', async () => {
       const p = buildProposicao()
       await db.insert(proposicao).values(p)
       const result = await getTramitacaoByProposicao(p.id as string)
-      expect(result).toEqual([])
+      expect(result.rows).toEqual([])
+      expect(result.nextCursor).toBeNull()
     })
   })
 

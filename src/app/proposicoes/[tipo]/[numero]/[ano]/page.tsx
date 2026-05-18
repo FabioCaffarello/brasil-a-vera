@@ -1,5 +1,5 @@
 import { Clock, FileText, Tag, Users } from 'lucide-react'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 
 import { AutoresList } from '@/components/proposicao/autores-list'
 import { FooterCrossLinks } from '@/components/proposicao/footer-cross-links'
@@ -16,7 +16,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/design-system/primitives/accordion'
+import { decodeCursor } from '@/lib/cursor'
 import { formatProposicaoRef } from '@/lib/format'
+import { CursorTramitacaoV1 } from '@/lib/queries/cursor-schemas'
 import {
   getAutoresByProposicao,
   getProposicaoByChave,
@@ -35,6 +37,7 @@ import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
+  searchParams: Promise<{ tram_after?: string }>
 }
 
 function parseParams(
@@ -47,6 +50,31 @@ function parseParams(
   if (!Number.isInteger(numero) || numero <= 0) return null
   if (!Number.isInteger(ano) || ano < 1900 || ano > 2100) return null
   return { tipo, numero, ano }
+}
+
+// Constrói href preservando outros params (futuro: filtros mini do
+// Sprint 8.3 PR2/PR3). Override com null strip o param do URL —
+// usado no permanentRedirect 308 quando o cursor decodifica como
+// inválido (ADR-026 §5).
+function buildDetalheHref(
+  tipo: string,
+  numero: number,
+  ano: number,
+  params: Awaited<PageProps['searchParams']>,
+  override: { tram_after?: string | null },
+  anchor = '',
+): string {
+  const merged = { ...params, ...override }
+  const search = new URLSearchParams()
+  for (const key of ['tram_after'] as const) {
+    const value = merged[key]
+    if (value !== null && value !== undefined && value !== '') {
+      search.set(key, value)
+    }
+  }
+  const qs = search.toString()
+  const base = `/proposicoes/${tipo}/${numero}/${ano}`
+  return `${base}${qs ? `?${qs}` : ''}${anchor}`
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -66,8 +94,12 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function ProposicaoDetalhePage({ params }: PageProps) {
+export default async function ProposicaoDetalhePage({
+  params,
+  searchParams,
+}: PageProps) {
   const raw = await params
+  const sp = await searchParams
   const parsed = parseParams(raw)
   if (!parsed) notFound()
 
@@ -78,11 +110,27 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
   )
   if (!proposicao) notFound()
 
-  const [temas, autores, votacoes, tramitacao, stats] = await Promise.all([
+  // Wave 8 Sprint 8.3 PR1 — cursor pagination da tramitação (ADR-026 §5).
+  // null = token inválido → redirect 308 strip do param. undefined = 1ª pág.
+  const cursorTramitacao = decodeCursor(sp.tram_after, CursorTramitacaoV1)
+  if (cursorTramitacao === null) {
+    permanentRedirect(
+      buildDetalheHref(
+        parsed.tipo,
+        parsed.numero,
+        parsed.ano,
+        sp,
+        { tram_after: null },
+        '#tramitacao',
+      ),
+    )
+  }
+
+  const [temas, autores, votacoes, tramitacaoPage, stats] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
     getVotacoesByProposicao(proposicao.id),
-    getTramitacaoByProposicao(proposicao.id),
+    getTramitacaoByProposicao(proposicao.id, { cursor: cursorTramitacao }),
     getProposicaoStats(proposicao.id),
   ])
 
@@ -93,6 +141,24 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
     situacao: proposicao.situacao,
     stats,
   })
+
+  // Wave 8 Sprint 8.3 PR1 — link "Mostrar mais" da tramitação.
+  // Restantes só calculável na 1ª página (sem rastreio de page-N entre
+  // requests). nEventosTramitacao vem do agregado (total real).
+  const tramitacaoMostrarMaisHref = tramitacaoPage.nextCursor
+    ? buildDetalheHref(
+        parsed.tipo,
+        parsed.numero,
+        parsed.ano,
+        sp,
+        { tram_after: tramitacaoPage.nextCursor },
+        '#tramitacao',
+      )
+    : null
+  const tramitacaoRestantes =
+    !cursorTramitacao && stats?.nEventosTramitacao
+      ? Math.max(0, stats.nEventosTramitacao - tramitacaoPage.rows.length)
+      : null
 
   // Wave 8 Sprint 8.2 PR5 — fase 2 do fetch para footer cross-links.
   // Depende dos resultados da fase 1 (autor principal vem da lista
@@ -193,7 +259,11 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
             Tramitação
           </AccordionTrigger>
           <AccordionContent>
-            <TramitacaoTimeline eventos={tramitacao} />
+            <TramitacaoTimeline
+              eventos={tramitacaoPage.rows}
+              mostrarMaisHref={tramitacaoMostrarMaisHref}
+              restantes={tramitacaoRestantes}
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -268,7 +338,11 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
           subtitle="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
           title="Tramitação"
         >
-          <TramitacaoTimeline eventos={tramitacao} />
+          <TramitacaoTimeline
+            eventos={tramitacaoPage.rows}
+            mostrarMaisHref={tramitacaoMostrarMaisHref}
+            restantes={tramitacaoRestantes}
+          />
         </SectionCard>
       </div>
 
