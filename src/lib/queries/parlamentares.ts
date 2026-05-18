@@ -555,3 +555,103 @@ export async function getListagemStats(): Promise<ListagemStats> {
     },
   )
 }
+
+export interface ComparacoesCasa {
+  /** Mediana de pct_alinhamento entre todos os parlamentares da mesma casa
+   * com agregado computado. Null se ninguém da casa tem amostra. */
+  medianaAlinhamentoCasa: number | null
+  /** Percentil do parlamentar no proposicoes_count da casa (0-100). Null
+   * se o parlamentar não está no agregado. */
+  percentilProposicoesCasa: number | null
+  /** Percentil já calculado no agregado (Sprint 7.0 PR1). Null quando
+   * agregado não tem gasto_total_ano para este parlamentar. */
+  percentilGastoCasa: number | null
+}
+
+// Comparações intra-casa para hints do KpiStrip v2 (Wave 7 Sprint 7.2 PR1).
+// Decisão editorial: usar "casa" (CAMARA/SENADO) como unidade comparativa
+// em vez de "partido" — partidos pequenos geram comparações ruidosas
+// (n=2 dá percentis triviais). Handoff sugere "p1 do partido" para
+// proposições mas optei por consistência com gasto (que já usa casa no
+// agregado da Sprint 7.0 PR1).
+//
+// 1 query agregada com CTEs lê estatistica_parlamentar_agregada já
+// populado — sem JOIN com voto_nominal/gasto/etc. Cache curto compartilha
+// com perfil (TTL.parlamentarPerfil = 3600s).
+export async function getComparacoesCasa(
+  parlamentarId: string,
+): Promise<ComparacoesCasa> {
+  return cached(
+    `parlamentar:comparacoes_casa:${parlamentarId}`,
+    TTL.parlamentarPerfil,
+    async () => {
+      type Row = {
+        mediana_alinhamento: string | null
+        percentil_proposicoes: string | null
+        percentil_gasto: string | null
+      }
+      const result = await db.execute(sql`
+        WITH alvo AS (
+          SELECT
+            p.casa,
+            e.percentil_gasto_casa
+          FROM parlamentares.parlamentar p
+          LEFT JOIN parlamentares.estatistica_parlamentar_agregada e
+            ON e.parlamentar_id = p.id
+          WHERE p.id = ${parlamentarId}
+        ),
+        mediana_alinhamento_casa AS (
+          SELECT
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY e.pct_alinhamento)::numeric(5, 2) AS mediana
+          FROM parlamentares.parlamentar p
+          JOIN parlamentares.estatistica_parlamentar_agregada e
+            ON e.parlamentar_id = p.id
+          WHERE p.casa = (SELECT casa FROM alvo)
+            AND e.pct_alinhamento IS NOT NULL
+        ),
+        percentil_propos_casa AS (
+          SELECT
+            (PERCENT_RANK() OVER (ORDER BY e.proposicoes_count) * 100)::numeric(5, 2) AS percentil,
+            p.id
+          FROM parlamentares.parlamentar p
+          JOIN parlamentares.estatistica_parlamentar_agregada e
+            ON e.parlamentar_id = p.id
+          WHERE p.casa = (SELECT casa FROM alvo)
+        )
+        SELECT
+          mac.mediana::text AS mediana_alinhamento,
+          ppc.percentil::text AS percentil_proposicoes,
+          a.percentil_gasto_casa::text AS percentil_gasto
+        FROM alvo a
+        LEFT JOIN mediana_alinhamento_casa mac ON TRUE
+        LEFT JOIN percentil_propos_casa ppc ON ppc.id = ${parlamentarId}
+      `)
+
+      const rows = (
+        Array.isArray(result)
+          ? result
+          : ((result as unknown as { rows: Row[] }).rows ?? [])
+      ) as Row[]
+      const row = rows[0]
+      if (!row) {
+        return {
+          medianaAlinhamentoCasa: null,
+          percentilProposicoesCasa: null,
+          percentilGastoCasa: null,
+        }
+      }
+      return {
+        medianaAlinhamentoCasa:
+          row.mediana_alinhamento == null
+            ? null
+            : Number(row.mediana_alinhamento),
+        percentilProposicoesCasa:
+          row.percentil_proposicoes == null
+            ? null
+            : Number(row.percentil_proposicoes),
+        percentilGastoCasa:
+          row.percentil_gasto == null ? null : Number(row.percentil_gasto),
+      }
+    },
+  )
+}

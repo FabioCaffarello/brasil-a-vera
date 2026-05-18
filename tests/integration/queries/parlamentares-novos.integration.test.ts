@@ -4,11 +4,15 @@ vi.mock('@/shared/db', () => import('../setup/db'))
 
 import {
   getAlinhamentoMensal,
+  getComparacoesCasa,
   getGastosMensalMedianaCasa,
   getGastosTopFornecedores,
 } from '@/lib/queries/parlamentares'
 import { gasto } from '@/modules/gastos/domain/schema'
-import { parlamentar } from '@/modules/parlamentares/domain/schema'
+import {
+  estatisticaParlamentarAgregada,
+  parlamentar,
+} from '@/modules/parlamentares/domain/schema'
 import {
   orientacao,
   votacao,
@@ -317,6 +321,98 @@ describe('queries/parlamentares (Sprint 7.0 PR4 — novos)', () => {
       const r2026 = await getGastosTopFornecedores(p.id as string, 2026)
       expect(r2026).toHaveLength(1)
       expect(r2026[0]?.nome).toBe('B')
+    })
+  })
+
+  describe('getComparacoesCasa (Sprint 7.2 PR1)', () => {
+    it('retorna todos nulos para parlamentar inexistente', async () => {
+      const r = await getComparacoesCasa(NONEXISTENT_UUID)
+      expect(r.medianaAlinhamentoCasa).toBeNull()
+      expect(r.percentilProposicoesCasa).toBeNull()
+      expect(r.percentilGastoCasa).toBeNull()
+    })
+
+    it('calcula mediana de alinhamento + percentis na mesma casa', async () => {
+      // 3 deputados (CAMARA) com agregados:
+      //   p1: pct=40, propos=10, percentil_gasto=10
+      //   p2: pct=70, propos=30, percentil_gasto=50
+      //   p3: pct=90, propos=50, percentil_gasto=90
+      // Mediana de pct na CAMARA = 70
+      // p1 está no percentil_propos = 0 (1ª posição em ordem ASC)
+      const p1 = buildParlamentar({ casa: 'CAMARA' })
+      const p2 = buildParlamentar({ casa: 'CAMARA' })
+      const p3 = buildParlamentar({ casa: 'CAMARA' })
+      await db.insert(parlamentar).values([p1, p2, p3])
+      await db.insert(estatisticaParlamentarAgregada).values([
+        {
+          parlamentarId: p1.id as string,
+          pctAlinhamento: '40.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 10,
+          gastoTotalAno: '1000.00',
+          percentilGastoCasa: '10.00',
+          trustLevel: 'L2',
+        },
+        {
+          parlamentarId: p2.id as string,
+          pctAlinhamento: '70.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 30,
+          gastoTotalAno: '2000.00',
+          percentilGastoCasa: '50.00',
+          trustLevel: 'L2',
+        },
+        {
+          parlamentarId: p3.id as string,
+          pctAlinhamento: '90.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 50,
+          gastoTotalAno: '3000.00',
+          percentilGastoCasa: '90.00',
+          trustLevel: 'L2',
+        },
+      ])
+
+      const r = await getComparacoesCasa(p1.id as string)
+      expect(r.medianaAlinhamentoCasa).toBe(70)
+      // PERCENT_RANK do menor = 0
+      expect(r.percentilProposicoesCasa).toBe(0)
+      expect(r.percentilGastoCasa).toBe(10)
+    })
+
+    it('ignora parlamentares de outra casa na mediana', async () => {
+      // 1 deputado com pct=50, 2 senadores com pct=10 e 90
+      // Mediana da CAMARA = 50 (só o deputado)
+      const dep = buildParlamentar({ casa: 'CAMARA' })
+      const sen1 = buildParlamentar({ casa: 'SENADO' })
+      const sen2 = buildParlamentar({ casa: 'SENADO' })
+      await db.insert(parlamentar).values([dep, sen1, sen2])
+      await db.insert(estatisticaParlamentarAgregada).values([
+        {
+          parlamentarId: dep.id as string,
+          pctAlinhamento: '50.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 5,
+          trustLevel: 'L2',
+        },
+        {
+          parlamentarId: sen1.id as string,
+          pctAlinhamento: '10.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 5,
+          trustLevel: 'L2',
+        },
+        {
+          parlamentarId: sen2.id as string,
+          pctAlinhamento: '90.00',
+          votacoesAnalisadas: 100,
+          proposicoesCount: 5,
+          trustLevel: 'L2',
+        },
+      ])
+
+      const r = await getComparacoesCasa(dep.id as string)
+      expect(r.medianaAlinhamentoCasa).toBe(50)
     })
   })
 })
