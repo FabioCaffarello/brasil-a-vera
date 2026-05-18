@@ -526,13 +526,14 @@ export default function DesignSystemPage() {
           </div>
 
           <p className="text-foreground-subtle text-xs">
-            Composições usadas neste mock: <code>HeroSection</code> (gradient
-            variant), <code>DataBadge</code> (kicker accent + badges por
-            SectionCard), <code>PartyBadge</code> (sigla PT),{' '}
-            <code>KpiStrip</code> (4 KPIs com tones), <code>SectionNav</code>{' '}
-            (sticky, 3 anchors), <code>SectionCard</code> (3 instâncias com
-            ids), <code>FilterChips</code> (selected state),{' '}
-            <code>StatsGrid</code> (3 stats inline).
+            Composições usadas neste mock: <code>HeroSection</code> (variant
+            gradient — showcase only; rotas de produto usam plain por P8 da Wave
+            8), <code>DataBadge</code> (kicker accent + badges por SectionCard),{' '}
+            <code>PartyBadge</code> (sigla PT), <code>KpiStrip</code> (4 KPIs
+            com tones), <code>SectionNav</code> (sticky, 3 anchors),{' '}
+            <code>SectionCard</code> (3 instâncias com ids),{' '}
+            <code>FilterChips</code> (selected state), <code>StatsGrid</code> (3
+            stats inline).
           </p>
         </div>
 
@@ -552,7 +553,8 @@ export default function DesignSystemPage() {
             <code>@starting-style</code> (ADR-023, sem framer-motion).
           </p>
 
-          {/* Variante 1: gradient completa */}
+          {/* Variante 1: gradient completa (variant explícita — default do
+              componente é plain desde Wave 8 P8) */}
           <div className="overflow-hidden rounded-lg border border-border">
             <HeroSection
               kicker={
@@ -571,12 +573,13 @@ export default function DesignSystemPage() {
                   <Button variant="outline">Explorar parlamentares</Button>
                 </>
               }
+              variant="gradient"
             />
           </div>
 
           {/* Variante 2: gradient mínima (só título) */}
           <div className="overflow-hidden rounded-lg border border-border">
-            <HeroSection title="Apenas título (gradient)" />
+            <HeroSection title="Apenas título (gradient)" variant="gradient" />
           </div>
 
           {/* Variante 3: plain (sem gradient, sem text-gradient) */}
