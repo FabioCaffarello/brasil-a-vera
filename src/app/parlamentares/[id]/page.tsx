@@ -36,6 +36,7 @@ import {
   CursorVotosV1,
 } from '@/lib/queries/cursor-schemas'
 import {
+  getAlinhamentoMensal,
   getComparacoesCasa,
   getGastosResumo,
   getParlamentarById,
@@ -188,6 +189,7 @@ export default async function ParlamentarPerfilPage({
     paresContraditorios,
     coerenciaStats,
     alinhamento,
+    alinhamentoMensal,
     comparacoes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
@@ -209,6 +211,7 @@ export default async function ParlamentarPerfilPage({
     getParesContraditorios(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
     getAlinhamentoParlamentar(parlamentar.id),
+    getAlinhamentoMensal(parlamentar.id, 12),
     getComparacoesCasa(parlamentar.id),
   ])
 
@@ -456,6 +459,7 @@ export default async function ParlamentarPerfilPage({
             <AlinhamentoBancada
               alinhamento={alinhamento}
               casa={parlamentar.casa}
+              mensal={alinhamentoMensal}
             />
           </AccordionContent>
         </AccordionItem>
@@ -546,6 +550,7 @@ export default async function ParlamentarPerfilPage({
           <AlinhamentoBancada
             alinhamento={alinhamento}
             casa={parlamentar.casa}
+            mensal={alinhamentoMensal}
           />
         </SectionCard>
 
