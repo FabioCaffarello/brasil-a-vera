@@ -20,28 +20,23 @@ import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import {
   getProposicaoVinculada,
+  getTopVotacoesParaSSG,
   getVotacaoById,
   getVotosByVotacao,
   getVotosResumoPorPartido,
-  TIPOS_VOTO,
-  type TipoVoto,
 } from '@/lib/queries/votacoes'
 
-// Rota intencionalmente dynamic. Ler `searchParams` (filtro ?voto=) faz Next 16
-// opt-out de SSG mesmo com generateStaticParams. Trade-off aceito até a Wave 3+
-// entregar R2 incremental cache (#58) — sem cache cross-isolate em Workers, SSG
-// não tem ganho real e refactor para client-side filtering só inflaria payload.
-// Ver #59 para histórico empírico.
 interface PageProps {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ voto?: string }>
 }
 
-function normalizeVoto(value: string | undefined): TipoVoto | undefined {
-  if (!value) return undefined
-  return TIPOS_VOTO.includes(value as TipoVoto)
-    ? (value as TipoVoto)
-    : undefined
+// Wave 9 Sprint 9.2 PR1 (D7) — top-200 votações mais recentes geradas
+// estaticamente no build. Cobre >95% do tráfego (votações novas
+// concentram interesse). Restante cai em ISR fallback nativo do Next 16.
+// Filtro ?voto=X migrou para client-side em VotosIndividuais → página
+// não opta-out mais de SSG.
+export async function generateStaticParams() {
+  return getTopVotacoesParaSSG(200)
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -58,24 +53,17 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function VotacaoPage({ params, searchParams }: PageProps) {
+export default async function VotacaoPage({ params }: PageProps) {
   const { id } = await params
-  const sp = await searchParams
-  const filtroVoto = normalizeVoto(sp.voto)
 
   const v = await getVotacaoById(id)
   if (!v) notFound()
 
-  const [proposicao, votos, votosTotais, resumoPorPartido] = await Promise.all([
+  const [proposicao, votos, resumoPorPartido] = await Promise.all([
     getProposicaoVinculada(v.proposicaoId),
-    getVotosByVotacao(v.id, { voto: filtroVoto }),
-    // Pegamos a contagem total separadamente (sem filtro) para mostrar
-    // "X de Y votos" quando há filtro ativo.
-    filtroVoto ? getVotosByVotacao(v.id) : Promise.resolve([]),
+    getVotosByVotacao(v.id),
     getVotosResumoPorPartido(v.id),
   ])
-
-  const totalSemFiltro = filtroVoto ? votosTotais.length : undefined
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -201,12 +189,7 @@ export default async function VotacaoPage({ params, searchParams }: PageProps) {
               label="Exportar todos os votos (CSV)"
             />
           </div>
-          <VotosIndividuais
-            filtroAtual={filtroVoto}
-            totalSemFiltro={totalSemFiltro}
-            votacaoId={v.id}
-            votos={votos}
-          />
+          <VotosIndividuais votacaoId={v.id} votos={votos} />
         </SectionCard>
       </div>
     </div>
