@@ -1,6 +1,8 @@
 import { and, asc, count, desc, eq, ilike, sql, sum } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { encodeCursor } from '@/lib/cursor'
+import type { CursorVotosV1Payload } from '@/lib/queries/cursor-schemas'
 import { estatisticaParlamentarAgregada } from '@/modules/parlamentares/domain/schema'
 import { db } from '@/shared/db'
 import {
@@ -100,9 +102,109 @@ export async function getParlamentarById(id: string) {
   })
 }
 
-export async function getVotosRecentes(parlamentarId: string, limit = 10) {
-  return db
+export type VotosPeriodoFilter = '30d' | '90d' | '12m' | 'all'
+export type VotosAlinhamentoFilter = 'alinhado' | 'divergente' | 'todos'
+
+export const VOTOS_PERIODOS: VotosPeriodoFilter[] = ['all', '30d', '90d', '12m']
+export const VOTOS_ALINHAMENTOS: VotosAlinhamentoFilter[] = [
+  'todos',
+  'alinhado',
+  'divergente',
+]
+
+/** Page-size fixo (ADR-026 §3 — não configurável por consumer). */
+export const VOTOS_PAGE_SIZE = 20
+
+export interface VotosRecentesOpts {
+  cursor?: CursorVotosV1Payload
+  periodo?: VotosPeriodoFilter
+  alinhamento?: VotosAlinhamentoFilter
+}
+
+export interface VotoRecenteRow {
+  votoNominalId: string
+  voto: string
+  votacaoId: string
+  votacaoSourceId: string
+  dataHora: Date | string
+  descricao: string
+  orgao: string
+  casa: string
+  aprovada: boolean
+  orientacao: string | null
+}
+
+export interface VotosRecentesResult {
+  rows: VotoRecenteRow[]
+  /** Token do próximo cursor (já encoded), ou null quando não há mais
+   * páginas. Caller monta href como `?votos_after=${nextCursor}#votos`. */
+  nextCursor: string | null
+}
+
+// Wave 7 Sprint 7.3 PR1 — refactor de getVotosRecentes para cursor
+// pagination (ADR-026) + filtros mini de período e alinhamento.
+//
+// Mudança breaking: assinatura passa de `(parlamentarId, limit?)` para
+// `(parlamentarId, opts?)` retornando `{rows, nextCursor}` em vez de
+// array puro. Caller atual em src/app/parlamentares/[id]/page.tsx
+// atualizado no mesmo PR.
+//
+// Implementação: LEFT JOIN com orientacao_bancada permite filtrar por
+// alinhamento sem 2ª round-trip. ORDER BY (data_hora DESC, voto_nominal_id
+// DESC) com keyset pagination via WHERE composto (Postgres não suporta
+// tuple comparison direto via drizzle). LIMIT N+1 para detectar próxima
+// página sem COUNT.
+export async function getVotosRecentes(
+  parlamentarId: string,
+  opts: VotosRecentesOpts = {},
+): Promise<VotosRecentesResult> {
+  const cursor = opts.cursor
+  const periodo = opts.periodo ?? 'all'
+  const alinhamento = opts.alinhamento ?? 'todos'
+
+  const whereClauses = [eq(votoNominal.parlamentarId, parlamentarId)]
+
+  // Filtro de período (data_hora >= now() - interval).
+  if (periodo !== 'all') {
+    const interval =
+      periodo === '30d'
+        ? '30 days'
+        : periodo === '90d'
+          ? '90 days'
+          : '12 months'
+    whereClauses.push(sql`${votacao.dataHora} >= now() - ${interval}::interval`)
+  }
+
+  // Keyset pagination (ADR-026). Tuple comparison: ORDER BY (dt, id) DESC
+  // → continuar onde parou: `dt < cursor.dt OR (dt = cursor.dt AND id < cursor.id)`.
+  // Drizzle não tem helper de tuple compare; SQL puro aqui.
+  if (cursor) {
+    const cursorDate = new Date(cursor.d)
+    whereClauses.push(
+      sql`(${votacao.dataHora} < ${cursorDate} OR (${votacao.dataHora} = ${cursorDate} AND ${votoNominal.id} < ${cursor.id}))`,
+    )
+  }
+
+  // Filtro de alinhamento (depende de orientacao_bancada do partido do
+  // parlamentar). Aplica regras da função pura `classifyAlinhamento`:
+  // - alinhado: voto != AUSENTE AND orient != LIBERADO AND voto = orient
+  // - divergente: voto != AUSENTE AND orient != LIBERADO AND voto != orient
+  if (alinhamento === 'alinhado') {
+    whereClauses.push(
+      sql`${votoNominal.voto} != 'AUSENTE' AND orientacao_bancada.orientacao != 'LIBERADO' AND ${votoNominal.voto}::text = orientacao_bancada.orientacao::text`,
+    )
+  } else if (alinhamento === 'divergente') {
+    whereClauses.push(
+      sql`${votoNominal.voto} != 'AUSENTE' AND orientacao_bancada.orientacao != 'LIBERADO' AND ${votoNominal.voto}::text != orientacao_bancada.orientacao::text`,
+    )
+  }
+
+  // LIMIT N+1 → se vier 21, há próxima página; descartamos o extra.
+  const limitPlusOne = VOTOS_PAGE_SIZE + 1
+
+  const rows = await db
     .select({
+      votoNominalId: votoNominal.id,
       voto: votoNominal.voto,
       votacaoId: votacao.id,
       votacaoSourceId: votacao.sourceId,
@@ -111,12 +213,39 @@ export async function getVotosRecentes(parlamentarId: string, limit = 10) {
       orgao: votacao.orgao,
       casa: votacao.casa,
       aprovada: votacao.aprovada,
+      orientacao: sql<string | null>`orientacao_bancada.orientacao::text`.as(
+        'orientacao',
+      ),
     })
     .from(votoNominal)
     .innerJoin(votacao, eq(votacao.id, votoNominal.votacaoId))
-    .where(eq(votoNominal.parlamentarId, parlamentarId))
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+    .leftJoin(
+      sql`votacoes.orientacao_bancada`,
+      sql`orientacao_bancada.votacao_id = ${votoNominal.votacaoId} AND orientacao_bancada.partido_sigla = ${parlamentar.partidoSigla}`,
+    )
+    .where(and(...whereClauses))
+    .orderBy(desc(votacao.dataHora), desc(votoNominal.id))
+    .limit(limitPlusOne)
+
+  const hasMore = rows.length > VOTOS_PAGE_SIZE
+  const pageRows = hasMore ? rows.slice(0, VOTOS_PAGE_SIZE) : rows
+
+  let nextCursor: string | null = null
+  if (hasMore) {
+    const last = pageRows[pageRows.length - 1]
+    if (last) {
+      const dt =
+        last.dataHora instanceof Date ? last.dataHora : new Date(last.dataHora)
+      nextCursor = encodeCursor({
+        v: 1 as const,
+        d: dt.getTime(),
+        id: last.votoNominalId,
+      })
+    }
+  }
+
+  return { rows: pageRows as VotoRecenteRow[], nextCursor }
 }
 
 export async function getProposicoesAutoradas(
