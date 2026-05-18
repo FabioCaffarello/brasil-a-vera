@@ -1,11 +1,12 @@
 import Link from 'next/link'
 
+import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
 import { formatProposicaoRef } from '@/lib/format'
 import {
   classifyTramitacaoCard,
   type EstadoTramitacaoCard,
   inferirMarcoAtual,
-  MARCOS_TRAMITACAO,
+  isSituacaoTerminalNegativa,
 } from '@/modules/proposicoes/domain/tramitacao-card'
 
 interface Props {
@@ -52,8 +53,6 @@ const SITUACAO_CLASSES: Record<string, string> = {
   ARQUIVADA: 'bg-surface-elevated text-foreground-muted',
   TRANSFORMADA_EM_NORMA: 'bg-success text-success-foreground',
 }
-
-const SITUACOES_TERMINAIS_NEGATIVAS = new Set(['REJEITADA', 'ARQUIVADA'])
 
 /**
  * Card de listagem de proposição — Sprint 6.2 PR 2 (Wave 6) +
@@ -135,34 +134,18 @@ function TramitacaoStrip({
   }
 
   // com_marcos — render barra de 5 segmentos + label "Em {orgao}".
+  // Wave 8 Sprint 8.3 PR4: barra extraída para BarraProgressoTramitacao
+  // (compartilhada com SectionCard do detalhe em variant=full).
   const marcoAtual = inferirMarcoAtual(estado.ultimoOrgao, situacao)
-  const terminalNegativo = SITUACOES_TERMINAIS_NEGATIVAS.has(situacao)
+  const terminalNegativo = isSituacaoTerminalNegativa(situacao)
   return (
     <div className="mt-3">
-      <div
-        aria-label={`Tramitação em ${estado.ultimoOrgao}, marco ${marcoAtual} de ${MARCOS_TRAMITACAO.length}`}
-        className="flex gap-0.5"
-        role="img"
-      >
-        {MARCOS_TRAMITACAO.map((marco, idx) => {
-          const stepIndex = idx + 1
-          const ativo = stepIndex <= marcoAtual
-          // Cor difere por: ativo terminal-negativo (destructive),
-          // ativo terminal-positivo ou em curso (brand), inativo (muted).
-          const fillClass = !ativo
-            ? 'bg-surface-elevated'
-            : terminalNegativo && stepIndex === marcoAtual
-              ? 'bg-destructive/60'
-              : 'bg-brand/60'
-          return (
-            <div
-              className={`h-1 flex-1 rounded-sm ${fillClass}`}
-              key={marco}
-              title={marco}
-            />
-          )
-        })}
-      </div>
+      <BarraProgressoTramitacao
+        ariaLabel={`Tramitação em ${estado.ultimoOrgao}`}
+        currentStep={marcoAtual}
+        terminalNegativo={terminalNegativo}
+        variant="compact"
+      />
       <p
         className="mt-1.5 text-foreground-muted text-xs"
         title={
