@@ -2,7 +2,10 @@ import { and, asc, desc, eq, ilike, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
-import type { CursorProposicoesV1Payload } from '@/lib/queries/cursor-schemas'
+import type {
+  CursorProposicoesV1Payload,
+  CursorTramitacaoV1Payload,
+} from '@/lib/queries/cursor-schemas'
 import { db } from '@/shared/db'
 import {
   estatisticaProposicaoAgregada,
@@ -16,6 +19,11 @@ import {
 
 /** Page-size fixo da listagem /proposicoes (ADR-026 §3). */
 export const PROPOSICOES_LISTAGEM_PAGE_SIZE = 20
+
+/** Page-size fixo da tramitação no detalhe da proposição (ADR-026 §3).
+ * Wave 8 Sprint 8.3 PR1. Mesma magnitude da listagem por consistência
+ * de scroll mental do usuário. */
+export const TRAMITACAO_PAGE_SIZE = 20
 
 export type TipoProposicao = 'PL' | 'PEC' | 'PLP' | 'MPV' | 'PDC' | 'PRC'
 
@@ -336,29 +344,84 @@ export interface TramitacaoEvento {
   situacaoResultante: string | null
 }
 
-// Timeline da proposição: eventos ordenados do mais recente pro mais antigo,
-// que é a ordem natural pra exibir num feed. Cacheado com TTL longo (ADR-018)
-// — tramitação muda no máximo algumas vezes por semana, dominado pelo cron.
+export interface TramitacaoOpts {
+  /** Cursor versionado (ADR-026 + CursorTramitacaoV1). */
+  cursor?: CursorTramitacaoV1Payload
+  /** Override do page size. Default TRAMITACAO_PAGE_SIZE (20). */
+  limit?: number
+}
+
+export interface TramitacaoResult {
+  rows: TramitacaoEvento[]
+  /** Token base64url do próximo cursor, ou null quando não há mais. */
+  nextCursor: string | null
+}
+
+// Timeline da proposição — Sprint 6.2 + Wave 8 Sprint 8.3 PR1 (cursor
+// pagination ADR-026). Eventos ordenados do mais recente pro mais antigo
+// (data DESC, id DESC tiebreaker estável). Cacheado por (proposicao_id,
+// cursor) — primeira página tem key estável, páginas subsequentes
+// cacheiam independente quando o mesmo URL ressurgir.
+//
+// Tramitação muda poucas vezes por semana (dominado pelo cron), então
+// TTL longo é seguro. Cache miss em página interna paga 1 SELECT.
 export async function getTramitacaoByProposicao(
   proposicaoId: string,
-): Promise<TramitacaoEvento[]> {
-  return cached(
-    `proposicao:tramitacao:${proposicaoId}`,
-    TTL.proposicaoEmTramitacao,
-    async () =>
-      db
-        .select({
-          id: tramitacao.id,
-          data: tramitacao.data,
-          orgao: tramitacao.orgao,
-          descricaoResumida: tramitacao.descricaoResumida,
-          descricaoCompleta: tramitacao.descricaoCompleta,
-          situacaoResultante: tramitacao.situacaoResultante,
+  opts: TramitacaoOpts = {},
+): Promise<TramitacaoResult> {
+  const limit = opts.limit ?? TRAMITACAO_PAGE_SIZE
+  const cursor = opts.cursor
+  // Cache key inclui cursor para evitar colisão entre páginas. Primeira
+  // página (sem cursor) usa key estável `:p1`; demais usam o token
+  // encoded como chave (URL-safe, único por posição).
+  const cacheKey = cursor
+    ? `proposicao:tramitacao:${proposicaoId}:${encodeCursor(cursor)}:limit:${limit}`
+    : `proposicao:tramitacao:${proposicaoId}:p1:limit:${limit}`
+
+  return cached(cacheKey, TTL.proposicaoEmTramitacao, async () => {
+    const whereClauses = [eq(tramitacao.proposicaoId, proposicaoId)]
+    if (cursor) {
+      // Tuple compare em (data, id): continuar onde parou na ordem DESC.
+      const cursorDate = new Date(cursor.d)
+      whereClauses.push(
+        sql`(${tramitacao.data} < ${cursorDate}
+          OR (${tramitacao.data} = ${cursorDate} AND ${tramitacao.id} < ${cursor.id}))`,
+      )
+    }
+
+    const limitPlusOne = limit + 1
+    const rows = await db
+      .select({
+        id: tramitacao.id,
+        data: tramitacao.data,
+        orgao: tramitacao.orgao,
+        descricaoResumida: tramitacao.descricaoResumida,
+        descricaoCompleta: tramitacao.descricaoCompleta,
+        situacaoResultante: tramitacao.situacaoResultante,
+      })
+      .from(tramitacao)
+      .where(and(...whereClauses))
+      .orderBy(desc(tramitacao.data), desc(tramitacao.id))
+      .limit(limitPlusOne)
+
+    const hasMore = rows.length > limit
+    const pageRows = hasMore ? rows.slice(0, limit) : rows
+    let nextCursor: string | null = null
+    if (hasMore) {
+      const last = pageRows[pageRows.length - 1]
+      if (last) {
+        // `data` vem como Date do Drizzle. epoch ms para serialização.
+        const lastDate =
+          last.data instanceof Date ? last.data : new Date(last.data)
+        nextCursor = encodeCursor({
+          v: 1 as const,
+          d: lastDate.getTime(),
+          id: last.id,
         })
-        .from(tramitacao)
-        .where(eq(tramitacao.proposicaoId, proposicaoId))
-        .orderBy(desc(tramitacao.data)),
-  )
+      }
+    }
+    return { rows: pageRows, nextCursor }
+  })
 }
 
 // Counter para honestidade de truncagem no export CSV (Sprint 3.0). Mesmas
