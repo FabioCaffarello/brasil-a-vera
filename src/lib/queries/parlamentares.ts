@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, ilike, sql, sum } from 'drizzle-orm'
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
 import type {
+  CursorGastosV1Payload,
   CursorProposicoesV1Payload,
   CursorVotosV1Payload,
 } from '@/lib/queries/cursor-schemas'
@@ -994,4 +995,91 @@ export async function getVotosDistribuicao(
     acc.total += r.n
   }
   return acc
+}
+
+/** Page-size fixo (ADR-026 §3) para drill-down de gastos. */
+export const GASTOS_PAGE_SIZE = 20
+
+export interface GastosDetalheOpts {
+  cursor?: CursorGastosV1Payload
+}
+
+export interface GastoDetalheRow {
+  gastoId: string
+  dataEmissao: Date | string
+  categoriaDescricao: string
+  fornecedorNome: string
+  fornecedorCnpjCpf: string | null
+  valor: string
+  urlDocumento: string | null
+}
+
+export interface GastosDetalheResult {
+  rows: GastoDetalheRow[]
+  /** Token base64url do próximo cursor, ou null quando não há mais. */
+  nextCursor: string | null
+}
+
+// Drill-down paginado de gastos CEAP do parlamentar em um ano específico
+// (Wave 7 Sprint 7.4 PR3 — consumer real em /parlamentares/[id]/gastos).
+//
+// ORDER BY (data_emissao DESC, gasto_id DESC). Keyset pagination via
+// WHERE composto (Postgres não tem tuple compare direto via drizzle).
+// LIMIT N+1 → detectar nextCursor sem COUNT.
+export async function getGastosDetalhe(
+  parlamentarId: string,
+  ano: number,
+  opts: GastosDetalheOpts = {},
+): Promise<GastosDetalheResult> {
+  const cursor = opts.cursor
+
+  const whereClauses = [
+    eq(gasto.parlamentarId, parlamentarId),
+    sql`EXTRACT(YEAR FROM ${gasto.dataEmissao}) = ${ano}`,
+  ]
+  if (cursor) {
+    // data_emissao é DATE; comparamos como timestamp via cast implícito.
+    const cursorDate = new Date(cursor.d).toISOString().slice(0, 10)
+    whereClauses.push(
+      sql`(${gasto.dataEmissao} < ${cursorDate}::date OR (${gasto.dataEmissao} = ${cursorDate}::date AND ${gasto.id} < ${cursor.id}))`,
+    )
+  }
+
+  const limitPlusOne = GASTOS_PAGE_SIZE + 1
+
+  const rows = await db
+    .select({
+      gastoId: gasto.id,
+      dataEmissao: gasto.dataEmissao,
+      categoriaDescricao: gasto.categoriaDescricao,
+      fornecedorNome: gasto.fornecedorNome,
+      fornecedorCnpjCpf: gasto.fornecedorCnpjCpf,
+      valor: gasto.valor,
+      urlDocumento: gasto.urlDocumento,
+    })
+    .from(gasto)
+    .where(and(...whereClauses))
+    .orderBy(desc(gasto.dataEmissao), desc(gasto.id))
+    .limit(limitPlusOne)
+
+  const hasMore = rows.length > GASTOS_PAGE_SIZE
+  const pageRows = hasMore ? rows.slice(0, GASTOS_PAGE_SIZE) : rows
+
+  let nextCursor: string | null = null
+  if (hasMore) {
+    const last = pageRows[pageRows.length - 1]
+    if (last) {
+      // data_emissao vem como string YYYY-MM-DD (drizzle DATE → string).
+      // Converte para epoch ms via UTC midnight para empacotar no token.
+      const isoDate = String(last.dataEmissao).slice(0, 10)
+      const dt = new Date(`${isoDate}T00:00:00Z`)
+      nextCursor = encodeCursor({
+        v: 1 as const,
+        d: dt.getTime(),
+        id: last.gastoId,
+      })
+    }
+  }
+
+  return { rows: pageRows as GastoDetalheRow[], nextCursor }
 }

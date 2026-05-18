@@ -1,6 +1,10 @@
+import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+
 import { GastosChart } from '@/components/parlamentar/gastos-chart-client'
 import { formatBRL } from '@/lib/format'
 import type {
+  FornecedorTop,
   GastoMensalPoint,
   GastosResumo,
 } from '@/lib/queries/parlamentares'
@@ -10,6 +14,10 @@ interface Props {
   resumo: GastosResumo
   /** Série mensal vs mediana da casa (Wave 7 Sprint 7.4 PR2). */
   mensal?: GastoMensalPoint[]
+  /** Top N fornecedores no ano (Wave 7 Sprint 7.4 PR3). */
+  topFornecedores?: FornecedorTop[]
+  /** ID do parlamentar — usado pelo link de drill-down. */
+  parlamentarId?: string
 }
 
 // Sprint 4.3 PR 2 commit 4/4 — refatorado para tokens semânticos.
@@ -18,7 +26,13 @@ interface Props {
 // chunk só baixa quando a seção de gastos entra no viewport.
 // D5 da Sprint 4.3 (Recharts não adotado) revertido com evidência
 // empírica do spike `spike/chart-lib-benchmark` (tag spike-chart-lib-v1).
-export function GastosResumoBlock({ ano, resumo, mensal = [] }: Props) {
+export function GastosResumoBlock({
+  ano,
+  resumo,
+  mensal = [],
+  topFornecedores = [],
+  parlamentarId,
+}: Props) {
   if (resumo.totalRegistros === 0) {
     return (
       <p className="text-foreground-muted text-sm">
@@ -80,6 +94,42 @@ export function GastosResumoBlock({ ano, resumo, mensal = [] }: Props) {
           </li>
         )}
       </ul>
+
+      {topFornecedores.length > 0 ? (
+        <div className="border-border border-t pt-3">
+          <h3 className="mb-2 text-foreground-muted text-xs uppercase tracking-wider">
+            Top {topFornecedores.length} fornecedores
+          </h3>
+          <ul className="space-y-1.5 text-sm">
+            {topFornecedores.map((f) => (
+              <li
+                className="flex items-baseline justify-between gap-3"
+                key={f.cnpj || f.nome}
+              >
+                <span className="min-w-0 truncate text-foreground">
+                  {f.nome}
+                </span>
+                <span className="shrink-0 tabular-nums text-foreground-muted">
+                  {formatBRL(f.total)}
+                  <span className="ml-1 text-foreground-muted text-xs">
+                    ({f.registros})
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {parlamentarId ? (
+        <Link
+          className="inline-flex items-center gap-1.5 text-accent text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          href={`/parlamentares/${parlamentarId}/gastos`}
+        >
+          Ver detalhe completo
+          <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+        </Link>
+      ) : null}
     </div>
   )
 }
