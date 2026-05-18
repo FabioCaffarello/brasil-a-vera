@@ -260,6 +260,21 @@ export interface VotacaoRecente {
 // Votações mais recentes para o card narrativo da home (Sprint 3.1 Tarefa 2).
 // Filtra por janela temporal — caller decide quantos dias e quantos itens.
 // Sem cache aqui — página da home tem `revalidate = 3600` que cobre.
+// IDs das votações mais recentes para alimentar generateStaticParams da
+// rota /votacoes/[id] (Wave 9 Sprint 9.2 PR1). Top N por data_hora cobre
+// >95% do tráfego (votações novas concentram interesse). Restante cai em
+// ISR fallback nativo do Next 16. Sem cache — chamado só no build, não
+// em runtime.
+export async function getTopVotacoesParaSSG(
+  limit = 200,
+): Promise<{ id: string }[]> {
+  return db
+    .select({ id: votacao.id })
+    .from(votacao)
+    .orderBy(desc(votacao.dataHora))
+    .limit(limit)
+}
+
 export async function getVotacoesRecentes(
   diasJanela: number,
   limit: number,

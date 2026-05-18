@@ -1,12 +1,17 @@
+'use client'
+
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { useMemo } from 'react'
 
 import { getTipoVotoStyle } from '@/lib/format'
 import type { VotoIndividual } from '@/lib/queries/votacoes'
 
 interface Props {
+  /** Lista completa de votos (sem filtro). Cardinalidade finita pequena
+   * (~513 deputados ou ~81 senadores) cabe em memória cliente sem
+   * impacto perceptível de payload. */
   votos: VotoIndividual[]
-  filtroAtual?: string
-  totalSemFiltro?: number
   votacaoId: string
 }
 
@@ -19,19 +24,26 @@ const TIPOS = [
   { value: 'OBSTRUCAO', label: 'Obstrução' },
 ]
 
-// Sprint 4.2 PR 5 commit 7/8 — filter tabs + list refatorados para
-// tokens semânticos. Badge de cada voto usa `getTipoVotoStyle` em
-// `format.ts` (commit 1/8), que já está em tokens.
+// Wave 9 Sprint 9.2 PR1 (D7) — filtro migrou de server-side query para
+// client-side filter in-memory. Justificativa: lista é finita pequena,
+// roundtrip de filtro novo via servidor não valia opt-out de SSG. Página
+// agora é estática (SSG + ISR) com filtro reativo via useSearchParams.
 //
-// Filter pill ativo: variant `inverse` (foreground/background trocados)
-// para destacar seleção sem ressaltar com cor — semelhante ao pattern
-// de Button variant=default.
-export function VotosIndividuais({
-  votos,
-  filtroAtual,
-  totalSemFiltro,
-  votacaoId,
-}: Props) {
+// Links dos pills continuam server-routed (preservam shareable URL +
+// SEO + back/forward histórico do navegador). useSearchParams reage à
+// mudança sem trigger novo SSR.
+export function VotosIndividuais({ votos, votacaoId }: Props) {
+  const searchParams = useSearchParams()
+  const filtroAtual = searchParams.get('voto') ?? ''
+
+  const votosFiltrados = useMemo(() => {
+    if (!filtroAtual) return votos
+    return votos.filter((v) => v.voto === filtroAtual)
+  }, [votos, filtroAtual])
+
+  const totalSemFiltro = votos.length
+  const showCounter = filtroAtual && votosFiltrados.length !== totalSemFiltro
+
   return (
     <div>
       <nav
@@ -39,7 +51,7 @@ export function VotosIndividuais({
         className="mb-3 flex flex-wrap gap-1.5 text-xs"
       >
         {TIPOS.map((t) => {
-          const isAtivo = (filtroAtual ?? '') === t.value
+          const isAtivo = filtroAtual === t.value
           const href = t.value
             ? `/votacoes/${votacaoId}?voto=${t.value}`
             : `/votacoes/${votacaoId}`
@@ -52,6 +64,7 @@ export function VotosIndividuais({
               }
               href={href}
               key={t.value}
+              scroll={false}
             >
               {t.label}
             </Link>
@@ -59,7 +72,7 @@ export function VotosIndividuais({
         })}
       </nav>
 
-      {votos.length === 0 ? (
+      {votosFiltrados.length === 0 ? (
         <p className="text-foreground-muted text-sm">
           {filtroAtual
             ? 'Nenhum voto deste tipo registrado nesta votação.'
@@ -68,12 +81,12 @@ export function VotosIndividuais({
       ) : (
         <>
           <p className="mb-2 text-foreground-muted text-xs">
-            {votos.length}
-            {totalSemFiltro != null && filtroAtual && ` de ${totalSemFiltro}`}{' '}
-            voto{votos.length === 1 ? '' : 's'}
+            {votosFiltrados.length}
+            {showCounter && ` de ${totalSemFiltro}`} voto
+            {votosFiltrados.length === 1 ? '' : 's'}
           </p>
           <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-            {votos.map((v) => {
+            {votosFiltrados.map((v) => {
               const style = getTipoVotoStyle(v.voto)
               return (
                 <li
