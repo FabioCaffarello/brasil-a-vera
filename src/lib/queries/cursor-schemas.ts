@@ -24,8 +24,17 @@ export const CursorVotosV1 = z.object({
 export type CursorVotosV1Payload = z.infer<typeof CursorVotosV1>
 
 /**
- * Cursor de proposições autoradas em
- * `/parlamentares/[id]?propos_after=`.
+ * Cursor de proposições — serve dois consumers com ORDER BY idêntico:
+ *
+ * - **Proposições autoradas** em `/parlamentares/[id]?propos_after=`
+ *   (Wave 7 Sprint 7.3 PR3)
+ * - **Listagem global** em `/proposicoes?after=` (Wave 8 Sprint 8.1 PR5)
+ *
+ * Reuso justificado: o cursor é contrato de "como avançar na ordem", não
+ * "qual filtro está aplicado". Filtros são da query; cursor só posiciona o
+ * ponteiro. Mesmo ORDER BY → mesmo schema. Se em algum momento os dois
+ * consumers divergirem em ordenação, split em `CursorProposicoesAutorV1`
+ * + `CursorProposicoesListaV1` é trivial (ADR-026 §versionamento permite).
  *
  * ORDER BY: `proposicao.ano DESC, proposicao.numero DESC,
  * proposicao.id DESC`.
@@ -64,3 +73,26 @@ export const CursorGastosV1 = z.object({
 })
 
 export type CursorGastosV1Payload = z.infer<typeof CursorGastosV1>
+
+/**
+ * Cursor de eventos de tramitação em
+ * `/proposicoes/[tipo]/[numero]/[ano]?tram_after=` (Wave 8 Sprint 8.3 PR1).
+ *
+ * Schema idêntico em shape a `CursorVotosV1` e `CursorGastosV1`, mas
+ * mantido como entidade própria pela mesma razão da separação votos/gastos
+ * — lista distinta, semântica distinta, evolução independente de ORDER BY.
+ *
+ * ORDER BY: `tramitacao.data DESC, tramitacao.id DESC`.
+ *
+ * Payload:
+ * - `v=1`: versão atual
+ * - `d`: epoch ms de `tramitacao.data` do último item da página
+ * - `id`: uuid v7 de `tramitacao.id` do último item (tiebreaker)
+ */
+export const CursorTramitacaoV1 = z.object({
+  v: z.literal(1),
+  d: z.number().int().positive(),
+  id: z.string().uuid(),
+})
+
+export type CursorTramitacaoV1Payload = z.infer<typeof CursorTramitacaoV1>
