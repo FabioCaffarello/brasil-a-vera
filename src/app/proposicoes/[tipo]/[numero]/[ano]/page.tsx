@@ -9,6 +9,12 @@ import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/design-system/primitives/accordion'
 import { formatProposicaoRef } from '@/lib/format'
 import {
   getAutoresByProposicao,
@@ -117,8 +123,10 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
         }))}
       />
 
+      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
+          Wave 8 Sprint 8.2 PR4 (espelha padrão Wave 7 Sprint 7.2 PR4). */}
       <SectionNav
-        className="mt-6"
+        className="mt-6 hidden sm:block"
         items={[
           { id: 'temas', label: 'Temas', icon: <Tag className="h-4 w-4" /> },
           {
@@ -140,7 +148,70 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
         stickyTop="3.5rem"
       />
 
-      <div className="mt-6 space-y-5">
+      {/* Mobile: Accordion colapsável (Wave 8 Sprint 8.2 PR4).
+          defaultValue=['tramitacao', 'autores'] cravado na rodada 2
+          (§Decisões resolvidas #3 — hierarquia das perguntas cívicas em
+          mobile share: "está vivo?" → tramitação; "quem propôs?" → autores). */}
+      <Accordion
+        className="mt-6 space-y-3 sm:hidden"
+        defaultValue={['tramitacao', 'autores']}
+        type="multiple"
+      >
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="tramitacao"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Tramitação
+          </AccordionTrigger>
+          <AccordionContent>
+            <TramitacaoTimeline eventos={tramitacao} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="autores"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Autores
+          </AccordionTrigger>
+          <AccordionContent>
+            <AutoresList autores={autores} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="votacoes"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Votações vinculadas
+          </AccordionTrigger>
+          <AccordionContent>
+            <VotacoesVinculadas votacoes={votacoes} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="temas"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Temas
+          </AccordionTrigger>
+          <AccordionContent>
+            <TemasList temas={temas} />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors).
+          Ordem mantida do Wave 6 (temas → autores → votações → tramitação)
+          — aqui as âncoras do SectionNav precisam casar. No Accordion mobile
+          a ordem é narrativa (tramitação → autores → votações → temas)
+          conforme decisão #3 da rodada 2. */}
+      <div className="mt-6 hidden space-y-5 sm:block">
         <SectionCard className="scroll-mt-28" id="temas" title="Temas">
           <TemasList temas={temas} />
         </SectionCard>
