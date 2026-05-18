@@ -221,46 +221,33 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         >
           <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
         </SectionCard>
-      </div>
 
-      {/* Tier 3 — análises comparativas (cobertura < 15%). Movidas para
-          seção secundária com separador visual + heading explicativo para
-          não competir com o conteúdo principal quando vazias. Sprint 3.1
-          Tarefa 3 — wireframe aprovado em 2026-05-15. Sprint 6.3 manteve
-          a divisória (princípio: reskin não muda hierarquia cívica). */}
-      <div className="mt-8 border-border border-t pt-8">
-        <header className="mb-6">
-          <h2 className="font-semibold text-2xl text-foreground tracking-tight">
-            Análises comparativas
-          </h2>
-          <p className="mt-1 text-foreground-muted text-sm">
-            Comparações com outros parlamentares e padrões de voto. Requer base
-            de votações nominais — disponível para parte dos perfis.
-          </p>
-        </header>
+        {/* Top 5 + Pares promovidos para Tier 1 (Wave 7 Sprint 7.1 PR5).
+            Decisão do handoff: fecham a jornada cívica do Cidadão Consciente
+            — quem é parecido e onde diverge — antes de Compartilhar. Sem
+            separador visual nem header agrupador; SectionNav (acima) já
+            sinaliza as 6 seções em ordem (Votos → Alinh → Propos → Gastos
+            → Top 5 → Pares). */}
+        <SectionCard
+          className="scroll-mt-28"
+          id="afinidade"
+          subtitle="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
+          title="Top 5 maior afinidade de voto"
+        >
+          <Top5Afinidade afinidades={afinidades} />
+        </SectionCard>
 
-        <div className="space-y-5">
-          <SectionCard
-            className="scroll-mt-28"
-            id="afinidade"
-            subtitle="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
-            title="Top 5 maior afinidade de voto"
-          >
-            <Top5Afinidade afinidades={afinidades} />
-          </SectionCard>
-
-          <SectionCard
-            className="scroll-mt-28"
-            id="pares"
-            subtitle="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
-            title="Pares de votos em direções opostas"
-          >
-            <ParesContraditorios
-              pares={paresContraditorios}
-              stats={coerenciaStats}
-            />
-          </SectionCard>
-        </div>
+        <SectionCard
+          className="scroll-mt-28"
+          id="pares"
+          subtitle="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
+          title="Pares de votos em direções opostas"
+        >
+          <ParesContraditorios
+            pares={paresContraditorios}
+            stats={coerenciaStats}
+          />
+        </SectionCard>
       </div>
     </div>
   )
