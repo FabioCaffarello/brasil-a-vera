@@ -38,6 +38,7 @@ import {
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
+  getGastosMensalMedianaCasa,
   getGastosResumo,
   getParlamentarById,
   getProposicoesAutoradas,
@@ -185,6 +186,7 @@ export default async function ParlamentarPerfilPage({
     votosDistribuicao,
     proposicoesPage,
     gastos,
+    gastosMensal,
     afinidades,
     paresContraditorios,
     coerenciaStats,
@@ -207,6 +209,7 @@ export default async function ParlamentarPerfilPage({
       situacao: situacaoPropos,
     }),
     getGastosResumo(parlamentar.id, anoCorrente),
+    getGastosMensalMedianaCasa(parlamentar.id, anoCorrente),
     getTop5Afinidade(parlamentar.id),
     getParesContraditorios(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
@@ -489,7 +492,11 @@ export default async function ParlamentarPerfilPage({
             Gastos parlamentares — {anoCorrente}
           </AccordionTrigger>
           <AccordionContent>
-            <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
+            <GastosResumoBlock
+              ano={anoCorrente}
+              mensal={gastosMensal}
+              resumo={gastos}
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -574,7 +581,11 @@ export default async function ParlamentarPerfilPage({
           subtitle="Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido."
           title={`Gastos parlamentares — ${anoCorrente}`}
         >
-          <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
+          <GastosResumoBlock
+            ano={anoCorrente}
+            mensal={gastosMensal}
+            resumo={gastos}
+          />
         </SectionCard>
 
         {/* Top 5 + Pares promovidos para Tier 1 (Wave 7 Sprint 7.1 PR5).
