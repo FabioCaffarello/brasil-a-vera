@@ -480,3 +480,34 @@ export async function getGastosTopFornecedores(
     },
   )
 }
+
+export interface ListagemStats {
+  totalParlamentares: number
+  totalPartidos: number
+  totalUfs: number
+}
+
+// Contadores para o hero da listagem (Wave 7 Sprint 7.1 PR1). Stats são
+// "geral" — não refletem filtros aplicados (513 parlamentares é a base
+// inteira, não os 30 filtrados por casa=SENADO). Cache curto compartilha
+// com o restante da listagem (TTL.listagemFiltrada = 300s).
+export async function getListagemStats(): Promise<ListagemStats> {
+  return cached(
+    'parlamentares:listagem_stats',
+    TTL.listagemFiltrada,
+    async () => {
+      const [totalRow, partidos, ufs] = await Promise.all([
+        db.select({ n: count(parlamentar.id) }).from(parlamentar),
+        db
+          .selectDistinct({ partidoSigla: parlamentar.partidoSigla })
+          .from(parlamentar),
+        db.selectDistinct({ uf: parlamentar.uf }).from(parlamentar),
+      ])
+      return {
+        totalParlamentares: totalRow[0]?.n ?? 0,
+        totalPartidos: partidos.length,
+        totalUfs: ufs.length,
+      }
+    },
+  )
+}
