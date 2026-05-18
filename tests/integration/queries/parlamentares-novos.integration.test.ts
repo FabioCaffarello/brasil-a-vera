@@ -5,6 +5,7 @@ vi.mock('@/shared/db', () => import('../setup/db'))
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
+  getGastosCategoriasDistintas,
   getGastosDetalhe,
   getGastosMensalMedianaCasa,
   getGastosTopFornecedores,
@@ -483,6 +484,119 @@ describe('queries/parlamentares (Sprint 7.0 PR4 — novos)', () => {
       const r2025 = await getGastosDetalhe(p.id as string, 2025)
       expect(r2025.rows).toHaveLength(1)
       expect(r2025.rows[0]?.valor).toBe('999.00')
+    })
+
+    it('filtra por trimestre (Q1, Q2, Q3, Q4)', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values([
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-02-10',
+          valor: '100.00',
+        }), // Q1
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-05-10',
+          valor: '200.00',
+        }), // Q2
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-08-10',
+          valor: '300.00',
+        }), // Q3
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-11-10',
+          valor: '400.00',
+        }), // Q4
+      ])
+
+      const q1 = await getGastosDetalhe(p.id as string, 2026, {
+        trimestre: 'Q1',
+      })
+      expect(q1.rows).toHaveLength(1)
+      expect(q1.rows[0]?.valor).toBe('100.00')
+
+      const q3 = await getGastosDetalhe(p.id as string, 2026, {
+        trimestre: 'Q3',
+      })
+      expect(q3.rows).toHaveLength(1)
+      expect(q3.rows[0]?.valor).toBe('300.00')
+
+      const tudo = await getGastosDetalhe(p.id as string, 2026, {
+        trimestre: 'todo',
+      })
+      expect(tudo.rows).toHaveLength(4)
+    })
+
+    it('filtra por categoria (string exata)', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values([
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-03-10',
+          categoriaDescricao: 'COMBUSTÍVEL',
+          valor: '100.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-04-10',
+          categoriaDescricao: 'PASSAGEM AÉREA',
+          valor: '200.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-05-10',
+          categoriaDescricao: 'COMBUSTÍVEL',
+          valor: '150.00',
+        }),
+      ])
+
+      const combustivel = await getGastosDetalhe(p.id as string, 2026, {
+        categoria: 'COMBUSTÍVEL',
+      })
+      expect(combustivel.rows).toHaveLength(2)
+      expect(
+        combustivel.rows.every((g) => g.categoriaDescricao === 'COMBUSTÍVEL'),
+      ).toBe(true)
+    })
+  })
+
+  describe('getGastosCategoriasDistintas (Sprint 7.4 PR4)', () => {
+    it('retorna lista alfabética das categorias presentes no ano', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values([
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-01-10',
+          categoriaDescricao: 'TELEFONIA',
+          valor: '50.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-02-10',
+          categoriaDescricao: 'COMBUSTÍVEL',
+          valor: '100.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-03-10',
+          categoriaDescricao: 'COMBUSTÍVEL', // duplicada
+          valor: '150.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2025-12-10',
+          categoriaDescricao: 'OUTRO ANO', // ano diferente
+          valor: '50.00',
+        }),
+      ])
+
+      const r = await getGastosCategoriasDistintas(p.id as string, 2026)
+      expect(r).toEqual(['COMBUSTÍVEL', 'TELEFONIA'])
     })
   })
 })

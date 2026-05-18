@@ -1,10 +1,19 @@
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
+
+import {
+  FilterChip,
+  FilterChips,
+} from '@/design-system/compositions/filter-chips'
+import { Label } from '@/design-system/primitives/label'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatDataBR } from '@/lib/format'
 import { CursorGastosV1 } from '@/lib/queries/cursor-schemas'
 import {
+  GASTOS_TRIMESTRES,
+  type GastosTrimestreFilter,
+  getGastosCategoriasDistintas,
   getGastosDetalhe,
   getParlamentarById,
 } from '@/lib/queries/parlamentares'
@@ -13,7 +22,29 @@ interface PageProps {
   params: Promise<{ id: string }>
   searchParams: Promise<{
     after?: string
+    trimestre?: string
+    categoria?: string
   }>
+}
+
+const TRIMESTRE_LABEL: Record<GastosTrimestreFilter, string> = {
+  todo: 'Ano todo',
+  Q1: 'Jan–Mar',
+  Q2: 'Abr–Jun',
+  Q3: 'Jul–Set',
+  Q4: 'Out–Dez',
+}
+
+const SELECT_CLASS =
+  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
+function normalizeTrimestre(
+  v: string | undefined,
+): GastosTrimestreFilter | undefined {
+  if (v && (GASTOS_TRIMESTRES as string[]).includes(v)) {
+    return v as GastosTrimestreFilter
+  }
+  return undefined
 }
 
 export async function generateMetadata({ params }: PageProps) {
@@ -33,12 +64,17 @@ export async function generateMetadata({ params }: PageProps) {
 
 function buildHref(
   parlamentarId: string,
+  searchParams: Record<string, string | undefined>,
   overrides: Record<string, string | null>,
 ): string {
+  const merged: Record<string, string | undefined | null> = {
+    ...searchParams,
+    ...overrides,
+  }
   const params = new URLSearchParams()
-  for (const [key, value] of Object.entries(overrides)) {
+  for (const [key, value] of Object.entries(merged)) {
     if (value !== null && value !== undefined && value !== '') {
-      params.set(key, value)
+      params.set(key, String(value))
     }
   }
   const qs = params.toString()
@@ -57,13 +93,24 @@ export default async function GastosDetalhePage({
   // Cursor (ADR-026): null = inválido → redirect 308 strip o param.
   const cursor = decodeCursor(sp.after, CursorGastosV1)
   if (cursor === null) {
-    permanentRedirect(buildHref(parlamentar.id, { after: null }))
+    permanentRedirect(buildHref(parlamentar.id, sp, { after: null }))
   }
+  const trimestre = normalizeTrimestre(sp.trimestre)
+  const categoria = sp.categoria?.trim() || undefined
 
   const ano = new Date().getFullYear()
-  const { rows, nextCursor } = await getGastosDetalhe(parlamentar.id, ano, {
-    cursor,
-  })
+  const [{ rows, nextCursor }, categoriasDisponiveis] = await Promise.all([
+    getGastosDetalhe(parlamentar.id, ano, {
+      cursor,
+      trimestre,
+      categoria,
+    }),
+    getGastosCategoriasDistintas(parlamentar.id, ano),
+  ])
+
+  // Helper que troca um filtro mantendo os demais; sempre reseta cursor.
+  const buildFiltroHref = (overrides: Record<string, string | null>) =>
+    buildHref(parlamentar.id, sp, { ...overrides, after: null })
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -86,10 +133,73 @@ export default async function GastosDetalhePage({
         </p>
       </header>
 
+      <div className="mb-4 space-y-3 rounded-lg border border-border bg-surface p-4">
+        <FilterChips label="Período">
+          {GASTOS_TRIMESTRES.map((t) => (
+            <FilterChip asChild key={t} selected={(trimestre ?? 'todo') === t}>
+              <Link
+                href={buildFiltroHref({ trimestre: t === 'todo' ? null : t })}
+              >
+                {TRIMESTRE_LABEL[t]}
+              </Link>
+            </FilterChip>
+          ))}
+        </FilterChips>
+
+        {categoriasDisponiveis.length > 0 ? (
+          <form
+            action={`/parlamentares/${parlamentar.id}/gastos`}
+            className="border-border border-t pt-3"
+            method="get"
+          >
+            {trimestre ? (
+              <input name="trimestre" type="hidden" value={trimestre} />
+            ) : null}
+            <div className="flex flex-col gap-1">
+              <Label
+                className="text-foreground-muted text-xs"
+                htmlFor="filtro-categoria"
+              >
+                Categoria
+              </Label>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className={SELECT_CLASS}
+                  defaultValue={categoria ?? ''}
+                  id="filtro-categoria"
+                  name="categoria"
+                >
+                  <option value="">Todas</option>
+                  {categoriasDisponiveis.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="inline-flex items-center rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  type="submit"
+                >
+                  Filtrar
+                </button>
+                {categoria ? (
+                  <Link
+                    className="text-foreground-muted text-sm hover:text-foreground"
+                    href={buildFiltroHref({ categoria: null })}
+                  >
+                    Limpar
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </form>
+        ) : null}
+      </div>
+
       {rows.length === 0 ? (
         <p className="text-foreground-muted text-sm">
-          {cursor
-            ? 'Sem mais gastos para mostrar nesta paginação.'
+          {cursor || trimestre || categoria
+            ? 'Sem gastos para os filtros selecionados.'
             : `Sem gastos CEAP registrados em ${ano} para este parlamentar.`}
         </p>
       ) : (
@@ -147,7 +257,7 @@ export default async function GastosDetalhePage({
       {nextCursor ? (
         <a
           className="mt-4 block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          href={buildHref(parlamentar.id, { after: nextCursor })}
+          href={buildHref(parlamentar.id, sp, { after: nextCursor })}
         >
           Mostrar mais
         </a>

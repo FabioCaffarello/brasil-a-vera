@@ -1000,8 +1000,33 @@ export async function getVotosDistribuicao(
 /** Page-size fixo (ADR-026 §3) para drill-down de gastos. */
 export const GASTOS_PAGE_SIZE = 20
 
+/** Trimestres do ano civil (Wave 7 Sprint 7.4 PR4 — filtro mini). */
+export type GastosTrimestreFilter = 'todo' | 'Q1' | 'Q2' | 'Q3' | 'Q4'
+
+export const GASTOS_TRIMESTRES: GastosTrimestreFilter[] = [
+  'todo',
+  'Q1',
+  'Q2',
+  'Q3',
+  'Q4',
+]
+
+const TRIMESTRE_MESES: Record<
+  Exclude<GastosTrimestreFilter, 'todo'>,
+  [number, number]
+> = {
+  Q1: [1, 3],
+  Q2: [4, 6],
+  Q3: [7, 9],
+  Q4: [10, 12],
+}
+
 export interface GastosDetalheOpts {
   cursor?: CursorGastosV1Payload
+  /** Filtro de trimestre dentro do ano. */
+  trimestre?: GastosTrimestreFilter
+  /** Filtro por categoria_descricao (string exata). */
+  categoria?: string
 }
 
 export interface GastoDetalheRow {
@@ -1032,11 +1057,22 @@ export async function getGastosDetalhe(
   opts: GastosDetalheOpts = {},
 ): Promise<GastosDetalheResult> {
   const cursor = opts.cursor
+  const trimestre = opts.trimestre ?? 'todo'
+  const categoria = opts.categoria?.trim() || undefined
 
   const whereClauses = [
     eq(gasto.parlamentarId, parlamentarId),
     sql`EXTRACT(YEAR FROM ${gasto.dataEmissao}) = ${ano}`,
   ]
+  if (trimestre !== 'todo') {
+    const [from, to] = TRIMESTRE_MESES[trimestre]
+    whereClauses.push(
+      sql`EXTRACT(MONTH FROM ${gasto.dataEmissao}) BETWEEN ${from} AND ${to}`,
+    )
+  }
+  if (categoria) {
+    whereClauses.push(eq(gasto.categoriaDescricao, categoria))
+  }
   if (cursor) {
     // data_emissao é DATE; comparamos como timestamp via cast implícito.
     const cursorDate = new Date(cursor.d).toISOString().slice(0, 10)
@@ -1082,4 +1118,24 @@ export async function getGastosDetalhe(
   }
 
   return { rows: pageRows as GastoDetalheRow[], nextCursor }
+}
+
+// Lista distinta de categorias presentes nos gastos do parlamentar no ano
+// (Wave 7 Sprint 7.4 PR4 — popula o dropdown de filtro na rota
+// /parlamentares/[id]/gastos). Ordem alfabética pra UI determinística.
+export async function getGastosCategoriasDistintas(
+  parlamentarId: string,
+  ano: number,
+): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ categoria: gasto.categoriaDescricao })
+    .from(gasto)
+    .where(
+      and(
+        eq(gasto.parlamentarId, parlamentarId),
+        sql`EXTRACT(YEAR FROM ${gasto.dataEmissao}) = ${ano}`,
+      ),
+    )
+    .orderBy(gasto.categoriaDescricao)
+  return rows.map((r) => r.categoria)
 }
