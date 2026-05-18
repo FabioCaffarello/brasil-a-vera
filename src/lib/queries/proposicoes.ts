@@ -317,7 +317,47 @@ export async function getAutoresByProposicao(
     )
 }
 
-export async function getVotacoesByProposicao(proposicaoId: string) {
+// Wave 8 Sprint 8.3 PR3 — filtros mini em Votações vinculadas.
+// Cardinalidade naturalmente baixa por proposição (raramente > 20),
+// então sem cursor pagination — apenas filtros que estreitam o
+// universo via FilterChips.
+export type VotacoesResultadoFiltro = 'todos' | 'aprovadas' | 'rejeitadas'
+export type VotacoesCasaFiltro = 'todas' | 'CAMARA' | 'SENADO'
+
+export const VOTACOES_RESULTADO_FILTROS: readonly VotacoesResultadoFiltro[] = [
+  'todos',
+  'aprovadas',
+  'rejeitadas',
+] as const
+
+export const VOTACOES_CASA_FILTROS: readonly VotacoesCasaFiltro[] = [
+  'todas',
+  'CAMARA',
+  'SENADO',
+] as const
+
+export interface VotacoesOpts {
+  resultado?: VotacoesResultadoFiltro
+  casa?: VotacoesCasaFiltro
+}
+
+export async function getVotacoesByProposicao(
+  proposicaoId: string,
+  opts: VotacoesOpts = {},
+) {
+  const resultado = opts.resultado ?? 'todos'
+  const casa = opts.casa ?? 'todas'
+
+  const where = [eq(votacao.proposicaoId, proposicaoId)]
+  if (resultado === 'aprovadas') {
+    where.push(eq(votacao.aprovada, true))
+  } else if (resultado === 'rejeitadas') {
+    where.push(eq(votacao.aprovada, false))
+  }
+  if (casa !== 'todas') {
+    where.push(eq(votacao.casa, casa))
+  }
+
   return db
     .select({
       id: votacao.id,
@@ -331,7 +371,7 @@ export async function getVotacoesByProposicao(proposicaoId: string) {
       votosNao: votacao.votosNao,
     })
     .from(votacao)
-    .where(eq(votacao.proposicaoId, proposicaoId))
+    .where(and(...where))
     .orderBy(desc(votacao.dataHora))
 }
 

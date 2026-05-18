@@ -29,6 +29,10 @@ import {
   type TipoProposicao,
   TRAMITACAO_FILTROS,
   type TramitacaoFiltro,
+  VOTACOES_CASA_FILTROS,
+  VOTACOES_RESULTADO_FILTROS,
+  type VotacoesCasaFiltro,
+  type VotacoesResultadoFiltro,
 } from '@/lib/queries/proposicoes'
 import {
   getProposicoesMesmoAutor,
@@ -39,7 +43,12 @@ import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
-  searchParams: Promise<{ tram_after?: string; tram_filtro?: string }>
+  searchParams: Promise<{
+    tram_after?: string
+    tram_filtro?: string
+    vot_resultado?: string
+    vot_casa?: string
+  }>
 }
 
 function normalizeTramitacaoFiltro(
@@ -49,6 +58,25 @@ function normalizeTramitacaoFiltro(
     return value as TramitacaoFiltro
   }
   return 'todos'
+}
+
+function normalizeVotacoesResultado(
+  value: string | undefined,
+): VotacoesResultadoFiltro {
+  if (
+    value &&
+    VOTACOES_RESULTADO_FILTROS.includes(value as VotacoesResultadoFiltro)
+  ) {
+    return value as VotacoesResultadoFiltro
+  }
+  return 'todos'
+}
+
+function normalizeVotacoesCasa(value: string | undefined): VotacoesCasaFiltro {
+  if (value && VOTACOES_CASA_FILTROS.includes(value as VotacoesCasaFiltro)) {
+    return value as VotacoesCasaFiltro
+  }
+  return 'todas'
 }
 
 function parseParams(
@@ -72,12 +100,22 @@ function buildDetalheHref(
   numero: number,
   ano: number,
   params: Awaited<PageProps['searchParams']>,
-  override: { tram_after?: string | null; tram_filtro?: string | null },
+  override: {
+    tram_after?: string | null
+    tram_filtro?: string | null
+    vot_resultado?: string | null
+    vot_casa?: string | null
+  },
   anchor = '',
 ): string {
   const merged = { ...params, ...override }
   const search = new URLSearchParams()
-  for (const key of ['tram_after', 'tram_filtro'] as const) {
+  for (const key of [
+    'tram_after',
+    'tram_filtro',
+    'vot_resultado',
+    'vot_casa',
+  ] as const) {
     const value = merged[key]
     if (value !== null && value !== undefined && value !== '') {
       search.set(key, value)
@@ -139,11 +177,17 @@ export default async function ProposicaoDetalhePage({
 
   // Wave 8 Sprint 8.3 PR2 — filtro "marcos importantes" vs "todos".
   const tramitacaoFiltro = normalizeTramitacaoFiltro(sp.tram_filtro)
+  // Wave 8 Sprint 8.3 PR3 — filtros mini de votações (resultado + casa).
+  const votacoesResultado = normalizeVotacoesResultado(sp.vot_resultado)
+  const votacoesCasa = normalizeVotacoesCasa(sp.vot_casa)
 
   const [temas, autores, votacoes, tramitacaoPage, stats] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
-    getVotacoesByProposicao(proposicao.id),
+    getVotacoesByProposicao(proposicao.id, {
+      resultado: votacoesResultado,
+      casa: votacoesCasa,
+    }),
     getTramitacaoByProposicao(proposicao.id, {
       cursor: cursorTramitacao,
       filtro: tramitacaoFiltro,
@@ -193,6 +237,36 @@ export default async function ProposicaoDetalhePage({
         tram_filtro: next === 'todos' ? null : next,
       },
       '#tramitacao',
+    )
+
+  // Wave 8 Sprint 8.3 PR3 — buildFiltroHref votações. Aceita override
+  // parcial (só resultado, só casa, ou ambos) — caller pode preservar o
+  // outro filtro ao trocar um. Strip o param quando volta ao default
+  // ('todos'/'todas') para URLs limpas.
+  const buildVotacoesFiltroHref = (override: {
+    resultado?: VotacoesResultadoFiltro
+    casa?: VotacoesCasaFiltro
+  }): string =>
+    buildDetalheHref(
+      parsed.tipo,
+      parsed.numero,
+      parsed.ano,
+      sp,
+      {
+        vot_resultado:
+          override.resultado !== undefined
+            ? override.resultado === 'todos'
+              ? null
+              : override.resultado
+            : undefined,
+        vot_casa:
+          override.casa !== undefined
+            ? override.casa === 'todas'
+              ? null
+              : override.casa
+            : undefined,
+      },
+      '#votacoes',
     )
 
   // Wave 8 Sprint 8.2 PR5 — fase 2 do fetch para footer cross-links.
@@ -324,7 +398,12 @@ export default async function ProposicaoDetalhePage({
             Votações vinculadas
           </AccordionTrigger>
           <AccordionContent>
-            <VotacoesVinculadas votacoes={votacoes} />
+            <VotacoesVinculadas
+              buildFiltroHref={buildVotacoesFiltroHref}
+              casa={votacoesCasa}
+              resultado={votacoesResultado}
+              votacoes={votacoes}
+            />
           </AccordionContent>
         </AccordionItem>
 
@@ -366,7 +445,12 @@ export default async function ProposicaoDetalhePage({
           subtitle="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente."
           title="Votações vinculadas"
         >
-          <VotacoesVinculadas votacoes={votacoes} />
+          <VotacoesVinculadas
+            buildFiltroHref={buildVotacoesFiltroHref}
+            casa={votacoesCasa}
+            resultado={votacoesResultado}
+            votacoes={votacoes}
+          />
         </SectionCard>
 
         <SectionCard
