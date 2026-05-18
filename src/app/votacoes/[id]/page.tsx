@@ -1,12 +1,4 @@
-import {
-  Check,
-  CircleSlash,
-  FileText,
-  Minus,
-  Users,
-  UserX,
-  X,
-} from 'lucide-react'
+import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
@@ -19,12 +11,14 @@ import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import {
+  getDisciplinaPartidariaPorVotacao,
   getProposicaoVinculada,
   getTopVotacoesParaSSG,
   getVotacaoById,
   getVotosByVotacao,
   getVotosResumoPorPartido,
 } from '@/lib/queries/votacoes'
+import { calcularDisciplinaMedia } from '@/modules/votacoes/domain/disciplina'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -59,11 +53,45 @@ export default async function VotacaoPage({ params }: PageProps) {
   const v = await getVotacaoById(id)
   if (!v) notFound()
 
-  const [proposicao, votos, resumoPorPartido] = await Promise.all([
+  const [proposicao, votos, resumoPorPartido, disciplinas] = await Promise.all([
     getProposicaoVinculada(v.proposicaoId),
     getVotosByVotacao(v.id),
     getVotosResumoPorPartido(v.id),
+    getDisciplinaPartidariaPorVotacao(v.id),
   ])
+
+  // KpiStrip híbrido (D1 do WAVE-9-VOTACOES-PLAN.md) — SIM/NÃO como
+  // âncoras cognitivas, Margem + Disciplina como narrativa única de
+  // votações.
+  const totalNominal = v.votosSim + v.votosNao + v.abstencoes
+  const pctSim =
+    totalNominal > 0 ? Math.round((v.votosSim / totalNominal) * 100) : null
+  const pctNao =
+    totalNominal > 0 ? Math.round((v.votosNao / totalNominal) * 100) : null
+
+  // Margem como delta absoluto. Sinal "+" sempre — o hint conta de quem
+  // foi a vantagem (a favor / contra). Empate e simbólica explicitados.
+  const margemAbs = Math.abs(v.votosSim - v.votosNao)
+  const margemValue = totalNominal === 0 ? '—' : `+${margemAbs}`
+  const margemHint =
+    totalNominal === 0
+      ? 'votação simbólica'
+      : margemAbs === 0
+        ? 'empate'
+        : v.aprovada
+          ? 'votos a favor'
+          : 'votos contra'
+
+  // Disciplina média entre partidos com orientação efetiva (LIBERADO
+  // excluído pela query). Null = nenhuma orientação registrada — slot
+  // mostra "—" honesto.
+  const disciplinaMedia = calcularDisciplinaMedia(disciplinas)
+  const disciplinaValue =
+    disciplinaMedia === null ? '—' : `${Math.round(disciplinaMedia)}%`
+  const disciplinaHint =
+    disciplinaMedia === null
+      ? 'sem orientações registradas'
+      : `média de ${disciplinas.length} ${disciplinas.length === 1 ? 'partido' : 'partidos'}`
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -88,25 +116,33 @@ export default async function VotacaoPage({ params }: PageProps) {
               icon: <Check className="h-4 w-4" />,
               label: 'Sim',
               value: v.votosSim,
+              hint:
+                pctSim !== null
+                  ? `${pctSim}% dos nominais`
+                  : 'votação simbólica',
               tone: 'success',
             },
             {
               icon: <X className="h-4 w-4" />,
               label: 'Não',
               value: v.votosNao,
+              hint:
+                pctNao !== null
+                  ? `${pctNao}% dos nominais`
+                  : 'votação simbólica',
               tone: 'destructive',
             },
             {
-              icon: <Minus className="h-4 w-4" />,
-              label: 'Abstenção',
-              value: v.abstencoes,
-              tone: 'warning',
+              icon: <BarChart3 className="h-4 w-4" />,
+              label: 'Margem',
+              value: margemValue,
+              hint: margemHint,
             },
             {
-              icon: <UserX className="h-4 w-4" />,
-              label: 'Ausente',
-              value: v.ausentes,
-              tone: 'muted',
+              icon: <Users className="h-4 w-4" />,
+              label: 'Disciplina',
+              value: disciplinaValue,
+              hint: disciplinaHint,
             },
           ]}
         />
