@@ -47,7 +47,7 @@ type HeroSectionProps = {
   /**
    * Alinhamento horizontal do conteúdo interno (kicker, h1,
    * description, actions). Default `'start'` (esquerda) — preserva
-   * consumers existentes (busca, comparar, meu-parlamentar, perfil).
+   * consumers existentes (busca, comparar, perfil).
    * `'center'` centraliza tudo — combina bem com `variant='plain'`
    * em heros minimalistas onde a ausência de fundo decorativo pede
    * equilíbrio simétrico. O slot `meta` é sempre centralizado,

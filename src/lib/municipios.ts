@@ -1,26 +1,6 @@
-// Helpers de municípios IBGE para o fluxo `/o-meu-parlamentar`.
-//
-// O JSON ordenado por (UF, nome) vive em `./municipios-ibge.json` e é
-// importado server-side. Não vai para o bundle do cliente — funções
-// abaixo são consumidas em server components ou recebem subset já
-// filtrado quando passadas como prop para client component.
-//
-// Sprint 3.1 Tarefa 1 — regenerar via `ingestion/ops/seed-municipios-ibge.ts`
-// quando IBGE publicar alteração territorial.
+// Helpers de UFs brasileiras consumidos por /feed (listagem RSS por UF) e
+// pelo route handler de /feed/votacoes/uf/[uf].
 
-import dataset from './municipios-ibge.json'
-
-export interface Municipio {
-  /** Código IBGE de 7 dígitos. */
-  id: number
-  nome: string
-  /** Sigla de 2 caracteres (BR). */
-  uf: string
-}
-
-const MUNICIPIOS = dataset as Municipio[]
-
-// Tipos importáveis em qualquer ponto da app. UFs brasileiras.
 export const UFS = [
   'AC',
   'AL',
@@ -89,29 +69,4 @@ export function isUf(value: unknown): value is Uf {
 
 export function nomeUfCompleto(uf: Uf): string {
   return UF_NOMES_COMPLETOS[uf]
-}
-
-/**
- * Retorna municípios de uma UF, já ordenados por nome (PT-BR).
- * Subset suficientemente pequeno (8 a 853 municípios) para ser passado
- * como prop para o autocomplete client-side sem inflar payload.
- */
-export function getMunicipiosByUf(uf: Uf): Municipio[] {
-  // Lista já está pré-ordenada por (UF, nome) no JSON — basta filtrar.
-  return MUNICIPIOS.filter((m) => m.uf === uf)
-}
-
-/**
- * Valida que um nome de município pertence à UF. Comparação case-insensitive
- * e acent-insensitive para tolerância de entrada (`saopaulo` casa com
- * `São Paulo`).
- */
-export function findMunicipio(uf: Uf, nome: string): Municipio | null {
-  const norm = normalize(nome)
-  const candidates = getMunicipiosByUf(uf)
-  return candidates.find((m) => normalize(m.nome) === norm) ?? null
-}
-
-function normalize(s: string): string {
-  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }

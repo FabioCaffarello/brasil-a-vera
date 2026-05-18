@@ -49,7 +49,6 @@ Observações por rota:
 |---|---|---|---|---|---|---|---|---|
 | `/votacoes` (listing) | _s | _s | _ms | _ | _ | _ | _ | _ |
 | `/proposicoes/[tipo]/[numero]/[ano]` | _s | _s | _ms | _ | _ | _ | _ | _ |
-| `/o-meu-parlamentar?uf=SP&municipio=...` | _s | _s | _ms | _ | _ | _ | _ | _ |
 | `/docs` (hub) | _s | _s | _ms | _ | _ | _ | _ | _ |
 | `/docs/piramide-de-confianca` | _s | _s | _ms | _ | _ | _ | _ | _ |
 | `/busca?q=...` | _s | _s | _ms | _ | _ | _ | _ | _ |

@@ -60,10 +60,9 @@ describe('NavMobile', () => {
     expect(document.body.style.overflow).toBe('')
   })
 
-  it('lista todos os 5 links de navegação no painel', () => {
+  it('lista todos os 4 links de navegação no painel', () => {
     render(<NavMobile />)
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
-    expect(screen.getByRole('link', { name: /meu parlamentar/i })).toBeDefined()
     expect(screen.getByRole('link', { name: /^parlamentares$/i })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Proposições' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Votações' })).toBeDefined()

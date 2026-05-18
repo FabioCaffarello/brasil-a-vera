@@ -61,19 +61,6 @@ const PROBES: readonly Probe[] = [
     concurrency: 5,
     expectedStatuses: [401, 503],
   },
-  {
-    name: 'meu-parlamentar-root',
-    path: '/o-meu-parlamentar',
-    concurrency: 5,
-    expectedStatuses: [200],
-  },
-  {
-    name: 'meu-parlamentar-uf-municipio',
-    // Sprint 3.1 Tarefa 1 — DF tem só Brasília, valida fluxo end-to-end.
-    path: '/o-meu-parlamentar?uf=DF&municipio=Bras%C3%ADlia',
-    concurrency: 5,
-    expectedStatuses: [200],
-  },
 ] as const
 
 // Rotas verificadas para OG canônico no smoke. Cobertura: home, listas e
@@ -87,14 +74,13 @@ const OG_ROUTES = [
   '/votacoes',
   '/comparar',
   '/docs',
-  '/o-meu-parlamentar',
 ] as const
 
 // Strings âncora que precisam aparecer no HTML da home — guarda contra
 // regressão silenciosa de cards removidos do JSX (audit pré-3.2 mostrou
 // que status HTTP-only não pega esse caso). Sprint 3.1 hygiene.
 const HOME_CARDS_ANCHORS = [
-  'Quem representa seu estado',
+  'Quem está no Congresso',
   'Votações da semana',
   'A plataforma em números',
 ] as const
@@ -106,7 +92,6 @@ const OG_LISTING_PATHS = [
   '/parlamentares/opengraph-image',
   '/proposicoes/opengraph-image',
   '/votacoes/opengraph-image',
-  '/o-meu-parlamentar/opengraph-image',
   '/partidos/PT/opengraph-image',
 ] as const
 

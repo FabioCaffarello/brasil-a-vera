@@ -9,8 +9,8 @@ export const size = OG_SIZE
 export const contentType = OG_CONTENT_TYPE
 
 // OG da home + fallback global. Rotas com `opengraph-image.tsx` próprio
-// (listagens em /parlamentares, /proposicoes, /votacoes, /o-meu-parlamentar
-// e entidades em /parlamentares/[id], /proposicoes/[tipo]/..., /votacoes/[id],
+// (listagens em /parlamentares, /proposicoes, /votacoes e entidades em
+// /parlamentares/[id], /proposicoes/[tipo]/..., /votacoes/[id],
 // /partidos/[sigla], /comparar) sobrescrevem este.
 //
 // Render dinâmico para incluir contagens L2 (total de parlamentares, votações,

@@ -22,7 +22,6 @@ const FORBIDDEN_IMPORT_PREFIXES = [
   '@/components/proposicao',
   '@/components/votacao',
   '@/components/partido',
-  '@/components/meu-parlamentar',
   '@/components/comparar',
   '@/components/busca',
   '@/components/home',

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-import { CardMeuParlamentar } from '@/components/home/card-meu-parlamentar'
+import { CardParlamentares } from '@/components/home/card-parlamentares'
 import { CardStats } from '@/components/home/card-stats'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { FeaturesGrid } from '@/components/home/features-grid'
@@ -158,7 +158,7 @@ export default async function Home() {
             Comece por aqui
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <CardMeuParlamentar />
+            <CardParlamentares />
             <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
             <CardStats stats={stats} />
           </div>
