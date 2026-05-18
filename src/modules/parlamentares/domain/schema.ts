@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  numeric,
   pgSchema,
   text,
   timestamp,
@@ -74,6 +75,47 @@ export const filiacaoPartidaria = parlamentaresSchema.table(
     // FK em parlamentar_id não é auto-indexada pelo Postgres; queries
     // "histórico de filiação do parlamentar X" são padrão.
     index('filiacao_partidaria_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
+// Tabela agregada — Wave 7 Sprint 7.0 PR1. Reduz comparações de KPI (vs.
+// mediana da casa, percentil de gasto) a uma única linha por parlamentar,
+// evitando materialized view (ADR-019: complexidade só com gargalo provado).
+// Populada pelo script seed:agregados:parlamentar (PR2), idempotente via
+// INSERT … ON CONFLICT … DO UPDATE. Consumida por KpiStrip v2 e
+// ParlamentarCard v2 (Sprints 7.1/7.2).
+export const estatisticaParlamentarAgregada = parlamentaresSchema.table(
+  'estatistica_parlamentar_agregada',
+  {
+    parlamentarId: uuid('parlamentar_id')
+      .primaryKey()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    pctAlinhamento: numeric('pct_alinhamento', { precision: 5, scale: 2 }),
+    votacoesAnalisadas: integer('votacoes_analisadas').notNull().default(0),
+    proposicoesCount: integer('proposicoes_count').notNull().default(0),
+    gastoTotalAno: numeric('gasto_total_ano', { precision: 14, scale: 2 }),
+    gastoMedianaCasa: numeric('gasto_mediana_casa', {
+      precision: 14,
+      scale: 2,
+    }),
+    percentilGastoCasa: numeric('percentil_gasto_casa', {
+      precision: 5,
+      scale: 2,
+    }),
+    trustLevel: trustLevel('trust_level').notNull().default('L2'),
+    computedAt: timestamp('computed_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Ordenação descendente para "ranking de alinhamento" e "maior gasto".
+    // NULLS LAST mantém parlamentares sem amostra fora do topo do ranking.
+    index('idx_estat_parlamentar_alinhamento').on(
+      sql`${table.pctAlinhamento} DESC NULLS LAST`,
+    ),
+    index('idx_estat_parlamentar_gasto').on(
+      sql`${table.gastoTotalAno} DESC NULLS LAST`,
+    ),
   ],
 )
 
