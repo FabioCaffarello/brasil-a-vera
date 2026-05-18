@@ -18,12 +18,22 @@ import {
   getParesContraditorios,
 } from '@/lib/queries/coerencia'
 import {
+  getComparacoesCasa,
   getGastosResumo,
   getParlamentarById,
   getProposicoesAutoradas,
   getTop5Afinidade,
   getVotosRecentes,
 } from '@/lib/queries/parlamentares'
+
+const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
+
+function formatPercentil(p: number): string {
+  // 0-100 → "p1".."p99". Threshold para "p100" só com 100.0 exato (raro).
+  if (p >= 99.5) return 'p99'
+  if (p < 0.5) return 'p1'
+  return `p${Math.round(p)}`
+}
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -58,6 +68,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     paresContraditorios,
     coerenciaStats,
     alinhamento,
+    comparacoes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, 10),
     getProposicoesAutoradas(parlamentar.id, 5),
@@ -66,6 +77,7 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
     getParesContraditorios(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
     getAlinhamentoParlamentar(parlamentar.id),
+    getComparacoesCasa(parlamentar.id),
   ])
 
   // KpiStrip values com fallback honesto (D1 do plano Sprint 6.3 — "—"
@@ -107,10 +119,22 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
                 alinhamento.percentual === null
                   ? '—'
                   : `${alinhamento.percentual}%`,
-              hint:
-                alinhamento.total > 0
-                  ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
-                  : 'sem orientação no período',
+              hint: (
+                <>
+                  {alinhamento.total > 0
+                    ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
+                    : 'sem orientação no período'}
+                  {comparacoes.medianaAlinhamentoCasa !== null ? (
+                    <>
+                      {' · '}
+                      <span className="text-foreground-subtle">
+                        mediana da {casaLabel(parlamentar.casa)} em{' '}
+                        {Math.round(comparacoes.medianaAlinhamentoCasa)}%
+                      </span>
+                    </>
+                  ) : null}
+                </>
+              ),
               tone: alinhamentoTone,
             },
             {
@@ -126,7 +150,20 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
               icon: <Inbox className="h-4 w-4" />,
               label: 'Proposições como autor',
               value: proposicoes.length,
-              hint: proposicoes.length === 5 ? 'mostrando 5 mais recentes' : '',
+              hint: (
+                <>
+                  {proposicoes.length === 5 ? 'mostrando 5 mais recentes' : ''}
+                  {comparacoes.percentilProposicoesCasa !== null ? (
+                    <>
+                      {proposicoes.length === 5 ? ' · ' : ''}
+                      <span className="text-foreground-subtle">
+                        {formatPercentil(comparacoes.percentilProposicoesCasa)}{' '}
+                        da {casaLabel(parlamentar.casa)}
+                      </span>
+                    </>
+                  ) : null}
+                </>
+              ),
               tone: 'muted',
             },
             {
@@ -136,10 +173,23 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
                 gastos.totalRegistros === 0
                   ? '—'
                   : formatBRL(gastos.totalGeral),
-              hint:
-                gastos.totalRegistros === 0
-                  ? 'sem gastos registrados'
-                  : `${gastos.totalRegistros} registros`,
+              hint: (
+                <>
+                  {gastos.totalRegistros === 0
+                    ? 'sem gastos registrados'
+                    : `${gastos.totalRegistros} registros`}
+                  {comparacoes.percentilGastoCasa !== null &&
+                  gastos.totalRegistros > 0 ? (
+                    <>
+                      {' · '}
+                      <span className="text-foreground-subtle">
+                        {formatPercentil(comparacoes.percentilGastoCasa)} da{' '}
+                        {casaLabel(parlamentar.casa)}
+                      </span>
+                    </>
+                  ) : null}
+                </>
+              ),
               tone: gastos.totalRegistros === 0 ? 'muted' : 'default',
             },
           ]}
