@@ -61,6 +61,13 @@ export const proposicao = proposicoesSchema.table(
       table.numero,
       table.ano,
     ),
+    // B-tree em numero — Wave 8 Sprint 8.1 PR2. Permite "busca por número
+    // exato sem tipo" (input "1234" → match em qualquer tipo de PL/PEC/etc).
+    // O unique index acima usa `tipo` como leading column, então NÃO ajuda
+    // queries sem condição em tipo. Sem pg_trgm (decisão cravada na rodada
+    // 2): busca por ementa fica como ILIKE %X% via sequential scan
+    // (aceitável até ~50k rows; reabrir se cardinalidade subir).
+    index('proposicao_numero_idx').on(table.numero),
   ],
 )
 

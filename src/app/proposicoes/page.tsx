@@ -13,6 +13,8 @@ import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
   listProposicoes,
+  ORDENS_PROPOSICAO,
+  type OrdemProposicao,
   type SituacaoProposicao,
   TIPOS_PROPOSICAO,
   type TipoProposicao,
@@ -55,11 +57,27 @@ function normalizeAno(value: string | undefined): number | undefined {
   return Number.isInteger(n) && n > 1900 && n < 2100 ? n : undefined
 }
 
+function normalizeQ(value: string | undefined): string | undefined {
+  const trimmed = value?.trim()
+  return trimmed && trimmed.length > 0 ? trimmed : undefined
+}
+
+function normalizeOrdem(
+  value: string | undefined,
+): OrdemProposicao | undefined {
+  if (!value) return undefined
+  return ORDENS_PROPOSICAO.includes(value as OrdemProposicao)
+    ? (value as OrdemProposicao)
+    : undefined
+}
+
 interface PageProps {
   searchParams: Promise<{
     tipo?: string
     ano?: string
     situacao?: string
+    q?: string
+    ordem?: string
   }>
 }
 
@@ -69,6 +87,8 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
     tipo: normalizeTipo(params.tipo),
     ano: normalizeAno(params.ano),
     situacao: normalizeSituacao(params.situacao),
+    q: normalizeQ(params.q),
+    ordem: normalizeOrdem(params.ordem),
   }
 
   const LIMITE = 50
@@ -82,7 +102,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
     <>
       <HeroSection
         align="center"
-        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil à Vera. Resultados ordenados por ano e número, mais recentes primeiro."
+        description="Projetos de lei, PECs, MPs, decretos e resoluções legislativas ingeridas no Brasil à Vera. Busque por número ou palavra na ementa, ou ordene por movimentação recente."
         kicker={
           <DataBadge
             icon={<FileText className="h-3 w-3" />}
@@ -132,6 +152,8 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             tipo: params.tipo,
             ano: params.ano,
             situacao: params.situacao,
+            q: params.q,
+            ordem: params.ordem,
           }}
         />
 
@@ -148,6 +170,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
                   tipo: filtros.tipo ?? '',
                   ano: filtros.ano ? String(filtros.ano) : '',
                   situacao: filtros.situacao ?? '',
+                  q: filtros.q ?? '',
                 }).filter(([, v]) => v !== ''),
               ).toString()}`}
             />

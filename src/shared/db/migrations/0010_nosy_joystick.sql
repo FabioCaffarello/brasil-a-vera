@@ -1,0 +1,1 @@
+CREATE INDEX "proposicao_numero_idx" ON "proposicoes"."proposicao" USING btree ("numero");

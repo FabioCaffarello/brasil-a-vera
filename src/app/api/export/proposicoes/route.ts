@@ -46,10 +46,14 @@ const LIMITE_EXPORT = 1000
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
+    // Wave 8 Sprint 8.1 PR2 — incluído `q` para que busca por ementa/numero
+    // também seja exportável. `ordem` não entra: CSV é para análise, ordenação
+    // é responsabilidade da planilha do destinatário.
     const filtros = {
       tipo: normalizeTipo(url.searchParams.get('tipo')),
       ano: normalizeAno(url.searchParams.get('ano')),
       situacao: normalizeSituacao(url.searchParams.get('situacao')),
+      q: url.searchParams.get('q')?.trim() || undefined,
     }
 
     const [rows, total] = await Promise.all([
