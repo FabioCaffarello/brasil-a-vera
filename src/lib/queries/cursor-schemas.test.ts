@@ -6,6 +6,7 @@ import {
   CursorGastosV1,
   CursorProposicoesV1,
   CursorTramitacaoV1,
+  CursorVotacoesV1,
   CursorVotosV1,
 } from './cursor-schemas'
 
@@ -107,5 +108,30 @@ describe('CursorTramitacaoV1', () => {
     const v7Like = '019e184f-0cdd-7109-ab34-bbfa9f92bd13'
     const token = encodeCursor({ v: 1, d: 1_700_000_000_000, id: v7Like })
     expect(decodeCursor(token, CursorTramitacaoV1)?.id).toBe(v7Like)
+  })
+})
+
+describe('CursorVotacoesV1', () => {
+  it('round-trip encode → decode preserva payload', () => {
+    const payload = { v: 1 as const, d: 1_700_000_000_000, id: NORMAL_UUID }
+    const token = encodeCursor(payload)
+    expect(decodeCursor(token, CursorVotacoesV1)).toEqual(payload)
+  })
+
+  it('rejeita versão diferente de 1', () => {
+    const token = encodeCursor({ v: 2, d: 1_700_000_000_000, id: NORMAL_UUID })
+    expect(decodeCursor(token, CursorVotacoesV1)).toBeNull()
+  })
+
+  it('rejeita timestamp não-positivo', () => {
+    const zero = encodeCursor({ v: 1, d: 0, id: NORMAL_UUID })
+    const negative = encodeCursor({ v: 1, d: -1, id: NORMAL_UUID })
+    expect(decodeCursor(zero, CursorVotacoesV1)).toBeNull()
+    expect(decodeCursor(negative, CursorVotacoesV1)).toBeNull()
+  })
+
+  it('rejeita payload sem o campo d', () => {
+    const token = encodeCursor({ v: 1, id: NORMAL_UUID })
+    expect(decodeCursor(token, CursorVotacoesV1)).toBeNull()
   })
 })

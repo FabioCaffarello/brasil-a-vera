@@ -96,3 +96,25 @@ export const CursorTramitacaoV1 = z.object({
 })
 
 export type CursorTramitacaoV1Payload = z.infer<typeof CursorTramitacaoV1>
+
+/**
+ * Cursor de listagem de votações em `/votacoes?after=` (Wave 9
+ * Sprint 9.1 PR3). Schema idêntico em shape a `CursorVotosV1`,
+ * `CursorGastosV1` e `CursorTramitacaoV1`, mas mantido como entidade
+ * própria — lista distinta, semântica distinta, evolução independente
+ * de ORDER BY conforme ADR-026 §versionamento.
+ *
+ * ORDER BY: `votacao.data_hora DESC, votacao.id DESC`.
+ *
+ * Payload:
+ * - `v=1`: versão atual
+ * - `d`: epoch ms de `votacao.data_hora` do último item da página
+ * - `id`: uuid v7 de `votacao.id` do último item (tiebreaker)
+ */
+export const CursorVotacoesV1 = z.object({
+  v: z.literal(1),
+  d: z.number().int().positive(),
+  id: z.string().uuid(),
+})
+
+export type CursorVotacoesV1Payload = z.infer<typeof CursorVotacoesV1>
