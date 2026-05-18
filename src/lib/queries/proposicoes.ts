@@ -284,6 +284,94 @@ export async function getTemasByProposicao(proposicaoId: string) {
     .orderBy(asc(proposicaoTema.nomeTema))
 }
 
+/** Wave 8 Sprint 8.4 PR2 — Top 6 partidos + agregado "Outros".
+ * Cravado decisão #2 da rodada 2: filtro `tipoAutoria='AUTOR'`
+ * (coautores não entram). Apenas autores que são parlamentares (com
+ * `parlamentar_id NOT NULL`) — autoria por órgão/mesa/comissão não
+ * tem partido e fica fora do chart por design.
+ *
+ * Retorna lista de até 7 itens: top 6 partidos + "Outros" agregado
+ * quando há mais partidos. Quando há ≤ 6 partidos, retorna só os
+ * partidos sem o "Outros".
+ *
+ * Lista `nomes` tem até 5 entradas para o tooltip — UI exibe o resto
+ * como "...e N outros" (decisão #2 da rodada 2).
+ */
+export async function getApoioPorPartido(proposicaoId: string): Promise<
+  Array<{
+    sigla: string
+    nome: string
+    count: number
+    nomes: readonly string[]
+  }>
+> {
+  // Pega TODOS os autores parlamentares principais — agregação top 6
+  // + Outros é feita em JS (cardinalidade pequena: ~10-30 partidos
+  // distintos no máximo). Mais legível que CTE com window function.
+  const rows = await db
+    .select({
+      partidoSigla: parlamentar.partidoSigla,
+      partidoNome: parlamentar.partidoNome,
+      nomeAutor: proposicaoAutor.nome,
+    })
+    .from(proposicaoAutor)
+    .innerJoin(parlamentar, eq(parlamentar.id, proposicaoAutor.parlamentarId))
+    .where(
+      and(
+        eq(proposicaoAutor.proposicaoId, proposicaoId),
+        eq(proposicaoAutor.tipoAutoria, 'AUTOR'),
+      ),
+    )
+
+  if (rows.length === 0) return []
+
+  // Agrupa por sigla. Mantém ordem de inserção de nomes (que veio sem
+  // ORDER BY, mas Postgres consistente o suficiente em ~30 rows).
+  type Agg = { nome: string; nomes: string[] }
+  const porSigla = new Map<string, Agg>()
+  for (const r of rows) {
+    let agg = porSigla.get(r.partidoSigla)
+    if (!agg) {
+      agg = { nome: r.partidoNome, nomes: [] }
+      porSigla.set(r.partidoSigla, agg)
+    }
+    agg.nomes.push(r.nomeAutor)
+  }
+
+  const partidosOrdenados = Array.from(porSigla.entries())
+    .map(([sigla, agg]) => ({
+      sigla,
+      nome: agg.nome,
+      count: agg.nomes.length,
+      // Lista compacta para tooltip: top 5 nomes. Caller mostra "+N" no
+      // restante. Ordena alfabético para apresentação estável.
+      nomes: agg.nomes.slice().sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    }))
+    .sort((a, b) => b.count - a.count || a.sigla.localeCompare(b.sigla))
+
+  if (partidosOrdenados.length <= 6) {
+    return partidosOrdenados
+  }
+
+  const top6 = partidosOrdenados.slice(0, 6)
+  const outros = partidosOrdenados.slice(6)
+  const outrosCount = outros.reduce((acc, p) => acc + p.count, 0)
+  return [
+    ...top6,
+    {
+      sigla: 'Outros',
+      nome: '',
+      count: outrosCount,
+      // Para o tooltip de "Outros", lista as siglas dos partidos que
+      // entraram no agregado (alfabético) — informa o usuário o que
+      // ficou de fora.
+      nomes: outros
+        .map((p) => p.sigla)
+        .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    },
+  ]
+}
+
 export interface AutorDeProposicao {
   id: string
   nome: string

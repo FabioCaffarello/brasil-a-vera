@@ -1,9 +1,8 @@
-// Tipos compartilhados dos charts de proposição — Wave 8 Sprint 8.4 PR1.
+// Tipos compartilhados dos charts de proposição — Wave 8 Sprint 8.4.
 // Vivem em arquivo separado (sem 'use client') para poder ser importados
 // tanto em Server Components (page.tsx do detalhe, que monta o adapter
 // de dados) quanto pelos Client Components dos charts (que renderizam
-// Recharts). Server Components não podem importar de 'use client' sem
-// trigger de boundary, mas podem importar de módulos puros.
+// Recharts).
 
 /** Wave 8 Sprint 8.4 PR2 — Chart "Apoio por partido".
  *
@@ -51,11 +50,4 @@ export interface VotacoesConsolidadasData {
     /** Data ISO da última votação para legenda do donut. */
     dataHora: string
   } | null
-}
-
-/** Props consolidadas do componente raiz ProposicaoCharts. Cada chart é
- * opcional — PR2 implementa apoioPartido, PR3 implementa votacoes. */
-export interface ProposicaoChartsProps {
-  apoioPartido?: readonly ApoioPartidoDatum[]
-  votacoes?: VotacoesConsolidadasData
 }
