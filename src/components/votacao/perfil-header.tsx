@@ -1,3 +1,6 @@
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { formatDataHoraBR } from '@/lib/format'
@@ -15,47 +18,61 @@ interface Props {
 }
 
 /**
- * Perfil header votação — Sprint 6.3 PR 3 (Wave 6, reskin perfis).
+ * Perfil header votação — Sprint 6.3 PR 3 (Wave 6) +
+ * Wave 9 Sprint 9.2 PR2 (breadcrumb "← Votações").
  *
- * Refactor incremental vs Sprint 4.2 PR 5:
- * - DataBadges no topo (casa + órgão tone=brand, data/hora tone=default,
- *   aprovada/rejeitada tone=success/destructive em destaque)
- * - h1 maior (text-2xl sm:text-3xl — descrição da votação pode ser longa,
- *   não exagero)
- * - Padding header sm:p-8 — consistência com parlamentar + proposição
- * - Estrutura semântica preservada
+ * DataBadges no topo (casa + órgão + data/hora + aprovada/rejeitada com
+ * tone semântico) já entregam a "sub-line" narrativa cravada no plano —
+ * não há necessidade de linha adicional. Layout mantém DataBadges ACIMA
+ * do h1 porque a descrição da votação tende a ser longa, e contexto
+ * (casa/data/resultado) é o filtro mental de scan rápido.
+ *
+ * Breadcrumb "← Votações" espelha padrão Wave 7 (parlamentares) + Wave 8
+ * (proposicoes): contexto para visitantes vindos de link compartilhado.
+ *
+ * Trust badge + source url preservados (P2 — honestidade do dado).
  */
 export function PerfilVotacaoHeader({ votacao: v }: Props) {
   return (
-    <header className="rounded-lg border border-border bg-surface p-6 sm:p-8">
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <DataBadge
-          label={v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}
-          source={v.orgao}
-          tone="brand"
-        />
-        <DataBadge label={formatDataHoraBR(v.dataHora)} tone="default" />
-        <DataBadge
-          label={v.aprovada ? 'Aprovada' : 'Rejeitada'}
-          tone={v.aprovada ? 'success' : 'destructive'}
-        />
-      </div>
+    <div>
+      <Link
+        className="mb-3 inline-flex items-center gap-1 rounded text-foreground-muted text-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        href="/votacoes"
+      >
+        <ArrowLeft aria-hidden className="h-3.5 w-3.5" />
+        Votações
+      </Link>
 
-      <h1 className="font-semibold text-2xl text-foreground tracking-tight sm:text-3xl">
-        {v.descricao}
-      </h1>
+      <header className="rounded-lg border border-border bg-surface p-6 sm:p-8">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <DataBadge
+            label={v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}
+            source={v.orgao}
+            tone="brand"
+          />
+          <DataBadge label={formatDataHoraBR(v.dataHora)} tone="default" />
+          <DataBadge
+            label={v.aprovada ? 'Aprovada' : 'Rejeitada'}
+            tone={v.aprovada ? 'success' : 'destructive'}
+          />
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-        <TrustBadge trustLevel={v.trustLevel} />
-        <a
-          className="rounded text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          href={v.sourceUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Ver na fonte oficial ↗
-        </a>
-      </div>
-    </header>
+        <h1 className="font-semibold text-2xl text-foreground tracking-tight sm:text-3xl">
+          {v.descricao}
+        </h1>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+          <TrustBadge trustLevel={v.trustLevel} />
+          <a
+            className="rounded text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={v.sourceUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Ver na fonte oficial ↗
+          </a>
+        </div>
+      </header>
+    </div>
   )
 }
