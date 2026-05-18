@@ -11,6 +11,12 @@ import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/design-system/primitives/accordion'
 import { formatBRL } from '@/lib/format'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
 import {
@@ -196,8 +202,10 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         />
       </div>
 
+      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
+          (Wave 7 Sprint 7.2 PR4) */}
       <SectionNav
-        className="mt-6"
+        className="mt-6 hidden sm:block"
         items={[
           { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
           {
@@ -229,7 +237,95 @@ export default async function ParlamentarPerfilPage({ params }: PageProps) {
         stickyTop="3.5rem"
       />
 
-      <div className="mt-6 space-y-5">
+      {/* Mobile: Accordion colapsável (Wave 7 Sprint 7.2 PR4).
+          Header + Votos + Alinhamento default-expanded conforme handoff
+          §Sprint 7.2 PR4 + spec PARLAMENTAR-360.md §Mobile. */}
+      <Accordion
+        className="mt-6 space-y-3 sm:hidden"
+        defaultValue={['votos', 'alinhamento']}
+        type="multiple"
+      >
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="votos"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Votos recentes
+          </AccordionTrigger>
+          <AccordionContent>
+            <VotosRecentes votos={votos} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="alinhamento"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Alinhamento à bancada
+          </AccordionTrigger>
+          <AccordionContent>
+            <AlinhamentoBancada
+              alinhamento={alinhamento}
+              casa={parlamentar.casa}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="proposicoes"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Proposições onde é autor ou coautor
+          </AccordionTrigger>
+          <AccordionContent>
+            <ProposicoesAutor proposicoes={proposicoes} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="gastos"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Gastos parlamentares — {anoCorrente}
+          </AccordionTrigger>
+          <AccordionContent>
+            <GastosResumoBlock ano={anoCorrente} resumo={gastos} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="afinidade"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Top 5 maior afinidade de voto
+          </AccordionTrigger>
+          <AccordionContent>
+            <Top5Afinidade afinidades={afinidades} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="pares"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Pares de votos em direções opostas
+          </AccordionTrigger>
+          <AccordionContent>
+            <ParesContraditorios
+              pares={paresContraditorios}
+              stats={coerenciaStats}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors). */}
+      <div className="mt-6 hidden space-y-5 sm:block">
         {/* Tier 1 — ação legislativa (cobertura ≥ 22%). Ordem: o que votou →
             se seguiu a bancada → o que propôs → como gastou. Sprint 3.1
             Tarefa 3 — hierarquia reflete cobertura empírica. */}
