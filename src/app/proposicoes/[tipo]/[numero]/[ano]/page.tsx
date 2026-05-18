@@ -6,6 +6,7 @@ import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
+import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import { formatProposicaoRef } from '@/lib/format'
@@ -18,6 +19,8 @@ import {
   TIPOS_PROPOSICAO,
   type TipoProposicao,
 } from '@/lib/queries/proposicoes'
+import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
+import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
@@ -64,12 +67,21 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
   )
   if (!proposicao) notFound()
 
-  const [temas, autores, votacoes, tramitacao] = await Promise.all([
+  const [temas, autores, votacoes, tramitacao, stats] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
     getVotacoesByProposicao(proposicao.id),
     getTramitacaoByProposicao(proposicao.id),
+    getProposicaoStats(proposicao.id),
   ])
+
+  // Wave 8 Sprint 8.2 PR1 — 4 slots narrativos do KpiStrip do detalhe.
+  // Pura: rodada 2 §Decisões resolvidas #1 + §Contratos de fallback.
+  const kpiSlots = buildKpiSlotsDetalhe({
+    tipo: proposicao.tipo,
+    situacao: proposicao.situacao,
+    stats,
+  })
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -85,6 +97,16 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
           sourceUrl: proposicao.sourceUrl,
           trustLevel: proposicao.trustLevel,
         }}
+      />
+
+      <KpiStrip
+        className="mt-6"
+        items={kpiSlots.map((slot) => ({
+          label: slot.label,
+          value: slot.value,
+          hint: slot.hint,
+          tone: slot.tone,
+        }))}
       />
 
       <SectionNav
