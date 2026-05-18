@@ -98,7 +98,7 @@ O Brasil a Vera é **estritamente apartidário**. Os mesmos critérios se aplica
 
 ### Posicionamento Editorial
 
-Dados factuais como foundation (L1/L2), analytics derivados como camada opt-in (L3/L4), sempre com metodologia 100% transparente e open-source. Rankings e índices são apresentados como **cálculos reproduzíveis**, não como vereditos.
+Dados factuais como foundation (L1/L2), analytics derivados como camada opt-in (L3/L4), sempre com metodologia 100% transparente e código publicamente auditável. Rankings e índices são apresentados como **cálculos reproduzíveis**, não como vereditos.
 
 ### Acessibilidade de Linguagem
 
@@ -106,9 +106,9 @@ O processo legislativo brasileiro usa terminologia técnica inacessível para a 
 
 Glossário completo: [Processo Legislativo](../domain/LEGISLATIVE-PROCESS.md)
 
-### Open Source e Vitrine Técnica
+### Código Publicamente Auditável e Vitrine Técnica
 
-Todo o código é open-source. A qualidade do código é parte da proposta de valor — código simples, testado, reprodutível e auditável. Privilegiamos clareza sobre sofisticação: aplicamos padrões quando há ganho concreto, não como ritual. O repositório serve como referência de engenharia pragmática aplicada a um problema cívico real. Detalhes em [Guia de Contribuição](../contributing/CONTRIBUTING.md).
+Todo o código é publicamente auditável ([PolyForm Noncommercial 1.0.0](../../LICENSE) — source-available, uso não-comercial; ver [ADR-027](../architecture/ADR/027-licenca-polyform-noncommercial.md)). A qualidade do código é parte da proposta de valor — código simples, testado, reprodutível e auditável. Privilegiamos clareza sobre sofisticação: aplicamos padrões quando há ganho concreto, não como ritual. O repositório serve como referência de engenharia pragmática aplicada a um problema cívico real. Detalhes em [Guia de Contribuição](../contributing/CONTRIBUTING.md).
 
 ## Escopo Federativo
 
@@ -131,7 +131,7 @@ Opções a explorar:
 - Grants de organizações internacionais de civic tech
 - Doações da comunidade
 
-O MVP é gratuito e open-source. A camada premium (se houver) financia a infraestrutura.
+O MVP é de acesso público gratuito com código auditável sob PolyForm Noncommercial 1.0.0. A camada premium (se houver) financia a infraestrutura.
 
 ## Riscos e Mitigações
 

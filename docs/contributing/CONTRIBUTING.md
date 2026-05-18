@@ -19,7 +19,18 @@
 
 ## Bem-vindo
 
-O Brasil a Vera é um projeto open-source de transparência legislativa. Toda contribuição que melhore a qualidade, precisão ou acessibilidade da plataforma é bem-vinda.
+O Brasil a Vera é um projeto de transparência legislativa com código publicamente auditável sob [PolyForm Noncommercial 1.0.0](../../LICENSE).
+
+### Política de Contribuições Externas
+
+> **Contribuições externas via Pull Request estão fechadas.** Apenas membros do projeto (`OWNER`, `MEMBER`, `COLLABORATOR` no GitHub) podem abrir PRs. PRs de outras origens são fechados automaticamente pelo workflow [`close-external-prs.yml`](../../.github/workflows/close-external-prs.yml) com comentário orientando o caminho alternativo. Ver [ADR-027](../architecture/ADR/027-licenca-polyform-noncommercial.md) para o motivo da política.
+>
+> **Issues continuam abertas para qualquer pessoa.** Use issue para:
+>
+> - Reportar **bug** ou comportamento inesperado
+> - Reportar **dado incorreto** (com link para a fonte oficial)
+> - Sugerir **feature** (descrevendo o problema que ela resolve)
+> - **Candidatar-se a contribuidor regular** (apresente-se e descreva onde gostaria de ajudar — o owner avalia caso a caso e adiciona como `COLLABORATOR` se aprovado)
 
 **Antes de contribuir**, familiarize-se com:
 - [Product Vision](../product/PRODUCT-VISION.md) — o que o projeto faz e por quê
@@ -39,12 +50,13 @@ O Brasil a Vera é um projeto open-source de transparência legislativa. Toda co
 
 ### Pull Requests
 
-1. Faça fork do repositório
-2. Crie branch a partir de `main` com nome descritivo: `feat/busca-por-tema`, `fix/sync-camara-paginacao`
-3. Implemente a mudança seguindo os [padrões de código](CODE-STYLE.md)
-4. Escreva testes (cobertura mínima: 70% no domínio)
-5. Siga a [convenção de commits](COMMIT-CONVENTION.md)
-6. Abra PR com descrição clara do que muda e por quê
+> Esta seção aplica-se a **membros do projeto** (PRs externos são auto-fechados — ver [Política de Contribuições Externas](#política-de-contribuições-externas) acima).
+
+1. Crie branch a partir de `main` com nome descritivo: `feat/busca-por-tema`, `fix/sync-camara-paginacao`
+2. Implemente a mudança seguindo os [padrões de código](CODE-STYLE.md)
+3. Escreva testes (cobertura mínima: 70% no domínio)
+4. Siga a [convenção de commits](COMMIT-CONVENTION.md)
+5. Abra PR com descrição clara do que muda e por quê
 
 ### Tipos de contribuição
 

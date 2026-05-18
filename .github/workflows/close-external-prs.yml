@@ -1,0 +1,53 @@
+name: Close external PRs
+
+# Política Wave 6+: contribuições externas via PR estão fechadas. Apenas
+# membros do projeto (OWNER, MEMBER, COLLABORATOR) e bots de dependência
+# (Dependabot, Renovate) podem abrir PRs. PRs de outras origens são fechados
+# automaticamente com comentário orientando a abrir issue.
+#
+# Usa pull_request_target (e não pull_request) porque PR vindo de fork tem
+# GITHUB_TOKEN read-only no contexto pull_request — não conseguiria comentar
+# nem fechar. pull_request_target roda no contexto do repo base com write
+# nas PRs. Como NÃO fazemos checkout do código do PR, não há vetor de
+# execução de código malicioso (pattern recomendado pela doc oficial do
+# GitHub para ações administrativas em PRs externos).
+#
+# Ver ADR-027 para o motivo da política.
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check-author:
+    name: Auto-close PRs de não-membros
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.author_association != 'OWNER' &&
+      github.event.pull_request.author_association != 'MEMBER' &&
+      github.event.pull_request.author_association != 'COLLABORATOR' &&
+      github.event.pull_request.user.login != 'dependabot[bot]' &&
+      github.event.pull_request.user.login != 'renovate[bot]'
+    steps:
+      - name: Comment and close PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$REPO" --body "Olá @${PR_AUTHOR}, obrigado pelo interesse no Brasil a Vera!
+
+          Contribuições externas via Pull Request estão fechadas (ver [ADR-027](https://github.com/${REPO}/blob/main/docs/architecture/ADR/027-licenca-polyform-noncommercial.md) e [Guia de Contribuição](https://github.com/${REPO}/blob/main/docs/contributing/CONTRIBUTING.md#política-de-contribuições-externas)).
+
+          O que você pode fazer:
+
+          - **Bug ou dado incorreto?** Abra uma [issue](https://github.com/${REPO}/issues/new) descrevendo o problema com link para a fonte oficial.
+          - **Quer propor uma feature?** Abra uma issue descrevendo o problema que ela resolve.
+          - **Quer virar contribuidor regular?** Abra uma issue se apresentando e descrevendo onde gostaria de ajudar.
+
+          Este PR será fechado automaticamente. O código que você escreveu permanece preservado no seu fork."
+          gh pr close "$PR_NUMBER" --repo "$REPO"

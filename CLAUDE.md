@@ -1,7 +1,8 @@
 # Brasil a Vera
 
-Plataforma de transparência política brasileira. Open source, mantida por doação,
-projetada para ter custo operacional próximo de zero.
+Plataforma de transparência política brasileira. Código publicamente auditável
+(PolyForm Noncommercial 1.0.0), mantida por doação, projetada para ter custo
+operacional próximo de zero.
 
 ## Propósito
 
