@@ -5,6 +5,7 @@ vi.mock('@/shared/db', () => import('../setup/db'))
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
+  getGastosDetalhe,
   getGastosMensalMedianaCasa,
   getGastosTopFornecedores,
 } from '@/lib/queries/parlamentares'
@@ -413,6 +414,75 @@ describe('queries/parlamentares (Sprint 7.0 PR4 — novos)', () => {
 
       const r = await getComparacoesCasa(dep.id as string)
       expect(r.medianaAlinhamentoCasa).toBe(50)
+    })
+  })
+
+  describe('getGastosDetalhe (Sprint 7.4 PR3)', () => {
+    it('retorna {rows, nextCursor: null} quando < page-size', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values([
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-01-15',
+          valor: '100.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-02-15',
+          valor: '200.00',
+        }),
+      ])
+
+      const { rows, nextCursor } = await getGastosDetalhe(p.id as string, 2026)
+      expect(rows).toHaveLength(2)
+      // ORDER BY data_emissao DESC
+      expect(rows[0]?.dataEmissao).toContain('2026-02')
+      expect(rows[1]?.dataEmissao).toContain('2026-01')
+      expect(nextCursor).toBeNull()
+    })
+
+    it('retorna nextCursor != null com 25 gastos no ano', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values(
+        Array.from({ length: 25 }, (_, i) =>
+          buildGasto({
+            parlamentarId: p.id as string,
+            dataEmissao: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
+            valor: `${i + 1}.00`,
+          }),
+        ),
+      )
+
+      const { rows, nextCursor } = await getGastosDetalhe(p.id as string, 2026)
+      expect(rows).toHaveLength(20)
+      expect(nextCursor).not.toBeNull()
+    })
+
+    it('filtra por ano (não retorna gastos de outros anos)', async () => {
+      const p = buildParlamentar()
+      await db.insert(parlamentar).values(p)
+      await db.insert(gasto).values([
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2025-06-15',
+          valor: '999.00',
+        }),
+        buildGasto({
+          parlamentarId: p.id as string,
+          dataEmissao: '2026-06-15',
+          valor: '100.00',
+        }),
+      ])
+
+      const r2026 = await getGastosDetalhe(p.id as string, 2026)
+      expect(r2026.rows).toHaveLength(1)
+      expect(r2026.rows[0]?.valor).toBe('100.00')
+
+      const r2025 = await getGastosDetalhe(p.id as string, 2025)
+      expect(r2025.rows).toHaveLength(1)
+      expect(r2025.rows[0]?.valor).toBe('999.00')
     })
   })
 })

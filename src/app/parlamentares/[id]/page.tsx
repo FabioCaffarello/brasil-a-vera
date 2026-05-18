@@ -40,6 +40,7 @@ import {
   getComparacoesCasa,
   getGastosMensalMedianaCasa,
   getGastosResumo,
+  getGastosTopFornecedores,
   getParlamentarById,
   getProposicoesAutoradas,
   getTop5Afinidade,
@@ -187,6 +188,7 @@ export default async function ParlamentarPerfilPage({
     proposicoesPage,
     gastos,
     gastosMensal,
+    gastosTopFornecedores,
     afinidades,
     paresContraditorios,
     coerenciaStats,
@@ -210,6 +212,7 @@ export default async function ParlamentarPerfilPage({
     }),
     getGastosResumo(parlamentar.id, anoCorrente),
     getGastosMensalMedianaCasa(parlamentar.id, anoCorrente),
+    getGastosTopFornecedores(parlamentar.id, anoCorrente, 5),
     getTop5Afinidade(parlamentar.id),
     getParesContraditorios(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
@@ -584,7 +587,9 @@ export default async function ParlamentarPerfilPage({
           <GastosResumoBlock
             ano={anoCorrente}
             mensal={gastosMensal}
+            parlamentarId={parlamentar.id}
             resumo={gastos}
+            topFornecedores={gastosTopFornecedores}
           />
         </SectionCard>
 
