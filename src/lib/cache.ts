@@ -18,6 +18,10 @@ export const TTL = {
   // globais porque catálogo de autores muda mais frequentemente (proposições
   // novas surgem diariamente e podem entrar nas listas top-5 por autor).
   proposicoesRelacionadas: 3_600,
+  // Stats globais de votações (StatsGrid/KpiStrip do hero da listagem
+  // /votacoes, Wave 9 Sprint 9.1). Mesma cadência de proposicoesStatsGlobais
+  // — 6h alinha com cron de ingestão de votações.
+  votacoesStatsGlobais: 21_600,
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
