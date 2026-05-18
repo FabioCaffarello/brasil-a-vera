@@ -23,7 +23,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
   const params = await searchParams
   const query = params.q?.trim() ?? ''
 
-  // Estado entry — landing-like com HeroSection gradient (D1 do plano)
+  // Estado entry — landing-like com HeroSection plain (P8 Wave 8 — uniformidade)
   if (!query) {
     return (
       <>

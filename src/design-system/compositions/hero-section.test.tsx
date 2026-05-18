@@ -16,29 +16,43 @@ describe('HeroSection composition', () => {
     expect(heading.textContent).toBe('Olá mundo')
   })
 
-  it('aplica .bg-hero e .grid-bg na variante gradient (default)', () => {
-    const { container } = render(<HeroSection title="Hero" />)
+  it('aplica .bg-hero e .grid-bg na variante gradient (explícita)', () => {
+    const { container } = render(
+      <HeroSection title="Hero" variant="gradient" />,
+    )
     const section = container.querySelector('section')
     expect(section?.className).toContain('bg-hero')
     expect(section?.className).toContain('grid-bg')
   })
 
   it('aplica .text-gradient no h1 da variante gradient', () => {
-    render(<HeroSection title="Hero" />)
+    render(<HeroSection title="Hero" variant="gradient" />)
     const heading = screen.getByRole('heading', { level: 1 })
     const gradientSpan = heading.querySelector('.text-gradient')
     expect(gradientSpan).not.toBeNull()
     expect(gradientSpan?.textContent).toBe('Hero')
   })
 
-  it('NÃO aplica .bg-hero, .grid-bg nem .text-gradient na variante plain', () => {
-    const { container } = render(<HeroSection title="Plain" variant="plain" />)
+  it('NÃO aplica .bg-hero, .grid-bg nem .text-gradient no default (plain, Wave 8 P8)', () => {
+    const { container } = render(<HeroSection title="Plain" />)
     const section = container.querySelector('section')
     expect(section?.className).not.toContain('bg-hero')
     expect(section?.className).not.toContain('grid-bg')
     const heading = screen.getByRole('heading', { level: 1 })
     expect(heading.querySelector('.text-gradient')).toBeNull()
     expect(heading.textContent).toBe('Plain')
+  })
+
+  it('variant="plain" explícito tem mesmo comportamento que default', () => {
+    const { container: defaultContainer } = render(
+      <HeroSection title="Default" />,
+    )
+    const { container: explicitContainer } = render(
+      <HeroSection title="Explicit" variant="plain" />,
+    )
+    expect(defaultContainer.querySelector('section')?.className).toBe(
+      explicitContainer.querySelector('section')?.className,
+    )
   })
 
   it('renderiza kicker quando fornecido', () => {
@@ -159,8 +173,10 @@ describe('HeroSection composition', () => {
       }
     })
 
-    it('NÃO aplica .hero-glow na variante gradient (default)', () => {
-      const { container } = render(<HeroSection title="Plain gradient" />)
+    it('NÃO aplica .hero-glow na variante gradient (sem -glow)', () => {
+      const { container } = render(
+        <HeroSection title="Gradient simples" variant="gradient" />,
+      )
       const section = container.querySelector('section')
       expect(section?.className).not.toContain('hero-glow')
       expect(container.querySelector('.hero-glow__blob')).toBeNull()

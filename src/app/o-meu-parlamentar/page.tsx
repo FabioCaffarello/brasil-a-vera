@@ -35,7 +35,7 @@ export default async function MeuParlamentarPage({ searchParams }: PageProps) {
   const ufParam = params.uf
   const municipioParam = params.municipio?.trim() ?? ''
 
-  // Estado entry — landing-like com HeroSection gradient (D1 do plano Sprint 6.4)
+  // Estado entry — landing-like com HeroSection plain (P8 Wave 8 — uniformidade)
   if (!ufParam || !isUf(ufParam)) {
     return (
       <>

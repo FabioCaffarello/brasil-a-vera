@@ -34,10 +34,14 @@ type HeroSectionProps = {
    */
   meta?: ReactNode
   /**
-   * - `'gradient'` (default): `.bg-hero` + `.grid-bg` + `.text-gradient` no H1.
+   * - `'plain'` (default, Wave 8 P8): hero limpo, consumer controla
+   *   background. Uniformidade visual entre eixos — identidade do produto
+   *   é discrição editorial, conteúdo carrega a presença.
+   * - `'gradient'`: `.bg-hero` + `.grid-bg` + `.text-gradient` no H1.
+   *   Disponível no DS mas vedado em rotas de produto sem novo ADR.
    * - `'gradient-glow'`: gradient + 3 blobs animados (CSS puro via
-   *   `@keyframes` + `@starting-style`, ADR-023) + accent line.
-   * - `'plain'`: hero limpo, consumer controla background.
+   *   `@keyframes` + `@starting-style`, ADR-023) + accent line. Mesma
+   *   restrição de uso da variante gradient.
    */
   variant?: HeroVariant
   /**
@@ -59,14 +63,16 @@ type HeroSectionProps = {
  * Server Component. Sem domínio acoplado (ADR-021 boundary). Configurável
  * via props: `kicker`, `title`, `description`, `actions`, `kpis`, `variant`.
  *
- * Variantes:
- * - `gradient` consome `.bg-hero` + `.grid-bg` + `.text-gradient` (ADR-024)
- *   para entregar a "gravidade visual" do hero do protótipo.
- * - `gradient-glow` adiciona blobs animados via `.hero-glow*` + accent line
- *   + stagger reveal via `.hero-stagger` (CSS puro, ADR-023). Equivalente
- *   ao efeito que protótipos como `framer-motion`-based entregavam com
- *   ~50 kB gzip de JS — aqui sai por 0 kB.
- * - `plain` deixa o consumer escolher o background.
+ * Variantes (Wave 8 — P8 uniformidade visual entre eixos):
+ * - `plain` (default): deixa o consumer escolher o background.
+ *   Padrão universal em rotas de produto. Densidade narrativa vem do
+ *   conteúdo (StatsGrid, KpiStrip, DataBadges), não do fundo decorativo.
+ * - `gradient`: `.bg-hero` + `.grid-bg` + `.text-gradient` (ADR-024).
+ *   Disponível no DS para uso futuro condicional; vedado em rotas de
+ *   produto sem novo ADR.
+ * - `gradient-glow`: gradient + blobs animados via `.hero-glow*` + accent
+ *   line + stagger reveal via `.hero-stagger` (CSS puro, ADR-023).
+ *   Mesma restrição de uso.
  *
  * Sem framer-motion (ADR-023). Animações usam `@starting-style` + `@keyframes`
  * em `src/app/globals.css §5/5b`. `prefers-reduced-motion` é honrado
@@ -79,7 +85,7 @@ export function HeroSection({
   actions,
   kpis,
   meta,
-  variant = 'gradient',
+  variant = 'plain',
   align = 'start',
   className,
 }: HeroSectionProps) {
