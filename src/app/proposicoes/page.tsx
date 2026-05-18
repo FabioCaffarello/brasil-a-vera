@@ -6,7 +6,9 @@ import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { formatNumeroAbreviado } from '@/lib/format-number'
 import {
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
@@ -15,6 +17,7 @@ import {
   TIPOS_PROPOSICAO,
   type TipoProposicao,
 } from '@/lib/queries/proposicoes'
+import { getEstatisticasGlobaisProposicoes } from '@/lib/queries/proposicoes-stats'
 
 export const metadata = {
   title: 'Proposições — Brasil à Vera',
@@ -69,9 +72,10 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
   }
 
   const LIMITE = 50
-  const [proposicoes, anos] = await Promise.all([
+  const [proposicoes, anos, stats] = await Promise.all([
     listProposicoes(filtros, LIMITE),
     getAnosDistintos(),
+    getEstatisticasGlobaisProposicoes(),
   ])
 
   return (
@@ -92,6 +96,36 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        {/* Wave 8 Sprint 8.1 PR1 — StatsGrid alimenta o hero com 4 stats
+            narrativos (P7: proposição é ciclo de vida). Hints curtos
+            (P1: densidade > floreio) explicam a janela de cada métrica.
+            Aprovadas/Encerradas filtradas pelos últimos 12m via MAX da
+            tramitação — proteção contra inflar com históricas paradas. */}
+        <StatsGrid
+          items={[
+            {
+              value: formatNumeroAbreviado(stats.total),
+              label: 'Total',
+              hint: 'no banco',
+            },
+            {
+              value: formatNumeroAbreviado(stats.tramitando),
+              label: 'Tramitando',
+              hint: 'agora',
+            },
+            {
+              value: formatNumeroAbreviado(stats.aprovadas12m),
+              label: 'Aprovadas',
+              hint: 'últimos 12 m',
+            },
+            {
+              value: formatNumeroAbreviado(stats.rejeitadasArquivadas12m),
+              label: 'Encerradas',
+              hint: 'rejeitadas ou arquivadas, 12 m',
+            },
+          ]}
+        />
+
         <FiltrosProposicao
           anos={anos}
           selecionado={{
