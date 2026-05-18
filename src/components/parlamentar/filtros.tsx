@@ -1,5 +1,7 @@
+import { X } from 'lucide-react'
 import Link from 'next/link'
 
+import { Combobox } from '@/design-system/compositions/combobox'
 import {
   FilterChip,
   FilterChips,
@@ -30,6 +32,11 @@ const ORDEM_LABEL: Record<OrdemListagem, string> = {
   proposicoes: 'Mais proposições',
 }
 
+const CASA_LABEL: Record<string, string> = {
+  CAMARA: 'Câmara',
+  SENADO: 'Senado',
+}
+
 /**
  * Helper interno: constrói href de filtro mantendo os outros filtros
  * ativos. Override com `null` remove o filtro do URL.
@@ -39,6 +46,7 @@ const ORDEM_LABEL: Record<OrdemListagem, string> = {
  *   buildHref({ casa: 'CAMARA', uf: 'SP' }, { casa: null }) → '/parlamentares?uf=SP'
  *
  * Wave 7 Sprint 7.1 PR2: preserva também q e ordem.
+ * Wave 7 Sprint 7.1 PR3: reutilizado pelos chips de filtro ativo.
  */
 function buildHref(
   current: Props['selecionado'],
@@ -60,17 +68,83 @@ function buildHref(
 }
 
 /**
- * Filtros de parlamentares — Sprint 6.2 PR 1 (Wave 6, reskin listagens).
+ * Chips de filtros aplicados (Sprint 7.1 PR3). Cada chip mostra
+ * "Filtro: valor" e um link × que remove apenas aquele filtro,
+ * preservando os demais via buildHref. Casa, partido, UF e q ganham
+ * chip; ordem fica fora — é estado de visualização, não recorte.
+ */
+function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
+  const ativos: Array<{
+    key: keyof Props['selecionado']
+    label: string
+    value: string
+  }> = []
+  if (selecionado.casa) {
+    ativos.push({
+      key: 'casa',
+      label: 'Casa',
+      value: CASA_LABEL[selecionado.casa] ?? selecionado.casa,
+    })
+  }
+  if (selecionado.partido) {
+    ativos.push({
+      key: 'partido',
+      label: 'Partido',
+      value: selecionado.partido,
+    })
+  }
+  if (selecionado.uf) {
+    ativos.push({ key: 'uf', label: 'UF', value: selecionado.uf })
+  }
+  if (selecionado.q) {
+    ativos.push({
+      key: 'q',
+      label: 'Busca',
+      value: `"${selecionado.q}"`,
+    })
+  }
+
+  if (ativos.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
+      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+        Filtros ativos:
+      </span>
+      {ativos.map((a) => (
+        <Link
+          aria-label={`Remover filtro ${a.label}: ${a.value}`}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          href={buildHref(selecionado, { [a.key]: null })}
+          key={a.key}
+        >
+          <span>
+            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="font-medium">{a.value}</span>
+          </span>
+          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Filtros de parlamentares — Sprint 6.2 PR 1 (Wave 6) +
+ * Sprint 7.1 PR2/PR3 (Wave 7).
  *
- * Hybrid pragmático (D1 do plano Sprint 6.2):
- * - **Casa** (3 opções: Todas, Câmara, Senado): FilterChips com Links
- *   que preservam outros filtros (Partido/UF). URL=state, sem JS client.
- * - **Partido** (~30 opções) + **UF** (27 estados): mantém `<select>`
- *   nativo em form GET — chips quebrariam mobile com tantas opções.
- *
- * Form GET mantido para Partido/UF (Filtrar/Limpar buttons). Casa fora
- * do form (chips Links instant click). Visualmente unificado num único
- * container.
+ * - **Casa** (3 opções): FilterChips com Links preservando outros filtros.
+ *   URL=state, sem JS client.
+ * - **Busca por nome** (Sprint 7.1 PR2): `<input type="search" name="q">`
+ *   SSR puro, Enter submete.
+ * - **Partido** (~35 opções) + **UF** (27 estados) (Sprint 7.1 PR3):
+ *   `<Combobox>` (cmdk + popover) com busca embutida, no lugar do
+ *   `<select>` nativo. Combobox renderiza `<input type="hidden">`
+ *   acompanhando o valor — form GET submete normalmente.
+ * - **Ordem** (4 opções fixas): `<select>` nativo (Combobox seria
+ *   overkill para 4 opções sem busca).
+ * - **Chips de filtros ativos** (Sprint 7.1 PR3): abaixo dos filtros,
+ *   um chip por filtro aplicado com × para remover. Reusa `buildHref`.
  */
 export function Filtros({ partidos, ufs, selecionado }: Props) {
   return (
@@ -119,19 +193,15 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
             >
               Partido
             </Label>
-            <select
-              className={INPUT_CLASS}
+            <Combobox
+              allOptionLabel="Todos"
+              ariaLabel="Filtrar por partido"
               defaultValue={selecionado.partido ?? ''}
-              id="filtro-partido"
               name="partido"
-            >
-              <option value="">Todos</option>
-              {partidos.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              options={partidos.map((p) => ({ value: p, label: p }))}
+              placeholder="Todos"
+              searchPlaceholder="Buscar partido"
+            />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -141,19 +211,15 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
             >
               UF
             </Label>
-            <select
-              className={INPUT_CLASS}
+            <Combobox
+              allOptionLabel="Todas"
+              ariaLabel="Filtrar por UF"
               defaultValue={selecionado.uf ?? ''}
-              id="filtro-uf"
               name="uf"
-            >
-              <option value="">Todas</option>
-              {ufs.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
+              options={ufs.map((u) => ({ value: u, label: u }))}
+              placeholder="Todas"
+              searchPlaceholder="Buscar UF"
+            />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -187,6 +253,8 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           </Button>
         </div>
       </form>
+
+      <FiltrosAtivos selecionado={selecionado} />
     </div>
   )
 }
