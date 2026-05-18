@@ -139,9 +139,12 @@ export function ProposicoesAutor({
       )}
 
       {proximaPaginaHref ? (
+        // Ver comentário em votos-recentes.tsx: anchor no próprio botão
+        // preserva posição visual entre paginas.
         <a
           className="block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           href={proximaPaginaHref}
+          id="mostrar-mais-propos"
         >
           Mostrar mais
         </a>

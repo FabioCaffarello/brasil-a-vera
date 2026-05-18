@@ -255,9 +255,13 @@ export default async function GastosDetalhePage({
       )}
 
       {nextCursor ? (
+        // Ancora no próprio botão: navegação para a próxima página
+        // posiciona scroll no novo botão (mesmo offset visual), em vez
+        // de resetar para o topo da página.
         <a
           className="mt-4 block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          href={buildHref(parlamentar.id, sp, { after: nextCursor })}
+          href={`${buildHref(parlamentar.id, sp, { after: nextCursor })}#mostrar-mais-gastos`}
+          id="mostrar-mais-gastos"
         >
           Mostrar mais
         </a>

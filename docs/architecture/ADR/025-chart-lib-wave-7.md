@@ -1,13 +1,16 @@
 # ADR-025: Lib de chart para a Wave 7 — Recharts com C1 relaxado
 
-> Brasil a Vera · Arquitetura · v0.2
+> Brasil a Vera · Arquitetura · v0.3
 > Última atualização: 2026-05-18
 > Status: accepted
 >
 > **Histórico de mudanças**:
 > - v0.1 (2026-05-17): adoção inicial com C1 ≤90 kB gzip
 > - v0.2 (2026-05-18): C1 ajustado para ≤105 kB gzip após medição
->   empírica integrada na Sprint 7.4 PR1 (#241). Detalhes em §Decisão.
+>   empírica integrada na Sprint 7.4 PR1 (#241).
+> - v0.3 (2026-05-18): C1 ajustado para ≤120 kB gzip após polish
+>   dataviz (Wave 7 PR #251) que introduziu LabelList. Margem
+>   adicional para refinements futuros sem novo ADR.
 
 ---
 
@@ -106,13 +109,14 @@ Conforme `SPIKE-CHART-LIBS.md` §"Decisão pós-spike":
 
 ## Decisão
 
-**Caminho A adotado**: Recharts com C1 relaxado para **≤105 kB gzip**
-(atualizado de 90 kB → 105 kB em 2026-05-18; ver §"Ajuste do C1 pós-
-medição integrada" abaixo). Owner autorizou em `2026-05-17` após
-apresentação dos 3 caminhos abaixo. Spike encerrado; Sprint 7.4
-destravada.
+**Caminho A adotado**: Recharts com C1 relaxado para **≤120 kB gzip**
+(90 kB → 105 kB em 2026-05-18 com PR #241; 105 kB → 120 kB em
+2026-05-18 com PR #251 — ver §"Ajuste do C1 pós-medição integrada"
++ §"Ajuste para acomodar dataviz refinement"). Owner autorizou em
+`2026-05-17` após apresentação dos 3 caminhos abaixo. Spike
+encerrado; Sprint 7.4 destravada.
 
-### Caminho A (adotado) — Recharts com C1 relaxado para ≤105 kB gzip
+### Caminho A (adotado) — Recharts com C1 relaxado para ≤120 kB gzip
 
 **Justificativa do relax**: o threshold original (≤35 kB gzip) foi
 conservador demais. O spike provou empiricamente que **todas as libs SVG
@@ -133,8 +137,9 @@ Trade-off:
   acessível; alternativa CSS-only foi descartada por incapacidade de
   cobrir tooltip+escala+mediana.
 
-Novo threshold C1 = **≤105 kB gzip** (atualizado em 2026-05-18 — ver
-§"Ajuste do C1 pós-medição integrada"). Reabertura via ADR-X se a
+Novo threshold C1 = **≤120 kB gzip** (atualizado em 2026-05-18 nas
+2 versões — ver §"Ajuste do C1 pós-medição integrada" e §"Ajuste
+para acomodar dataviz refinement"). Reabertura via ADR-X se a
 Wave 8 introduzir 2ª lib JS pesada que ultrapasse orçamento agregado
 de bundle (a definir).
 
@@ -167,6 +172,28 @@ para **≤105 kB gzip** — 5 kB de margem sobre 100.7 kB, alinhada à
 margem do C1 original. Justificativa: nenhuma lib alternativa do spike
 caberia em 90 kB sequer no isolamento; reabrir o spike para 10% de
 diferença sem ganho semântico seria churn desproporcional.
+
+### Ajuste para acomodar dataviz refinement (2026-05-18)
+
+Após o merge da Sprint 7.4 PR1/PR2, owner reportou que os gráficos
+estavam "sem visualização clara". O PR #251 (Wave 7 polish) aplicou
+princípios de dataviz (Tufte: max data/ink, hierarquia tipográfica,
+tooltip rico, data labels embutidos no Bar) — refactor que custou
+**+0.7 kB gzip** ao chunk Recharts (104.8 → 105.5 kB), 0.5 kB acima
+do C1 v0.2.
+
+Causa do aumento: import de `LabelList` para data labels embutidos
+no `<Bar>` ("ler valor sem precisar de hover" — ganho UX maior do
+refinement).
+
+**Owner autorizou em 2026-05-18 (#251 mergeado)** ajustar para
+**≤120 kB gzip** — margem extra de 14.5 kB sobre 105.5 kB, para
+acomodar refinements futuros (legend dinâmica, brush, secondary
+axis, etc) sem precisar de novo ADR a cada PR.
+
+Cap permanece: lib externa NOVA (não-Recharts) ainda exige spike +
+ADR subsequente. Este C1 é orçamento específico da escolha Recharts;
+não é cheque em branco para Wave 8.
 
 ### Caminho B (não adotado) — Voltar a CSS-only com escopo reduzido
 
@@ -257,10 +284,10 @@ Owner descartou: ROI negativo para o escopo atual.
 
 ### Negativas
 
-- +100.7 kB gzip no chunk de `/parlamentares/[id]` (somente quando o
-  usuário rola até gastos — medição empírica integrada do PR1 da
-  Sprint 7.4, #241)
-- Threshold C1 oficialmente relaxado para 105 kB — futuro ADR sobre
+- +105.5 kB gzip no chunk de `/parlamentares/[id]` (somente quando o
+  usuário rola até gastos — medição empírica integrada PR #241
+  +0.7 kB do refinement dataviz PR #251)
+- Threshold C1 oficialmente relaxado para 120 kB — futuro ADR sobre
   nova lib JS precisa contar contra mesmo orçamento
 - Bundle budget de Wave 7 pós-spike sobe (acompanhar em PR Sprint 7.4)
 
