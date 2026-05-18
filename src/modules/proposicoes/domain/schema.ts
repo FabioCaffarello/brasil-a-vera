@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  boolean,
   index,
   integer,
   pgSchema,
@@ -148,5 +149,83 @@ export const tramitacao = proposicoesSchema.table(
     ),
     // Index em FK para queries "timeline da proposição X ORDER BY data".
     index('tramitacao_proposicao_id_idx').on(table.proposicaoId),
+  ],
+)
+
+// Tabela agregada — Wave 8 Sprint 8.0 PR1. Espelho do padrão da Wave 7
+// (estatistica_parlamentar_agregada), aplicado ao eixo "artefato jurídico".
+// Reduz comparações de KPI (idade vs. mediana do tipo, n autores · partidos ·
+// UFs, votações aprovadas/rejeitadas) a uma única linha por proposição,
+// evitando materialized view (ADR-019: complexidade só com gargalo provado).
+// Populada por seed:agregados:proposicao (Sprint 8.0 PR2), idempotente via
+// INSERT … ON CONFLICT … DO UPDATE. Consumida por KpiStrip v2 do detalhe
+// (Sprint 8.2 PR1) e por ProposicaoCard v2 da listagem (Sprint 8.1 PR4).
+export const estatisticaProposicaoAgregada = proposicoesSchema.table(
+  'estatistica_proposicao_agregada',
+  {
+    proposicaoId: uuid('proposicao_id')
+      .primaryKey()
+      .references(() => proposicao.id, { onDelete: 'cascade' }),
+    // Dias entre a 1ª tramitação (apresentação) e hoje. Zero quando não há
+    // tramitação registrada (proposição recém-ingerida).
+    diasEmTramitacao: integer('dias_em_tramitacao').notNull().default(0),
+    // Dias desde a tramitação mais recente. NULL quando n_eventos_tramitacao
+    // = 0 (sem como medir).
+    diasDesdeUltimaTramitacao: integer('dias_desde_ultima_tramitacao'),
+    // Contagem de autores na proposicao_autor (qualquer tipoAutoria).
+    nAutores: integer('n_autores').notNull().default(0),
+    // Cardinalidade de partidos distintos entre autores que são parlamentares
+    // (autoria por órgão/comissão não conta). Zero quando autoria é apenas
+    // externa (Mesa, Comissão, Senado Federal, etc.).
+    nPartidosAutores: integer('n_partidos_autores').notNull().default(0),
+    // Cardinalidade de UFs distintas entre autores parlamentares. Mesmo
+    // critério de nPartidosAutores.
+    nUfsAutores: integer('n_ufs_autores').notNull().default(0),
+    // Votações vinculadas (qualquer resultado).
+    nVotacoes: integer('n_votacoes').notNull().default(0),
+    nVotacoesAprovadas: integer('n_votacoes_aprovadas').notNull().default(0),
+    nVotacoesRejeitadas: integer('n_votacoes_rejeitadas').notNull().default(0),
+    // Total de eventos em tramitacao (cardinalidade do array).
+    nEventosTramitacao: integer('n_eventos_tramitacao').notNull().default(0),
+    // Órgão da última tramitação (ex: "CCJC", "Plenário", "Mesa do Senado").
+    // NULL quando n_eventos_tramitacao = 0.
+    ultimoOrgao: text('ultimo_orgao'),
+    // True se houve aprovação em pelo menos uma votação vinculada (Câmara OU
+    // Senado). Usado pelo KpiStrip para narrar "aprovada em alguma casa".
+    aprovadaEmAlgumaCasa: boolean('aprovada_em_alguma_casa')
+      .notNull()
+      .default(false),
+    // Mediana de diasEmTramitacao do mesmo tipoProposicao no banco. NULL
+    // quando a amostra do tipo é < 50 — honestidade do dado (P2 Wave 8):
+    // não comparar "vs mediana de 3 MPVs" seria desonesto. Decoder da UI
+    // checa NULL → suprime hint comparativo.
+    medianaDiasTipoReferencia: integer('mediana_dias_tipo_referencia'),
+    // Código do tema "canônico" da proposição — o tema com maior cardinalidade
+    // global entre os temas catalogados desta proposição (decisão resolvida
+    // #4 da rodada 2). Pré-computado aqui para evitar custo recorrente no
+    // footer cross-links (Sprint 8.2 PR5). NULL quando proposição não tem
+    // tema catalogado.
+    temaCanonicoCodigo: integer('tema_canonico_codigo'),
+    trustLevel: trustLevel('trust_level').notNull().default('L2'),
+    computedAt: timestamp('computed_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Ordenação descendente para "ranking de proposições mais antigas em
+    // tramitação". NULLS LAST não se aplica (coluna NOT NULL).
+    index('idx_estat_proposicao_dias').on(sql`${table.diasEmTramitacao} DESC`),
+    // Ordenação ascendente para "proposições mais recentemente movimentadas
+    // primeiro". NULLS LAST mantém proposições sem tramitação fora do topo.
+    index('idx_estat_proposicao_movimentacao').on(
+      sql`${table.diasDesdeUltimaTramitacao} ASC NULLS LAST`,
+    ),
+    // Index parcial em tema_canonico_codigo — footer cross-links sempre
+    // filtra "WHERE tema_canonico_codigo = ?" e ignora proposições sem
+    // tema canônico. Partial index economiza espaço quando muitas linhas
+    // têm NULL.
+    index('idx_estat_proposicao_tema_canonico')
+      .on(table.temaCanonicoCodigo)
+      .where(sql`${table.temaCanonicoCodigo} IS NOT NULL`),
   ],
 )
