@@ -14,6 +14,8 @@ import {
   getPartidosDistintos,
   getUfsDistintos,
   listParlamentares,
+  ORDENS_LISTAGEM,
+  type OrdemListagem,
 } from '@/lib/queries/parlamentares'
 
 export const metadata = {
@@ -27,11 +29,20 @@ interface PageProps {
     casa?: string
     partido?: string
     uf?: string
+    q?: string
+    ordem?: string
   }>
 }
 
 function normalizeCasa(value: string | undefined): Casa | undefined {
   if (value === 'CAMARA' || value === 'SENADO') return value
+  return undefined
+}
+
+function normalizeOrdem(value: string | undefined): OrdemListagem | undefined {
+  if (value && (ORDENS_LISTAGEM as string[]).includes(value)) {
+    return value as OrdemListagem
+  }
   return undefined
 }
 
@@ -41,6 +52,8 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     casa: normalizeCasa(params.casa),
     partido: params.partido?.trim() || undefined,
     uf: params.uf?.trim() || undefined,
+    q: params.q?.trim() || undefined,
+    ordem: normalizeOrdem(params.ordem),
   }
 
   const [parlamentares, partidos, ufs, stats] = await Promise.all([

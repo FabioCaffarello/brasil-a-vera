@@ -55,6 +55,10 @@ export const parlamentar = parlamentaresSchema.table(
       table.casa,
       table.sourceId,
     ),
+    // B-tree em nome — serve ORDER BY nome (default da listagem) e ILIKE
+    // prefix matches. Wave 7 Sprint 7.1 PR2. Sem pg_trgm: 513 rows cabem
+    // em seq scan sub-50ms, índice é redundância barata para ordenação.
+    index('parlamentar_nome_idx').on(table.nome),
   ],
 )
 

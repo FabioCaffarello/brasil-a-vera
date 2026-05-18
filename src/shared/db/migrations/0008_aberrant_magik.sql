@@ -1,0 +1,1 @@
+CREATE INDEX "parlamentar_nome_idx" ON "parlamentares"."parlamentar" USING btree ("nome");
