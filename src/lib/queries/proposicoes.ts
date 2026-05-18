@@ -405,6 +405,76 @@ export async function getAutoresByProposicao(
     )
 }
 
+/** Wave 8 Sprint 8.4 PR3 — Votos consolidados (donut do detalhe).
+ *
+ * Agrega Sim/Não/Abstenção/Ausentes de TODAS as votações vinculadas à
+ * proposição + retorna metadados da última votação separadamente (para
+ * honestidade P2 — uma votação recente que discorde do agregado merece
+ * destaque, não pode ficar diluída no número grande).
+ *
+ * Retorna null quando proposição não tem votações vinculadas. Caller
+ * trata empty state.
+ */
+export async function getVotosConsolidados(proposicaoId: string): Promise<{
+  sim: number
+  nao: number
+  abstencao: number
+  ausentes: number
+  ultima: {
+    sim: number
+    nao: number
+    abstencao: number
+    ausentes: number
+    dataHora: string
+    aprovada: boolean
+    descricao: string
+  } | null
+} | null> {
+  const rows = await db
+    .select({
+      sim: votacao.votosSim,
+      nao: votacao.votosNao,
+      abstencao: votacao.abstencoes,
+      ausentes: votacao.ausentes,
+      dataHora: votacao.dataHora,
+      aprovada: votacao.aprovada,
+      descricao: votacao.descricao,
+    })
+    .from(votacao)
+    .where(eq(votacao.proposicaoId, proposicaoId))
+    .orderBy(desc(votacao.dataHora))
+
+  if (rows.length === 0) return null
+
+  const agregado = rows.reduce(
+    (acc, r) => ({
+      sim: acc.sim + r.sim,
+      nao: acc.nao + r.nao,
+      abstencao: acc.abstencao + r.abstencao,
+      ausentes: acc.ausentes + (r.ausentes ?? 0),
+    }),
+    { sim: 0, nao: 0, abstencao: 0, ausentes: 0 },
+  )
+
+  const ultimaRow = rows[0]
+  const ultima = ultimaRow
+    ? {
+        sim: ultimaRow.sim,
+        nao: ultimaRow.nao,
+        abstencao: ultimaRow.abstencao,
+        ausentes: ultimaRow.ausentes ?? 0,
+        dataHora:
+          ultimaRow.dataHora instanceof Date
+            ? ultimaRow.dataHora.toISOString()
+            : String(ultimaRow.dataHora),
+        aprovada: ultimaRow.aprovada,
+        descricao: ultimaRow.descricao,
+      }
+    : null
+
+  return { ...agregado, ultima }
+}
+
 // Wave 8 Sprint 8.3 PR3 — filtros mini em Votações vinculadas.
 // Cardinalidade naturalmente baixa por proposição (raramente > 20),
 // então sem cursor pagination — apenas filtros que estreitam o
