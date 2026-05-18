@@ -6,9 +6,11 @@ import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import {
   type Casa,
+  getListagemStats,
   getPartidosDistintos,
   getUfsDistintos,
   listParlamentares,
@@ -41,10 +43,11 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     uf: params.uf?.trim() || undefined,
   }
 
-  const [parlamentares, partidos, ufs] = await Promise.all([
+  const [parlamentares, partidos, ufs, stats] = await Promise.all([
     listParlamentares(filtros),
     getPartidosDistintos(),
     getUfsDistintos(),
+    getListagemStats(),
   ])
 
   return (
@@ -61,10 +64,18 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           />
         }
         title="Parlamentares"
-        variant="plain"
+        variant="gradient"
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        <StatsGrid
+          items={[
+            { value: stats.totalParlamentares, label: 'parlamentares' },
+            { value: stats.totalPartidos, label: 'partidos' },
+            { value: stats.totalUfs, label: 'UFs' },
+          ]}
+        />
+
         <Filtros partidos={partidos} selecionado={filtros} ufs={ufs} />
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
