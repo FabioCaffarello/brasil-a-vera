@@ -97,6 +97,14 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
           sourceUrl: proposicao.sourceUrl,
           trustLevel: proposicao.trustLevel,
         }}
+        stats={
+          stats
+            ? {
+                diasEmTramitacao: stats.diasEmTramitacao,
+                nAutores: stats.nAutores,
+              }
+            : null
+        }
       />
 
       <KpiStrip
