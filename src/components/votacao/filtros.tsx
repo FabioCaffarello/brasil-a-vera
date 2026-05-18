@@ -1,3 +1,4 @@
+import { X } from 'lucide-react'
 import Link from 'next/link'
 
 import {
@@ -58,8 +59,78 @@ function buildHref(
   return query ? `/votacoes?${query}` : '/votacoes'
 }
 
+const CASA_LABEL: Record<string, string> = {
+  CAMARA: 'Câmara',
+  SENADO: 'Senado',
+}
+
+const RESULTADO_LABEL: Record<string, string> = {
+  aprovadas: 'Só aprovadas',
+  rejeitadas: 'Só rejeitadas',
+}
+
 /**
- * Filtros de votações — Sprint 6.2 PR 3 (Wave 6, reskin listagens).
+ * Chips de filtros aplicados (Wave 9 Sprint 9.1 PR4, paridade com
+ * Wave 8 Sprint 8.1 PR3 / proposicao/filtros.tsx). Cada chip mostra
+ * "Filtro: valor" e um link × que remove apenas aquele filtro,
+ * preservando os demais via buildHref.
+ */
+function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
+  const ativos: Array<{
+    key: 'casa' | 'resultado' | 'ano' | 'somenteNominais'
+    label: string
+    value: string
+  }> = []
+
+  if (selecionado.casa) {
+    ativos.push({
+      key: 'casa',
+      label: 'Casa',
+      value: CASA_LABEL[selecionado.casa] ?? selecionado.casa,
+    })
+  }
+  if (selecionado.resultado) {
+    ativos.push({
+      key: 'resultado',
+      label: 'Resultado',
+      value: RESULTADO_LABEL[selecionado.resultado] ?? selecionado.resultado,
+    })
+  }
+  if (selecionado.ano) {
+    ativos.push({ key: 'ano', label: 'Ano', value: selecionado.ano })
+  }
+  if (selecionado.somenteNominais) {
+    ativos.push({ key: 'somenteNominais', label: 'Tipo', value: 'Só nominais' })
+  }
+
+  if (ativos.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
+      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+        Filtros ativos:
+      </span>
+      {ativos.map((a) => (
+        <Link
+          aria-label={`Remover filtro ${a.label}: ${a.value}`}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          href={buildHref(selecionado, { [a.key]: null })}
+          key={a.key}
+        >
+          <span>
+            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="font-medium">{a.value}</span>
+          </span>
+          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Filtros de votações — Sprint 6.2 PR 3 (Wave 6) +
+ * Wave 9 Sprint 9.1 PR4 (FiltrosAtivos para paridade com Wave 8).
  *
  * Hybrid pragmático (D1):
  * - **Casa** (3 opções): FilterChips com Link asChild
@@ -67,6 +138,8 @@ function buildHref(
  * - **Só nominais** (toggle bool): FilterChip único acting as toggle —
  *   click adiciona/remove `somenteNominais=1` do URL
  * - **Ano** (~10+ valores): mantém `<select>` em form GET
+ * - **Chips de filtros ativos**: abaixo dos filtros, um chip por
+ *   filtro aplicado com × para remover individual.
  *
  * Form preserva chips ao submeter Ano via hidden inputs.
  */
@@ -158,6 +231,8 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           </Button>
         </div>
       </form>
+
+      <FiltrosAtivos selecionado={selecionado} />
     </div>
   )
 }
