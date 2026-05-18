@@ -1,10 +1,15 @@
 import { GastosChart } from '@/components/parlamentar/gastos-chart-client'
 import { formatBRL } from '@/lib/format'
-import type { GastosResumo } from '@/lib/queries/parlamentares'
+import type {
+  GastoMensalPoint,
+  GastosResumo,
+} from '@/lib/queries/parlamentares'
 
 interface Props {
   ano: number
   resumo: GastosResumo
+  /** Série mensal vs mediana da casa (Wave 7 Sprint 7.4 PR2). */
+  mensal?: GastoMensalPoint[]
 }
 
 // Sprint 4.3 PR 2 commit 4/4 — refatorado para tokens semânticos.
@@ -13,7 +18,7 @@ interface Props {
 // chunk só baixa quando a seção de gastos entra no viewport.
 // D5 da Sprint 4.3 (Recharts não adotado) revertido com evidência
 // empírica do spike `spike/chart-lib-benchmark` (tag spike-chart-lib-v1).
-export function GastosResumoBlock({ ano, resumo }: Props) {
+export function GastosResumoBlock({ ano, resumo, mensal = [] }: Props) {
   if (resumo.totalRegistros === 0) {
     return (
       <p className="text-foreground-muted text-sm">
@@ -43,7 +48,7 @@ export function GastosResumoBlock({ ano, resumo }: Props) {
         </span>
       </div>
 
-      <GastosChart categorias={resumo.porCategoria} />
+      <GastosChart categorias={resumo.porCategoria} mensal={mensal} />
 
       <ul className="space-y-1.5 text-sm">
         {top.map((c) => (
