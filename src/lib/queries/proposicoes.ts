@@ -100,6 +100,11 @@ export async function listProposicoes(
   if (qClause) where.push(qClause)
 
   const ordem = filtros.ordem ?? 'recente'
+  // Wave 8 Sprint 8.1 PR4 — select inclui campos agregados consumidos
+  // pelo ProposicaoCard v2 (mini-barra de progresso + footer "N autores ·
+  // M votações · X dias"). LEFT JOIN sempre: o card mostra estado honesto
+  // (fallback subtle) quando a row agregada não existe (seed não rodou ou
+  // proposição recém-ingerida). Sem custo prático em listagem de 50 rows.
   const baseSelect = {
     id: proposicao.id,
     tipo: proposicao.tipo,
@@ -108,11 +113,18 @@ export async function listProposicoes(
     ementa: proposicao.ementa,
     situacao: proposicao.situacao,
     sourceUrl: proposicao.sourceUrl,
+    nEventosTramitacao: estatisticaProposicaoAgregada.nEventosTramitacao,
+    nAutores: estatisticaProposicaoAgregada.nAutores,
+    nVotacoes: estatisticaProposicaoAgregada.nVotacoes,
+    diasEmTramitacao: estatisticaProposicaoAgregada.diasEmTramitacao,
+    diasDesdeUltimaTramitacao:
+      estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao,
+    ultimoOrgao: estatisticaProposicaoAgregada.ultimoOrgao,
   }
 
   // Ordens 'movimentada' e 'parada' exigem dias_desde_ultima_tramitacao da
-  // tabela agregada. LEFT JOIN: proposições sem linha agregada (seed ainda
-  // não rodou ou row órfã) ficam com NULL — caem para o fim via NULLS LAST.
+  // tabela agregada (acessada via LEFT JOIN abaixo). NULLS LAST mantém
+  // proposições sem agregada fora do topo dos rankings.
   if (ordem === 'movimentada' || ordem === 'parada') {
     const orderExpr =
       ordem === 'movimentada'
@@ -138,6 +150,10 @@ export async function listProposicoes(
   return db
     .select(baseSelect)
     .from(proposicao)
+    .leftJoin(
+      estatisticaProposicaoAgregada,
+      eq(estatisticaProposicaoAgregada.proposicaoId, proposicao.id),
+    )
     .where(where.length > 0 ? and(...where) : undefined)
     .orderBy(...ordenacao)
     .limit(limit)
