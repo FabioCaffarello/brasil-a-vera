@@ -27,27 +27,39 @@ export interface ApoioPartidoDatum {
 /** Wave 8 Sprint 8.4 PR3 — Chart "Donut de votos consolidados".
  *
  * Soma de votos por tipo agregados de todas as votações vinculadas à
- * proposição. Usado para mostrar "tendência geral" da posição da casa.
- * Não substitui a lista de votações vinculadas — complementa com
- * overview visual. */
+ * proposição. Usado para mostrar "tendência geral" da posição da casa
+ * sem substituir a lista de votações vinculadas — complementa com
+ * overview visual.
+ *
+ * 4 categorias = Sim / Não / Abstenção / Ausente.
+ *
+ * **Nota sobre obstrução**: o agregado `votacao` (aggregate root) tem
+ * apenas Sim/Não/Abstencoes/Ausentes — obstrução só existe no nível
+ * individual de `voto_nominal.voto='OBSTRUCAO'` (Câmara). Para o donut
+ * consolidado, "ausente" engloba obstrução política — caller deve
+ * documentar isso no UI (P2 — honestidade do dado). */
 export interface VotacoesConsolidadasData {
   /** Soma de votos SIM em todas as votações vinculadas. */
   sim: number
   /** Soma de votos NÃO. */
   nao: number
-  /** Soma de votos ABSTENÇÃO. */
+  /** Soma de abstenções. */
   abstencao: number
-  /** Soma de votos OBSTRUÇÃO (válido apenas Câmara — Senado registra
-   * como abstenção). */
-  obstrucao: number
+  /** Soma de ausentes (inclui obstrução política implicitamente; ver
+   * nota sobre obstrução acima). */
+  ausentes: number
   /** Para honestidade (P2): última votação destacada separadamente.
-   * Null quando não há votações ou apenas votações antigas. */
+   * Null quando não há votações vinculadas. */
   ultima?: {
     sim: number
     nao: number
     abstencao: number
-    obstrucao: number
-    /** Data ISO da última votação para legenda do donut. */
+    ausentes: number
+    /** ISO da data da última votação para legenda do donut. */
     dataHora: string
+    /** Resultado (true = aprovada). */
+    aprovada: boolean
+    /** Descrição curta da votação. */
+    descricao: string
   } | null
 }

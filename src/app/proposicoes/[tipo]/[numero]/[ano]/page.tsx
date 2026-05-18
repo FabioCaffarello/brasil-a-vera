@@ -9,6 +9,7 @@ import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
+import { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart-client'
 import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
@@ -28,6 +29,7 @@ import {
   getTemasByProposicao,
   getTramitacaoByProposicao,
   getVotacoesByProposicao,
+  getVotosConsolidados,
   TIPOS_PROPOSICAO,
   type TipoProposicao,
   TRAMITACAO_FILTROS,
@@ -188,21 +190,29 @@ export default async function ProposicaoDetalhePage({
   const votacoesResultado = normalizeVotacoesResultado(sp.vot_resultado)
   const votacoesCasa = normalizeVotacoesCasa(sp.vot_casa)
 
-  const [temas, autores, votacoes, tramitacaoPage, stats, apoioPartido] =
-    await Promise.all([
-      getTemasByProposicao(proposicao.id),
-      getAutoresByProposicao(proposicao.id),
-      getVotacoesByProposicao(proposicao.id, {
-        resultado: votacoesResultado,
-        casa: votacoesCasa,
-      }),
-      getTramitacaoByProposicao(proposicao.id, {
-        cursor: cursorTramitacao,
-        filtro: tramitacaoFiltro,
-      }),
-      getProposicaoStats(proposicao.id),
-      getApoioPorPartido(proposicao.id),
-    ])
+  const [
+    temas,
+    autores,
+    votacoes,
+    tramitacaoPage,
+    stats,
+    apoioPartido,
+    votosConsolidados,
+  ] = await Promise.all([
+    getTemasByProposicao(proposicao.id),
+    getAutoresByProposicao(proposicao.id),
+    getVotacoesByProposicao(proposicao.id, {
+      resultado: votacoesResultado,
+      casa: votacoesCasa,
+    }),
+    getTramitacaoByProposicao(proposicao.id, {
+      cursor: cursorTramitacao,
+      filtro: tramitacaoFiltro,
+    }),
+    getProposicaoStats(proposicao.id),
+    getApoioPorPartido(proposicao.id),
+    getVotosConsolidados(proposicao.id),
+  ])
 
   // Wave 8 Sprint 8.2 PR1 — 4 slots narrativos do KpiStrip do detalhe.
   // Pura: rodada 2 §Decisões resolvidas #1 + §Contratos de fallback.
@@ -427,7 +437,10 @@ export default async function ProposicaoDetalhePage({
           <AccordionTrigger className="font-semibold text-base">
             Votações vinculadas
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent className="space-y-4">
+            {votosConsolidados ? (
+              <VotosConsolidadosChart data={votosConsolidados} />
+            ) : null}
             <VotacoesVinculadas
               buildFiltroHref={buildVotacoesFiltroHref}
               casa={votacoesCasa}
@@ -480,12 +493,17 @@ export default async function ProposicaoDetalhePage({
           subtitle="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente."
           title="Votações vinculadas"
         >
-          <VotacoesVinculadas
-            buildFiltroHref={buildVotacoesFiltroHref}
-            casa={votacoesCasa}
-            resultado={votacoesResultado}
-            votacoes={votacoes}
-          />
+          <div className="space-y-4">
+            {votosConsolidados ? (
+              <VotosConsolidadosChart data={votosConsolidados} />
+            ) : null}
+            <VotacoesVinculadas
+              buildFiltroHref={buildVotacoesFiltroHref}
+              casa={votacoesCasa}
+              resultado={votacoesResultado}
+              votacoes={votacoes}
+            />
+          </div>
         </SectionCard>
 
         <SectionCard
