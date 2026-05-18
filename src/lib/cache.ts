@@ -9,6 +9,10 @@ export const TTL = {
   votacaoHistorica: 604_800,
   proposicaoEmTramitacao: 21_600,
   proposicaoArquivada: 604_800,
+  // Stats globais de proposições (StatsGrid hero da listagem /proposicoes,
+  // Wave 8 Sprint 8.0 PR2). Mesma cadência do cron de ingestão de
+  // proposições — 6h é hora-redonda e alinhada com proposicaoEmTramitacao.
+  proposicoesStatsGlobais: 21_600,
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
