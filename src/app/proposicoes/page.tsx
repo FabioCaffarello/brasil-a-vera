@@ -1,4 +1,5 @@
 import { FileText, SearchX } from 'lucide-react'
+import { permanentRedirect } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
@@ -8,14 +9,18 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
+import { CursorProposicoesV1 } from '@/lib/queries/cursor-schemas'
 import {
+  countProposicoes,
   type FiltrosProposicao as Filtros,
   getAnosDistintos,
   getTemasDistintos,
   listProposicoes,
   ORDENS_PROPOSICAO,
   type OrdemProposicao,
+  PROPOSICOES_LISTAGEM_PAGE_SIZE,
   type SituacaoProposicao,
   TIPOS_PROPOSICAO,
   type TipoProposicao,
@@ -86,7 +91,35 @@ interface PageProps {
     tema?: string
     q?: string
     ordem?: string
+    after?: string
   }>
+}
+
+// Constrói href preservando filtros e mudando apenas `after` (cursor).
+// Strip o param quando cursor é null (volta à primeira página) — usado
+// no permanentRedirect 308 para tokens inválidos (ADR-026 §5).
+function buildPageHref(
+  params: Awaited<PageProps['searchParams']>,
+  override: { after?: string | null },
+): string {
+  const merged = { ...params, ...override }
+  const search = new URLSearchParams()
+  for (const key of [
+    'tipo',
+    'ano',
+    'situacao',
+    'tema',
+    'q',
+    'ordem',
+    'after',
+  ] as const) {
+    const value = merged[key]
+    if (value !== null && value !== undefined && value !== '') {
+      search.set(key, value)
+    }
+  }
+  const qs = search.toString()
+  return qs ? `/proposicoes?${qs}` : '/proposicoes'
 }
 
 export default async function ProposicoesPage({ searchParams }: PageProps) {
@@ -100,13 +133,27 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
     ordem: normalizeOrdem(params.ordem),
   }
 
-  const LIMITE = 50
-  const [proposicoes, anos, temas, stats] = await Promise.all([
-    listProposicoes(filtros, LIMITE),
+  // Cursor (ADR-026): null = token inválido → redirect 308 strip do param,
+  // preservando demais filtros. undefined = primeira página.
+  const cursor = decodeCursor(params.after, CursorProposicoesV1)
+  if (cursor === null) {
+    permanentRedirect(buildPageHref(params, { after: null }))
+  }
+
+  const [page, anos, temas, stats, totalFiltrado] = await Promise.all([
+    listProposicoes(filtros, { cursor }),
     getAnosDistintos(),
     getTemasDistintos(),
     getEstatisticasGlobaisProposicoes(),
+    countProposicoes(filtros),
   ])
+  const proposicoes = page.rows
+  // "Mostrar mais (N restantes)" só faz sentido na primeira página (cursor
+  // = undefined). Em páginas subsequentes não sabemos quantos itens já
+  // foram vistos sem rastrear page-N — então mostra só "Mostrar mais".
+  const restantesPrimeiraPagina = !cursor
+    ? Math.max(0, totalFiltrado - PROPOSICOES_LISTAGEM_PAGE_SIZE)
+    : null
 
   return (
     <>
@@ -171,9 +218,9 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
           <span>
-            {proposicoes.length === LIMITE
-              ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-              : `${proposicoes.length} ${proposicoes.length === 1 ? 'resultado' : 'resultados'}`}
+            {totalFiltrado === 0
+              ? 'Nenhum resultado'
+              : `${formatNumeroAbreviado(totalFiltrado)} ${totalFiltrado === 1 ? 'resultado' : 'resultados'}`}
           </span>
           {proposicoes.length > 0 && (
             <ExportCsvLink
@@ -210,6 +257,22 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             ))}
           </ul>
         )}
+
+        {/* Wave 8 Sprint 8.1 PR5 — Cursor pagination (ADR-026 §4). Link
+            <a> puro, sem JS, com anchor #mostrar-mais que mantém scroll
+            visual após paginar. Só renderiza quando nextCursor existe
+            (ordens 'recente'/'antiga' que suportam keyset). */}
+        {page.nextCursor ? (
+          <div className="flex justify-center" id="mostrar-mais">
+            <Button asChild variant="outline">
+              <a href={buildPageHref(params, { after: page.nextCursor })}>
+                {restantesPrimeiraPagina !== null
+                  ? `Mostrar mais (${formatNumeroAbreviado(restantesPrimeiraPagina)} restantes)`
+                  : 'Mostrar mais'}
+              </a>
+            </Button>
+          </div>
+        ) : null}
       </div>
     </>
   )

@@ -1,6 +1,8 @@
 import { and, asc, desc, eq, ilike, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { encodeCursor } from '@/lib/cursor'
+import type { CursorProposicoesV1Payload } from '@/lib/queries/cursor-schemas'
 import { db } from '@/shared/db'
 import {
   estatisticaProposicaoAgregada,
@@ -11,6 +13,9 @@ import {
   tramitacao,
   votacao,
 } from '@/shared/db/schema'
+
+/** Page-size fixo da listagem /proposicoes (ADR-026 §3). */
+export const PROPOSICOES_LISTAGEM_PAGE_SIZE = 20
 
 export type TipoProposicao = 'PL' | 'PEC' | 'PLP' | 'MPV' | 'PDC' | 'PRC'
 
@@ -86,10 +91,50 @@ function whereForQ(q: string | undefined) {
   return ilike(proposicao.ementa, `%${trimmed}%`)
 }
 
+export interface ListProposicoesOpts {
+  /** Cursor versionado (ADR-026). Aplica WHERE keyset; ignorado quando a
+   * ordem é 'movimentada'/'parada' (chave não-determinística por requerer
+   * agregada que pode ter NULLs). */
+  cursor?: CursorProposicoesV1Payload
+  /** Override do page size. Default PROPOSICOES_LISTAGEM_PAGE_SIZE (20).
+   * Export CSV passa 1000 (limit alto, cursor ignorado em qualquer caso). */
+  limit?: number
+}
+
+export interface ListProposicoesResult {
+  rows: Array<{
+    id: string
+    tipo: TipoProposicao
+    numero: number
+    ano: number
+    ementa: string
+    situacao: SituacaoProposicao
+    sourceUrl: string
+    nEventosTramitacao: number | null
+    nAutores: number | null
+    nVotacoes: number | null
+    diasEmTramitacao: number | null
+    diasDesdeUltimaTramitacao: number | null
+    ultimoOrgao: string | null
+  }>
+  /** Token base64url do próximo cursor, ou null quando não há mais páginas
+   * OU quando a ordem corrente não suporta cursor pagination. */
+  nextCursor: string | null
+}
+
 export async function listProposicoes(
   filtros: FiltrosProposicao = {},
-  limit = 50,
-) {
+  opts: ListProposicoesOpts = {},
+): Promise<ListProposicoesResult> {
+  const limit = opts.limit ?? PROPOSICOES_LISTAGEM_PAGE_SIZE
+  const ordem = filtros.ordem ?? 'recente'
+  // Cursor pagination só é aplicada em ordens lexicográficas estáveis
+  // (recente/antiga). 'movimentada'/'parada' exigem chave em
+  // dias_desde_ultima_tramitacao, que pode ser NULL — keyset não funciona
+  // com NULLs em PostgreSQL sem ginástica de COALESCE que não vale a pena
+  // no MVP. Para essas ordens: limit fixo, sem "Mostrar mais".
+  const cursorFriendly = ordem === 'recente' || ordem === 'antiga'
+
   const where = []
   if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
   if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
@@ -99,12 +144,27 @@ export async function listProposicoes(
   const qClause = whereForQ(filtros.q)
   if (qClause) where.push(qClause)
 
-  const ordem = filtros.ordem ?? 'recente'
+  // Keyset pagination (ADR-026 §1+§4). Tuple compare em (ano, numero, id):
+  // continuar onde parou na ordem (DESC para 'recente', ASC para 'antiga').
+  if (cursorFriendly && opts.cursor) {
+    const c = opts.cursor
+    if (ordem === 'recente') {
+      where.push(
+        sql`(${proposicao.ano} < ${c.a}
+          OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} < ${c.n})
+          OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} = ${c.n} AND ${proposicao.id} < ${c.id}))`,
+      )
+    } else {
+      where.push(
+        sql`(${proposicao.ano} > ${c.a}
+          OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} > ${c.n})
+          OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} = ${c.n} AND ${proposicao.id} > ${c.id}))`,
+      )
+    }
+  }
+
   // Wave 8 Sprint 8.1 PR4 — select inclui campos agregados consumidos
-  // pelo ProposicaoCard v2 (mini-barra de progresso + footer "N autores ·
-  // M votações · X dias"). LEFT JOIN sempre: o card mostra estado honesto
-  // (fallback subtle) quando a row agregada não existe (seed não rodou ou
-  // proposição recém-ingerida). Sem custo prático em listagem de 50 rows.
+  // pelo ProposicaoCard v2 (mini-barra + footer). LEFT JOIN sempre.
   const baseSelect = {
     id: proposicao.id,
     tipo: proposicao.tipo,
@@ -122,15 +182,17 @@ export async function listProposicoes(
     ultimoOrgao: estatisticaProposicaoAgregada.ultimoOrgao,
   }
 
-  // Ordens 'movimentada' e 'parada' exigem dias_desde_ultima_tramitacao da
-  // tabela agregada (acessada via LEFT JOIN abaixo). NULLS LAST mantém
-  // proposições sem agregada fora do topo dos rankings.
+  // LIMIT N+1 para detectar hasMore (e gerar nextCursor a partir do
+  // último item da página).
+  const limitPlusOne = limit + 1
+
+  let rows: ListProposicoesResult['rows']
   if (ordem === 'movimentada' || ordem === 'parada') {
     const orderExpr =
       ordem === 'movimentada'
         ? sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} ASC NULLS LAST`
         : sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} DESC NULLS LAST`
-    return db
+    rows = (await db
       .select(baseSelect)
       .from(proposicao)
       .leftJoin(
@@ -138,16 +200,25 @@ export async function listProposicoes(
         eq(estatisticaProposicaoAgregada.proposicaoId, proposicao.id),
       )
       .where(where.length > 0 ? and(...where) : undefined)
-      .orderBy(orderExpr, desc(proposicao.ano), desc(proposicao.numero))
-      .limit(limit)
+      .orderBy(
+        orderExpr,
+        desc(proposicao.ano),
+        desc(proposicao.numero),
+        desc(proposicao.id),
+      )
+      .limit(limit)) as ListProposicoesResult['rows']
+    // Sem cursor nessas ordens (ver comentário acima).
+    return { rows, nextCursor: null }
   }
 
+  // Ordens lexicográficas — id DESC/ASC como tiebreaker estável (chave
+  // keyset). N+1 para detectar hasMore.
   const ordenacao =
     ordem === 'antiga'
-      ? [asc(proposicao.ano), asc(proposicao.numero)]
-      : [desc(proposicao.ano), desc(proposicao.numero)]
+      ? [asc(proposicao.ano), asc(proposicao.numero), asc(proposicao.id)]
+      : [desc(proposicao.ano), desc(proposicao.numero), desc(proposicao.id)]
 
-  return db
+  rows = (await db
     .select(baseSelect)
     .from(proposicao)
     .leftJoin(
@@ -156,7 +227,23 @@ export async function listProposicoes(
     )
     .where(where.length > 0 ? and(...where) : undefined)
     .orderBy(...ordenacao)
-    .limit(limit)
+    .limit(limitPlusOne)) as ListProposicoesResult['rows']
+
+  const hasMore = rows.length > limit
+  const pageRows = hasMore ? rows.slice(0, limit) : rows
+  let nextCursor: string | null = null
+  if (hasMore) {
+    const last = pageRows[pageRows.length - 1]
+    if (last) {
+      nextCursor = encodeCursor({
+        v: 1 as const,
+        a: last.ano,
+        n: last.numero,
+        id: last.id,
+      })
+    }
+  }
+  return { rows: pageRows, nextCursor }
 }
 
 export async function getProposicaoByChave(
