@@ -2,6 +2,7 @@ import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { AutoresList } from '@/components/proposicao/autores-list'
+import { FooterCrossLinks } from '@/components/proposicao/footer-cross-links'
 import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
@@ -25,6 +26,10 @@ import {
   TIPOS_PROPOSICAO,
   type TipoProposicao,
 } from '@/lib/queries/proposicoes'
+import {
+  getProposicoesMesmoAutor,
+  getProposicoesMesmoTema,
+} from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
 import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
 
@@ -88,6 +93,29 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
     situacao: proposicao.situacao,
     stats,
   })
+
+  // Wave 8 Sprint 8.2 PR5 — fase 2 do fetch para footer cross-links.
+  // Depende dos resultados da fase 1 (autor principal vem da lista
+  // de autores; tema canônico vem do stats). 1 round-trip extra ao
+  // DB mas cacheado 1h via TTL.proposicoesRelacionadas.
+  //
+  // "Autor principal" = primeiro AUTOR (tipoAutoria=AUTOR) com
+  // parlamentar_id NOT NULL. Lista `autores` já ordena AUTOR antes
+  // de COAUTOR (asc(tipoAutoria) = D antes de O), depois asc(nome).
+  const autorPrincipal =
+    autores.find(
+      (a) => a.tipoAutoria === 'AUTOR' && a.parlamentarId !== null,
+    ) ?? null
+  const temaCanonico = stats?.temaCanonicoCodigo ?? null
+
+  const [mesmoAutor, mesmoTema] = await Promise.all([
+    autorPrincipal?.parlamentarId
+      ? getProposicoesMesmoAutor(autorPrincipal.parlamentarId, proposicao.id, 5)
+      : Promise.resolve([]),
+    temaCanonico !== null
+      ? getProposicoesMesmoTema(temaCanonico, proposicao.id, 5)
+      : Promise.resolve([]),
+  ])
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -243,6 +271,12 @@ export default async function ProposicaoDetalhePage({ params }: PageProps) {
           <TramitacaoTimeline eventos={tramitacao} />
         </SectionCard>
       </div>
+
+      <FooterCrossLinks
+        autorPrincipalNome={autorPrincipal?.nome ?? null}
+        mesmoAutor={mesmoAutor}
+        mesmoTema={mesmoTema}
+      />
     </div>
   )
 }

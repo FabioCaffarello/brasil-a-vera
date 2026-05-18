@@ -163,6 +163,11 @@ export interface ProposicaoStats {
   ultimoOrgao: string | null
   aprovadaEmAlgumaCasa: boolean
   medianaDiasTipoReferencia: number | null
+  /** Tema com maior cardinalidade global entre os catalogados desta
+   * proposição (pré-computado no PR3.5 do Sprint 8.0). Wave 8 Sprint
+   * 8.2 PR5 usa para o footer cross-links "Outras proposições neste
+   * tema". NULL quando proposição não tem tema catalogado. */
+  temaCanonicoCodigo: number | null
 }
 
 export async function getProposicaoStats(
@@ -190,6 +195,7 @@ export async function getProposicaoStats(
             estatisticaProposicaoAgregada.aprovadaEmAlgumaCasa,
           medianaDiasTipoReferencia:
             estatisticaProposicaoAgregada.medianaDiasTipoReferencia,
+          temaCanonicoCodigo: estatisticaProposicaoAgregada.temaCanonicoCodigo,
         })
         .from(estatisticaProposicaoAgregada)
         .where(eq(estatisticaProposicaoAgregada.proposicaoId, proposicaoId))
