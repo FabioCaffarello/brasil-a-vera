@@ -1,4 +1,5 @@
 import { SearchX, Vote } from 'lucide-react'
+import { permanentRedirect } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -8,12 +9,16 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
+import { CursorVotacoesV1 } from '@/lib/queries/cursor-schemas'
 import {
   type Casa,
+  countVotacoes,
   type FiltrosVotacao as Filtros,
   getAnosVotacaoDistintos,
-  listVotacoes,
+  listVotacoesCursor,
+  VOTACOES_LISTAGEM_PAGE_SIZE,
 } from '@/lib/queries/votacoes'
 import { getEstatisticasGlobaisVotacoes } from '@/lib/queries/votacoes-stats'
 
@@ -52,7 +57,40 @@ interface PageProps {
     ano?: string
     resultado?: string
     somenteNominais?: string
+    after?: string
+    /** Compat ADR-028 §4 — aceito por 1 release. Sempre redireciona para
+     * strip do param, preservando os demais filtros. */
+    offset?: string
   }>
+}
+
+// Constrói href preservando filtros e mudando apenas `after` (cursor).
+// Strip de `after` quando override é null — usado no permanentRedirect 308
+// para tokens inválidos (ADR-026 §5) e no strip do `offset` (compat
+// ADR-028 §4).
+function buildPageHref(
+  params: Awaited<PageProps['searchParams']>,
+  override: { after?: string | null; offset?: null },
+): string {
+  const merged: Record<string, string | null | undefined> = {
+    ...params,
+    ...override,
+  }
+  const search = new URLSearchParams()
+  for (const key of [
+    'casa',
+    'ano',
+    'resultado',
+    'somenteNominais',
+    'after',
+  ] as const) {
+    const value = merged[key]
+    if (value !== null && value !== undefined && value !== '') {
+      search.set(key, value)
+    }
+  }
+  const qs = search.toString()
+  return qs ? `/votacoes?${qs}` : '/votacoes'
 }
 
 // Stat "Última votação": narrativa de recência ("há N dias") em primeiro
@@ -82,6 +120,14 @@ function formatUltimaVotacaoStat(ultima: Date | string | null): {
 
 export default async function VotacoesPage({ searchParams }: PageProps) {
   const params = await searchParams
+
+  // Compat ADR-028 §4 — `?offset=` aceito por 1 release (até v0.9.0).
+  // Strip via permanentRedirect 308 preservando filtros + cursor. Mantém
+  // deep-links externos válidos sem precisar coexistir nos internals.
+  if (params.offset !== undefined && params.offset !== '') {
+    permanentRedirect(buildPageHref(params, { offset: null }))
+  }
+
   const filtros: Filtros = {
     casa: normalizeCasa(params.casa),
     ano: normalizeAno(params.ano),
@@ -89,12 +135,27 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     somenteNominais: params.somenteNominais === '1',
   }
 
-  const LIMITE = 50
-  const [votacoes, anos, stats] = await Promise.all([
-    listVotacoes(filtros, LIMITE),
+  // Cursor ADR-026: null = token inválido (versão antiga, shape errado,
+  // base64 corrompido) → strip do param via 308. undefined = primeira
+  // página.
+  const cursor = decodeCursor(params.after, CursorVotacoesV1)
+  if (cursor === null) {
+    permanentRedirect(buildPageHref(params, { after: null }))
+  }
+
+  const [page, anos, stats, totalFiltrado] = await Promise.all([
+    listVotacoesCursor(filtros, { cursor }),
     getAnosVotacaoDistintos(),
     getEstatisticasGlobaisVotacoes(),
+    countVotacoes(filtros),
   ])
+  const votacoes = page.rows
+  // "Mostrar mais (N restantes)" só faz sentido na primeira página (sem
+  // cursor). Em páginas subsequentes mostra só "Mostrar mais" — não
+  // rastreamos page-N para calcular restantes sem ginástica adicional.
+  const restantesPrimeiraPagina = !cursor
+    ? Math.max(0, totalFiltrado - VOTACOES_LISTAGEM_PAGE_SIZE)
+    : null
 
   // Volume narrativo no hero (Wave 9 Sprint 9.1 PR1) — N votações desde
   // AAAA quando há cobertura histórica conhecida; cai em fallback honesto
@@ -166,9 +227,9 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
           <span>
-            {votacoes.length === LIMITE
-              ? `${LIMITE} resultados (limite — refine os filtros para ver outros)`
-              : `${votacoes.length} ${votacoes.length === 1 ? 'resultado' : 'resultados'}`}
+            {totalFiltrado === 0
+              ? 'Nenhum resultado'
+              : `${formatNumeroAbreviado(totalFiltrado)} ${totalFiltrado === 1 ? 'resultado' : 'resultados'}`}
           </span>
           {votacoes.length > 0 && (
             <ExportCsvLink
@@ -204,6 +265,20 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             ))}
           </ul>
         )}
+
+        {/* Cursor pagination (ADR-026 §4 + ADR-028). Link <a> puro, sem JS,
+            com anchor #mostrar-mais que mantém scroll visual após paginar. */}
+        {page.nextCursor ? (
+          <div className="flex justify-center" id="mostrar-mais">
+            <Button asChild variant="outline">
+              <a href={buildPageHref(params, { after: page.nextCursor })}>
+                {restantesPrimeiraPagina !== null
+                  ? `Mostrar mais (${formatNumeroAbreviado(restantesPrimeiraPagina)} restantes)`
+                  : 'Mostrar mais'}
+              </a>
+            </Button>
+          </div>
+        ) : null}
       </div>
     </>
   )
