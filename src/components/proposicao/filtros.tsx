@@ -5,6 +5,7 @@ import {
   FilterChips,
 } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
+import { Input } from '@/design-system/primitives/input'
 import { Label } from '@/design-system/primitives/label'
 
 interface Props {
@@ -13,6 +14,10 @@ interface Props {
     tipo?: string
     ano?: string
     situacao?: string
+    /** Wave 8 Sprint 8.1 PR2 — busca livre (numero ou ementa). */
+    q?: string
+    /** Wave 8 Sprint 8.1 PR2 — ordem de exibição. */
+    ordem?: string
   }
 }
 
@@ -33,6 +38,13 @@ const SITUACOES_CHIPS = [
   { value: 'TRANSFORMADA_EM_NORMA', label: 'Virou norma' },
 ]
 
+const ORDEM_OPCOES = [
+  { value: 'recente', label: 'Mais recentes' },
+  { value: 'antiga', label: 'Mais antigas' },
+  { value: 'movimentada', label: 'Movimentadas recentemente' },
+  { value: 'parada', label: 'Paradas há mais tempo' },
+]
+
 const SELECT_CLASS =
   'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
 
@@ -49,7 +61,7 @@ function buildHref(
     ...overrides,
   }
   const params = new URLSearchParams()
-  for (const key of ['tipo', 'ano', 'situacao'] as const) {
+  for (const key of ['tipo', 'ano', 'situacao', 'q', 'ordem'] as const) {
     const value = merged[key]
     if (value !== null && value !== undefined && value !== '') {
       params.set(key, value)
@@ -60,16 +72,20 @@ function buildHref(
 }
 
 /**
- * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6, reskin listagens).
+ * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6, reskin listagens) +
+ * Wave 8 Sprint 8.1 PR2 (busca por ementa/numero + ordenação SSR).
  *
- * Hybrid pragmático (D1 do plano Sprint 6.2):
- * - **Tipo** (6 opções: PL, PEC, PLP, MPV, PDC, PRC + "Todos"): FilterChips
- *   com Links. Labels curtos (siglas) — full names em PL/PEC/etc seriam
- *   ruins na chip
- * - **Situação** (5 opções + "Todas"): FilterChips com Links
- * - **Ano**: mantém `<select>` em form GET — alta cardinalidade (~10+ anos)
+ * Hybrid pragmático:
+ * - **Busca** (`q`): input de texto SSR. Sem onChange, sem debounce —
+ *   Enter submete (P1: densidade, P5: zero JS no path anônimo). Numero
+ *   puro → match exato; texto → ILIKE %X% em ementa.
+ * - **Ordem** (`ordem`): select 4-opção, troca scope via form GET.
+ * - **Tipo** (6 opções + "Todos"): FilterChips com Links (sem form).
+ * - **Situação** (5 opções + "Todas"): FilterChips com Links.
+ * - **Ano**: `<select>` no form (alta cardinalidade ~10+ anos).
  *
- * Form preserva chip Tipo + Situação via hidden inputs ao submeter Ano.
+ * Chips de Tipo/Situação preservam q/ordem via buildHref. Form de Ano
+ * preserva tipo/situação/q/ordem via hidden inputs ao submeter.
  */
 export function FiltrosProposicao({ anos, selecionado }: Props) {
   return (
@@ -120,6 +136,19 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
           <input name="situacao" type="hidden" value={selecionado.situacao} />
         ) : null}
 
+        <div className="flex min-w-[200px] flex-1 flex-col gap-1">
+          <Label className="text-foreground-muted text-xs" htmlFor="filtro-q">
+            Buscar (número ou palavra na ementa)
+          </Label>
+          <Input
+            defaultValue={selecionado.q ?? ''}
+            id="filtro-q"
+            name="q"
+            placeholder="Ex: 1234 ou educação"
+            type="search"
+          />
+        </div>
+
         <div className="flex flex-col gap-1">
           <Label className="text-foreground-muted text-xs" htmlFor="filtro-ano">
             Ano
@@ -134,6 +163,27 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
             {anos.map((a) => (
               <option key={a} value={a}>
                 {a}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label
+            className="text-foreground-muted text-xs"
+            htmlFor="filtro-ordem"
+          >
+            Ordem
+          </Label>
+          <select
+            className={SELECT_CLASS}
+            defaultValue={selecionado.ordem ?? 'recente'}
+            id="filtro-ordem"
+            name="ordem"
+          >
+            {ORDEM_OPCOES.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
               </option>
             ))}
           </select>
