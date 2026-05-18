@@ -6,6 +6,7 @@ import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
+import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import {
@@ -54,6 +55,31 @@ interface PageProps {
   }>
 }
 
+// Stat "Última votação": narrativa de recência ("há N dias") em primeiro
+// plano + data formal como hint. Quando > 30 dias, inverte (data grande,
+// distância como hint) — passou a ser história, não atividade corrente.
+function formatUltimaVotacaoStat(ultima: Date | string | null): {
+  value: string
+  hint: string
+} {
+  if (!ultima) return { value: '—', hint: 'sem registro' }
+  const data = typeof ultima === 'string' ? new Date(ultima) : ultima
+  const agora = new Date()
+  const ms = agora.getTime() - data.getTime()
+  const dias = Math.floor(ms / 86_400_000)
+  const dataFmt = data.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+  })
+
+  if (dias < 0) return { value: dataFmt, hint: 'data futura registrada' }
+  if (dias === 0) return { value: 'hoje', hint: dataFmt }
+  if (dias === 1) return { value: 'há 1 dia', hint: dataFmt }
+  if (dias < 30) return { value: `há ${dias} dias`, hint: dataFmt }
+  // > 30 dias: vira referência histórica — data ganha destaque.
+  return { value: dataFmt, hint: `há ${dias} dias` }
+}
+
 export default async function VotacoesPage({ searchParams }: PageProps) {
   const params = await searchParams
   const filtros: Filtros = {
@@ -96,6 +122,38 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+        {/* Wave 9 Sprint 9.1 PR2 — 4 stats narrativos sob o hero. Total e
+            "Última votação" sempre presentes; Aprovadas/Rejeitadas usam
+            janela 12m (mesmo critério Wave 8) para refletir atividade
+            recente, não acervo cumulativo. */}
+        <StatsGrid
+          items={[
+            {
+              value: formatNumeroAbreviado(stats.total),
+              label: 'Total',
+              hint: 'no banco',
+            },
+            {
+              value: formatNumeroAbreviado(stats.aprovadas12m),
+              label: 'Aprovadas',
+              hint: 'últimos 12 m',
+            },
+            {
+              value: formatNumeroAbreviado(stats.rejeitadas12m),
+              label: 'Rejeitadas',
+              hint: 'últimos 12 m',
+            },
+            (() => {
+              const ultima = formatUltimaVotacaoStat(stats.ultimaVotacaoData)
+              return {
+                value: ultima.value,
+                label: 'Última votação',
+                hint: ultima.hint,
+              }
+            })(),
+          ]}
+        />
+
         <FiltrosVotacao
           anos={anos}
           selecionado={{
