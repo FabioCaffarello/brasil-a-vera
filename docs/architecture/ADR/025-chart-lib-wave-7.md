@@ -1,8 +1,13 @@
 # ADR-025: Lib de chart para a Wave 7 — Recharts com C1 relaxado
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-17
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-05-18
 > Status: accepted
+>
+> **Histórico de mudanças**:
+> - v0.1 (2026-05-17): adoção inicial com C1 ≤90 kB gzip
+> - v0.2 (2026-05-18): C1 ajustado para ≤105 kB gzip após medição
+>   empírica integrada na Sprint 7.4 PR1 (#241). Detalhes em §Decisão.
 
 ---
 
@@ -101,11 +106,13 @@ Conforme `SPIKE-CHART-LIBS.md` §"Decisão pós-spike":
 
 ## Decisão
 
-**Caminho A adotado**: Recharts com C1 relaxado para ≤90 kB gzip.
-Owner autorizou em `2026-05-17` após apresentação dos 3 caminhos
-abaixo. Spike encerrado; Sprint 7.4 destravada.
+**Caminho A adotado**: Recharts com C1 relaxado para **≤105 kB gzip**
+(atualizado de 90 kB → 105 kB em 2026-05-18; ver §"Ajuste do C1 pós-
+medição integrada" abaixo). Owner autorizou em `2026-05-17` após
+apresentação dos 3 caminhos abaixo. Spike encerrado; Sprint 7.4
+destravada.
 
-### Caminho A (adotado) — Recharts com C1 relaxado para ≤90 kB gzip
+### Caminho A (adotado) — Recharts com C1 relaxado para ≤105 kB gzip
 
 **Justificativa do relax**: o threshold original (≤35 kB gzip) foi
 conservador demais. O spike provou empiricamente que **todas as libs SVG
@@ -115,18 +122,51 @@ da lib). Apenas uPlot (canvas) cabe — mas paga preço inaceitável em a11y.
 
 Trade-off:
 
-- **Recharts +83 kB gzip** vive em chunk dynamic-imported isolado, só
+- **Recharts ~83-101 kB gzip** vive em chunk dynamic-imported isolado, só
   baixado quando usuário visita `/parlamentares/[id]` E rola até a seção
   de gastos. Path anônimo (home, listagem, busca) zero JS preservado.
+  (Range: spike isolado mediu 83 kB; integração real do PR1 mediu 101 kB
+  — ver §"Ajuste do C1 pós-medição integrada".)
 - **A11y honesta** preservada — SVG semântico, axe-clean, VoiceOver
   espera-se OK (verificação manual no Sprint 7.4 antes do merge).
 - **Persona primária (Cidadão Consciente, 80% mobile)** ganha dataviz
   acessível; alternativa CSS-only foi descartada por incapacidade de
   cobrir tooltip+escala+mediana.
 
-Novo threshold C1 = **≤90 kB gzip** (5 kB de margem sobre o vencedor).
-Reabertura via ADR-X se a Wave 8 introduzir 2ª lib JS pesada que ultrapasse
-orçamento agregado de bundle (a definir).
+Novo threshold C1 = **≤105 kB gzip** (atualizado em 2026-05-18 — ver
+§"Ajuste do C1 pós-medição integrada"). Reabertura via ADR-X se a
+Wave 8 introduzir 2ª lib JS pesada que ultrapasse orçamento agregado
+de bundle (a definir).
+
+### Ajuste do C1 pós-medição integrada (2026-05-18)
+
+O spike isolado (`spike/chart-lib-benchmark`) mediu **83.4 kB gzip**
+para o chunk do Recharts. A Sprint 7.4 PR1 (#241) — primeiro consumer
+real em `gastos-resumo.tsx` via `dynamic({ssr:false})` — mediu o chunk
+isolado em **100.7 kB gzip** (`0zyw.c85a1.du.js`, 350 kB raw):
+
+| Métrica | Spike (isolado) | Prod integrado (PR1) | Δ |
+|---|---:|---:|---:|
+| Chunk Recharts raw | 306 kB | 350 kB | +14% |
+| Chunk Recharts gzip | 83.4 kB | 100.7 kB | +17 kB |
+
+Causas prováveis do aumento:
+
+1. **Surface area de imports maior**: o PoC do spike usava só
+   `<BarChart>` + `<LineChart>`. O consumer real importa também
+   `<CartesianGrid>`, `<ResponsiveContainer>`, `<XAxis>`, `<YAxis>`,
+   `<Tooltip>`, `<Bar>` — mais módulos no chunk
+2. **Bundling integrado vs route isolada**: o spike rodou em rota de
+   benchmark dedicada (`/dev/charts-bench/recharts`) com shared chunks
+   diferentes; em prod integrada o tree-shake muda. Esse é um sinal
+   meta-importante para spikes futuros: medir em consumer real, não
+   só em PoC isolada
+
+**Owner autorizou em 2026-05-18 (#241 mergeado)** ajustar o threshold
+para **≤105 kB gzip** — 5 kB de margem sobre 100.7 kB, alinhada à
+margem do C1 original. Justificativa: nenhuma lib alternativa do spike
+caberia em 90 kB sequer no isolamento; reabrir o spike para 10% de
+diferença sem ganho semântico seria churn desproporcional.
 
 ### Caminho B (não adotado) — Voltar a CSS-only com escopo reduzido
 
@@ -217,9 +257,10 @@ Owner descartou: ROI negativo para o escopo atual.
 
 ### Negativas
 
-- +83 kB gzip no chunk de `/parlamentares/[id]` (somente quando o
-  usuário rola até gastos)
-- Threshold C1 oficialmente relaxado para 90 kB — futuro ADR sobre
+- +100.7 kB gzip no chunk de `/parlamentares/[id]` (somente quando o
+  usuário rola até gastos — medição empírica integrada do PR1 da
+  Sprint 7.4, #241)
+- Threshold C1 oficialmente relaxado para 105 kB — futuro ADR sobre
   nova lib JS precisa contar contra mesmo orçamento
 - Bundle budget de Wave 7 pós-spike sobe (acompanhar em PR Sprint 7.4)
 
