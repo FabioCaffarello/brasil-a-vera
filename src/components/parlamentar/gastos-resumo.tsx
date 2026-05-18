@@ -1,3 +1,4 @@
+import { GastosChart } from '@/components/parlamentar/gastos-chart-client'
 import { formatBRL } from '@/lib/format'
 import type { GastosResumo } from '@/lib/queries/parlamentares'
 
@@ -7,9 +8,11 @@ interface Props {
 }
 
 // Sprint 4.3 PR 2 commit 4/4 — refatorado para tokens semânticos.
-// D5 (Sprint 4.3): Recharts NÃO adotado — ADR-019 (sem dep nova sem
-// evidência de gargalo). Tabela atual com top 3 + agregado já é clara
-// para a finalidade.
+// Wave 7 Sprint 7.4 PR1 — Recharts adotado via ADR-025 (lib vencedora
+// pós-spike). Carregada via dynamic import em gastos-chart-client.tsx;
+// chunk só baixa quando a seção de gastos entra no viewport.
+// D5 da Sprint 4.3 (Recharts não adotado) revertido com evidência
+// empírica do spike `spike/chart-lib-benchmark` (tag spike-chart-lib-v1).
 export function GastosResumoBlock({ ano, resumo }: Props) {
   if (resumo.totalRegistros === 0) {
     return (
@@ -39,6 +42,8 @@ export function GastosResumoBlock({ ano, resumo }: Props) {
           {resumo.totalRegistros === 1 ? '' : 's'} · ano {ano}
         </span>
       </div>
+
+      <GastosChart categorias={resumo.porCategoria} />
 
       <ul className="space-y-1.5 text-sm">
         {top.map((c) => (
