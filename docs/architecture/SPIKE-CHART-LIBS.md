@@ -2,8 +2,8 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-05-17
-> Status: planned (execução em branch `spike/chart-lib-benchmark`)
-> Bloqueia: ADR-025, Sprint 7.4
+> Status: **completed** — decisão em [ADR-025](ADR/025-chart-lib-wave-7.md)
+> Branch preservada: `spike/chart-lib-benchmark` (tag `spike-chart-lib-v1`)
 
 ---
 
@@ -53,19 +53,22 @@ consumirem chart.
 |---|---|---|---|---|
 | 1 | **Recharts** | latest | SVG, composable React | ~35 kB |
 | 2 | **uPlot** + react wrapper | latest | Canvas, vanilla + `react-uplot` (~3 kB) | ~13 + 3 kB |
-| 3 | **Visx** (tree-shaken) | latest | SVG, primitivas D3 expostas, React-native | ~20-28 kB |
+| 3 | **Nivo** (`@nivo/bar` + `@nivo/line`) | latest | SVG, declarativo React-first | ~50+ kB |
 | 4 | **Observable Plot** | latest | SVG, declarativo, vanilla | ~50 kB |
 
-Pacotes Visx exatos a importar (tree-shake provado):
+> **Nota — slot 3 substituído**: o slot original era Visx (tree-shaken).
+> Visx 3.12.0 declara `peerDependencies.react: ^16-18` e não suporta
+> React 19 (projeto em `react@19.2.6`). Owner aprovou troca por Nivo,
+> que aceita `react: ^19` no peer. Decisão registrada no commit
+> `spike: swap visx for nivo (R19 incompat)`.
 
-- `@visx/shape` (bar + line primitives)
-- `@visx/scale` (escalas linear/band)
-- `@visx/axis` (eixos com tickFormat BRL)
-- `@visx/tooltip` (tooltip portal + estado)
-- `@visx/responsive` (ParentSize wrapper para responsividade)
-- `@visx/text` (label rotation se necessário)
+Pacotes Nivo a importar:
 
-Não importar `@visx/visx` (meta-pacote arrasta tudo).
+- `@nivo/core` (peer obrigatório; arrasta uma vez)
+- `@nivo/bar` (ResponsiveBar para Chart A)
+- `@nivo/line` (ResponsiveLine para Chart B)
+
+Cada `@nivo/X` arrasta uma fatia de `d3-*`. Bundle real a medir no spike.
 
 ## PoC scope — idênticas para todas as libs
 
@@ -75,7 +78,7 @@ Quatro PoCs, mesmo dado mock, mesmo design visual, em rota dedicada:
 /dev/charts-bench
   ├─ /recharts       # PoC 1
   ├─ /uplot          # PoC 2
-  ├─ /visx           # PoC 3
+  ├─ /nivo           # PoC 3 (era /visx)
   └─ /observable-plot # PoC 4
 ```
 
@@ -137,7 +140,7 @@ Produto cívico → WCAG não-negociável. Specifics:
 - **Canvas-based libs (uPlot)**: zero a11y nativa. Requer fallback `<table>`
   semântico sincronizado em DOM, posicionado off-screen para leitores de
   tela. Trabalho extra a contabilizar
-- **SVG-based libs (Recharts, Visx, Observable Plot)**: aceitam `<title>`,
+- **SVG-based libs (Recharts, Nivo, Observable Plot)**: aceitam `<title>`,
   `<desc>`, `aria-label` em elementos. Validar que a implementação default
   da lib os inclui — algumas exigem prop explícita
 - **axe-core**: rodar via `@axe-core/playwright` em CI nas 4 rotas. Zero
@@ -168,10 +171,10 @@ Empate em INP: **menor bundle**.
 git checkout -b spike/chart-lib-benchmark
 
 # Instalar as 4 libs (commits separados para diff isolado)
-npm i recharts             # commit 1
-npm i uplot react-uplot    # commit 2
-npm i @visx/shape @visx/scale @visx/axis @visx/tooltip @visx/responsive  # commit 3
-npm i @observablehq/plot   # commit 4
+npm i recharts                          # commit 1
+npm i uplot react-uplot                 # commit 2
+npm i @nivo/core @nivo/bar @nivo/line   # commit 3 (era visx — R19 incompat)
+npm i @observablehq/plot                # commit 4
 ```
 
 Cada `npm i` em commit isolado para que o spike final possa **descartar 3 libs
@@ -242,7 +245,7 @@ spike/chart-lib-benchmark
 │           ├─ mock.ts              # dado compartilhado
 │           ├─ recharts/page.tsx    # PoC 1
 │           ├─ uplot/page.tsx       # PoC 2
-│           ├─ visx/page.tsx        # PoC 3
+│           ├─ nivo/page.tsx        # PoC 3 (era visx — R19 incompat)
 │           └─ observable-plot/page.tsx  # PoC 4
 ├─ spike/
 │  ├─ scripts/
@@ -268,59 +271,82 @@ não-produção, descartar após ADR-025".
    (apenas a lib vencedora + scaffolding mínimo + revert das 3 perdedoras)
 3. `/dev/charts-bench` removido na branch de feature (não vai pra prod)
 
-## Tabela de resultados (template — preencher pós-execução)
+## Tabela de resultados (final — pós-execução 2026-05-17)
 
-### Bundle delta
+Outputs literais em `spike/results/` (branch `spike/chart-lib-benchmark`,
+tag `spike-chart-lib-v1`).
 
-| Lib | Chunk size raw | Chunk size gzip | Vs baseline | Passou C1? |
-|---|---|---|---|---|
-| Recharts | TBD | TBD | TBD | TBD |
-| uPlot + react-uplot | TBD | TBD | TBD | TBD |
-| Visx (tree-shaken) | TBD | TBD | TBD | TBD |
-| Observable Plot | TBD | TBD | TBD | TBD |
+### Bundle (C1, ≤35 kB gzip)
 
-### Lighthouse (mediana de 3 runs, mobile Slow 3G)
+Fonte: `spike/results/bundle.md`. Heurística: chunk identificado em
+`.next/static/chunks/` via grep por string do package.
 
-| Lib | LCP | INP load | INP hover bar | INP hover line | TBT | Passou C2-C4? |
-|---|---|---|---|---|---|---|
-| Recharts | TBD | TBD | TBD | TBD | TBD | TBD |
-| uPlot | TBD | TBD | TBD | TBD | TBD | TBD |
-| Visx | TBD | TBD | TBD | TBD | TBD | TBD |
-| Observable Plot | TBD | TBD | TBD | TBD | TBD | TBD |
+| Lib | Chunk raw bytes | Chunk gzip bytes | Gzip kB | Passou C1? |
+|---|---:|---:|---:|:---:|
+| Recharts 3.8 | 306 238 | 85 354 | 83.4 | ❌ (2.4× over) |
+| uPlot 1.6 (vanilla, sem wrapper) | 52 528 | 22 534 | 22.0 | ✅ |
+| Nivo 0.99 (@nivo/bar+line+core) | 275 909 | 84 806 | 82.8 | ❌ (2.4× over) |
+| Observable Plot 0.6 | 192 966 | 66 038 | 64.5 | ❌ (1.8× over) |
 
-### axe-core violations
+### Lighthouse (C2/C3/C4) — não medidos
 
-| Lib | Critical | Serious | Moderate | Minor | Passou C5 (axe)? |
-|---|---|---|---|---|---|
-| Recharts | TBD | TBD | TBD | TBD | TBD |
-| uPlot | TBD | TBD | TBD | TBD | TBD |
-| Visx | TBD | TBD | TBD | TBD | TBD |
-| Observable Plot | TBD | TBD | TBD | TBD | TBD |
+Pulados por decisão de escopo do owner em `2026-05-17`. Veredito do
+spike não depende deles: 3 libs já reprovam C1, e a quarta (uPlot)
+reprova C5. Scripts em `spike/scripts/lh-bench.sh` ficam preservados
+para reabertura se a Wave 8 justificar.
 
-### VoiceOver (manual, somente vencedor de C1-C4)
+### axe-core (C5, lib-only — 4 violations de layout descontadas)
 
-| Cenário | Resultado |
-|---|---|
-| Anuncia título do gráfico ao entrar | TBD |
-| Navega entre pontos de dado | TBD |
-| Anuncia valor exato em cada ponto | TBD |
-| Veredicto C5 (VoiceOver) | TBD |
+Fonte: `spike/results/axe.md`.
+
+| Lib | Critical | Serious | Moderate | Minor | Lib-specific violations | Passou C5? |
+|---|---:|---:|---:|---:|---|:---:|
+| Recharts | 0 | 0 | 0 | 0 | (nenhuma) | ✅ |
+| uPlot | 0 | 0 | 0 | 0 | (canvas opaco a screen readers) | ❌ |
+| Nivo | 0 | 2 | 0 | 0 | `svg-img-alt` | ❌ |
+| Observable Plot | 0 | 7 | 0 | 0 | `aria-prohibited-attr` | ❌ |
+
+**Nota uPlot**: axe não detecta canvas (sem árvore acessível). "0 violations"
+é falso positivo — VoiceOver confirmaria que o gráfico é invisível a
+screen readers.
+
+### VoiceOver (manual) — não rodado
+
+Pulado: nenhuma lib passou em C5 lib-only por axe (exceto falso positivo
+do uPlot). Veredito final do C5 fica em axe + análise de canvas opaco.
+
+### Matriz consolidada
+
+| Lib | C1 | C5 | Passa todos? |
+|---|:---:|:---:|:---:|
+| Recharts | ❌ | ✅ | ❌ |
+| uPlot | ✅ | ❌ | ❌ |
+| Nivo | ❌ | ❌ | ❌ |
+| Observable Plot | ❌ | ❌ | ❌ |
 
 ## Decisão pós-spike
 
-Após preenchimento da tabela acima:
+**Nenhuma lib qualificou em todos os critérios obrigatórios.**
 
-1. Identificar lib que passa em todos os 5 critérios
-2. Aplicar tiebreak (menor INP → menor bundle) se >1 lib qualificada
-3. Se **nenhuma** lib qualifica: escalar a owner. Possíveis caminhos:
-   - Relaxar threshold de um critério com justificativa (ADR registra)
-   - Implementar fallback `<table>` semântico + lib canvas (custo extra)
-   - Reabrir CSS-only com 3 tentativas adicionais
-4. Redigir ADR-025 com:
-   - Tabela final
-   - Lib escolhida
-   - Bundle budget exato (≤ vencedor + 5 kB de margem)
-   - Plano de saída (qual sinal dispararia substituição em Wave futura)
+Conforme o procedimento de escalation desta § (regra original):
+
+> Se nenhuma lib qualifica: escalar a owner. Possíveis caminhos:
+> - Relaxar threshold de um critério com justificativa
+> - Implementar fallback `<table>` semântico + lib canvas (custo extra)
+> - Reabrir CSS-only com 3 tentativas adicionais
+
+Owner autorizou em `2026-05-17`:
+
+**Caminho A — Adotar Recharts com C1 relaxado para ≤90 kB gzip.**
+
+Justificativa empírica: todas as libs SVG declarativas excedem 35 kB
+quando medidas no chunk real do bundler (não no advertised size). uPlot
+cabe mas paga preço inaceitável em a11y (canvas opaco). Recharts é a
+única opção que entrega o sinal cívico completo (bar categoria + line
+mensal vs mediana) com a11y honesta (axe-clean, SVG semântico).
+
+Detalhes, trade-offs e plano de saída em
+[ADR-025](ADR/025-chart-lib-wave-7.md).
 
 ## Referências
 
@@ -336,5 +362,5 @@ Após preenchimento da tabela acima:
 - [axe-core](https://github.com/dequelabs/axe-core)
 - [Lighthouse CI](https://github.com/GoogleChrome/lighthouse-ci)
 - [uPlot](https://github.com/leeoniya/uPlot)
-- [Visx](https://airbnb.io/visx/)
+- [Nivo](https://nivo.rocks/)
 - [Observable Plot](https://observablehq.com/plot/)

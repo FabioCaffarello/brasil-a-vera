@@ -18,7 +18,8 @@
       "!.cache",
       "!coverage",
       "!src/shared/db/migrations/meta",
-      "!src/lib/municipios-ibge.json"
+      "!src/lib/municipios-ibge.json",
+      "!spike/results/*.json"
     ]
   },
   "formatter": {
