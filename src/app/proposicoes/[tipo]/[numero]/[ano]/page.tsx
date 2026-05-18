@@ -27,6 +27,8 @@ import {
   getVotacoesByProposicao,
   TIPOS_PROPOSICAO,
   type TipoProposicao,
+  TRAMITACAO_FILTROS,
+  type TramitacaoFiltro,
 } from '@/lib/queries/proposicoes'
 import {
   getProposicoesMesmoAutor,
@@ -37,7 +39,16 @@ import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
-  searchParams: Promise<{ tram_after?: string }>
+  searchParams: Promise<{ tram_after?: string; tram_filtro?: string }>
+}
+
+function normalizeTramitacaoFiltro(
+  value: string | undefined,
+): TramitacaoFiltro {
+  if (value && TRAMITACAO_FILTROS.includes(value as TramitacaoFiltro)) {
+    return value as TramitacaoFiltro
+  }
+  return 'todos'
 }
 
 function parseParams(
@@ -61,12 +72,12 @@ function buildDetalheHref(
   numero: number,
   ano: number,
   params: Awaited<PageProps['searchParams']>,
-  override: { tram_after?: string | null },
+  override: { tram_after?: string | null; tram_filtro?: string | null },
   anchor = '',
 ): string {
   const merged = { ...params, ...override }
   const search = new URLSearchParams()
-  for (const key of ['tram_after'] as const) {
+  for (const key of ['tram_after', 'tram_filtro'] as const) {
     const value = merged[key]
     if (value !== null && value !== undefined && value !== '') {
       search.set(key, value)
@@ -126,11 +137,17 @@ export default async function ProposicaoDetalhePage({
     )
   }
 
+  // Wave 8 Sprint 8.3 PR2 — filtro "marcos importantes" vs "todos".
+  const tramitacaoFiltro = normalizeTramitacaoFiltro(sp.tram_filtro)
+
   const [temas, autores, votacoes, tramitacaoPage, stats] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
     getVotacoesByProposicao(proposicao.id),
-    getTramitacaoByProposicao(proposicao.id, { cursor: cursorTramitacao }),
+    getTramitacaoByProposicao(proposicao.id, {
+      cursor: cursorTramitacao,
+      filtro: tramitacaoFiltro,
+    }),
     getProposicaoStats(proposicao.id),
   ])
 
@@ -143,8 +160,9 @@ export default async function ProposicaoDetalhePage({
   })
 
   // Wave 8 Sprint 8.3 PR1 — link "Mostrar mais" da tramitação.
-  // Restantes só calculável na 1ª página (sem rastreio de page-N entre
-  // requests). nEventosTramitacao vem do agregado (total real).
+  // Restantes só calculável na 1ª página COM filtro='todos' — agregado
+  // n_eventos_tramitacao não tem versão filtrada por marcos. Páginas
+  // subsequentes ou filtro='marcos' caem para "Mostrar mais" simples.
   const tramitacaoMostrarMaisHref = tramitacaoPage.nextCursor
     ? buildDetalheHref(
         parsed.tipo,
@@ -156,9 +174,26 @@ export default async function ProposicaoDetalhePage({
       )
     : null
   const tramitacaoRestantes =
-    !cursorTramitacao && stats?.nEventosTramitacao
+    !cursorTramitacao &&
+    tramitacaoFiltro === 'todos' &&
+    stats?.nEventosTramitacao
       ? Math.max(0, stats.nEventosTramitacao - tramitacaoPage.rows.length)
       : null
+
+  // Wave 8 Sprint 8.3 PR2 — buildFiltroHref que reseta cursor ao trocar
+  // filtro (não faz sentido manter `tram_after` quando o universo muda).
+  const buildTramitacaoFiltroHref = (next: TramitacaoFiltro): string =>
+    buildDetalheHref(
+      parsed.tipo,
+      parsed.numero,
+      parsed.ano,
+      sp,
+      {
+        tram_after: null,
+        tram_filtro: next === 'todos' ? null : next,
+      },
+      '#tramitacao',
+    )
 
   // Wave 8 Sprint 8.2 PR5 — fase 2 do fetch para footer cross-links.
   // Depende dos resultados da fase 1 (autor principal vem da lista
@@ -260,7 +295,9 @@ export default async function ProposicaoDetalhePage({
           </AccordionTrigger>
           <AccordionContent>
             <TramitacaoTimeline
+              buildFiltroHref={buildTramitacaoFiltroHref}
               eventos={tramitacaoPage.rows}
+              filtro={tramitacaoFiltro}
               mostrarMaisHref={tramitacaoMostrarMaisHref}
               restantes={tramitacaoRestantes}
             />

@@ -1,6 +1,12 @@
 import { ArrowDown } from 'lucide-react'
+import Link from 'next/link'
 
+import {
+  FilterChip,
+  FilterChips,
+} from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
+import type { TramitacaoFiltro } from '@/lib/queries/proposicoes'
 
 interface Evento {
   id: string
@@ -21,25 +27,51 @@ interface Props {
    * conhecido, exibido como "Mostrar mais (N restantes)". Quando null,
    * apenas "Mostrar mais". */
   restantes?: number | null
+  /** Wave 8 Sprint 8.3 PR2 — filtro corrente ('todos' | 'marcos').
+   * Quando passado, a UI renderiza FilterChips para alternar. Caller
+   * gera os hrefs via `buildFiltroHref` (URL state). */
+  filtro?: TramitacaoFiltro
+  /** Builder de href que recebe o filtro de destino e retorna URL
+   * que reseta o cursor (para não pular eventos ao trocar filtro).
+   * Quando ausente, FilterChips não renderiza. */
+  buildFiltroHref?: (filtro: TramitacaoFiltro) => string
 }
 
 export function TramitacaoTimeline({
   eventos,
   mostrarMaisHref,
   restantes,
+  filtro,
+  buildFiltroHref,
 }: Props) {
+  const mostrarFiltros = filtro !== undefined && buildFiltroHref !== undefined
+
+  // Empty state: distingue entre "proposição sem tramitação" e "filtro
+  // de marcos sem casamento". Honestidade P2 — não dizer "nenhum marco"
+  // quando a base não tem dado ainda.
   if (eventos.length === 0) {
     return (
-      <p className="text-foreground-muted text-sm">
-        Nenhum evento de tramitação ingerido para esta proposição. A coleta de
-        tramitação é semanal (domingo 03:00 UTC) e cobre apenas proposições com
-        movimentação registrada na fonte oficial.
-      </p>
+      <div className="space-y-4">
+        {mostrarFiltros ? (
+          <FilterChipsHeader
+            filtro={filtro}
+            buildFiltroHref={buildFiltroHref}
+          />
+        ) : null}
+        <p className="text-foreground-muted text-sm">
+          {filtro === 'marcos'
+            ? 'Nenhum marco importante registrado entre os eventos desta proposição. Mude para "Tudo" para ver a tramitação completa.'
+            : 'Nenhum evento de tramitação ingerido para esta proposição. A coleta de tramitação é semanal (domingo 03:00 UTC) e cobre apenas proposições com movimentação registrada na fonte oficial.'}
+        </p>
+      </div>
     )
   }
 
   return (
     <div className="space-y-4">
+      {mostrarFiltros ? (
+        <FilterChipsHeader filtro={filtro} buildFiltroHref={buildFiltroHref} />
+      ) : null}
       <ol className="relative space-y-3 border-border border-l-2 pl-5">
         {eventos.map((e) => (
           <li className="relative" key={e.id}>
@@ -93,5 +125,24 @@ export function TramitacaoTimeline({
         </div>
       ) : null}
     </div>
+  )
+}
+
+function FilterChipsHeader({
+  filtro,
+  buildFiltroHref,
+}: {
+  filtro: TramitacaoFiltro
+  buildFiltroHref: (filtro: TramitacaoFiltro) => string
+}) {
+  return (
+    <FilterChips label="Eventos">
+      <FilterChip asChild selected={filtro === 'todos'}>
+        <Link href={buildFiltroHref('todos')}>Tudo</Link>
+      </FilterChip>
+      <FilterChip asChild selected={filtro === 'marcos'}>
+        <Link href={buildFiltroHref('marcos')}>Marcos importantes</Link>
+      </FilterChip>
+    </FilterChips>
   )
 }

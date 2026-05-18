@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
@@ -344,11 +344,41 @@ export interface TramitacaoEvento {
   situacaoResultante: string | null
 }
 
+// Lista canônica de substrings que caracterizam "marco importante" de
+// tramitação — Wave 8 Sprint 8.3 PR2. Conservadora (poucas keywords muito
+// comuns) para não inflar falsos positivos. Aplicada via ILIKE %X% em
+// descricao_resumida E situacao_resultante (basta um casar).
+//
+// Cravado plano §Sprint 8.3 PR2: "apresentação, aprovação em comissão,
+// aprovação em plenário, sanção/veto". Expandi com "publica", "rejeit"
+// e "arquiv" porque são marcos terminais equivalentes na narrativa
+// cívica (eventos que mudam a situação geral da proposição).
+export const MARCOS_TRAMITACAO_KEYWORDS = [
+  'Apresenta', // Apresentação, Apresentado
+  'Aprova', // Aprovação, Aprovado, Aprovada
+  'Sanção',
+  'Sanciona', // Sancionado
+  'Veto',
+  'Publica', // Publicação
+  'Rejeit', // Rejeitado, Rejeitada
+  'Arquiv', // Arquivado, Arquivada
+] as const
+
+export type TramitacaoFiltro = 'todos' | 'marcos'
+
+export const TRAMITACAO_FILTROS: readonly TramitacaoFiltro[] = [
+  'todos',
+  'marcos',
+] as const
+
 export interface TramitacaoOpts {
   /** Cursor versionado (ADR-026 + CursorTramitacaoV1). */
   cursor?: CursorTramitacaoV1Payload
   /** Override do page size. Default TRAMITACAO_PAGE_SIZE (20). */
   limit?: number
+  /** Filtro de "marcos importantes" (Wave 8 Sprint 8.3 PR2).
+   * Default 'todos'. 'marcos' aplica ILIKE com MARCOS_TRAMITACAO_KEYWORDS. */
+  filtro?: TramitacaoFiltro
 }
 
 export interface TramitacaoResult {
@@ -371,12 +401,12 @@ export async function getTramitacaoByProposicao(
 ): Promise<TramitacaoResult> {
   const limit = opts.limit ?? TRAMITACAO_PAGE_SIZE
   const cursor = opts.cursor
-  // Cache key inclui cursor para evitar colisão entre páginas. Primeira
-  // página (sem cursor) usa key estável `:p1`; demais usam o token
-  // encoded como chave (URL-safe, único por posição).
-  const cacheKey = cursor
-    ? `proposicao:tramitacao:${proposicaoId}:${encodeCursor(cursor)}:limit:${limit}`
-    : `proposicao:tramitacao:${proposicaoId}:p1:limit:${limit}`
+  const filtro = opts.filtro ?? 'todos'
+  // Cache key inclui cursor + filtro para evitar colisão entre páginas e
+  // entre filtros. Primeira página de cada filtro usa key estável `:p1`;
+  // demais usam o token encoded.
+  const cursorPart = cursor ? encodeCursor(cursor) : 'p1'
+  const cacheKey = `proposicao:tramitacao:${proposicaoId}:f:${filtro}:c:${cursorPart}:limit:${limit}`
 
   return cached(cacheKey, TTL.proposicaoEmTramitacao, async () => {
     const whereClauses = [eq(tramitacao.proposicaoId, proposicaoId)]
@@ -387,6 +417,17 @@ export async function getTramitacaoByProposicao(
         sql`(${tramitacao.data} < ${cursorDate}
           OR (${tramitacao.data} = ${cursorDate} AND ${tramitacao.id} < ${cursor.id}))`,
       )
+    }
+    if (filtro === 'marcos') {
+      // OR sobre todas as keywords aplicadas a 2 colunas (descricaoResumida
+      // e situacaoResultante). ILIKE para case-insensitive sem locale-pain.
+      // Sequential scan aceitável: tramitação tem N pequeno por proposição.
+      const marcoClauses = MARCOS_TRAMITACAO_KEYWORDS.flatMap((kw) => [
+        ilike(tramitacao.descricaoResumida, `%${kw}%`),
+        ilike(tramitacao.situacaoResultante, `%${kw}%`),
+      ])
+      const marcoOr = or(...marcoClauses)
+      if (marcoOr) whereClauses.push(marcoOr)
     }
 
     const limitPlusOne = limit + 1
