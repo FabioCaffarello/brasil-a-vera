@@ -1,5 +1,7 @@
+import { X } from 'lucide-react'
 import Link from 'next/link'
 
+import { Combobox } from '@/design-system/compositions/combobox'
 import {
   FilterChip,
   FilterChips,
@@ -7,13 +9,17 @@ import {
 import { Button } from '@/design-system/primitives/button'
 import { Input } from '@/design-system/primitives/input'
 import { Label } from '@/design-system/primitives/label'
+import type { TemaDistinto } from '@/lib/queries/proposicoes'
 
 interface Props {
   anos: number[]
+  temas: TemaDistinto[]
   selecionado: {
     tipo?: string
     ano?: string
     situacao?: string
+    /** Wave 8 Sprint 8.1 PR3 — código de tema (proposicao_tema.codigo_tema). */
+    tema?: string
     /** Wave 8 Sprint 8.1 PR2 — busca livre (numero ou ementa). */
     q?: string
     /** Wave 8 Sprint 8.1 PR2 — ordem de exibição. */
@@ -38,6 +44,10 @@ const SITUACOES_CHIPS = [
   { value: 'TRANSFORMADA_EM_NORMA', label: 'Virou norma' },
 ]
 
+const SITUACAO_LABEL: Record<string, string> = Object.fromEntries(
+  SITUACOES_CHIPS.map((s) => [s.value, s.label]),
+)
+
 const ORDEM_OPCOES = [
   { value: 'recente', label: 'Mais recentes' },
   { value: 'antiga', label: 'Mais antigas' },
@@ -51,6 +61,10 @@ const SELECT_CLASS =
 /**
  * Helper interno: constrói href preservando outros filtros. Override
  * com `null` remove o filtro do URL.
+ *
+ * Wave 8 Sprint 8.1 PR2 — preserva também q + ordem.
+ * Wave 8 Sprint 8.1 PR3 — preserva também tema + reutilizado pelos
+ * chips de filtro ativo.
  */
 function buildHref(
   current: Props['selecionado'],
@@ -61,7 +75,14 @@ function buildHref(
     ...overrides,
   }
   const params = new URLSearchParams()
-  for (const key of ['tipo', 'ano', 'situacao', 'q', 'ordem'] as const) {
+  for (const key of [
+    'tipo',
+    'ano',
+    'situacao',
+    'tema',
+    'q',
+    'ordem',
+  ] as const) {
     const value = merged[key]
     if (value !== null && value !== undefined && value !== '') {
       params.set(key, value)
@@ -72,22 +93,96 @@ function buildHref(
 }
 
 /**
- * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6, reskin listagens) +
- * Wave 8 Sprint 8.1 PR2 (busca por ementa/numero + ordenação SSR).
+ * Chips de filtros aplicados (Wave 8 Sprint 8.1 PR3, espelhando padrão
+ * da listagem /parlamentares). Cada chip mostra "Filtro: valor" e um
+ * link × que remove apenas aquele filtro, preservando os demais via
+ * buildHref. Ordem fica fora — é estado de visualização, não recorte.
+ */
+function FiltrosAtivos({
+  selecionado,
+  temas,
+}: {
+  selecionado: Props['selecionado']
+  temas: TemaDistinto[]
+}) {
+  const ativos: Array<{
+    key: keyof Props['selecionado']
+    label: string
+    value: string
+  }> = []
+
+  if (selecionado.tipo) {
+    ativos.push({ key: 'tipo', label: 'Tipo', value: selecionado.tipo })
+  }
+  if (selecionado.situacao) {
+    ativos.push({
+      key: 'situacao',
+      label: 'Situação',
+      value: SITUACAO_LABEL[selecionado.situacao] ?? selecionado.situacao,
+    })
+  }
+  if (selecionado.ano) {
+    ativos.push({ key: 'ano', label: 'Ano', value: selecionado.ano })
+  }
+  if (selecionado.tema) {
+    const codigo = Number(selecionado.tema)
+    const tema = temas.find((t) => t.codigo === codigo)
+    ativos.push({
+      key: 'tema',
+      label: 'Tema',
+      value: tema?.nome ?? selecionado.tema,
+    })
+  }
+  if (selecionado.q) {
+    ativos.push({
+      key: 'q',
+      label: 'Busca',
+      value: `"${selecionado.q}"`,
+    })
+  }
+
+  if (ativos.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
+      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+        Filtros ativos:
+      </span>
+      {ativos.map((a) => (
+        <Link
+          aria-label={`Remover filtro ${a.label}: ${a.value}`}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          href={buildHref(selecionado, { [a.key]: null })}
+          key={a.key}
+        >
+          <span>
+            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="font-medium">{a.value}</span>
+          </span>
+          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6) +
+ * Wave 8 Sprint 8.1 PR2 (busca + ordenação) +
+ * Wave 8 Sprint 8.1 PR3 (Combobox tema + chips ativos).
  *
  * Hybrid pragmático:
- * - **Busca** (`q`): input de texto SSR. Sem onChange, sem debounce —
- *   Enter submete (P1: densidade, P5: zero JS no path anônimo). Numero
- *   puro → match exato; texto → ILIKE %X% em ementa.
- * - **Ordem** (`ordem`): select 4-opção, troca scope via form GET.
  * - **Tipo** (6 opções + "Todos"): FilterChips com Links (sem form).
  * - **Situação** (5 opções + "Todas"): FilterChips com Links.
- * - **Ano**: `<select>` no form (alta cardinalidade ~10+ anos).
- *
- * Chips de Tipo/Situação preservam q/ordem via buildHref. Form de Ano
- * preserva tipo/situação/q/ordem via hidden inputs ao submeter.
+ * - **Busca** (`q`): input SSR, Enter submete.
+ * - **Tema** (~50-200 catalogados): Combobox com busca embutida.
+ *   Cardinalidade alta justifica a primitiva command sobre select.
+ * - **Ano**: `<select>` no form (cardinalidade média).
+ * - **Ordem**: `<select>` no form (4 opções fixas, sem busca).
+ * - **Chips de filtros ativos**: abaixo dos filtros, um chip por
+ *   filtro aplicado com × para remover individual.
  */
-export function FiltrosProposicao({ anos, selecionado }: Props) {
+export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
   return (
     <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
       <FilterChips label="Tipo">
@@ -126,7 +221,7 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
 
       <form
         action="/proposicoes"
-        className="flex flex-wrap items-end gap-3 border-border border-t pt-4"
+        className="space-y-3 border-border border-t pt-4"
         method="get"
       >
         {selecionado.tipo ? (
@@ -136,7 +231,7 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
           <input name="situacao" type="hidden" value={selecionado.situacao} />
         ) : null}
 
-        <div className="flex min-w-[200px] flex-1 flex-col gap-1">
+        <div className="flex flex-col gap-1">
           <Label className="text-foreground-muted text-xs" htmlFor="filtro-q">
             Buscar (número ou palavra na ementa)
           </Label>
@@ -149,47 +244,74 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <Label className="text-foreground-muted text-xs" htmlFor="filtro-ano">
-            Ano
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.ano ?? ''}
-            id="filtro-ano"
-            name="ano"
-          >
-            <option value="">Todos</option>
-            {anos.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex flex-col gap-1">
+            <Label
+              className="text-foreground-muted text-xs"
+              htmlFor="filtro-tema"
+            >
+              Tema
+            </Label>
+            <Combobox
+              allOptionLabel="Todos"
+              ariaLabel="Filtrar por tema"
+              defaultValue={selecionado.tema ?? ''}
+              emptyText="Nenhum tema casa com a busca"
+              name="tema"
+              options={temas.map((t) => ({
+                value: String(t.codigo),
+                label: t.nome,
+              }))}
+              placeholder="Todos"
+              searchPlaceholder="Buscar tema"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label
+              className="text-foreground-muted text-xs"
+              htmlFor="filtro-ano"
+            >
+              Ano
+            </Label>
+            <select
+              className={SELECT_CLASS}
+              defaultValue={selecionado.ano ?? ''}
+              id="filtro-ano"
+              name="ano"
+            >
+              <option value="">Todos</option>
+              {anos.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Label
+              className="text-foreground-muted text-xs"
+              htmlFor="filtro-ordem"
+            >
+              Ordem
+            </Label>
+            <select
+              className={SELECT_CLASS}
+              defaultValue={selecionado.ordem ?? 'recente'}
+              id="filtro-ordem"
+              name="ordem"
+            >
+              {ORDEM_OPCOES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <Label
-            className="text-foreground-muted text-xs"
-            htmlFor="filtro-ordem"
-          >
-            Ordem
-          </Label>
-          <select
-            className={SELECT_CLASS}
-            defaultValue={selecionado.ordem ?? 'recente'}
-            id="filtro-ordem"
-            name="ordem"
-          >
-            {ORDEM_OPCOES.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="ml-auto flex gap-2">
+        <div className="flex justify-end gap-2">
           <Button asChild size="sm" variant="outline">
             <a href="/proposicoes">Limpar</a>
           </Button>
@@ -198,6 +320,8 @@ export function FiltrosProposicao({ anos, selecionado }: Props) {
           </Button>
         </div>
       </form>
+
+      <FiltrosAtivos selecionado={selecionado} temas={temas} />
     </div>
   )
 }

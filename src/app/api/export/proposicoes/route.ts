@@ -39,6 +39,12 @@ function normalizeAno(value: string | null): number | undefined {
   return Number.isInteger(n) && n > 1900 && n < 2100 ? n : undefined
 }
 
+function normalizeTema(value: string | null): number | undefined {
+  if (!value) return undefined
+  const n = Number(value)
+  return Number.isInteger(n) && n > 0 ? n : undefined
+}
+
 // Limite mais alto que a página HTML (1000 vs 50) — CSV é para análise,
 // não para olhar de cima. Acima de 1000, refinar filtros.
 const LIMITE_EXPORT = 1000
@@ -47,12 +53,14 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     // Wave 8 Sprint 8.1 PR2 — incluído `q` para que busca por ementa/numero
-    // também seja exportável. `ordem` não entra: CSV é para análise, ordenação
-    // é responsabilidade da planilha do destinatário.
+    // também seja exportável. PR3 — incluído `tema`. `ordem` não entra:
+    // CSV é para análise; ordenação é responsabilidade da planilha do
+    // destinatário.
     const filtros = {
       tipo: normalizeTipo(url.searchParams.get('tipo')),
       ano: normalizeAno(url.searchParams.get('ano')),
       situacao: normalizeSituacao(url.searchParams.get('situacao')),
+      tema: normalizeTema(url.searchParams.get('tema')),
       q: url.searchParams.get('q')?.trim() || undefined,
     }
 
