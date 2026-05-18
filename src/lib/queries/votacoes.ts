@@ -1,6 +1,8 @@
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { encodeCursor } from '@/lib/cursor'
+import type { CursorVotacoesV1Payload } from '@/lib/queries/cursor-schemas'
 import type {
   OrientacaoBancada,
   TipoVoto as TipoVotoDomain,
@@ -13,6 +15,10 @@ import {
   votacao,
   votoNominal,
 } from '@/shared/db/schema'
+
+// Page size da listagem com cursor (ADR-028 §1). Divisível por 2/3/4/6
+// para harmonizar grids em qualquer breakpoint.
+export const VOTACOES_LISTAGEM_PAGE_SIZE = 24
 
 export type Casa = 'CAMARA' | 'SENADO'
 
@@ -272,6 +278,112 @@ export async function getVotacoesRecentes(
     )
     .orderBy(desc(votacao.dataHora))
     .limit(limit)
+}
+
+export interface VotacaoListaItem {
+  id: string
+  sourceId: string
+  casa: Casa
+  dataHora: Date | string
+  descricao: string
+  orgao: string
+  aprovada: boolean
+  votosSim: number
+  votosNao: number
+  abstencoes: number
+  sourceUrl: string
+}
+
+export interface ListVotacoesOpts {
+  /** Cursor versionado v1 (ADR-026 + ADR-028). Quando undefined, primeira página. */
+  cursor?: CursorVotacoesV1Payload
+  /** Override do page size. Default VOTACOES_LISTAGEM_PAGE_SIZE (24). */
+  limit?: number
+}
+
+export interface ListVotacoesCursorResult {
+  rows: VotacaoListaItem[]
+  /** Token base64url do próximo cursor, ou null quando não há mais páginas. */
+  nextCursor: string | null
+}
+
+// Listagem com cursor opaco versionado v1 (ADR-026 + ADR-028).
+// ORDER BY: votacao.data_hora DESC, votacao.id DESC (tiebreaker estável).
+// Keyset compare via tuple: (dataHora, id) < (cursor.d, cursor.id).
+// N+1 trick para detectar hasMore + gerar nextCursor.
+// Cache: TTL.listagemFiltrada (5min). Key inclui filtros + cursor.
+export async function listVotacoesCursor(
+  filtros: FiltrosVotacao = {},
+  opts: ListVotacoesOpts = {},
+): Promise<ListVotacoesCursorResult> {
+  const limit = opts.limit ?? VOTACOES_LISTAGEM_PAGE_SIZE
+  const cursorPart = opts.cursor ? encodeCursor(opts.cursor) : 'p1'
+  const key = `votacoes:listcursor:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}:limit=${limit}:cursor=${cursorPart}`
+
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const where = []
+    if (filtros.casa) where.push(eq(votacao.casa, filtros.casa))
+    if (filtros.ano) {
+      where.push(sql`extract(year from ${votacao.dataHora}) = ${filtros.ano}`)
+    }
+    if (filtros.resultado === 'aprovadas')
+      where.push(eq(votacao.aprovada, true))
+    if (filtros.resultado === 'rejeitadas')
+      where.push(eq(votacao.aprovada, false))
+    if (filtros.somenteNominais) {
+      where.push(
+        sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
+      )
+    }
+
+    if (opts.cursor) {
+      const c = opts.cursor
+      const cursorDate = new Date(c.d)
+      where.push(
+        sql`(${votacao.dataHora} < ${cursorDate}
+          OR (${votacao.dataHora} = ${cursorDate} AND ${votacao.id} < ${c.id}))`,
+      )
+    }
+
+    const limitPlusOne = limit + 1
+    const rows = await db
+      .select({
+        id: votacao.id,
+        sourceId: votacao.sourceId,
+        casa: votacao.casa,
+        dataHora: votacao.dataHora,
+        descricao: votacao.descricao,
+        orgao: votacao.orgao,
+        aprovada: votacao.aprovada,
+        votosSim: votacao.votosSim,
+        votosNao: votacao.votosNao,
+        abstencoes: votacao.abstencoes,
+        sourceUrl: votacao.sourceUrl,
+      })
+      .from(votacao)
+      .where(where.length > 0 ? and(...where) : undefined)
+      .orderBy(desc(votacao.dataHora), desc(votacao.id))
+      .limit(limitPlusOne)
+
+    const hasMore = rows.length > limit
+    const pageRows = hasMore ? rows.slice(0, limit) : rows
+    let nextCursor: string | null = null
+    if (hasMore) {
+      const last = pageRows[pageRows.length - 1]
+      if (last) {
+        const dEpoch =
+          typeof last.dataHora === 'string'
+            ? new Date(last.dataHora).getTime()
+            : last.dataHora.getTime()
+        nextCursor = encodeCursor({
+          v: 1 as const,
+          d: dEpoch,
+          id: last.id,
+        })
+      }
+    }
+    return { rows: pageRows as VotacaoListaItem[], nextCursor }
+  })
 }
 
 // =============================================================================
