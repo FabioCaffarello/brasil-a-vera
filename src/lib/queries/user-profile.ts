@@ -122,6 +122,66 @@ export async function getOrCreateUserProfileId(
 }
 
 /**
+ * Atualiza nome (display_name) E/OU UF. Wave 10 Etapa 5 — form
+ * Perfil em /painel/configuracoes. Aceita campos opcionais; só
+ * atualiza os passados (UPDATE parcial via spread). Display name
+ * é atualizado em paralelo no Clerk via clerkClient (Decisão A:
+ * Clerk = source of truth).
+ *
+ * NOTA: a função aqui só toca o banco local. A atualização do Clerk
+ * é responsabilidade do caller (route handler) por dois motivos:
+ * (1) função pura de query, sem side-effects externos;
+ * (2) tratamento de erro do Clerk fica no boundary HTTP.
+ */
+export async function updateUserProfileBasic(
+  internalUserId: string,
+  input: { displayName?: string | null; uf?: string | null },
+): Promise<void> {
+  const patch: Partial<typeof userProfile.$inferInsert> = {
+    updatedAt: new Date(),
+  }
+  if ('displayName' in input) patch.displayName = input.displayName
+  if ('uf' in input) patch.uf = input.uf
+  await db
+    .update(userProfile)
+    .set(patch)
+    .where(eq(userProfile.id, internalUserId))
+}
+
+/**
+ * Atualiza apenas a coluna `themes` (jsonb). Form Temas em
+ * /painel/configuracoes (Wave 10 Etapa 5) — usuário marca/desmarca
+ * chips. Caller valida que cada string ∈ TEMA_IDS via Zod.
+ */
+export async function updateUserProfileThemes(
+  internalUserId: string,
+  themes: string[],
+): Promise<void> {
+  await db
+    .update(userProfile)
+    .set({ themes, updatedAt: sql`now()` })
+    .where(eq(userProfile.id, internalUserId))
+}
+
+/**
+ * Atualiza opt-ins de comunicação. Caller (route handler) escreve
+ * em consent_log em paralelo (audit trail LGPD).
+ */
+export async function updateUserProfileComunicacao(
+  internalUserId: string,
+  input: { marketingOptedIn: boolean; surveyOptedIn: boolean },
+): Promise<void> {
+  await db
+    .update(userProfile)
+    .set({
+      marketingOptedIn: input.marketingOptedIn,
+      surveyOptedIn: input.surveyOptedIn,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(userProfile.id, internalUserId))
+}
+
+/**
  * Commit do wizard de onboarding (Wave 10 Etapa 3). Persiste UF
  * (opcional), temas selecionados (subset de TEMA_IDS) e marca
  * `onboarded_at = now()` numa única operação atômica.

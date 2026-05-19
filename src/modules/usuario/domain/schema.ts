@@ -59,6 +59,13 @@ export const userProfile = usuarioSchema.table(
       .$type<string[]>()
       .notNull()
       .default(sql`'[]'::jsonb`),
+    // Opt-ins de comunicação (Wave 10 Etapa 5).
+    // Separados dos `topic_*` da alert_policy (alertas de serviço sempre
+    // ligados quando há follows; comunicação opt-in é mensagem fora do
+    // serviço — releases, surveys). Default false: respeita LGPD art. 7º
+    // I (consentimento expresso). consent_log audit trail em paralelo.
+    marketingOptedIn: boolean('marketing_opted_in').notNull().default(false),
+    surveyOptedIn: boolean('survey_opted_in').notNull().default(false),
   },
   (table) => [
     // Unique em clerk_user_id — chave natural usada pelo webhook do Clerk
@@ -150,3 +157,54 @@ export const alertPolicy = usuarioSchema.table('alert_policy', {
 
 export type AlertPolicy = typeof alertPolicy.$inferSelect
 export type NewAlertPolicy = typeof alertPolicy.$inferInsert
+
+// `consent_log` — Wave 10 Etapa 5 (antecipada para registrar consents
+// de comunicação; UI dashboard /meus-dados e fluxos completos de
+// exercício de direitos LGPD entram na Etapa 9).
+//
+// ADR-031 §C: `user_id` é nullable — após anonimização (LGPD art. 16),
+// setamos NULL preservando o log como comprovação histórica de
+// consentimento sem identificar o titular (art. 8º §6º).
+//
+// `ip_hash` (ADR-031 §D2): coluna existe agora como `text` mas vamos
+// gravar string vazia até Etapa 9 implementar o salt diário completo.
+// Trade-off temporário consciente — log do consent funcional para
+// auditoria; reidentificação via IP fica para quando o framework
+// completo entrar.
+//
+// Escopos esperados em produção (não enum DB para permitir extensão
+// sem migration; validado no boundary Zod):
+//   - 'marketing'         — opt-in comunicações esporádicas do projeto
+//   - 'survey'            — opt-in convite para survey ocasional
+//   - 'privacy_policy_v1' — aceite da política de privacidade vigente
+//     (introduzido na Etapa 9)
+export const consentLog = usuarioSchema.table(
+  'consent_log',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    userId: uuid('user_id').references(() => userProfile.id, {
+      onDelete: 'set null',
+    }),
+    scope: text('scope').notNull(),
+    granted: boolean('granted').notNull(),
+    legalBasis: text('legal_basis').notNull(),
+    policyVersion: text('policy_version').notNull(),
+    source: text('source').notNull(),
+    ipHash: text('ip_hash').notNull().default(''),
+    consentedAt: timestamp('consented_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Lookup "todos consents de um usuário" — Etapa 9 dashboard.
+    index('consent_log_user_id_idx').on(table.userId),
+    // Lookup "último consent de um escopo para um usuário" — checagem
+    // pré-envio de marketing.
+    index('consent_log_user_scope_idx').on(table.userId, table.scope),
+  ],
+)
+
+export type ConsentLog = typeof consentLog.$inferSelect
+export type NewConsentLog = typeof consentLog.$inferInsert
