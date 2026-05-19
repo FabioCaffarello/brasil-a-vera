@@ -149,7 +149,8 @@ export default async function Home() {
 
         {/* ENTRY POINTS pragmáticos — portas de entrada cívicas.
             Movidos para BAIXO do features grid (Sprint 6.1 D3) — utilidade
-            permanece no mapa, depois da camada inspiracional. */}
+            permanece no mapa, depois da camada inspiracional. Grid 2-col em
+            desktop; stack em mobile — evita layout sparse. */}
         <section aria-labelledby="entry-points-titulo">
           <h2
             className="mb-6 font-semibold text-2xl tracking-tight"
@@ -157,7 +158,7 @@ export default async function Home() {
           >
             Comece por aqui
           </h2>
-          <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <CardParlamentares />
             <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
           </div>
