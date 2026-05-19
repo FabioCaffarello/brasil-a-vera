@@ -13,40 +13,14 @@ vi.mock('sonner', () => ({
 }))
 
 const PARLAMENTAR_ID = '019e184f-0cdd-7109-ab34-bbfa9f92bd13'
+const PARLAMENTAR_NOME = 'Maria Souza'
+
+// Wave 10 Hotfix 10.1 — `isAnonymous` removido do contrato. O gating
+// para anônimos é server-side (a página simplesmente não renderiza
+// o FollowButton). O ramo "link para /sign-in" foi deletado.
 
 describe('FollowButton', () => {
-  describe('quando anônimo', () => {
-    it('renderiza link para /sign-in', () => {
-      render(
-        <FollowButton
-          initialIsFollowing={false}
-          isAnonymous={true}
-          parlamentarId={PARLAMENTAR_ID}
-        />,
-      )
-
-      const link = screen.getByRole('link', { name: /acompanhar/i })
-      expect(link.getAttribute('href')).toBe('/sign-in')
-    })
-
-    it('NÃO chama fetch ao clicar', async () => {
-      const fetchSpy = vi.spyOn(global, 'fetch')
-      render(
-        <FollowButton
-          initialIsFollowing={false}
-          isAnonymous={true}
-          parlamentarId={PARLAMENTAR_ID}
-        />,
-      )
-
-      const link = screen.getByRole('link', { name: /acompanhar/i })
-      await userEvent.click(link)
-
-      expect(fetchSpy).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('quando autenticado e não acompanhando', () => {
+  describe('quando não acompanhando', () => {
     beforeEach(() => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -58,29 +32,33 @@ describe('FollowButton', () => {
       vi.restoreAllMocks()
     })
 
-    it('renderiza botão "Acompanhar" com aria-pressed=false', () => {
+    it('renderiza botão "Acompanhar [Nome]" com aria-pressed=false', () => {
       render(
         <FollowButton
           initialIsFollowing={false}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
-      const button = screen.getByRole('button', { name: /acompanhar/i })
+      const button = screen.getByRole('button', {
+        name: `Acompanhar ${PARLAMENTAR_NOME}`,
+      })
       expect(button.getAttribute('aria-pressed')).toBe('false')
     })
 
-    it('ao clicar, envia POST e troca para "Acompanhando"', async () => {
+    it('ao clicar, envia POST e troca para "Deixar de acompanhar"', async () => {
       render(
         <FollowButton
           initialIsFollowing={false}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
-      await userEvent.click(screen.getByRole('button', { name: /acompanhar/i }))
+      await userEvent.click(
+        screen.getByRole('button', { name: `Acompanhar ${PARLAMENTAR_NOME}` }),
+      )
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/painel/follows', {
@@ -90,12 +68,14 @@ describe('FollowButton', () => {
         })
       })
 
-      const button = screen.getByRole('button', { name: /acompanhando/i })
+      const button = screen.getByRole('button', {
+        name: `Deixar de acompanhar ${PARLAMENTAR_NOME}`,
+      })
       expect(button.getAttribute('aria-pressed')).toBe('true')
     })
   })
 
-  describe('quando autenticado e acompanhando', () => {
+  describe('quando acompanhando', () => {
     beforeEach(() => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -107,16 +87,18 @@ describe('FollowButton', () => {
       vi.restoreAllMocks()
     })
 
-    it('renderiza botão "Acompanhando" com aria-pressed=true', () => {
+    it('renderiza botão "Deixar de acompanhar [Nome]" com aria-pressed=true', () => {
       render(
         <FollowButton
           initialIsFollowing={true}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
-      const button = screen.getByRole('button', { name: /acompanhando/i })
+      const button = screen.getByRole('button', {
+        name: `Deixar de acompanhar ${PARLAMENTAR_NOME}`,
+      })
       expect(button.getAttribute('aria-pressed')).toBe('true')
     })
 
@@ -124,13 +106,15 @@ describe('FollowButton', () => {
       render(
         <FollowButton
           initialIsFollowing={true}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
       await userEvent.click(
-        screen.getByRole('button', { name: /acompanhando/i }),
+        screen.getByRole('button', {
+          name: `Deixar de acompanhar ${PARLAMENTAR_NOME}`,
+        }),
       )
 
       await waitFor(() => {
@@ -141,7 +125,9 @@ describe('FollowButton', () => {
         })
       })
 
-      const button = screen.getByRole('button', { name: /acompanhar/i })
+      const button = screen.getByRole('button', {
+        name: `Acompanhar ${PARLAMENTAR_NOME}`,
+      })
       expect(button.getAttribute('aria-pressed')).toBe('false')
     })
   })
@@ -161,16 +147,20 @@ describe('FollowButton', () => {
       render(
         <FollowButton
           initialIsFollowing={false}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
-      await userEvent.click(screen.getByRole('button', { name: /acompanhar/i }))
+      await userEvent.click(
+        screen.getByRole('button', { name: `Acompanhar ${PARLAMENTAR_NOME}` }),
+      )
 
       // Deveria voltar para "Acompanhar" após a falha
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /acompanhar/i })
+        const button = screen.getByRole('button', {
+          name: `Acompanhar ${PARLAMENTAR_NOME}`,
+        })
         expect(button.getAttribute('aria-pressed')).toBe('false')
       })
     })
@@ -185,15 +175,19 @@ describe('FollowButton', () => {
       render(
         <FollowButton
           initialIsFollowing={false}
-          isAnonymous={false}
           parlamentarId={PARLAMENTAR_ID}
+          parlamentarNome={PARLAMENTAR_NOME}
         />,
       )
 
-      await userEvent.click(screen.getByRole('button', { name: /acompanhar/i }))
+      await userEvent.click(
+        screen.getByRole('button', { name: `Acompanhar ${PARLAMENTAR_NOME}` }),
+      )
 
       await waitFor(() => {
-        const button = screen.getByRole('button', { name: /acompanhar/i })
+        const button = screen.getByRole('button', {
+          name: `Acompanhar ${PARLAMENTAR_NOME}`,
+        })
         expect(button.getAttribute('aria-pressed')).toBe('false')
       })
     })
