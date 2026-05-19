@@ -83,8 +83,10 @@ Não é compliance mínimo. Inclui:
 ### 4. DPO
 
 - **Encarregado**: Fabio Caffarello (declarado em `/privacidade`).
-- **Contato**: `lgpd@brasilavera.org` (placeholder; MX no Cloudflare
-  Email Routing — tarefa Etapa 9).
+- **Contato**: `lgpd@brasilavera.org` — Cloudflare Email Routing
+  ativado na Etapa 9.8 (forward para o inbox pessoal do controlador).
+  Setup runbook em
+  [`docs/contributing/LGPD-EMAIL-SETUP.md`](../../contributing/LGPD-EMAIL-SETUP.md).
 - Substituição futura sem alteração de ADR: basta atualizar a política
   (bump `policy_version` dispara re-aceite via `consent_log`).
 
