@@ -1,39 +1,38 @@
 'use client'
 
-// SubTabs (Recebidos | Políticas) — Wave 10 Etapa 6.
+// SubTabs (Recebidos | Políticas) — Wave 10 Etapa 6, atualizado na
+// Fase 2 do refator pós-Wave 10 (RFC §6).
 //
-// Pattern espelhando /painel/parlamentares/sub-tabs (Etapa 4):
-// navegação via <Link> preservando URL state em `?tab=`. Sem
-// interatividade — só renderiza links.
+// Mudança Fase 2: URL state vira `?subtab=` (não mais `?tab=`); main
+// tab fixa em `alertas` no href. Type renomeado para `AlertasSubtab`
+// e importado do util central `@/lib/painel-tabs`.
+//
+// Pattern espelhando /painel/@parlamentares/sub-tabs.
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/cn'
-
-export type TabKey = 'recebidos' | 'politicas'
+import type { AlertasSubtab } from '@/lib/painel-tabs'
 
 interface Props {
-  active: TabKey
+  active: AlertasSubtab
   recebidosCount: number | null
 }
 
-const TABS: { key: TabKey; label: string }[] = [
+const SUBTABS: { key: AlertasSubtab; label: string }[] = [
   { key: 'recebidos', label: 'Recebidos' },
   { key: 'politicas', label: 'Políticas' },
 ]
 
 export function SubTabs({ active, recebidosCount }: Props) {
-  const pathname = usePathname()
-
   return (
     <nav
       aria-label="Sub-tabs de alertas"
       className="flex gap-1 border-border-strong border-b"
     >
-      {TABS.map((tab) => {
-        const isActive = tab.key === active
-        const showCount = tab.key === 'recebidos' && recebidosCount !== null
+      {SUBTABS.map((subtab) => {
+        const isActive = subtab.key === active
+        const showCount = subtab.key === 'recebidos' && recebidosCount !== null
         return (
           <Link
             aria-current={isActive ? 'page' : undefined}
@@ -43,10 +42,10 @@ export function SubTabs({ active, recebidosCount }: Props) {
                 ? 'border-brand text-foreground'
                 : 'border-transparent text-foreground-muted hover:border-border-strong hover:text-foreground',
             )}
-            href={`${pathname}?tab=${tab.key}`}
-            key={tab.key}
+            href={`/painel?tab=alertas&subtab=${subtab.key}`}
+            key={subtab.key}
           >
-            {tab.label}
+            {subtab.label}
             {showCount && (
               <span className="ml-1.5 text-foreground-subtle">
                 ({recebidosCount})

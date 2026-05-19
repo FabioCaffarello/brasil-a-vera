@@ -1,13 +1,18 @@
-// `/painel/configuracoes/meus-dados` — Wave 10 Etapa 9.5.
+// `/painel?tab=meus-dados` slot — Wave 10 Etapa 9.5, **promovida de
+// sub-rota a tab principal** na Fase 2 do refator pós-Wave 10
+// (RFC §3 / ADR-032 — privacidade como pilar, VISION §1 ponto 2).
+//
+// Convenção: folder `@meusDados/` (camelCase, prop ergonômica em
+// `layout.tsx`), URL slug `?tab=meus-dados` (kebab, padrão URL).
 //
 // Dashboard LGPD em 3 blocos:
-//   1. Seus dados: dump do que registramos (transparência ativa).
-//   2. Suas solicitações: histórico de pedidos LGPD (auditoria).
+//   1. Seus dados: dump do que registramos (transparência ativa)
+//   2. Suas solicitações: histórico de pedidos LGPD (auditoria)
 //   3. Ações: 3 botões (Exportar / Anonimizar / Eliminar) com
-//      modais de confirmação calibrados por gravidade.
+//      modais de confirmação calibrados por gravidade
 //
-// RSC server-side — carrega dados em paralelo, passa para o
-// client component <AcoesLgpd /> apenas os 3 botões. Sem flash.
+// Link "voltar para Configurações" atualizado de
+// `/painel/configuracoes` para `/painel?tab=configuracoes`.
 
 import { auth } from '@clerk/nextjs/server'
 import { ArrowLeft } from 'lucide-react'
@@ -21,9 +26,6 @@ import {
 } from '@/lib/queries/user-profile'
 
 export const dynamic = 'force-dynamic'
-export const metadata = {
-  title: 'Meus dados — Brasil à Vera',
-}
 
 const KIND_LABELS: Record<string, string> = {
   export: 'Exportação',
@@ -50,7 +52,7 @@ function formatDateTime(d: Date): string {
   })
 }
 
-export default async function MeusDadosPage() {
+export default async function MeusDadosSlot() {
   const { userId } = await auth()
   if (!userId) return null
 
@@ -81,7 +83,7 @@ export default async function MeusDadosPage() {
     <div className="container mx-auto max-w-2xl px-4 py-8">
       <Link
         className="inline-flex items-center gap-2 text-foreground-muted text-sm hover:text-foreground"
-        href="/painel/configuracoes"
+        href="/painel?tab=configuracoes"
       >
         <ArrowLeft aria-hidden className="size-4" />
         Configurações

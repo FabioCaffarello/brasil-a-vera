@@ -1,41 +1,43 @@
-// SubTabs (Acompanhando | Da minha UF) — Wave 10 Etapa 4.
+// SubTabs (Acompanhando | Da minha UF) — Wave 10 Etapa 4, atualizado
+// na Fase 2 do refator pós-Wave 10 (RFC §6).
 //
-// Navegação via Next `<Link>` preserva URL state em `?tab=`. Component
-// é client por causa de `usePathname` para decidir o ativo, mas só
-// renderiza <Link> — sem fetch nem interatividade complexa.
+// Mudança Fase 2: URL state vira `?subtab=` (não mais `?tab=`); main
+// tab fixa em `parlamentares` no href (preserva contexto ao trocar
+// sub-tab). Type renomeado para `ParlamentaresSubtab` e importado do
+// util central `@/lib/painel-tabs`.
+//
+// Navegação via Next `<Link>` preserva URL state. Component continua
+// client porque emite Link com `aria-current` baseado em prop active
+// (sem `usePathname` — pathname agora é sempre `/painel`).
 
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/cn'
-
-export type TabKey = 'acompanhando' | 'da-minha-uf'
+import type { ParlamentaresSubtab } from '@/lib/painel-tabs'
 
 interface Props {
-  active: TabKey
+  active: ParlamentaresSubtab
   acompanhandoCount: number
   daMinhaUfCount: number | null
 }
 
-const TABS: { key: TabKey; label: string }[] = [
+const SUBTABS: { key: ParlamentaresSubtab; label: string }[] = [
   { key: 'acompanhando', label: 'Acompanhando' },
   { key: 'da-minha-uf', label: 'Da minha UF' },
 ]
 
 export function SubTabs({ active, acompanhandoCount, daMinhaUfCount }: Props) {
-  const pathname = usePathname()
-
   return (
     <nav
       aria-label="Sub-tabs"
       className="flex gap-1 border-border-strong border-b"
     >
-      {TABS.map((tab) => {
-        const isActive = tab.key === active
+      {SUBTABS.map((subtab) => {
+        const isActive = subtab.key === active
         const count =
-          tab.key === 'acompanhando' ? acompanhandoCount : daMinhaUfCount
+          subtab.key === 'acompanhando' ? acompanhandoCount : daMinhaUfCount
         return (
           <Link
             aria-current={isActive ? 'page' : undefined}
@@ -45,10 +47,10 @@ export function SubTabs({ active, acompanhandoCount, daMinhaUfCount }: Props) {
                 ? 'border-brand text-foreground'
                 : 'border-transparent text-foreground-muted hover:border-border-strong hover:text-foreground',
             )}
-            href={`${pathname}?tab=${tab.key}`}
-            key={tab.key}
+            href={`/painel?tab=parlamentares&subtab=${subtab.key}`}
+            key={subtab.key}
           >
-            {tab.label}
+            {subtab.label}
             {count !== null && (
               <span className="ml-1.5 text-foreground-subtle">({count})</span>
             )}

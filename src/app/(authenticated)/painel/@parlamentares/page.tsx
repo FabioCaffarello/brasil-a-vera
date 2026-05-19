@@ -1,24 +1,25 @@
-// `/painel/parlamentares` — Wave 10 Etapa 4.
+// `/painel?tab=parlamentares` slot — Wave 10 Etapa 4, movido para slot
+// na Fase 2 do refator pós-Wave 10 (RFC §3, §6).
 //
-// 2 sub-tabs com URL state em `?tab=`:
+// 2 sub-tabs com URL state em `?subtab=` (renomeado de `?tab=` da Wave 10):
 //   - acompanhando: parlamentares que o usuário acompanha
 //   - da-minha-uf:  parlamentares da UF do perfil (com botão Acompanhar)
 //
-// Default tab (LOGGED-AREA-VISION §5.6):
-//   - sem UF preenchida → acompanhando (mais relevante; UF vazia força
-//     form inline no da-minha-uf, melhor não ser default)
-//   - com UF preenchida + 0 follows → da-minha-uf (pós-wizard)
-//   - com UF preenchida + ≥1 follow → acompanhando
+// Default (LOGGED-AREA-VISION §5.6 / RFC §8):
+//   - sem UF preenchida → acompanhando
+//   - com UF + 0 follows → da-minha-uf (pós-wizard)
+//   - com UF + ≥1 follow → acompanhando
 
 import { auth } from '@clerk/nextjs/server'
 
 import { BannerMudancaUf } from '@/components/painel/parlamentares/banner-mudanca-uf'
 import { ListaAcompanhando } from '@/components/painel/parlamentares/lista-acompanhando'
 import { ListaDaMinhaUf } from '@/components/painel/parlamentares/lista-da-minha-uf'
+import { SubTabs } from '@/components/painel/parlamentares/sub-tabs'
 import {
-  SubTabs,
-  type TabKey,
-} from '@/components/painel/parlamentares/sub-tabs'
+  type ParlamentaresSubtab,
+  parseParlamentaresSubtab,
+} from '@/lib/painel-tabs'
 import { getFollowsWithParlamentarMeta } from '@/lib/queries/follows'
 import {
   findUserProfileByClerkId,
@@ -26,27 +27,20 @@ import {
 } from '@/lib/queries/user-profile'
 
 export const dynamic = 'force-dynamic'
-export const metadata = {
-  title: 'Parlamentares — Brasil à Vera',
-}
 
-function normalizeTab(value: string | undefined): TabKey | undefined {
-  if (value === 'acompanhando' || value === 'da-minha-uf') return value
-  return undefined
-}
-
-function defaultTab(uf: string | null, followsCount: number): TabKey {
+function defaultSubtab(
+  uf: string | null,
+  followsCount: number,
+): ParlamentaresSubtab {
   if (!uf) return 'acompanhando'
   return followsCount === 0 ? 'da-minha-uf' : 'acompanhando'
 }
 
 interface PageProps {
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ subtab?: string | string[] }>
 }
 
-export default async function PainelParlamentaresPage({
-  searchParams,
-}: PageProps) {
+export default async function ParlamentaresSlot({ searchParams }: PageProps) {
   const { userId } = await auth()
   if (!userId) return null
 
@@ -79,8 +73,9 @@ export default async function PainelParlamentaresPage({
         }))
     : []
 
-  const activeTab =
-    normalizeTab(params.tab) ?? defaultTab(profile.uf, acompanhados.length)
+  const activeSubtab =
+    parseParlamentaresSubtab(params.subtab) ??
+    defaultSubtab(profile.uf, acompanhados.length)
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -101,12 +96,12 @@ export default async function PainelParlamentaresPage({
 
       <SubTabs
         acompanhandoCount={acompanhados.length}
-        active={activeTab}
+        active={activeSubtab}
         daMinhaUfCount={null}
       />
 
       <div className="mt-6">
-        {activeTab === 'acompanhando' ? (
+        {activeSubtab === 'acompanhando' ? (
           <ListaAcompanhando
             acompanhados={acompanhados.map((p) => ({
               id: p.id,

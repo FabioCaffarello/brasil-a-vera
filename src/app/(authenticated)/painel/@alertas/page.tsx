@@ -1,37 +1,29 @@
-// `/painel/alertas` — Wave 10 Etapa 6 + 7.4.
+// `/painel?tab=alertas` slot — Wave 10 Etapa 6 + 7.4, movido para slot
+// na Fase 2 do refator pós-Wave 10 (RFC §3, §6).
 //
-// 2 sub-tabs com URL state em `?tab=`:
+// 2 sub-tabs com URL state em `?subtab=` (renomeado de `?tab=` da Wave 10):
 //   - recebidos: inbox de alert_delivery (channel=inapp)
 //   - politicas: form completo de gerenciamento da alert_policy
 //
-// Default tab até Etapa 7.4: políticas. Após cron rodar e popular
-// deliveries, owner pode mudar default para recebidos via copy
-// adjustment. Por enquanto mantém políticas (form útil pra setup).
+// Default: `politicas` (preserva default da Wave 10 — form útil pra setup).
 
 import { auth } from '@clerk/nextjs/server'
 
 import { FormPoliticas } from '@/components/painel/alertas/form-politicas'
 import { ListaRecebidos } from '@/components/painel/alertas/lista-recebidos'
-import { SubTabs, type TabKey } from '@/components/painel/alertas/sub-tabs'
+import { SubTabs } from '@/components/painel/alertas/sub-tabs'
+import { parseAlertasSubtab } from '@/lib/painel-tabs'
 import { listInappDeliveriesByUserId } from '@/lib/queries/alert-delivery'
 import { getAlertPolicyOrDefaults } from '@/lib/queries/alert-policy'
 import { getOrCreateUserProfileId } from '@/lib/queries/user-profile'
 
 export const dynamic = 'force-dynamic'
-export const metadata = {
-  title: 'Alertas — Brasil à Vera',
-}
-
-function normalizeTab(value: string | undefined): TabKey | undefined {
-  if (value === 'recebidos' || value === 'politicas') return value
-  return undefined
-}
 
 interface PageProps {
-  searchParams: Promise<{ tab?: string }>
+  searchParams: Promise<{ subtab?: string | string[] }>
 }
 
-export default async function PainelAlertasPage({ searchParams }: PageProps) {
+export default async function AlertasSlot({ searchParams }: PageProps) {
   const { userId } = await auth()
   if (!userId) return null
 
@@ -46,7 +38,7 @@ export default async function PainelAlertasPage({ searchParams }: PageProps) {
   }
 
   const params = await searchParams
-  const activeTab = normalizeTab(params.tab) ?? 'politicas'
+  const activeSubtab = parseAlertasSubtab(params.subtab) ?? 'politicas'
 
   const [policy, deliveries] = await Promise.all([
     getAlertPolicyOrDefaults(internalUserId),
@@ -64,10 +56,10 @@ export default async function PainelAlertasPage({ searchParams }: PageProps) {
         </p>
       </header>
 
-      <SubTabs active={activeTab} recebidosCount={deliveries.length} />
+      <SubTabs active={activeSubtab} recebidosCount={deliveries.length} />
 
       <div className="mt-6">
-        {activeTab === 'recebidos' ? (
+        {activeSubtab === 'recebidos' ? (
           <ListaRecebidos
             deliveries={deliveries.map((d) => ({
               id: d.id,

@@ -1,14 +1,14 @@
-// `/painel/configuracoes` — Wave 10 Etapa 5.
+// `/painel?tab=configuracoes` slot — Wave 10 Etapa 5, movido para slot
+// na Fase 2 do refator pós-Wave 10 (RFC §3, §6).
 //
 // 4 seções verticais (LOGGED-AREA-VISION §5.4):
 //   - Perfil (Nome, E-mail read-only, UF)
 //   - Temas de interesse (8 chips)
 //   - Comunicação (2 opt-ins separados de alertas de serviço)
-//   - Privacidade (links para /meus-dados e /privacidade)
+//   - Privacidade (link interno para a tab Meus dados + link público)
 //
-// A antiga seção "Preferências de acompanhamento" (mencionada no
-// VISION original) é consolidada na sub-tab Políticas de
-// /painel/alertas — Etapa 6.
+// Link "Ver, exportar ou apagar meus dados" atualizado para
+// `/painel?tab=meus-dados` (Meus Dados promovida a tab principal — RFC §6).
 
 import { auth } from '@clerk/nextjs/server'
 import { ArrowRight } from 'lucide-react'
@@ -23,11 +23,8 @@ import {
 } from '@/lib/queries/user-profile'
 
 export const dynamic = 'force-dynamic'
-export const metadata = {
-  title: 'Configurações — Brasil à Vera',
-}
 
-export default async function ConfiguracoesPage() {
+export default async function ConfiguracoesSlot() {
   const { userId } = await auth()
   if (!userId) return null
 
@@ -95,7 +92,7 @@ export default async function ConfiguracoesPage() {
             <li>
               <Link
                 className="inline-flex items-center gap-2 text-foreground underline underline-offset-4 hover:text-brand"
-                href="/painel/configuracoes/meus-dados"
+                href="/painel?tab=meus-dados"
               >
                 Ver, exportar ou apagar meus dados
                 <ArrowRight aria-hidden className="size-4" />

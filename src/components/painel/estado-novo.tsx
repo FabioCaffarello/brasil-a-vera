@@ -65,11 +65,11 @@ export async function EstadoNovo({ uf }: Props) {
           locais, preencha sua UF em{' '}
           <Link
             className="underline underline-offset-4 hover:text-foreground"
-            href="/painel/configuracoes"
+            href="/painel?tab=configuracoes"
           >
             Configurações
-          </Link>{' '}
-          (em construção — Wave 10 Etapa 5).
+          </Link>
+          .
         </p>
       )}
     </section>
