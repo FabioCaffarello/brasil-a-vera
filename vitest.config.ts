@@ -35,6 +35,15 @@ export default defineConfig({
         '**/types.ts',
         'src/lib/queries/**',
         'src/lib/og/**',
+        // Wave 10 Etapa 7.2 — agregadores semanais: queries.ts é
+        // db-dependent (mesma justificativa de src/lib/queries/);
+        // alertas-semanais.ts é orquestrador thin que chama essas
+        // queries — testá-lo sem mock de db (proibido pela memória
+        // feedback_db_testing.md) exigiria testcontainers, fora de
+        // escopo da Wave 10. compose-markdown.ts (pure) PERMANECE
+        // coberto e tem ~92% de coverage.
+        'src/lib/aggregators/queries.ts',
+        'src/lib/aggregators/alertas-semanais.ts',
       ],
       thresholds: {
         lines: 80,
