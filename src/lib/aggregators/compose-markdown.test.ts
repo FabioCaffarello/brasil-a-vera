@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { composeReportMarkdown } from './compose-markdown'
 import type {
-  Aggregate,
   DivergenciaItem,
   GastoItem,
   ProposicaoItem,
