@@ -120,7 +120,7 @@ export function VotosConsolidadosChart({ data }: Props) {
                 innerRadius="62%"
                 outerRadius="92%"
                 paddingAngle={2}
-                stroke="hsl(var(--surface))"
+                stroke="var(--surface)"
                 strokeWidth={2}
               >
                 {chartData.map((d) => (
