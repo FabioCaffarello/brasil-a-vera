@@ -57,7 +57,7 @@ export function VotacoesRelacionadasFooter({ votacoes }: Props) {
           return (
             <li key={v.id}>
               <Link
-                className="flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated"
+                className="flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={`/votacoes/${v.id}`}
               >
                 <div className="flex flex-wrap items-center gap-2 text-xs">

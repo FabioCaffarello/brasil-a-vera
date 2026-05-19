@@ -93,7 +93,11 @@ export function DisciplinaPartidariaChart({ data }: Props) {
   const height = data.length * 28 + 24
 
   return (
-    <div className="w-full" style={{ height }}>
+    <figure
+      aria-label={`Disciplina partidária — ${data.length} ${data.length === 1 ? 'partido' : 'partidos'} com orientação efetiva. Média: ${Math.round(data.reduce((acc, d) => acc + d.pctDisciplina, 0) / data.length)}%`}
+      className="w-full"
+      style={{ height }}
+    >
       <ResponsiveContainer height="100%" width="100%">
         <BarChart
           data={[...data]}
@@ -140,6 +144,6 @@ export function DisciplinaPartidariaChart({ data }: Props) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   )
 }
