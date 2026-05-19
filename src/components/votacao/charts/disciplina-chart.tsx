@@ -3,6 +3,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -11,6 +12,15 @@ import {
 } from 'recharts'
 
 import type { DisciplinaPartidoRow } from '@/lib/queries/votacoes'
+
+// Opacidade decrescente por ranking (DESIGN-TOKENS §"Padrões de uso
+// em charts"). Mesmo helper de gastos-chart.tsx.
+const RANKING_OPACITY: readonly number[] = [
+  1, 0.85, 0.7, 0.6, 0.5, 0.4, 0.3,
+] as const
+function rankingOpacity(idx: number): number {
+  return RANKING_OPACITY[Math.min(idx, RANKING_OPACITY.length - 1)] ?? 0.3
+}
 
 interface Props {
   data: readonly DisciplinaPartidoRow[]
@@ -107,7 +117,7 @@ export function DisciplinaPartidariaChart({ data }: Props) {
           <XAxis
             axisLine={false}
             domain={[0, 100]}
-            tick={{ fill: 'hsl(var(--foreground-muted))', fontSize: 10 }}
+            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
             tickFormatter={(v: number) => `${v}%`}
             tickLine={false}
             type="number"
@@ -115,7 +125,7 @@ export function DisciplinaPartidariaChart({ data }: Props) {
           <YAxis
             axisLine={false}
             dataKey="partido"
-            tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
+            tick={{ fill: 'var(--foreground)', fontSize: 11 }}
             tickLine={false}
             type="category"
             width={64}
@@ -124,16 +134,29 @@ export function DisciplinaPartidariaChart({ data }: Props) {
             content={(props: unknown) => (
               <DisciplinaTooltip {...(props as CustomTooltipProps)} />
             )}
-            cursor={{ fill: 'hsl(var(--accent) / 0.06)' }}
+            cursor={{
+              fill: 'color-mix(in oklch, var(--accent) 6%, transparent)',
+            }}
           />
           <Bar
             dataKey="pctDisciplina"
-            fill="hsl(var(--success))"
+            fill="var(--chart-1)"
             radius={[0, 4, 4, 0]}
           >
+            {/* Opacidade decrescente por ranking de disciplina (a query
+                já ordena por totalAtivo DESC). Disciplina não é "bom/ruim"
+                (P2 honestidade) — usa --chart-1 (categórico), não
+                --success. Cap em 0.3 preserva WCAG 1.4.11. */}
+            {data.map((entry, idx) => (
+              <Cell
+                fill="var(--chart-1)"
+                fillOpacity={rankingOpacity(idx)}
+                key={entry.partido}
+              />
+            ))}
             <LabelList
               dataKey="pctDisciplina"
-              fill="hsl(var(--foreground))"
+              fill="var(--foreground)"
               fontSize={11}
               formatter={(value) =>
                 typeof value === 'number' ? `${value.toFixed(0)}%` : ''

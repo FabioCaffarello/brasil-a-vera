@@ -119,11 +119,11 @@ export function VotacaoVotosConsolidadosChart({ data }: Props) {
                 innerRadius="62%"
                 outerRadius="92%"
                 paddingAngle={2}
-                stroke="hsl(var(--surface))"
+                stroke="var(--surface)"
                 strokeWidth={2}
               >
                 {chartData.map((d) => (
-                  <Cell fill={`hsl(var(${d.cssVar}))`} key={d.key} />
+                  <Cell fill={`var(${d.cssVar})`} key={d.key} />
                 ))}
               </Pie>
             </PieChart>
@@ -146,7 +146,7 @@ export function VotacaoVotosConsolidadosChart({ data }: Props) {
               <span
                 aria-hidden
                 className="h-3 w-3 shrink-0 rounded-sm"
-                style={{ backgroundColor: `hsl(var(${d.cssVar}))` }}
+                style={{ backgroundColor: `var(${d.cssVar})` }}
               />
               <span className="flex-1 text-foreground">{d.label}</span>
               <span className="tabular-nums text-foreground-muted">

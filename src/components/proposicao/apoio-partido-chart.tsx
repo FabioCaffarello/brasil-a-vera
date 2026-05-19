@@ -3,6 +3,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -11,6 +12,15 @@ import {
 } from 'recharts'
 
 import type { ApoioPartidoDatum } from './proposicao-charts-types'
+
+// Opacidade decrescente por ranking (DESIGN-TOKENS §"Padrões de uso
+// em charts"). Mesmo helper de gastos-chart.tsx + disciplina-chart.tsx.
+const RANKING_OPACITY: readonly number[] = [
+  1, 0.85, 0.7, 0.6, 0.5, 0.4, 0.3,
+] as const
+function rankingOpacity(idx: number): number {
+  return RANKING_OPACITY[Math.min(idx, RANKING_OPACITY.length - 1)] ?? 0.3
+}
 
 interface Props {
   data: readonly ApoioPartidoDatum[]
@@ -118,14 +128,14 @@ export function ApoioPartidoChart({ data }: Props) {
           <XAxis
             allowDecimals={false}
             axisLine={false}
-            tick={{ fill: 'hsl(var(--foreground-muted))', fontSize: 10 }}
+            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
             tickLine={false}
             type="number"
           />
           <YAxis
             axisLine={false}
             dataKey="sigla"
-            tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
+            tick={{ fill: 'var(--foreground)', fontSize: 11 }}
             tickLine={false}
             type="category"
             width={72}
@@ -134,21 +144,25 @@ export function ApoioPartidoChart({ data }: Props) {
             content={(props: unknown) => (
               <ApoioTooltip {...(props as CustomTooltipProps)} />
             )}
-            cursor={{ fill: 'hsl(var(--accent) / 0.06)' }}
+            cursor={{
+              fill: 'color-mix(in oklch, var(--accent) 6%, transparent)',
+            }}
           />
-          {/* Single fill com variação via fillOpacity prop function — evita
-              importar Cell (cada Cell custa ~1.5 kB gzip no chunk
-              Recharts). "Outros" fica em opacity 0.4 (P4: variação por
-              tom, não hue distinto). */}
-          <Bar
-            dataKey="count"
-            fill="hsl(var(--chart-1))"
-            fillOpacity={1}
-            radius={[0, 6, 6, 0]}
-          >
+          {/* Opacidade decrescente por ranking de autores (--chart-1
+              + RANKING_OPACITY). Data vem ordenada por count DESC do
+              getApoioPorPartido, então índice = posição no ranking.
+              "Outros" cai naturalmente no último slot (opacity 0.3). */}
+          <Bar dataKey="count" fill="var(--chart-1)" radius={[0, 6, 6, 0]}>
+            {data.map((entry, idx) => (
+              <Cell
+                fill="var(--chart-1)"
+                fillOpacity={rankingOpacity(idx)}
+                key={entry.sigla}
+              />
+            ))}
             <LabelList
               dataKey="count"
-              fill="hsl(var(--foreground))"
+              fill="var(--foreground)"
               fontSize={11}
               offset={6}
               position="right"

@@ -62,7 +62,7 @@ function PartidoTooltip({ active, payload }: CustomTooltipProps) {
               <span
                 aria-hidden
                 className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                style={{ backgroundColor: `hsl(var(${s.cssVar}))` }}
+                style={{ backgroundColor: `var(${s.cssVar})` }}
               />
               <span className="flex-1 text-foreground">{s.label}</span>
               <span>{valor}</span>
@@ -123,14 +123,14 @@ export function VotacaoPorPartidoChart({ data }: Props) {
           <XAxis
             allowDecimals={false}
             axisLine={false}
-            tick={{ fill: 'hsl(var(--foreground-muted))', fontSize: 10 }}
+            tick={{ fill: 'var(--foreground-muted)', fontSize: 10 }}
             tickLine={false}
             type="number"
           />
           <YAxis
             axisLine={false}
             dataKey="partidoSigla"
-            tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
+            tick={{ fill: 'var(--foreground)', fontSize: 11 }}
             tickLine={false}
             type="category"
             width={64}
@@ -139,12 +139,14 @@ export function VotacaoPorPartidoChart({ data }: Props) {
             content={(props: unknown) => (
               <PartidoTooltip {...(props as CustomTooltipProps)} />
             )}
-            cursor={{ fill: 'hsl(var(--accent) / 0.06)' }}
+            cursor={{
+              fill: 'color-mix(in oklch, var(--accent) 6%, transparent)',
+            }}
           />
           {SEGMENTOS.map((s, idx) => (
             <Bar
               dataKey={s.key}
-              fill={`hsl(var(${s.cssVar}))`}
+              fill={`var(${s.cssVar})`}
               key={s.key}
               radius={
                 idx === SEGMENTOS.length - 1 ? [0, 4, 4, 0] : [0, 0, 0, 0]

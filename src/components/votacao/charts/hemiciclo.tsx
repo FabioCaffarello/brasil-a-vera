@@ -118,7 +118,7 @@ function distribuirPontos(
       pontos.push({
         cx,
         cy,
-        fill: `hsl(var(${v.cssVar}))`,
+        fill: `var(${v.cssVar})`,
         title: `${v.parlamentar.parlamentarNome} (${v.parlamentar.parlamentarPartidoSigla}/${v.parlamentar.parlamentarUf}) — ${ORDEM_VOTO.find((o) => o.voto === v.voto)?.label ?? v.voto}`,
       })
       votoIdx += 1
@@ -206,7 +206,7 @@ export function VotacaoHemicicloChart({ votos }: Props) {
                 <span
                   aria-hidden
                   className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                  style={{ backgroundColor: `hsl(var(${cat.cssVar}))` }}
+                  style={{ backgroundColor: `var(${cat.cssVar})` }}
                 />
                 <span className="text-foreground-muted">{cat.label}</span>
                 <span className="tabular-nums text-foreground">{n}</span>
