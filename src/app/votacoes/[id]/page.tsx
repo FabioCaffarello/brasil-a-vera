@@ -2,6 +2,7 @@ import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
@@ -302,14 +303,21 @@ export default async function VotacaoPage({ params }: PageProps) {
                 votosNao={v.votosNao}
                 votosSim={v.votosSim}
               />
-              <VotacaoVotosConsolidadosChart
-                data={{
-                  sim: v.votosSim,
-                  nao: v.votosNao,
-                  abstencao: v.abstencoes,
-                  ausentes: v.ausentes ?? 0,
-                }}
-              />
+              {/* D3 — Hemiciclo SVG em desktop (≥md), Donut em viewport
+                  estreito. SVG puro server-rendered, zero JS, ~120 linhas. */}
+              <div className="hidden md:block">
+                <VotacaoHemicicloChart votos={votos} />
+              </div>
+              <div className="md:hidden">
+                <VotacaoVotosConsolidadosChart
+                  data={{
+                    sim: v.votosSim,
+                    nao: v.votosNao,
+                    abstencao: v.abstencoes,
+                    ausentes: v.ausentes ?? 0,
+                  }}
+                />
+              </div>
               <VotosResumo
                 totais={{
                   sim: v.votosSim,
