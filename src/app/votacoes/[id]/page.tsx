@@ -1,4 +1,12 @@
-import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
+import {
+  BarChart3,
+  Check,
+  CircleSlash,
+  FileText,
+  UserMinus,
+  Users,
+  X,
+} from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
@@ -9,6 +17,7 @@ import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
+import { RebeldesList } from '@/components/votacao/rebeldes-list'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
@@ -24,6 +33,7 @@ import {
 import {
   getDisciplinaPartidariaPorVotacao,
   getProposicaoVinculada,
+  getRebeldesByVotacao,
   getVotacaoById,
   getVotosByVotacao,
   getVotosResumoPorPartido,
@@ -70,12 +80,14 @@ export default async function VotacaoPage({ params }: PageProps) {
   const v = await getVotacaoById(id)
   if (!v) notFound()
 
-  const [proposicao, votos, resumoPorPartido, disciplinas] = await Promise.all([
-    getProposicaoVinculada(v.proposicaoId),
-    getVotosByVotacao(v.id),
-    getVotosResumoPorPartido(v.id),
-    getDisciplinaPartidariaPorVotacao(v.id),
-  ])
+  const [proposicao, votos, resumoPorPartido, disciplinas, rebeldes] =
+    await Promise.all([
+      getProposicaoVinculada(v.proposicaoId),
+      getVotosByVotacao(v.id),
+      getVotosResumoPorPartido(v.id),
+      getDisciplinaPartidariaPorVotacao(v.id),
+      getRebeldesByVotacao(v.id),
+    ])
 
   // KpiStrip híbrido (D1 do WAVE-9-VOTACOES-PLAN.md) — SIM/NÃO como
   // âncoras cognitivas, Margem + Disciplina como narrativa única de
@@ -193,6 +205,11 @@ export default async function VotacaoPage({ params }: PageProps) {
                   label: 'Disciplina',
                   icon: <BarChart3 className="h-4 w-4" />,
                 },
+                {
+                  id: 'rebeldes',
+                  label: 'Rebeldes',
+                  icon: <UserMinus className="h-4 w-4" />,
+                },
               ]
             : []),
           {
@@ -265,20 +282,38 @@ export default async function VotacaoPage({ params }: PageProps) {
           </AccordionContent>
         </AccordionItem>
 
-        {/* Disciplina partidária — D5: condicional, só renderiza se há
-            orientações de bancada registradas (disciplinas.length > 0). */}
+        {/* Disciplina partidária + Rebeldes — D5: condicionais, só
+            renderizam se há orientações de bancada registradas
+            (disciplinas.length > 0). */}
         {disciplinas.length > 0 ? (
-          <AccordionItem
-            className="rounded-lg border-border bg-surface px-4"
-            value="disciplina"
-          >
-            <AccordionTrigger className="font-semibold text-base">
-              Disciplina partidária
-            </AccordionTrigger>
-            <AccordionContent>
-              <DisciplinaPartidariaChart data={disciplinas} />
-            </AccordionContent>
-          </AccordionItem>
+          <>
+            <AccordionItem
+              className="rounded-lg border-border bg-surface px-4"
+              value="disciplina"
+            >
+              <AccordionTrigger className="font-semibold text-base">
+                Disciplina partidária
+              </AccordionTrigger>
+              <AccordionContent>
+                <DisciplinaPartidariaChart data={disciplinas} />
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem
+              className="rounded-lg border-border bg-surface px-4"
+              value="rebeldes"
+            >
+              <AccordionTrigger className="font-semibold text-base">
+                Quem rebelou-se
+              </AccordionTrigger>
+              <AccordionContent>
+                <RebeldesList
+                  partidosComOrientacao={disciplinas.length}
+                  rebeldes={rebeldes}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          </>
         ) : null}
 
         <AccordionItem
@@ -393,18 +428,32 @@ export default async function VotacaoPage({ params }: PageProps) {
           </div>
         </SectionCard>
 
-        {/* Disciplina partidária — D5: condicional, só renderiza se há
-            orientações de bancada registradas. Quando ausente, a seção
-            inteira some (sem placeholder vazio). */}
+        {/* Disciplina partidária + Rebeldes — D5: condicionais, só
+            renderizam se há orientações de bancada registradas. Quando
+            ausentes, ambas as seções somem (sem placeholders vazios). */}
         {disciplinas.length > 0 ? (
-          <SectionCard
-            className="scroll-mt-28"
-            id="disciplina"
-            subtitle="% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem."
-            title="Disciplina partidária"
-          >
-            <DisciplinaPartidariaChart data={disciplinas} />
-          </SectionCard>
+          <>
+            <SectionCard
+              className="scroll-mt-28"
+              id="disciplina"
+              subtitle="% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem."
+              title="Disciplina partidária"
+            >
+              <DisciplinaPartidariaChart data={disciplinas} />
+            </SectionCard>
+
+            <SectionCard
+              className="scroll-mt-28"
+              id="rebeldes"
+              subtitle="Parlamentares que votaram contra a orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva."
+              title="Quem rebelou-se"
+            >
+              <RebeldesList
+                partidosComOrientacao={disciplinas.length}
+                rebeldes={rebeldes}
+              />
+            </SectionCard>
+          </>
         ) : null}
 
         <SectionCard
