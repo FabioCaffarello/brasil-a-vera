@@ -1269,6 +1269,16 @@ Documento canônico:
 - **Rate limit follows via Workers KV não entrou na Etapa 10** — cap 200 já protege contra abuso; volume Wave 10 (≤750 MAU) não justifica infra nova.
 - **Smoke E2E signup→follow→alerta deferido** — Clerk signup automatizado exige bot account; smoke anônimo cobre breakages das rotas públicas.
 
+### Hotfixes pós-fechamento
+
+Três hotfixes mergeados em 2026-05-19, após a tag `v0.10.0-area-logada`. Não alteraram o release; aterrissaram a partir de revisão da rota pública `/parlamentares`, cristalização de princípio de gating server-side e fechamento do gap de navegação para usuário logado.
+
+| Hotfix | Conteúdo | PR |
+|---|---|---|
+| 10.1 | Redesign vertical do `ParlamentarCard` com footer-action (`<article>` + `<h3>` + `line-clamp-2`, fim da ellipsis nos nomes); `FollowButton` icon-only `Bell`/`BellRing`; gating server-side do botão — anônimo não recebe o HTML (`isAnonymous` removido do contrato) | [#335](https://github.com/FabioCaffarello/brasil-a-vera/pull/335) |
+| 10.2 | `canExport()` centralizado em `src/lib/auth-guards.ts`; `<ExportCsvLink>` gateado em 4 rotas (parlamentares, proposicoes, votacoes, votacao detalhe — 5 sites de render); princípio "saída de dados em massa exige autenticação prévia" cristalizado em JSDoc (ADR formal deferida) | [#336](https://github.com/FabioCaffarello/brasil-a-vera/pull/336) |
+| 10.3 | Link "Painel" na navbar para usuário logado (Proposta C: primeiro item, mesmo peso visual); `Navbar` async RSC com `auth()` deriva `personalLink` e passa por prop para `NavLinks`/`NavMobile`; zero flicker, zero layout shift, sem `useAuth`/`useUser` | [#338](https://github.com/FabioCaffarello/brasil-a-vera/pull/338) |
+
 ---
 
 ## Dependências entre Waves
