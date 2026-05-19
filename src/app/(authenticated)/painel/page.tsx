@@ -1,15 +1,24 @@
-// `/painel` — Wave 10 Etapas 1 e 2.
+// `/painel` Resumo — Wave 10 Etapa 3.
 //
-// Etapa 1: validar fluxo de login + lazy upsert do user_profile.
-// Etapa 2: mostrar contagem real de parlamentares acompanhados.
+// 4 estados dinâmicos (LOGGED-AREA-VISION §5.1):
+//   - onboarding-wizard: `onboarded_at IS NULL` → renderiza modal full-screen
+//   - novo: `onboarded_at IS NOT NULL` E `count(follows) = 0`
+//   - onboarding: `onboarded_at IS NOT NULL` E `1 ≤ count(follows) ≤ 4` E
+//                 sem `alert_delivery` recebida
+//   - maduro: `count(follows) ≥ 5` OU `count(alert_delivery delivered) ≥ 1`
 //
-// Estados completos (KPI strip, recomendações por UF, último report)
-// entram na Etapa 3 (LOGGED-AREA-VISION §5.1, 4 estados dinâmicos +
-// wizard de onboarding).
+// Etapa 3 não inclui alert_delivery (Etapa 7) — então a condição de
+// "maduro por delivery" sempre será false aqui; `maduro` só dispara
+// quando `count(follows) ≥ 5`. Lógica fica preparada para Etapa 7
+// destravar a segunda via.
 
 import { auth } from '@clerk/nextjs/server'
 
-import { countFollowsByUserId } from '@/lib/queries/follows'
+import { EstadoMaduro } from '@/components/painel/estado-maduro'
+import { EstadoNovo } from '@/components/painel/estado-novo'
+import { EstadoOnboarding } from '@/components/painel/estado-onboarding'
+import { OnboardingWizard } from '@/components/painel/onboarding-wizard'
+import { countFollowsByUserId, getFollowsByUserId } from '@/lib/queries/follows'
 import {
   findUserProfileByClerkId,
   getOrCreateUserProfileId,
@@ -17,47 +26,60 @@ import {
 
 export const dynamic = 'force-dynamic'
 
+const MATURE_FOLLOWS_THRESHOLD = 5
+
 export default async function PainelPage() {
   const { userId } = await auth()
-  if (!userId) {
-    // Estado impossível em prod (middleware redireciona antes), mas
-    // type-narrowing força o check.
-    return null
-  }
+  if (!userId) return null // middleware redireciona; type-narrowing.
 
   const internalUserId = await getOrCreateUserProfileId(userId)
-  const profile = internalUserId ? await findUserProfileByClerkId(userId) : null
+  if (!internalUserId) {
+    // Estado anormal: Clerk session sem email primário. Renderiza
+    // erro neutro em vez de quebrar o middleware ou logar o usuário fora.
+    return (
+      <div className="container mx-auto max-w-2xl px-4 py-16 text-foreground-muted">
+        Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
+        segundos.
+      </div>
+    )
+  }
 
-  const followsCount = internalUserId
-    ? await countFollowsByUserId(internalUserId)
-    : 0
+  const profile = await findUserProfileByClerkId(userId)
+  if (!profile) return null
 
+  // Estado 1: onboarding-wizard
+  if (profile.onboardedAt === null) {
+    return <OnboardingWizard />
+  }
+
+  const [followsCount, followedIds] = await Promise.all([
+    countFollowsByUserId(internalUserId),
+    getFollowsByUserId(internalUserId),
+  ])
+
+  // Estado 2: novo
+  if (followsCount === 0) {
+    return <EstadoNovo isAnonymous={false} uf={profile.uf} />
+  }
+
+  // Estado 4: maduro (limiar por follows; alert_delivery vem na Etapa 7)
+  if (followsCount >= MATURE_FOLLOWS_THRESHOLD) {
+    return (
+      <EstadoMaduro
+        displayName={profile.displayName}
+        followedIds={followedIds}
+        followsCount={followsCount}
+        uf={profile.uf}
+      />
+    )
+  }
+
+  // Estado 3: onboarding (1-4 follows)
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-16">
-      <h1 className="font-semibold text-3xl text-foreground tracking-tight">
-        Em construção
-      </h1>
-      <p className="mt-4 text-base text-muted-foreground">
-        Olá, {profile?.displayName ?? profile?.email ?? 'cidadão(ã)'}. A área
-        logada do Brasil à Vera está sendo construída em fases.
-      </p>
-      <p className="mt-2 text-base text-muted-foreground">
-        Você está acompanhando{' '}
-        <span className="font-semibold text-foreground">{followsCount}</span>{' '}
-        {followsCount === 1 ? 'parlamentar' : 'parlamentares'}. Próximas etapas
-        habilitam alertas semanais consolidados e dashboard LGPD.
-      </p>
-      <p className="mt-4 text-muted-foreground text-sm">
-        Documento de visão:{' '}
-        <a
-          className="underline underline-offset-4 hover:text-foreground"
-          href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/product/LOGGED-AREA-VISION.md"
-          rel="noreferrer"
-          target="_blank"
-        >
-          LOGGED-AREA-VISION.md
-        </a>
-      </p>
-    </div>
+    <EstadoOnboarding
+      followedIds={followedIds}
+      followsCount={followsCount}
+      uf={profile.uf}
+    />
   )
 }

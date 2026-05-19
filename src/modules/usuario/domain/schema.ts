@@ -1,7 +1,9 @@
 import { sql } from 'drizzle-orm'
 import {
+  boolean,
   char,
   index,
+  jsonb,
   pgSchema,
   primaryKey,
   text,
@@ -48,6 +50,15 @@ export const userProfile = usuarioSchema.table(
     // Wizard de onboarding (LOGGED-AREA-VISION §5.6): NULL = ainda não
     // completou o wizard. Setado em Etapa 3.
     onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
+    // Temas de interesse (Wave 10 Etapa 3). Array JSONB de strings com
+    // os ids dos temas escolhidos no wizard (subset de TEMA_IDS).
+    // Decisão registrada em LOGGED-AREA-VISION §5.6: lista é fixa (8) e
+    // não há queries reversas críticas — coluna jsonb simples > 8 booleanas
+    // > junction table. Default `[]` evita lidar com `null` no consumer.
+    themes: jsonb('themes')
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
   },
   (table) => [
     // Unique em clerk_user_id — chave natural usada pelo webhook do Clerk
@@ -101,3 +112,41 @@ export const follows = usuarioSchema.table(
 
 export type Follow = typeof follows.$inferSelect
 export type NewFollow = typeof follows.$inferInsert
+
+// `alert_policy` — Wave 10 Etapa 3 (antecipada para persistir as
+// escolhas do passo 3 do wizard; UI completa de gerenciamento entra
+// na Etapa 6 sub-tab Políticas em /painel/alertas).
+//
+// 1:1 com user_profile via `user_id` como PK + FK. Colunas booleanas
+// tipadas em vez de jsonb (ADR-029 §Schema/§4): topics e boosts são
+// flags planas independentes, queriables, lidas pelo Drizzle sem
+// coerção. Refator vem só quando entrarem ≥4 canais + matriz
+// canal×topic (anti-pattern #2 do LOGGED-AREA-VISION §12).
+//
+// Cadence default `weekly` (LOGGED-AREA-VISION §6). channel_email +
+// channel_inapp default `true` — Etapa 3 não expõe canais; serão
+// configuráveis na sub-tab Políticas da Etapa 6.
+export const alertPolicy = usuarioSchema.table('alert_policy', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => userProfile.id, { onDelete: 'cascade' }),
+  cadence: text('cadence').notNull().default('weekly'),
+  channelEmail: boolean('channel_email').notNull().default(true),
+  channelInapp: boolean('channel_inapp').notNull().default(true),
+  topicVotacoes: boolean('topic_votacoes').notNull().default(true),
+  topicGastos: boolean('topic_gastos').notNull().default(false),
+  topicProposicoes: boolean('topic_proposicoes').notNull().default(true),
+  topicDiscursos: boolean('topic_discursos').notNull().default(false),
+  topicDivergencias: boolean('topic_divergencias').notNull().default(true),
+  boostEleicoes: boolean('boost_eleicoes').notNull().default(true),
+  boostCpis: boolean('boost_cpis').notNull().default(true),
+  boostProposicoesMarcadas: boolean('boost_proposicoes_marcadas')
+    .notNull()
+    .default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+})
+
+export type AlertPolicy = typeof alertPolicy.$inferSelect
+export type NewAlertPolicy = typeof alertPolicy.$inferInsert
