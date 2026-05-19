@@ -85,6 +85,13 @@
       "when": 1779193512212,
       "tag": "0011_luxuriant_jocasta",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1779195524726,
+      "tag": "0012_curvy_wonder_man",
+      "breakpoints": true
     }
   ]
 }

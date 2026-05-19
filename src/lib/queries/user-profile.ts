@@ -5,8 +5,8 @@
 // para serem chamadas tanto do lazy upsert (RSC do /painel) quanto de jobs
 // futuros (Etapa 9 LGPD: soft delete via botão "Apagar conta" em /meus-dados).
 
+import { currentUser } from '@clerk/nextjs/server'
 import { eq, sql } from 'drizzle-orm'
-
 import { userProfile } from '@/modules/usuario/domain/schema'
 import { db } from '@/shared/db'
 
@@ -72,7 +72,7 @@ export async function softDeleteUserProfile(
  * Lookup por `clerk_user_id` (FK opaca usada em RSC de rotas
  * autenticadas para resolver o user_profile.id interno). Retorna
  * undefined se não existir ainda — caller faz lazy upsert via
- * `currentUser()` do Clerk.
+ * `getOrCreateUserProfileId()` ou direto via `upsertUserProfileFromClerk()`.
  */
 export async function findUserProfileByClerkId(clerkUserId: string) {
   const rows = await db
@@ -81,4 +81,42 @@ export async function findUserProfileByClerkId(clerkUserId: string) {
     .where(eq(userProfile.clerkUserId, clerkUserId))
     .limit(1)
   return rows[0]
+}
+
+/**
+ * Lazy resolve do user_profile.id interno (UUIDv7) a partir do
+ * clerk_user_id opaco. Sincroniza com Clerk no primeiro hit autenticado
+ * (caminho principal de criação de profile — método tradicional, sem
+ * webhook).
+ *
+ * Retorna o `user_profile.id` (UUIDv7 interno) ou `null` se o Clerk
+ * não retornou usuário ou se o usuário não tem email primário
+ * (estado anormal — usuário não consegue completar signup sem isso).
+ */
+export async function getOrCreateUserProfileId(
+  clerkUserId: string,
+): Promise<string | null> {
+  const existing = await findUserProfileByClerkId(clerkUserId)
+  if (existing) return existing.id
+
+  const user = await currentUser()
+  if (!user) return null
+
+  const primaryEmail =
+    user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
+      ?.emailAddress ?? user.emailAddresses[0]?.emailAddress
+  if (!primaryEmail) return null
+
+  const nameParts = [user.firstName, user.lastName].filter(
+    (s): s is string => s !== null && s.trim() !== '',
+  )
+
+  await upsertUserProfileFromClerk({
+    clerkUserId,
+    email: primaryEmail,
+    displayName: nameParts.length === 0 ? null : nameParts.join(' '),
+  })
+
+  const created = await findUserProfileByClerkId(clerkUserId)
+  return created?.id ?? null
 }
