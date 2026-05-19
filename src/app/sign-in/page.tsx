@@ -37,9 +37,12 @@ import { redirect } from 'next/navigation'
  *
  * Force dynamic — `auth()` precisa da request real (cookies de session).
  *
- * Quando Sprint 4.5 introduzir fluxo custom (`/minha-area/sign-in`),
- * substituir por `redirect('/minha-area/sign-in')` ou configurar
- * `signInUrl` no `<ClerkProvider>` apontando para a rota custom.
+ * Wave 10 substitui este stub por custom sign-in com catch-all em
+ * `app/sign-in/[[...sign-in]]/page.tsx` e `signInUrl="/sign-in"` no
+ * `<ClerkProvider>` do route group `(authenticated)/`. Ver
+ * `docs/product/LOGGED-AREA-VISION.md` §4 e ADR-029. O escopo
+ * originalmente previsto em `/minha-area/sign-in` foi rebrandeado
+ * para `/sign-in/[[...sign-in]]` na Wave 10 (addendum no ADR-022).
  */
 export const dynamic = 'force-dynamic'
 

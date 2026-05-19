@@ -96,9 +96,14 @@ No Sprint 4.1, **não criamos rota custom de sign-in**. O fluxo é:
 4. Volta para o Brasil a Vera autenticado (cookie de session)
 5. Header renderiza `<UserButton>`
 
-Quando Sprint 4.5 criar `/minha-area/sign-in`, configuramos
-`signInUrl="/sign-in"` no `<ClerkProvider>` para forçar o fluxo dentro
-do nosso site. Por ora, hosted está ótimo.
+Wave 10 substitui este fluxo pelo custom sign-in catch-all em
+`app/sign-in/[[...sign-in]]/page.tsx` com `signInUrl="/sign-in"`
+configurado no `<ClerkProvider>` do route group `(authenticated)/`.
+Ver [LOGGED-AREA-VISION](../product/LOGGED-AREA-VISION.md) §4 e
+[ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md).
+Por ora (pré-Wave 10), Account Portal hosted continua sendo o gate.
+O escopo originalmente previsto em `/minha-area/sign-in` foi
+rebrandeado para `/sign-in/[[...sign-in]]` na Wave 10.
 
 ## Troubleshooting
 
@@ -114,9 +119,12 @@ Wrangler. Sincronize os dois.
 
 ### Botão "Entrar" não aparece (UserButton sempre visível mesmo sem login)
 
-Verifique que o middleware **não está protegendo a home**: o matcher
-correto é `['/minha-area/(.*)']`, não `['(.*)']` ou `['/']`. Veja
-`src/middleware.ts`.
+Pré-Wave 10: o matcher do middleware é amplo (cobre todas as rotas
+não-asset desde Sprint 4.2 PR 1) mas `clerkMiddleware()` roda em
+modo dormente — sem `auth.protect()`. O AuthIslandLoader decide
+client-side entre `<SignInButton>` e `<UserButton>` via `<Show when>`.
+Veja `src/middleware.ts` e [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) §3 v4.
+Na Wave 10, `auth.protect()` será adicionado para `/painel/*` apenas.
 
 ### Bundle gzip da home explode após adicionar Clerk
 
