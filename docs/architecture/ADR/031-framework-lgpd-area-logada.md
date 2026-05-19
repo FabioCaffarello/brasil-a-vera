@@ -26,7 +26,7 @@ ADR-022 §Tratamento de dados pessoais (LGPD) cobriu a relação operador
 3. **Retenção** por categoria de dado.
 4. **DPO** e canal de contato.
 5. **Idade mínima** e procedimento para detecção de menor.
-6. **Dashboard de transparência** (`/painel/configuracoes/meus-dados`).
+6. **Dashboard de transparência** (`/painel?tab=meus-dados`).
 7. **Lembrete pré-hard-delete** (janela de reversão).
 
 Princípios LGPD diretamente aplicáveis (art. 6º):
@@ -53,7 +53,7 @@ Não é compliance mínimo. Inclui:
 - Direitos do titular (art. 18) implementados de fato — não só listados
   na política.
 - Encarregado (DPO) declarado em política de privacidade.
-- Dashboard `/painel/configuracoes/meus-dados` mostrando ao titular **tudo**
+- Dashboard `/painel?tab=meus-dados` mostrando ao titular **tudo**
   que o sistema registra sobre ele.
 - `consent_log` desde o dia 1 (retroatividade em LGPD é dolorosa).
 
@@ -102,7 +102,7 @@ Não é compliance mínimo. Inclui:
 - **Dados de menor não operáveis**: art. 14 LGPD exige consentimento
   parental, que não temos mecanismo para coletar. Erase é caminho único.
 
-### 6. Dashboard `/painel/configuracoes/meus-dados`
+### 6. Dashboard `/painel?tab=meus-dados`
 
 Três blocos verticais:
 

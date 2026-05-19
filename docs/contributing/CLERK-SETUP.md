@@ -124,7 +124,7 @@ não-asset desde Sprint 4.2 PR 1) mas `clerkMiddleware()` roda em
 modo dormente — sem `auth.protect()`. O AuthIslandLoader decide
 client-side entre `<SignInButton>` e `<UserButton>` via `<Show when>`.
 Veja `src/middleware.ts` e [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) §3 v4.
-Na Wave 10, `auth.protect()` será adicionado para `/painel/*` apenas.
+Na Wave 10, `auth.protect()` foi adicionado para `/painel(.*)` apenas. (Pós-refator do painel — ver [RFC](../product/REFACTOR-PAINEL-TABS.md) — a topologia multi-rota original virou rota única com tabs via Parallel Routes; o matcher continua cobrindo corretamente o destino `/painel` raiz + query params.)
 
 ### Bundle gzip da home explode após adicionar Clerk
 

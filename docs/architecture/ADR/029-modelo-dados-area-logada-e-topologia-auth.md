@@ -1,8 +1,36 @@
 # ADR-029: Modelo de dados da área logada e topologia de auth
 
-> Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-05-19 (addendum: topologia de Provider revisada empíricamente)
+> Brasil a Vera · Arquitetura · v0.3
+> Última atualização: 2026-05-19 (addendum pós-Wave 10 — refator de rotas)
 > Status: accepted
+
+---
+
+## Addendum pós-Wave 10 (2026-05-19) — refator de rotas
+
+A **arquitetura de rotas** descrita aqui (5 rotas multi-segmento sob
+`/painel/*`) foi revertida para `/painel` único com tabs via Parallel
+Routes após decisão de produto pós-entrega. Fonte: [ADR-032](./032-painel-tabs-parallel-routes.md)
++ [RFC](../../product/REFACTOR-PAINEL-TABS.md).
+
+**O que continua válido neste ADR sem alteração:**
+- Modelo de dados (`usuario.user_profile`, `usuario.follows`,
+  `usuario.alert_policy`, `usuario.alert_delivery`, `usuario.consent_log`,
+  `usuario.data_request`) — schema intocado pelo refator
+- Topologia revisada empíricamente (`<ClerkProvider>` único no root
+  layout — fix Wave 10 documentado no addendum abaixo)
+- Cap 200 follows por usuário
+- `consent_log.user_id` nullable + `ip_hash` com salt diário
+
+**O que muda:**
+- Rotas multi-segmento citadas (`/painel/parlamentares`,
+  `/painel/configuracoes`, etc.) deixam de existir como URLs;
+  todas resolvem via `/painel?tab=...&subtab=...`
+- `<ConsentGate />` em `(authenticated)/layout.tsx` permanece intocado
+  (gating server-side da consent acima do `/painel` continua válido)
+- Route group `(authenticated)/` permanece como organização lógica
+  (cobre `/painel/*`, `/sign-in/[[...]]`, `/sign-up/[[...]]` — rota
+  única `/painel` ainda vive dentro do route group)
 
 ---
 

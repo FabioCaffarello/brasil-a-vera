@@ -291,8 +291,8 @@ export const dataRequest = usuarioSchema.table(
     completedAt: timestamp('completed_at', { withTimezone: true }),
   },
   (table) => [
-    // Listagem "minhas solicitações" no /painel/meus-dados (Etapa 9.5):
-    // últimas N solicitações de um usuário.
+    // Listagem "minhas solicitações" no slot `@meusDados` do /painel
+    // (Etapa 9.5 da Wave 10): últimas N solicitações de um usuário.
     index('data_request_user_requested_idx').on(
       table.userId,
       table.requestedAt,

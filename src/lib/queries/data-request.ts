@@ -69,7 +69,8 @@ export async function markDataRequestFailed(id: string): Promise<void> {
 
 /**
  * Lista as N mais recentes solicitações do usuário. Usado pelo
- * /painel/meus-dados (Etapa 9.5) "Suas solicitações".
+ * slot `@meusDados` do /painel (Etapa 9.5 da Wave 10; movido para slot
+ * na Fase 2 do refator pós-Wave 10) — bloco "Suas solicitações".
  */
 export async function listDataRequestsByUser(
   userId: string,

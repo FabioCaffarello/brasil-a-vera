@@ -12,7 +12,7 @@ A **decisão #5** ("Modulação: tabela `alert_period` admin-managed", linha 85 
 
 - Tabela `alert_period` **não será criada** na migration de Wave 10.
 - Cron handler **não consulta** `alert_period`; cadência fixa semanal (dom 21:00 UTC).
-- Banner em `/painel` para período especial **não será renderizado** na Wave 10.
+- Banner em `/painel?tab=resumo` para período especial **não será renderizado** na Wave 10.
 - Bloco "Aviso de período especial" no template de email **fica omitido**.
 
 **Justificativa (ADR-019):** sem evidência empírica de que cadência semanal é insuficiente em período eleitoral. Volume Wave 10 (≤750 MAU) cabe no free tier Resend com folga. Reabrir como feature futura se houver pedido evidenciado durante eleições 2026 ou volume de feedback sinalizar gap.

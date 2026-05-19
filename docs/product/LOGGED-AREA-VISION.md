@@ -216,6 +216,31 @@ erDiagram
 
 ## 4. Arquitetura de rotas
 
+> **Addendum pós-Wave 10 (2026-05-19) — refator para rota única com tabs.**
+> A arquitetura de 5 rotas multi-segmento descrita abaixo foi entregue
+> conforme planejado em [`v0.10.0-area-logada`](../releases/v0.10.0-area-logada.md).
+> Após revisão de produto, foi **revertida** para `/painel` único com 5
+> tabs reais via Next.js Parallel Routes (`@slot/`):
+>
+> - `/painel?tab=resumo` (default) — antigo `/painel`
+> - `/painel?tab=parlamentares&subtab=acompanhando|da-minha-uf`
+> - `/painel?tab=alertas&subtab=recebidos|politicas`
+> - `/painel?tab=configuracoes`
+> - `/painel?tab=meus-dados` — **promovida a tab principal** (antes
+>   sub-rota de Configurações)
+>
+> Decisão consciente, custo técnico aceito. Fonte de verdade do
+> refator: [ADR-032](../architecture/ADR/032-painel-tabs-parallel-routes.md)
+> + [RFC `REFACTOR-PAINEL-TABS.md`](./REFACTOR-PAINEL-TABS.md). Execução
+> em 4 fases (RFC §5): #339 RFC + ADR, #340 estrutural, #341 visual,
+> #342 documental (este addendum). URLs antigas viram 404 (pré-lançamento,
+> zero retrocompatibilidade).
+>
+> O conteúdo original de §4 abaixo permanece como **histórico do release
+> v0.10.0**; tabela de cache, notas técnicas e topologia de `auth.protect()`
+> seguem válidas em substância (mapeamento para o novo padrão de URL é
+> trivial: `/painel/X` → `/painel?tab=X`).
+
 ```
 /sign-in/[[...sign-in]]              → Custom Clerk SignIn (client)
 /sign-up/[[...sign-up]]              → Custom Clerk SignUp (client)

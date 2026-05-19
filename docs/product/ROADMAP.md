@@ -1279,6 +1279,19 @@ Três hotfixes mergeados em 2026-05-19, após a tag `v0.10.0-area-logada`. Não 
 | 10.2 | `canExport()` centralizado em `src/lib/auth-guards.ts`; `<ExportCsvLink>` gateado em 4 rotas (parlamentares, proposicoes, votacoes, votacao detalhe — 5 sites de render); princípio "saída de dados em massa exige autenticação prévia" cristalizado em JSDoc (ADR formal deferida) | [#336](https://github.com/FabioCaffarello/brasil-a-vera/pull/336) |
 | 10.3 | Link "Painel" na navbar para usuário logado (Proposta C: primeiro item, mesmo peso visual); `Navbar` async RSC com `auth()` deriva `personalLink` e passa por prop para `NavLinks`/`NavMobile`; zero flicker, zero layout shift, sem `useAuth`/`useUser` | [#338](https://github.com/FabioCaffarello/brasil-a-vera/pull/338) |
 
+### Refator do painel pós-Wave 10 (multi-rota → tabs)
+
+Reversão consciente da topologia de rotas da Wave 10, motivada por revisão de UX (5 pilares paralelos, não níveis hierárquicos). Custo técnico de ~3 sprints aceito pelo dono do produto. Detalhes em [RFC `REFACTOR-PAINEL-TABS.md`](./REFACTOR-PAINEL-TABS.md) + [ADR-032](../architecture/ADR/032-painel-tabs-parallel-routes.md). **Meus Dados** (LGPD) promovida de sub-rota a tab principal — privacidade como pilar (VISION §1 ponto 2).
+
+| Fase | Conteúdo | PR |
+|---|---|---|
+| 1 | RFC + ADR-032 — plano de demolição controlada, decisões D1-D9, anti-patterns AP1-AP9 | [#339](https://github.com/FabioCaffarello/brasil-a-vera/pull/339) |
+| 2 | Refator estrutural — 5 pages movidas para slots `@resumo`/`@parlamentares`/`@alertas`/`@configuracoes`/`@meusDados`; layout async + `<ActiveSlotPicker />` client; util central `src/lib/painel-tabs.ts`; rotas antigas viram 404 (zero retrocompat) | [#340](https://github.com/FabioCaffarello/brasil-a-vera/pull/340) |
+| 3 | Polimento visual — `<PainelHeader>` (avatar gradient + SUA ÁREA + nome + email · UF); TabBar com ícones lucide + counters (follows + unread alertas); KPIs no Resumo via `<KpiStrip>` do DS Wave 6 (Acompanhados / Reports / Alinhamento médio / UF) | [#341](https://github.com/FabioCaffarello/brasil-a-vera/pull/341) |
+| 4 | Atualização documental — VISION §4 addendum, ADR-022 + ADR-029 addendum, ROADMAP (este registro), URLs em ADR-030/031/CLERK-SETUP/LGPD-ERASE-MENORES | [#342](https://github.com/FabioCaffarello/brasil-a-vera/pull/342) |
+
+Custo cristalizado: 5× queries server-side por request `/painel` (todos os slots renderizam em paralelo via RSC streaming; `<ActiveSlotPicker />` client decide visibilidade). Mitigação `cached()` ADR-018 fica como follow-up pós-deploy (RFC §7 R1: "medir antes de aplicar").
+
 ---
 
 ## Dependências entre Waves
