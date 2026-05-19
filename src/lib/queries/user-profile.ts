@@ -120,3 +120,30 @@ export async function getOrCreateUserProfileId(
   const created = await findUserProfileByClerkId(clerkUserId)
   return created?.id ?? null
 }
+
+/**
+ * Commit do wizard de onboarding (Wave 10 Etapa 3). Persiste UF
+ * (opcional), temas selecionados (subset de TEMA_IDS) e marca
+ * `onboarded_at = now()` numa única operação atômica.
+ *
+ * `themes` recebe sempre array — `[]` é o estado canônico para
+ * "usuário pulou o passo de temas".
+ *
+ * `uf` opcional: `null` significa "pulou o passo de UF" — Drizzle
+ * envia NULL explicitamente, preservando a semântica de "UF não
+ * selecionada".
+ */
+export async function commitOnboarding(
+  internalUserId: string,
+  input: { uf: string | null; themes: string[] },
+): Promise<void> {
+  await db
+    .update(userProfile)
+    .set({
+      uf: input.uf,
+      themes: input.themes,
+      onboardedAt: sql`now()`,
+      updatedAt: sql`now()`,
+    })
+    .where(eq(userProfile.id, internalUserId))
+}
