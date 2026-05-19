@@ -84,6 +84,21 @@ export async function findUserProfileByClerkId(clerkUserId: string) {
 }
 
 /**
+ * Lookup por UUID interno. Útil em rotas que já resolveram o
+ * `internalUserId` via `getOrCreateUserProfileId()` e precisam
+ * carregar o row completo (ex.: /painel/configuracoes/meus-dados
+ * mostrando "Seus dados").
+ */
+export async function findUserProfileById(internalUserId: string) {
+  const rows = await db
+    .select()
+    .from(userProfile)
+    .where(eq(userProfile.id, internalUserId))
+    .limit(1)
+  return rows[0]
+}
+
+/**
  * Lazy resolve do user_profile.id interno (UUIDv7) a partir do
  * clerk_user_id opaco. Sincroniza com Clerk no primeiro hit autenticado
  * (caminho principal de criação de profile — método tradicional, sem

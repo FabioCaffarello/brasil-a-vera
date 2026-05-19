@@ -1,0 +1,291 @@
+'use client'
+
+// Ações LGPD (Exportar / Anonimizar / Eliminar) — Wave 10 Etapa 9.5.
+//
+// 3 botões abrindo 3 modais distintos. Cada ação chama uma das
+// rotas da Etapa 9.4:
+//   - Exportar:  POST /api/painel/dados/export    → Blob download
+//   - Anonimizar: POST /api/painel/dados/anonimizar → signOut /
+//   - Eliminar:   POST /api/painel/dados/erase     → signOut /
+//
+// Fricção UX por gravidade:
+//   - Exportar: confirm simples (sem typing — ação reversível,
+//     não afeta dados).
+//   - Anonimizar e Eliminar: typing literal ("ANONIMIZAR" /
+//     "ELIMINAR") na caixa de texto antes do botão habilitar.
+//     Anonimizar é irreversível (PII apaga imediatamente);
+//     Eliminar é reversível em 30 dias.
+//
+// Botões usam DialogPrimitive direto (não DialogContent do DS) para
+// controlar o estado `open` manualmente — precisamos fechar o modal
+// ao confirmar e abrir um por vez.
+
+import { useClerk } from '@clerk/nextjs'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'sonner'
+
+import { Button } from '@/design-system/primitives/button'
+import { cn } from '@/lib/cn'
+
+type ActionKind = 'export' | 'anonymize' | 'erase' | null
+
+const ANONIMIZAR_CONFIRM_WORD = 'ANONIMIZAR'
+const ELIMINAR_CONFIRM_WORD = 'ELIMINAR'
+
+export function AcoesLgpd() {
+  const router = useRouter()
+  const { signOut } = useClerk()
+  const [open, setOpen] = useState<ActionKind>(null)
+  const [confirmText, setConfirmText] = useState('')
+  const [pending, setPending] = useState(false)
+
+  function openModal(kind: Exclude<ActionKind, null>) {
+    setOpen(kind)
+    setConfirmText('')
+  }
+
+  function closeModal() {
+    if (pending) return
+    setOpen(null)
+    setConfirmText('')
+  }
+
+  async function handleExport() {
+    setPending(true)
+    try {
+      const res = await fetch('/api/painel/dados/export', { method: 'POST' })
+      if (!res.ok) {
+        toast.error('Não foi possível exportar. Tente novamente.')
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const today = new Date().toISOString().slice(0, 10)
+      link.download = `brasil-a-vera-export-${today}.json`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+      toast.success('Export concluído.')
+      setOpen(null)
+      router.refresh()
+    } catch {
+      toast.error('Sem conexão. Tente novamente em instantes.')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleDestructive(kind: 'anonymize' | 'erase') {
+    setPending(true)
+    try {
+      const path =
+        kind === 'anonymize'
+          ? '/api/painel/dados/anonimizar'
+          : '/api/painel/dados/erase'
+      const res = await fetch(path, { method: 'POST' })
+      if (!res.ok) {
+        toast.error('Não foi possível processar. Tente novamente.')
+        setPending(false)
+        return
+      }
+      // Server retorna { signOut: true } — encerra sessão Clerk e
+      // leva o usuário para a home. router.refresh() não é
+      // necessário porque o redirect efetivo é o signOut.
+      await signOut({ redirectUrl: '/' })
+    } catch {
+      toast.error('Sem conexão. Tente novamente em instantes.')
+      setPending(false)
+    }
+  }
+
+  const confirmWordRequired =
+    open === 'anonymize'
+      ? ANONIMIZAR_CONFIRM_WORD
+      : open === 'erase'
+        ? ELIMINAR_CONFIRM_WORD
+        : null
+
+  const confirmEnabled =
+    open === 'export'
+      ? true
+      : open === null
+        ? false
+        : confirmText === confirmWordRequired
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-md border border-border bg-surface p-4">
+        <h3 className="font-medium text-foreground text-sm">
+          Exportar seus dados
+        </h3>
+        <p className="mt-1 text-foreground-muted text-xs">
+          Recebe um arquivo JSON com tudo que registramos sobre você. LGPD art.
+          18 V (portabilidade).
+        </p>
+        <Button
+          className="mt-3"
+          onClick={() => openModal('export')}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Exportar JSON
+        </Button>
+      </div>
+
+      <div className="rounded-md border border-border bg-surface p-4">
+        <h3 className="font-medium text-foreground text-sm">
+          Anonimizar sua conta
+        </h3>
+        <p className="mt-1 text-foreground-muted text-xs">
+          Apaga email, nome e qualquer identificador agora.{' '}
+          <strong>Irreversível.</strong> Histórico cívico abstrato
+          (consentimentos prestados, sem identificá-lo) é preservado para
+          auditoria. LGPD art. 16 e art. 18 IV.
+        </p>
+        <Button
+          className="mt-3"
+          onClick={() => openModal('anonymize')}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Anonimizar...
+        </Button>
+      </div>
+
+      <div className="rounded-md border border-red-500/40 bg-red-500/5 p-4">
+        <h3 className="font-medium text-foreground text-sm">
+          Eliminar sua conta
+        </h3>
+        <p className="mt-1 text-foreground-muted text-xs">
+          Sua conta vai para o estado "eliminada" agora. Você pode reativar em
+          até 30 dias acessando novamente; depois disso, eliminação definitiva.
+          LGPD art. 18 VI.
+        </p>
+        <Button
+          className="mt-3"
+          onClick={() => openModal('erase')}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          Eliminar...
+        </Button>
+      </div>
+
+      <DialogPrimitive.Root onOpenChange={closeModal} open={open !== null}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
+          <DialogPrimitive.Content
+            className={cn(
+              'fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
+              'border border-border bg-background p-6 shadow-lg sm:rounded-lg',
+            )}
+          >
+            <DialogPrimitive.Title className="font-semibold text-foreground text-lg leading-none tracking-tight">
+              {open === 'export'
+                ? 'Exportar seus dados'
+                : open === 'anonymize'
+                  ? 'Anonimizar sua conta'
+                  : 'Eliminar sua conta'}
+            </DialogPrimitive.Title>
+            <DialogPrimitive.Description className="space-y-3 text-foreground-muted text-sm leading-relaxed">
+              {open === 'export' && (
+                <span className="block">
+                  Vamos preparar um arquivo JSON com todos os dados que
+                  registramos sobre você (perfil, parlamentares acompanhados,
+                  política de alertas, histórico de reports e consentimentos). O
+                  download começa automaticamente quando estiver pronto.
+                </span>
+              )}
+              {open === 'anonymize' && (
+                <>
+                  <span className="block">
+                    A anonimização é <strong>imediata e irreversível</strong>.
+                    Email, nome e identificadores associados a você serão
+                    apagados agora. Você não conseguirá recuperar a conta — um
+                    novo login criará um novo perfil em branco.
+                  </span>
+                  <span className="block">
+                    Para confirmar, digite{' '}
+                    <code className="font-mono text-foreground text-xs">
+                      {ANONIMIZAR_CONFIRM_WORD}
+                    </code>{' '}
+                    no campo abaixo.
+                  </span>
+                </>
+              )}
+              {open === 'erase' && (
+                <>
+                  <span className="block">
+                    Sua conta entra no estado eliminado agora. Você tem 30 dias
+                    para voltar e reativar acessando normalmente; depois desse
+                    prazo, eliminação definitiva.
+                  </span>
+                  <span className="block">
+                    Para confirmar, digite{' '}
+                    <code className="font-mono text-foreground text-xs">
+                      {ELIMINAR_CONFIRM_WORD}
+                    </code>{' '}
+                    no campo abaixo.
+                  </span>
+                </>
+              )}
+            </DialogPrimitive.Description>
+
+            {(open === 'anonymize' || open === 'erase') && (
+              <input
+                aria-label={
+                  open === 'anonymize'
+                    ? `Digite ${ANONIMIZAR_CONFIRM_WORD} para confirmar`
+                    : `Digite ${ELIMINAR_CONFIRM_WORD} para confirmar`
+                }
+                autoComplete="off"
+                className="w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-foreground text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
+                disabled={pending}
+                onChange={(e) => setConfirmText(e.target.value)}
+                type="text"
+                value={confirmText}
+              />
+            )}
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <Button
+                disabled={pending}
+                onClick={closeModal}
+                type="button"
+                variant="outline"
+              >
+                Cancelar
+              </Button>
+              <Button
+                disabled={!confirmEnabled || pending}
+                onClick={() => {
+                  if (open === 'export') return handleExport()
+                  if (open === 'anonymize')
+                    return handleDestructive('anonymize')
+                  if (open === 'erase') return handleDestructive('erase')
+                }}
+                type="button"
+              >
+                {pending
+                  ? 'Processando...'
+                  : open === 'export'
+                    ? 'Confirmar export'
+                    : open === 'anonymize'
+                      ? 'Anonimizar agora'
+                      : 'Eliminar agora'}
+              </Button>
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
+    </div>
+  )
+}
