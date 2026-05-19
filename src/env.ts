@@ -51,7 +51,13 @@ export const env = createEnv({
     CLERK_SECRET_KEY: z.string().min(1).optional(),
   },
   client: {
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+    // Optional no schema porque o CI workflow `ci.yml` não fornece a
+    // key (só `deploy.yml` injeta). Clerk SDK lê via process.env
+    // diretamente (Next inlina NEXT_PUBLIC_* no buildtime), então o
+    // contrato runtime de Clerk não depende deste schema. Listar aqui
+    // serve documentação + tipagem para qualquer app code que venha
+    // a consumir a key direto.
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
   },
   shared: {
     NODE_ENV: z
