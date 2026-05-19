@@ -55,12 +55,18 @@
       "Bash(wrangler deploy:*)",
       "Bash(drizzle-kit drop:*)",
       "Bash(drizzle-kit push:*)",
-      "Edit(.env*)",
-      "Write(.env*)",
-      "Edit(src/shared/db/migrations/**)",
-      "Write(src/shared/db/migrations/**)",
-      "Edit(.github/workflows/**)",
-      "Write(.github/workflows/**)"
+      "Edit(.env)",
+      "Edit(.env.local)",
+      "Edit(.env.development)",
+      "Edit(.env.production)",
+      "Edit(.env.test)",
+      "Edit(.dev.vars)",
+      "Write(.env)",
+      "Write(.env.local)",
+      "Write(.env.development)",
+      "Write(.env.production)",
+      "Write(.env.test)",
+      "Write(.dev.vars)"
     ]
   },
   "hooks": {
