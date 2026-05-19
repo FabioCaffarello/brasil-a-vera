@@ -10,7 +10,7 @@
 // count(*) antes do INSERT. ADR-029 §5: valor calibrado para Câmara
 // (513 deputados) com folga.
 
-import { and, count, desc, eq, inArray } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import {
   estatisticaParlamentarAgregada,
@@ -47,6 +47,42 @@ export async function countFollowsByUserId(userId: string): Promise<number> {
     .from(follows)
     .where(eq(follows.userId, userId))
   return row?.n ?? 0
+}
+
+/**
+ * Média de % alinhamento dos parlamentares acompanhados — KPI do painel
+ * pós-refator Fase 3. Filtra parlamentares com amostra insuficiente
+ * (`votacoes_analisadas < ALINHAMENTO_AMOSTRA_MINIMA = 50`, consistente
+ * com `classifyAlinhamento` do `ParlamentarCard`).
+ *
+ * Retorna `null` quando nenhum acompanhado tem amostra suficiente — o
+ * KPI então exibe "—" (honestidade do dado, P2 do VISION).
+ */
+export async function getAvgAlinhamentoForFollows(
+  userId: string,
+): Promise<{ pct: number; sampleSize: number } | null> {
+  const [row] = await db
+    .select({
+      avg: sql<
+        string | null
+      >`AVG(${estatisticaParlamentarAgregada.pctAlinhamento})`,
+      sample: count(),
+    })
+    .from(follows)
+    .innerJoin(
+      estatisticaParlamentarAgregada,
+      eq(estatisticaParlamentarAgregada.parlamentarId, follows.parlamentarId),
+    )
+    .where(
+      and(
+        eq(follows.userId, userId),
+        sql`${estatisticaParlamentarAgregada.pctAlinhamento} IS NOT NULL`,
+        sql`${estatisticaParlamentarAgregada.votacoesAnalisadas} >= 50`,
+      ),
+    )
+
+  if (!row || row.sample === 0 || row.avg === null) return null
+  return { pct: Number(row.avg), sampleSize: row.sample }
 }
 
 export type AddFollowResult =

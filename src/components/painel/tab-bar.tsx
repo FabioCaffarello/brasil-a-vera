@@ -1,35 +1,49 @@
 'use client'
 
-// TabBar — Fase 2 do refator do painel pós-Wave 10
-// (RFC `docs/product/REFACTOR-PAINEL-TABS.md` §3, ADR-032).
+// TabBar — Fase 3 do refator do painel pós-Wave 10 (RFC §5).
 //
-// 5 pilares do painel logado em ordem definida pela decisão de produto:
-// Resumo (default), Parlamentares, Alertas, Configurações, Meus dados.
-// `?tab=meus-dados` (kebab URL slug) — Meus Dados promovida de sub-rota
-// a tab principal (privacidade como pilar, VISION §1 ponto 2).
+// 5 pilares com ícones lucide + counters (Parlamentares: follows,
+// Alertas: unread inapp deliveries). Counters renderizam apenas
+// quando > 0 (zero state limpo). Counter `· N` em
+// `text-foreground-subtle` discreto, separado por middot.
 //
-// Active state via `useSearchParams().get('tab')` + parseTab para
-// garantir TabKey válido. Link emite `/painel?tab=...` direto (sem
-// preservar `?subtab=` do estado atual — trocar de tab principal
-// reseta para o default da nova tab, comportamento natural).
+// Ícones semanticamente alinhados:
+//   - Resumo → LayoutDashboard
+//   - Parlamentares → Users
+//   - Alertas → BellRing (mesmo do FollowButton Hotfix 10.1)
+//   - Configurações → Settings
+//   - Meus dados → Shield (privacidade como pilar)
 //
-// AP4 (RFC §12): componente bound ao painel; sem generificar agora.
+// AP4 (RFC §12): bound ao painel; sem generificar agora.
 
+import {
+  BellRing,
+  LayoutDashboard,
+  type LucideIcon,
+  Settings,
+  Shield,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
 import { cn } from '@/lib/cn'
 import { parseTab, type TabKey } from '@/lib/painel-tabs'
 
-const TABS: readonly { key: TabKey; label: string }[] = [
-  { key: 'resumo', label: 'Resumo' },
-  { key: 'parlamentares', label: 'Parlamentares' },
-  { key: 'alertas', label: 'Alertas' },
-  { key: 'configuracoes', label: 'Configurações' },
-  { key: 'meus-dados', label: 'Meus dados' },
+interface Props {
+  /** Mapa de contadores por tab. Counter só renderiza quando > 0. */
+  counters: Partial<Record<TabKey, number>>
+}
+
+const TABS: readonly { key: TabKey; label: string; icon: LucideIcon }[] = [
+  { key: 'resumo', label: 'Resumo', icon: LayoutDashboard },
+  { key: 'parlamentares', label: 'Parlamentares', icon: Users },
+  { key: 'alertas', label: 'Alertas', icon: BellRing },
+  { key: 'configuracoes', label: 'Configurações', icon: Settings },
+  { key: 'meus-dados', label: 'Meus dados', icon: Shield },
 ]
 
-export function TabBar() {
+export function TabBar({ counters }: Props) {
   const activeTab = parseTab(useSearchParams().get('tab'))
 
   return (
@@ -40,12 +54,14 @@ export function TabBar() {
       <ul className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4">
         {TABS.map((tab) => {
           const isActive = tab.key === activeTab
+          const count = counters[tab.key]
+          const Icon = tab.icon
           return (
             <li key={tab.key}>
               <Link
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'inline-flex items-center whitespace-nowrap rounded-t-md border-b-2 px-3 py-2.5 font-medium text-sm transition-colors',
+                  'inline-flex items-center gap-2 whitespace-nowrap rounded-t-md border-b-2 px-3 py-2.5 font-medium text-sm transition-colors',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
                   isActive
                     ? 'border-brand text-foreground'
@@ -53,7 +69,13 @@ export function TabBar() {
                 )}
                 href={`/painel?tab=${tab.key}`}
               >
-                {tab.label}
+                <Icon aria-hidden="true" className="size-4" />
+                <span>{tab.label}</span>
+                {count !== undefined && count > 0 ? (
+                  <span className="text-foreground-subtle text-xs">
+                    · {count}
+                  </span>
+                ) : null}
               </Link>
             </li>
           )

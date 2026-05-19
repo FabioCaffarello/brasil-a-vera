@@ -4,7 +4,7 @@
 // (channel=email). Inserções via cron são idempotentes pelo
 // `idempotency_key` unique.
 
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, sql } from 'drizzle-orm'
 
 import { alertDelivery } from '@/modules/usuario/domain/schema'
 import { db } from '@/shared/db'
@@ -71,6 +71,42 @@ export async function markDeliveryFailed(deliveryId: string): Promise<void> {
     .update(alertDelivery)
     .set({ status: 'failed' })
     .where(eq(alertDelivery.id, deliveryId))
+}
+
+/**
+ * Conta deliveries `channel=inapp` do usuário — KPI "Reports" do
+ * painel pós-refator Fase 3.
+ */
+export async function countInappDeliveriesByUserId(
+  userId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(alertDelivery)
+    .where(
+      and(eq(alertDelivery.userId, userId), eq(alertDelivery.channel, 'inapp')),
+    )
+  return row?.n ?? 0
+}
+
+/**
+ * Conta deliveries `channel=inapp` não lidas (`read_at IS NULL`) do
+ * usuário — counter da tab Alertas no TabBar + hint do KPI Reports.
+ */
+export async function countUnreadInappDeliveriesByUserId(
+  userId: string,
+): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(alertDelivery)
+    .where(
+      and(
+        eq(alertDelivery.userId, userId),
+        eq(alertDelivery.channel, 'inapp'),
+        isNull(alertDelivery.readAt),
+      ),
+    )
+  return row?.n ?? 0
 }
 
 /**
