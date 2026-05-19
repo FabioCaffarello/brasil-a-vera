@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 
+import { env } from '@/env'
 import * as schema from './schema'
 
 // Driver HTTP para Cloudflare Workers.
@@ -26,5 +27,5 @@ import * as schema from './schema'
 // - ADR-015 (split de driver Neon por runtime; documenta o incidente do
 //   Pool singleton e o caminho de correção).
 
-const sql = neon(process.env.DATABASE_URL as string)
+const sql = neon(env.DATABASE_URL)
 export const db = drizzle(sql, { schema })

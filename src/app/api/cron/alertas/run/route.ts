@@ -20,6 +20,7 @@
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
+import { env } from '@/env'
 import {
   aggregateForUser,
   isAggregateEmpty,
@@ -53,7 +54,7 @@ interface RunStats {
 }
 
 export async function POST(req: Request) {
-  const expectedSecret = process.env.CRON_SECRET
+  const expectedSecret = env.CRON_SECRET
   if (!expectedSecret) {
     console.error('[cron/alertas] CRON_SECRET não configurado')
     return new NextResponse('Server misconfigured', { status: 500 })

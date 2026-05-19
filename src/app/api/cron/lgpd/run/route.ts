@@ -20,13 +20,14 @@
 
 import { NextResponse } from 'next/server'
 
+import { env } from '@/env'
 import { runLgpdCron } from '@/lib/lgpd-cron/orchestrator'
 import { getSiteUrl } from '@/lib/site-url'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
-  const expectedSecret = process.env.CRON_SECRET
+  const expectedSecret = env.CRON_SECRET
   if (!expectedSecret) {
     console.error('[cron/lgpd] CRON_SECRET não configurado')
     return new NextResponse('Server misconfigured', { status: 500 })
