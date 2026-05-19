@@ -1,28 +1,37 @@
-// POST /api/cron/alertas/run — Wave 10 Etapa 7 sub-PR 7.1.
+// POST /api/cron/alertas/run — Wave 10 Etapa 7 sub-PRs 7.1 + 7.2.
 //
-// Endpoint disparado pelo cron semanal (Cloudflare Cron Trigger ou
-// GitHub Actions cron — escolha de trigger documentada no PR).
-// Não usa autenticação Clerk: o caller é máquina, não usuário. Auth
-// via header `x-cron-secret` validado contra `CRON_SECRET` env.
+// Endpoint disparado pelo cron semanal (GitHub Actions cron via curl
+// para este endpoint com header x-cron-secret). Auth via header
+// CRON_SECRET — não usa Clerk (caller é máquina).
 //
-// Lógica do sub-PR 7.1 (infra):
-//   1. Valida secret
-//   2. Lista usuários elegíveis (com follows > 0)
-//   3. Para cada usuário, computa idempotency_key e cria 1-2
-//      deliveries (canal email + inapp, conforme alert_policy)
-//   4. **Esta sub-PR cria deliveries com status `pending` + body
-//      placeholder.** Sub-PR 7.2 adiciona agregadores reais
-//      (substituindo o body). Sub-PR 7.3 envia via Resend
-//      (status pending → sent).
+// Sub-PR 7.1 (infra):
+//   - alert_delivery + idempotency_key sha256 unique
+//   - body placeholder + status pending
 //
-// Idempotente: rodar duas vezes na mesma janela NÃO duplica deliveries
-// (`onConflictDoNothing` no idempotency_key).
+// Sub-PR 7.2 (agregadores — esta camada):
+//   - Para cada usuário+canal, agrega votações/divergências/proposições/
+//     gastos do período (apenas topics ligados na alert_policy do user)
+//   - Se Aggregate vazio: status=skipped (LOGGED-AREA-VISION §6 — "sem
+//     novidades, sem envio"). Próximo ciclo agrega período pulado.
+//   - Se não-vazio: status=pending + body_md gerado pelo composer
+//
+// Sub-PR 7.3 (próximo): substitui pending→sent via Resend.
+// Idempotente: rodar duas vezes na mesma janela NÃO duplica
+// deliveries (`onConflictDoNothing` no idempotency_key).
 
-import { count, eq, isNull } from 'drizzle-orm'
+import { and, count, eq, isNull } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 
+import {
+  aggregateForUser,
+  isAggregateEmpty,
+} from '@/lib/aggregators/alertas-semanais'
+import { composeReportMarkdown } from '@/lib/aggregators/compose-markdown'
 import { computeIdempotencyKey, currentWeeklyPeriod } from '@/lib/cron-period'
-import { createDelivery } from '@/lib/queries/alert-delivery'
+import {
+  createDelivery,
+  type DeliveryStatus,
+} from '@/lib/queries/alert-delivery'
 import {
   alertPolicy,
   follows,
@@ -34,8 +43,9 @@ export const dynamic = 'force-dynamic'
 
 interface RunStats {
   usersProcessed: number
-  deliveriesInserted: number
+  deliveriesPending: number
   deliveriesSkipped: number
+  deliveriesAlreadyExisted: number
   errors: number
 }
 
@@ -58,9 +68,15 @@ export async function POST(req: Request) {
   const eligible = await db
     .select({
       userId: userProfile.id,
+      email: userProfile.email,
+      displayName: userProfile.displayName,
       cadence: alertPolicy.cadence,
       channelEmail: alertPolicy.channelEmail,
       channelInapp: alertPolicy.channelInapp,
+      topicVotacoes: alertPolicy.topicVotacoes,
+      topicGastos: alertPolicy.topicGastos,
+      topicProposicoes: alertPolicy.topicProposicoes,
+      topicDivergencias: alertPolicy.topicDivergencias,
       followsCount: count(follows.parlamentarId),
     })
     .from(userProfile)
@@ -72,27 +88,62 @@ export async function POST(req: Request) {
       alertPolicy.cadence,
       alertPolicy.channelEmail,
       alertPolicy.channelInapp,
+      alertPolicy.topicVotacoes,
+      alertPolicy.topicGastos,
+      alertPolicy.topicProposicoes,
+      alertPolicy.topicDivergencias,
     )
 
   const stats: RunStats = {
     usersProcessed: 0,
-    deliveriesInserted: 0,
+    deliveriesPending: 0,
     deliveriesSkipped: 0,
+    deliveriesAlreadyExisted: 0,
     errors: 0,
   }
 
   const periodLabel = formatPeriodLabel(period.periodStart, period.periodEnd)
 
   for (const user of eligible) {
-    if (user.followsCount === 0) continue // safety: GROUP BY garante mas defensivo
+    if (user.followsCount === 0) continue
     stats.usersProcessed += 1
 
     const channels: ('email' | 'inapp')[] = []
     if (user.channelEmail) channels.push('email')
     if (user.channelInapp) channels.push('inapp')
+    if (channels.length === 0) continue
 
-    for (const channel of channels) {
-      try {
+    try {
+      // Agrega UMA VEZ por usuário (não por canal) — conteúdo é o mesmo
+      // para email e inapp.
+      const aggregate = await aggregateForUser({
+        userId: user.userId,
+        periodStart: period.periodStart,
+        periodEnd: period.periodEnd,
+        policy: {
+          topicVotacoes: user.topicVotacoes,
+          topicGastos: user.topicGastos,
+          topicProposicoes: user.topicProposicoes,
+          topicDivergencias: user.topicDivergencias,
+        },
+      })
+
+      const empty = isAggregateEmpty(aggregate)
+
+      const status: DeliveryStatus = empty ? 'skipped' : 'pending'
+      const subject = empty
+        ? `Brasil à Vera · ${periodLabel} (sem novidades)`
+        : `Brasil à Vera · Resumo ${periodLabel}`
+      const bodyMd = empty
+        ? `# Sem novidades em ${periodLabel}\n\nNenhuma atividade relevante dos parlamentares que você acompanha. Este ciclo será agregado no próximo report.\n`
+        : composeReportMarkdown(aggregate, {
+            periodStart: period.periodStart,
+            periodEnd: period.periodEnd,
+            followsCount: user.followsCount,
+            displayName: user.displayName,
+          })
+
+      for (const channel of channels) {
         const idempotencyKey = await computeIdempotencyKey({
           userId: user.userId,
           periodStart: period.periodStart,
@@ -103,22 +154,22 @@ export async function POST(req: Request) {
           userId: user.userId,
           idempotencyKey,
           channel,
-          subject: `Brasil à Vera · Resumo ${periodLabel}`,
-          // Body placeholder — sub-PR 7.2 substitui pelo agregador real.
-          bodyMd:
-            '# Em construção\n\nO conteúdo agregado do report chega na Wave 10 Etapa 7.2.\n',
+          subject,
+          bodyMd,
           scheduledFor: period.scheduledFor,
-          status: 'pending',
+          status,
         })
-        if (result.inserted) stats.deliveriesInserted += 1
-        else stats.deliveriesSkipped += 1
-      } catch (err) {
-        console.error(
-          `[cron/alertas] erro processando user=${user.userId} channel=${channel}:`,
-          err,
-        )
-        stats.errors += 1
+        if (!result.inserted) {
+          stats.deliveriesAlreadyExisted += 1
+        } else if (status === 'skipped') {
+          stats.deliveriesSkipped += 1
+        } else {
+          stats.deliveriesPending += 1
+        }
       }
+    } catch (err) {
+      console.error(`[cron/alertas] erro processando user=${user.userId}:`, err)
+      stats.errors += 1
     }
   }
 
@@ -138,3 +189,8 @@ function formatPeriodLabel(start: Date, end: Date): string {
     `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}`
   return `${fmt(start)}–${fmt(end)}`
 }
+
+// Suprime warning de import não-usado em `and` (mantido para futuro
+// uso quando filtros adicionais entrarem — orientacao_bancada
+// LIBERADO, etc.).
+void and
