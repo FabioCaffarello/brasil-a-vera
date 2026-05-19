@@ -29,7 +29,7 @@ describe('OnboardingWizard', () => {
       ok: true,
       json: async () => ({
         ok: true,
-        redirectTo: '/painel/parlamentares?tab=da-minha-uf',
+        redirectTo: '/painel?tab=parlamentares&subtab=da-minha-uf',
       }),
     } as Response)
   })
@@ -129,7 +129,7 @@ describe('OnboardingWizard', () => {
 
     await waitFor(() => {
       expect(routerPush).toHaveBeenCalledWith(
-        '/painel/parlamentares?tab=da-minha-uf',
+        '/painel?tab=parlamentares&subtab=da-minha-uf',
       )
     })
   })

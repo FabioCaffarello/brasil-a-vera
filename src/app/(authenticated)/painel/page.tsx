@@ -1,85 +1,38 @@
-// `/painel` Resumo — Wave 10 Etapa 3.
+// `/painel` — neutral entry-point — Fase 2 do refator pós-Wave 10
+// (RFC `docs/product/REFACTOR-PAINEL-TABS.md` §3 / ADR-032).
 //
-// 4 estados dinâmicos (LOGGED-AREA-VISION §5.1):
-//   - onboarding-wizard: `onboarded_at IS NULL` → renderiza modal full-screen
-//   - novo: `onboarded_at IS NOT NULL` E `count(follows) = 0`
-//   - onboarding: `onboarded_at IS NOT NULL` E `1 ≤ count(follows) ≤ 4` E
-//                 sem `alert_delivery` recebida
-//   - maduro: `count(follows) ≥ 5` OU `count(alert_delivery delivered) ≥ 1`
+// Page.tsx é exigido pelo Next.js para a rota `/painel` ser navegável,
+// mas o conteúdo real vive nos 5 slots Parallel Routes (`@resumo/`,
+// `@parlamentares/`, `@alertas/`, `@configuracoes/`, `@meusDados/`).
+// O layout.tsx vizinho compõe os slots via `<ActiveSlotPicker />`.
 //
-// Etapa 3 não inclui alert_delivery (Etapa 7) — então a condição de
-// "maduro por delivery" sempre será false aqui; `maduro` só dispara
-// quando `count(follows) ≥ 5`. Lógica fica preparada para Etapa 7
-// destravar a segunda via.
+// `generateMetadata` dinâmica vive AQUI (não no layout) porque layouts
+// em Next.js não recebem `searchParams` (RFC §4 D5).
+//
+// O conteúdo do antigo `/painel/page.tsx` (Resumo) está em
+// `@resumo/page.tsx`.
 
-import { auth } from '@clerk/nextjs/server'
+import { parseTab, type TabKey } from '@/lib/painel-tabs'
 
-import { EstadoMaduro } from '@/components/painel/estado-maduro'
-import { EstadoNovo } from '@/components/painel/estado-novo'
-import { EstadoOnboarding } from '@/components/painel/estado-onboarding'
-import { OnboardingWizard } from '@/components/painel/onboarding-wizard'
-import { countFollowsByUserId, getFollowsByUserId } from '@/lib/queries/follows'
-import {
-  findUserProfileByClerkId,
-  getOrCreateUserProfileId,
-} from '@/lib/queries/user-profile'
+const TITLES: Record<TabKey, string> = {
+  resumo: 'Painel — Brasil à Vera',
+  parlamentares: 'Parlamentares — Painel',
+  alertas: 'Alertas — Painel',
+  configuracoes: 'Configurações — Painel',
+  'meus-dados': 'Meus dados — Painel',
+}
 
-export const dynamic = 'force-dynamic'
+interface PageProps {
+  searchParams: Promise<{ tab?: string | string[] }>
+}
 
-const MATURE_FOLLOWS_THRESHOLD = 5
+export async function generateMetadata({ searchParams }: PageProps) {
+  const params = await searchParams
+  const tab = parseTab(params.tab)
+  return { title: TITLES[tab] }
+}
 
-export default async function PainelPage() {
-  const { userId } = await auth()
-  if (!userId) return null // middleware redireciona; type-narrowing.
-
-  const internalUserId = await getOrCreateUserProfileId(userId)
-  if (!internalUserId) {
-    // Estado anormal: Clerk session sem email primário. Renderiza
-    // erro neutro em vez de quebrar o middleware ou logar o usuário fora.
-    return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-foreground-muted">
-        Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
-        segundos.
-      </div>
-    )
-  }
-
-  const profile = await findUserProfileByClerkId(userId)
-  if (!profile) return null
-
-  // Estado 1: onboarding-wizard
-  if (profile.onboardedAt === null) {
-    return <OnboardingWizard />
-  }
-
-  const [followsCount, followedIds] = await Promise.all([
-    countFollowsByUserId(internalUserId),
-    getFollowsByUserId(internalUserId),
-  ])
-
-  // Estado 2: novo
-  if (followsCount === 0) {
-    return <EstadoNovo isAnonymous={false} uf={profile.uf} />
-  }
-
-  // Estado 4: maduro (limiar por follows; alert_delivery vem na Etapa 7)
-  if (followsCount >= MATURE_FOLLOWS_THRESHOLD) {
-    return (
-      <EstadoMaduro
-        displayName={profile.displayName}
-        followedIds={followedIds}
-        followsCount={followsCount}
-        uf={profile.uf}
-      />
-    )
-  }
-
-  // Estado 3: onboarding (1-4 follows)
-  return (
-    <EstadoOnboarding
-      followedIds={followedIds}
-      followsCount={followsCount}
-      uf={profile.uf}
-    />
-  )
+export default function PainelPage() {
+  // Slots cobrem toda a área de conteúdo via ActiveSlotPicker no layout.
+  return null
 }

@@ -90,12 +90,15 @@ export async function POST(req: Request) {
   })
 
   // CTA pós-wizard (LOGGED-AREA-VISION §5.6): redirect para a sub-tab
-  // certa de /painel/parlamentares. Com UF → da-minha-uf (descobrir
-  // quem é da região). Sem UF → acompanhando (foca em explorar
-  // a partir do estado vazio).
+  // certa do slot Parlamentares no `/painel`. Com UF → da-minha-uf
+  // (descobrir quem é da região). Sem UF → acompanhando (foca em
+  // explorar a partir do estado vazio).
+  //
+  // Fase 2 do refator pós-Wave 10 (RFC §6): URL antiga
+  // `/painel/parlamentares?tab=X` virou `/painel?tab=parlamentares&subtab=X`.
   const redirectTo = parsed.data.uf
-    ? '/painel/parlamentares?tab=da-minha-uf'
-    : '/painel/parlamentares?tab=acompanhando'
+    ? '/painel?tab=parlamentares&subtab=da-minha-uf'
+    : '/painel?tab=parlamentares&subtab=acompanhando'
 
   return NextResponse.json({ ok: true, redirectTo })
 }

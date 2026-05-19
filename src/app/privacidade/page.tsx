@@ -246,9 +246,9 @@ export default function PrivacidadePage() {
           A maioria desses direitos pode ser exercida diretamente em{' '}
           <Link
             className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
-            href="/painel/meus-dados"
+            href="/painel?tab=meus-dados"
           >
-            /painel/meus-dados
+            /painel?tab=meus-dados
           </Link>
           . Para os demais, escreva para <ContactLink />.
         </p>
