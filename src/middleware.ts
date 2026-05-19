@@ -1,4 +1,4 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
 /**
@@ -63,12 +63,22 @@ import { NextResponse } from 'next/server'
 const LEGACY_PROD_HOST = 'brasil-a-vera.fabio-caffarello.workers.dev'
 const CANONICAL_HOST = 'brasilavera.org'
 
-export default clerkMiddleware((_auth, req) => {
+// Rotas privadas — Wave 10 Etapa 1. `auth.protect()` redireciona anônimo
+// para `signInUrl` configurado no `<ClerkProvider>` (route group
+// `(authenticated)/`). Webhook do Clerk em `/api/webhooks/clerk` NÃO
+// entra aqui — auth é via Svix HMAC, não session Clerk.
+const isProtectedRoute = createRouteMatcher(['/painel(.*)', '/api/painel(.*)'])
+
+export default clerkMiddleware(async (auth, req) => {
   if (req.headers.get('host') === LEGACY_PROD_HOST) {
     const url = new URL(req.url)
     url.host = CANONICAL_HOST
     url.protocol = 'https:'
     return NextResponse.redirect(url, 301)
+  }
+
+  if (isProtectedRoute(req)) {
+    await auth.protect()
   }
 })
 
