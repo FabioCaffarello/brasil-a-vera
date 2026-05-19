@@ -95,3 +95,33 @@ describe('NAV_LINKS', () => {
     }
   })
 })
+
+describe('NavLinks com personalLink (Hotfix 10.3)', () => {
+  beforeEach(() => {
+    mockedPathname.mockReset()
+    mockedPathname.mockReturnValue('/')
+  })
+
+  it('quando personalLink é definido, renderiza-o como primeiro link', () => {
+    render(<NavLinks personalLink={{ href: '/painel', label: 'Painel' }} />)
+    const links = screen.getAllByRole('link')
+    expect(links).toHaveLength(5)
+    expect(links[0].textContent).toBe('Painel')
+    expect(links[0].getAttribute('href')).toBe('/painel')
+    expect(links[1].textContent).toBe('Parlamentares')
+  })
+
+  it('marca Painel active quando pathname é /painel ou sub-rota', () => {
+    mockedPathname.mockReturnValue('/painel/parlamentares')
+    render(<NavLinks personalLink={{ href: '/painel', label: 'Painel' }} />)
+    const painel = screen.getByRole('link', { name: 'Painel' })
+    expect(painel.getAttribute('aria-current')).toBe('page')
+  })
+
+  it('quando personalLink é null, NÃO renderiza link extra (paridade anônima)', () => {
+    render(<NavLinks personalLink={null} />)
+    const links = screen.getAllByRole('link')
+    expect(links).toHaveLength(4)
+    expect(screen.queryByRole('link', { name: 'Painel' })).toBeNull()
+  })
+})

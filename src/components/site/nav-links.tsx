@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { cn } from '@/lib/cn'
 
-type NavLink = {
+export type NavLink = {
   href: string
   label: string
 }
@@ -22,6 +22,19 @@ export function isNavLinkActive(pathname: string | null, href: string) {
   return pathname?.startsWith(href) ?? false
 }
 
+interface Props {
+  /**
+   * Wave 10 Hotfix 10.3 — link único da área pessoal (`/painel`),
+   * renderizado **antes** de NAV_LINKS quando o usuário está
+   * autenticado. Resolvido server-side via `auth()` no Navbar e
+   * passado por prop (regra Hotfix 10.3: nada de `useAuth()` /
+   * `useUser()` aqui; sem flicker de hydration).
+   *
+   * `undefined` ou `null` = anônimo → nada extra renderiza.
+   */
+  personalLink?: NavLink | null
+}
+
 /**
  * NavLinks — desktop horizontal (≥ md). Mobile usa <NavMobile />.
  *
@@ -30,19 +43,24 @@ export function isNavLinkActive(pathname: string | null, href: string) {
  *   (substitui bg-surface-elevated que sumia no glass shell)
  * - Idle: text-foreground-muted, hover text-foreground com fill leve
  *
- * Todos os links têm peso visual uniforme — sem diferenciação por área.
+ * Todos os links têm peso visual uniforme — sem diferenciação por área
+ * (decisão Hotfix 10.3 Proposta C: "Painel" entra como item primeiro
+ * sem ícone/divisor; sinaliza prioridade por posição, não por estilo).
  *
  * Active = pathname começa com href (ou exatamente "/" para home).
  * aria-current="page" (WCAG 2.4.8 / 4.1.2).
  *
  * Cliente apenas para usePathname(). Sem outros listeners; bundle ~1KB gzip.
  */
-export function NavLinks() {
+export function NavLinks({ personalLink }: Props = {}) {
   const pathname = usePathname()
+  const links: NavLink[] = personalLink
+    ? [personalLink, ...NAV_LINKS]
+    : NAV_LINKS
 
   return (
     <ul className="hidden items-center gap-0.5 text-sm md:flex">
-      {NAV_LINKS.map((link) => {
+      {links.map((link) => {
         const isActive = isNavLinkActive(pathname, link.href)
 
         return (

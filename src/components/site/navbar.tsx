@@ -1,10 +1,11 @@
+import { auth } from '@clerk/nextjs/server'
 import { Eye } from 'lucide-react'
 import Link from 'next/link'
 
 import { SearchForm } from '@/components/busca/search-form'
 
 import { AuthSlot } from './auth-slot'
-import { NavLinks } from './nav-links'
+import { type NavLink, NavLinks } from './nav-links'
 import { NavMobile } from './nav-mobile'
 
 /**
@@ -43,8 +44,26 @@ import { NavMobile } from './nav-mobile'
  *
  * ADRs consumidos: 021 (boundary), 022 (Clerk pattern), 023 (CSS only
  * transitions), 024 (--gradient-primary + .glass-strong).
+ *
+ * Wave 10 Hotfix 10.3 — link "Painel" para usuário logado.
+ *
+ * Navbar passa a ser async para chamar `auth()` server-side e derivar
+ * `personalLink`. Quando autenticado, prepend `{ href: '/painel', label:
+ * 'Painel' }` ao array de links em ambos NavLinks (desktop) e NavMobile.
+ * Anônimo recebe `null` → nada extra renderiza.
+ *
+ * Por que não em `NavLinks` direto: a regra é gating server-side,
+ * `'use client'` em NavLinks impede `auth()`. AuthSlot já paga o
+ * mesmo custo (RSC com `auth()`); reaproveitamos a infra (Clerk já
+ * roda no middleware Workers Paid — ADR-022 §3 v4). Zero flicker
+ * (HTML emitido pelo SSR já contém ou omite o link).
  */
-export function Navbar() {
+export async function Navbar() {
+  const { userId } = await auth()
+  const personalLink: NavLink | null = userId
+    ? { href: '/painel', label: 'Painel' }
+    : null
+
   return (
     <header className="glass-strong sticky top-0 z-30 border-white/[0.08] border-b">
       <nav
@@ -66,10 +85,10 @@ export function Navbar() {
           </span>
         </Link>
         <div className="flex items-center gap-1 md:gap-3">
-          <NavLinks />
+          <NavLinks personalLink={personalLink} />
           <SearchForm variant="header" />
           <AuthSlot />
-          <NavMobile />
+          <NavMobile personalLink={personalLink} />
         </div>
       </nav>
     </header>
