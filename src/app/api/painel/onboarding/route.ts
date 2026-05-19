@@ -89,11 +89,13 @@ export async function POST(req: Request) {
     themes: parsed.data.themes,
   })
 
-  // CTA pós-wizard (LOGGED-AREA-VISION §5.6): redirect para listagem
-  // com tab de UF se preenchida, senão acompanhando.
+  // CTA pós-wizard (LOGGED-AREA-VISION §5.6): redirect para a sub-tab
+  // certa de /painel/parlamentares. Com UF → da-minha-uf (descobrir
+  // quem é da região). Sem UF → acompanhando (foca em explorar
+  // a partir do estado vazio).
   const redirectTo = parsed.data.uf
-    ? `/parlamentares?uf=${parsed.data.uf}`
-    : '/parlamentares'
+    ? '/painel/parlamentares?tab=da-minha-uf'
+    : '/painel/parlamentares?tab=acompanhando'
 
   return NextResponse.json({ ok: true, redirectTo })
 }
