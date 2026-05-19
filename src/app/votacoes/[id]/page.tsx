@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
+import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
@@ -208,6 +209,11 @@ export default async function VotacaoPage({ params }: PageProps) {
             Resumo
           </AccordionTrigger>
           <AccordionContent className="space-y-4">
+            <MargemDecisaoBar
+              aprovada={v.aprovada}
+              votosNao={v.votosNao}
+              votosSim={v.votosSim}
+            />
             <VotacaoVotosConsolidadosChart
               data={{
                 sim: v.votosSim,
@@ -291,6 +297,11 @@ export default async function VotacaoPage({ params }: PageProps) {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <SectionCard className="scroll-mt-28" id="resumo" title="Resumo">
             <div className="space-y-4">
+              <MargemDecisaoBar
+                aprovada={v.aprovada}
+                votosNao={v.votosNao}
+                votosSim={v.votosSim}
+              />
               <VotacaoVotosConsolidadosChart
                 data={{
                   sim: v.votosSim,
