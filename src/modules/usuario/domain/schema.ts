@@ -257,3 +257,48 @@ export const alertDelivery = usuarioSchema.table(
 
 export type AlertDelivery = typeof alertDelivery.$inferSelect
 export type NewAlertDelivery = typeof alertDelivery.$inferInsert
+
+// `data_request` — Wave 10 Etapa 9.4.
+//
+// Rastro de solicitações LGPD do titular (art. 18): export
+// (portabilidade), erase (eliminação), rectify (correção) e
+// anonymize (anonimização). Cada solicitação cria uma linha; o
+// processador atualiza `status` e (quando aplicável) `result_url`.
+//
+// Wave 10 processa síncrono dentro do request handler — volume
+// esperado é baixíssimo (~750 MAU, raras solicitações por mês),
+// não justifica Workers Queue (ADR-019). Async migration prevista
+// se métricas de timeout do Worker (50ms CPU padrão) apertarem.
+//
+// `result_url` é nullable: usado apenas para `kind = 'export'`
+// quando R2 for adotado (Wave 11+); por enquanto o export retorna
+// o JSON diretamente no response do POST e essa coluna fica NULL.
+export const dataRequest = usuarioSchema.table(
+  'data_request',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => userProfile.id, { onDelete: 'cascade' }),
+    kind: text('kind').notNull(),
+    status: text('status').notNull(),
+    resultUrl: text('result_url'),
+    requestedAt: timestamp('requested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+  },
+  (table) => [
+    // Listagem "minhas solicitações" no /painel/meus-dados (Etapa 9.5):
+    // últimas N solicitações de um usuário.
+    index('data_request_user_requested_idx').on(
+      table.userId,
+      table.requestedAt,
+    ),
+  ],
+)
+
+export type DataRequest = typeof dataRequest.$inferSelect
+export type NewDataRequest = typeof dataRequest.$inferInsert

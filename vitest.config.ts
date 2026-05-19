@@ -49,6 +49,13 @@ export default defineConfig({
         // dependência — fora de escopo. Helper é fino e funcional
         // (sendEmail é um pass-through com tradução de erro).
         'src/lib/resend-client.ts',
+        // Wave 10 Etapa 9.4 — orquestradores LGPD DB-bound:
+        // export-user agrega 5 queries do bounded context Usuário,
+        // erase-user e anonymize-user emitem UPDATEs. A pure
+        // `export-payload.ts` PERMANECE coberta (100%).
+        'src/lib/data-requests/export-user.ts',
+        'src/lib/data-requests/erase-user.ts',
+        'src/lib/data-requests/anonymize-user.ts',
       ],
       thresholds: {
         lines: 80,

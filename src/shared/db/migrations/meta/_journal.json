@@ -113,6 +113,13 @@
       "when": 1779201327577,
       "tag": "0015_outgoing_lilandra",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1779208767651,
+      "tag": "0016_silent_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }
