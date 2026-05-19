@@ -14,6 +14,7 @@ import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplin
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
+import { VotacoesRelacionadasFooter } from '@/components/votacao/footer-relacionadas'
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
@@ -35,6 +36,7 @@ import {
   getProposicaoVinculada,
   getRebeldesByVotacao,
   getVotacaoById,
+  getVotacoesRelacionadas,
   getVotosByVotacao,
   getVotosResumoPorPartido,
 } from '@/lib/queries/votacoes'
@@ -80,14 +82,21 @@ export default async function VotacaoPage({ params }: PageProps) {
   const v = await getVotacaoById(id)
   if (!v) notFound()
 
-  const [proposicao, votos, resumoPorPartido, disciplinas, rebeldes] =
-    await Promise.all([
-      getProposicaoVinculada(v.proposicaoId),
-      getVotosByVotacao(v.id),
-      getVotosResumoPorPartido(v.id),
-      getDisciplinaPartidariaPorVotacao(v.id),
-      getRebeldesByVotacao(v.id),
-    ])
+  const [
+    proposicao,
+    votos,
+    resumoPorPartido,
+    disciplinas,
+    rebeldes,
+    relacionadas,
+  ] = await Promise.all([
+    getProposicaoVinculada(v.proposicaoId),
+    getVotosByVotacao(v.id),
+    getVotosResumoPorPartido(v.id),
+    getDisciplinaPartidariaPorVotacao(v.id),
+    getRebeldesByVotacao(v.id),
+    getVotacoesRelacionadas(v.id, 4),
+  ])
 
   // KpiStrip híbrido (D1 do WAVE-9-VOTACOES-PLAN.md) — SIM/NÃO como
   // âncoras cognitivas, Margem + Disciplina como narrativa única de
@@ -471,6 +480,12 @@ export default async function VotacaoPage({ params }: PageProps) {
           <VotosIndividuais votacaoId={v.id} votos={votos} />
         </SectionCard>
       </div>
+
+      {/* Footer cross-links — Wave 9 Sprint 9.4 PR3. Renderiza fora dos
+          containers mobile/desktop porque é responsivo nativo (grid
+          1-col → md:2-col). Empty state interno suprime quando não há
+          relacionadas. */}
+      <VotacoesRelacionadasFooter votacoes={relacionadas} />
     </div>
   )
 }
