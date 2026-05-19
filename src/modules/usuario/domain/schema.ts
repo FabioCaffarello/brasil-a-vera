@@ -208,3 +208,47 @@ export const consentLog = usuarioSchema.table(
 
 export type ConsentLog = typeof consentLog.$inferSelect
 export type NewConsentLog = typeof consentLog.$inferInsert
+
+// `alert_delivery` — Wave 10 Etapa 7. Inbox de reports semanais
+// (channel=inapp) e auditoria de envio por email (channel=email).
+//
+// Idempotency key (ADR-029 §Schema + ADR-030): sha256(user_id +
+// period_start + cadence + channel). LOGGED-AREA-VISION §6 omitiu
+// `channel` na composição — divergência consciente da Etapa 7 para
+// suportar 1 row por canal (precisa de keys distintas).
+//
+// Status flow: pending → sent (envio OK) | failed (3 retries) |
+// skipped (sem novidades no período — registra no log para auditoria
+// mas não envia nada).
+export const alertDelivery = usuarioSchema.table(
+  'alert_delivery',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => userProfile.id, { onDelete: 'cascade' }),
+    idempotencyKey: text('idempotency_key').notNull(),
+    channel: text('channel').notNull(),
+    subject: text('subject').notNull(),
+    bodyMd: text('body_md').notNull(),
+    scheduledFor: timestamp('scheduled_for', { withTimezone: true }).notNull(),
+    deliveredAt: timestamp('delivered_at', { withTimezone: true }),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    status: text('status').notNull(),
+  },
+  (table) => [
+    uniqueIndex('alert_delivery_idempotency_key_unique').on(
+      table.idempotencyKey,
+    ),
+    // Cobre inbox: "últimos N reports do usuário X".
+    index('alert_delivery_user_scheduled_idx').on(
+      table.userId,
+      table.scheduledFor,
+    ),
+  ],
+)
+
+export type AlertDelivery = typeof alertDelivery.$inferSelect
+export type NewAlertDelivery = typeof alertDelivery.$inferInsert
