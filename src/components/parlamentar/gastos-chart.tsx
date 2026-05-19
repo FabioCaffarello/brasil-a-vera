@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   LabelList,
   Line,
   LineChart,
@@ -12,6 +13,18 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+
+// Opacidade decrescente por posição no ranking (DESIGN-TOKENS.md
+// §"Padrões de uso em charts"). Reforça hierarquia visual sem
+// virar arco-íris — uma cor única (--chart-1), 7 níveis de opacidade.
+// Cap em 0.3 (último item nunca abaixo disso, preservando contraste
+// WCAG 1.4.11 ≥3:1 para non-text).
+const RANKING_OPACITY: readonly number[] = [
+  1, 0.85, 0.7, 0.6, 0.5, 0.4, 0.3,
+] as const
+function rankingOpacity(idx: number): number {
+  return RANKING_OPACITY[Math.min(idx, RANKING_OPACITY.length - 1)] ?? 0.3
+}
 
 // Recharts 3.x não exporta TooltipProps com payload tipado de forma
 // estável; tooltip custom recebe shape do payload dinamicamente.
@@ -108,7 +121,7 @@ function LineTooltip({ active, payload, label }: CustomTooltipProps) {
     <div className="rounded-md border border-border bg-surface-elevated px-3 py-2 text-xs shadow-md">
       <p className="font-medium text-foreground">{String(label ?? '')}</p>
       <div className="mt-1 space-y-0.5 tabular-nums">
-        <p className="text-[hsl(var(--chart-1))]">
+        <p className="text-[var(--chart-1)]">
           Parlamentar: {brl.format(parlValue)}
         </p>
         <p className="text-foreground-muted">
@@ -197,13 +210,13 @@ export function GastosChart({ categorias, mensal }: Props) {
               >
                 <CartesianGrid
                   horizontal={false}
-                  stroke="hsl(var(--border) / 0.4)"
+                  stroke="color-mix(in oklch, var(--border) 40%, transparent)"
                   strokeDasharray="2 4"
                 />
                 <XAxis
                   axisLine={false}
                   tick={{
-                    fill: 'hsl(var(--foreground-muted))',
+                    fill: 'var(--foreground-muted)',
                     fontSize: 10,
                   }}
                   tickFormatter={brlShort}
@@ -214,7 +227,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                   axisLine={false}
                   dataKey="categoria"
                   tick={{
-                    fill: 'hsl(var(--foreground))',
+                    fill: 'var(--foreground)',
                     fontSize: 11,
                   }}
                   tickLine={false}
@@ -228,16 +241,27 @@ export function GastosChart({ categorias, mensal }: Props) {
                       total={totalBar}
                     />
                   )}
-                  cursor={{ fill: 'hsl(var(--accent) / 0.06)' }}
+                  cursor={{
+                    fill: 'color-mix(in oklch, var(--accent) 6%, transparent)',
+                  }}
                 />
                 <Bar
                   dataKey="valor"
-                  fill="hsl(var(--chart-1))"
+                  fill="var(--chart-1)"
                   radius={[0, 6, 6, 0]}
                 >
+                  {/* Opacidade decrescente por posição no ranking
+                      (DESIGN-TOKENS §"Padrões de uso em charts"). */}
+                  {barData.map((entry, idx) => (
+                    <Cell
+                      fill="var(--chart-1)"
+                      fillOpacity={rankingOpacity(idx)}
+                      key={entry.categoria}
+                    />
+                  ))}
                   <LabelList
                     dataKey="valor"
-                    fill="hsl(var(--foreground))"
+                    fill="var(--foreground)"
                     fontSize={10}
                     formatter={(v) => brlShort(Number(v))}
                     offset={6}
@@ -267,14 +291,14 @@ export function GastosChart({ categorias, mensal }: Props) {
             <span className="inline-flex items-center gap-1.5 text-foreground">
               <span
                 aria-hidden
-                className="h-0.5 w-5 rounded-full bg-[hsl(var(--chart-1))]"
+                className="h-0.5 w-5 rounded-full bg-[var(--chart-1)]"
               />
               <span className="font-medium">Parlamentar</span>
             </span>
             <span className="inline-flex items-center gap-1.5 text-foreground-muted">
               <span
                 aria-hidden
-                className="h-0.5 w-5 rounded-full border-[hsl(var(--chart-3))] border-t-2 border-dashed"
+                className="h-0.5 w-5 rounded-full border-[var(--chart-3)] border-t-2 border-dashed"
               />
               Mediana da casa
             </span>
@@ -286,7 +310,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                 margin={{ top: 8, right: 16, bottom: 4, left: 4 }}
               >
                 <CartesianGrid
-                  stroke="hsl(var(--border) / 0.4)"
+                  stroke="color-mix(in oklch, var(--border) 40%, transparent)"
                   strokeDasharray="2 4"
                   vertical={false}
                 />
@@ -294,7 +318,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                   axisLine={false}
                   dataKey="mes"
                   tick={{
-                    fill: 'hsl(var(--foreground-muted))',
+                    fill: 'var(--foreground-muted)',
                     fontSize: 10,
                   }}
                   tickLine={false}
@@ -302,7 +326,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                 <YAxis
                   axisLine={false}
                   tick={{
-                    fill: 'hsl(var(--foreground-muted))',
+                    fill: 'var(--foreground-muted)',
                     fontSize: 10,
                   }}
                   tickFormatter={brlShort}
@@ -314,14 +338,15 @@ export function GastosChart({ categorias, mensal }: Props) {
                     <LineTooltip {...(props as CustomTooltipProps)} />
                   )}
                   cursor={{
-                    stroke: 'hsl(var(--accent) / 0.3)',
+                    stroke:
+                      'color-mix(in oklch, var(--accent) 30%, transparent)',
                     strokeWidth: 1,
                   }}
                 />
                 <Line
                   dataKey="medianaCasa"
                   dot={false}
-                  stroke="hsl(var(--chart-3))"
+                  stroke="var(--chart-3)"
                   strokeDasharray="4 4"
                   strokeWidth={1.5}
                   type="monotone"
@@ -330,7 +355,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                   activeDot={{ r: 4, strokeWidth: 0 }}
                   dataKey="parlamentar"
                   dot={false}
-                  stroke="hsl(var(--chart-1))"
+                  stroke="var(--chart-1)"
                   strokeWidth={2.5}
                   type="monotone"
                 />
