@@ -139,6 +139,42 @@ group `(authenticated)/` (decisão pendente para Sprint 4.5).
 ## Referências
 
 - [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) — governança
+- [ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md) — modelo `user_profile` + topologia route group
+- [LOGGED-AREA-VISION](../product/LOGGED-AREA-VISION.md) — ground truth Wave 10
 - [Clerk docs](https://clerk.com/docs/quickstarts/nextjs)
 - [Clerk Workers integration](https://clerk.com/docs/quickstarts/nextjs#cloudflare-workers)
+- [Clerk Webhooks (Svix)](https://clerk.com/docs/webhooks/overview)
 - [OpenNext + middleware.ts](https://github.com/opennextjs/opennextjs-cloudflare/issues/962) — por que mantemos `middleware.ts`, não `proxy.ts`
+
+## Setup no Clerk Dashboard (Wave 10 Etapa 1)
+
+Wave 10 Etapa 1 introduz rotas custom de sign-in/sign-up dentro do site:
+
+1. Dashboard → **Customization → Paths**:
+   - Sign-in URL: `/sign-in`
+   - Sign-up URL: `/sign-up`
+   - After sign-in URL: `/painel`
+   - After sign-up URL: `/painel`
+2. Em **Domains → Authorized origins**, garantir que `https://brasilavera.org`
+   está autorizado (já estava desde Sprint 4.1; só confirmar)
+
+## Sincronização do `user_profile` — método tradicional (sem webhook)
+
+A Wave 10 Etapa 1 **não usa webhook do Clerk**. A sincronização da tabela
+`usuario.user_profile` com o Clerk acontece via **lazy upsert** na RSC do
+`/painel`:
+
+1. Usuário autentica via custom sign-in/sign-up.
+2. Clerk redireciona para `/painel`.
+3. A RSC do `/painel` busca o profile por `clerk_user_id`. Se não existir,
+   chama `currentUser()` do `@clerk/nextjs/server`, extrai email primário
+   e display name, e faz `INSERT … ON CONFLICT DO UPDATE`.
+4. A mesma rotina cobre mudanças posteriores (alterar email/nome no Clerk
+   Account Portal) — basta o usuário abrir o `/painel` para a tabela
+   refletir.
+
+Justificativa: método tradicional é suficiente para o escopo Wave 10
+(login funciona, profile criado, dashboard mostra dados certos). Se uma
+wave futura precisar reagir a `user.deleted` em tempo real ou cobrir
+mudanças que NÃO passam pelo `/painel`, reabrir webhook nessa wave com
+`svix` + endpoint POST `/api/webhooks/clerk`.
