@@ -148,7 +148,7 @@ de disciplina/rebelião da Wave 9.
 
 | Camada | Wave 7/8 hoje | /votacoes hoje | Gap a fechar Wave 9 |
 |---|---|---|---|
-| Render mode detalhe | SSG + ISR | `force-dynamic` | Resolver via client-component filter (D7) |
+| Render mode detalhe | Dynamic + cache edge | `force-dynamic` | Resolver via client-component filter (D7) |
 | Paginação listagem | Cursor ADR-026 v1 | `limit=50` offset | Aplicar ADR-026 |
 | KpiStrip detalhe | 4 slots narrativos | 4 slots quantitativos crus | KpiStrip híbrido (D1) |
 | Breadcrumb detalhe | Presente | Ausente | Adicionar |
@@ -280,23 +280,37 @@ quóruns diferentes) que merecem rodada dedicada.
 
 ### D7 — Render mode do detalhe
 
-**Decisão:** **Client component filter + SSG + ISR.**
+**Decisão (revisada 2026-05-18 após fix #293):** **Client component
+filter + página dinâmica + cache de edge nas queries.** A parte SSG
+da decisão original foi revertida — ver "Lição empírica" abaixo.
 
 `VotosIndividuais` migra para `'use client'`, consome `useSearchParams()`
 e filtra in-memory a lista completa (~513 ou ~81 votos) já carregada no
-servidor. Remove `dynamic = 'force-dynamic'` da página. Adiciona
-`generateStaticParams` retornando top-200 votações mais acessadas
-(ordenadas por data desc, primeira leva).
+servidor. Remove `dynamic = 'force-dynamic'` da página — agora roda
+como dinâmica padrão (server-rendered on demand). Cache de edge nas
+queries `cached()` (Sprint 9.0 PR 9.0.3) entrega performance
+equivalente a SSG.
 
 **Why:** votações têm cardinalidade finita pequena (centenas de
 parlamentares, não milhões de registros). Filter in-memory é trivial,
-bundle delta ~2kb gz aceitável (cabe no orçamento ADR-025). Resolve a
-dívida sem esperar Issue #58 (R2 incremental cache em Workers).
+bundle delta ~2kb gz aceitável (cabe no orçamento ADR-025).
 
-**Trade-off aceito:** votos individuais não são mais indexáveis por
-filtro de tipo no Google. URL canônica continua a página inteira
-(`/votacoes/[id]`). Title/H1/SectionCard headers permanecem
-server-rendered → SEO preservado.
+**Lição empírica do fix #293:** o PR 9.2.1 introduziu
+`generateStaticParams` confiante de que o "ISR fallback nativo do
+Next 16" cobriria long-tail. Após deploy, **todas** as URLs de detalhe
+retornaram 500 em produção. Causa: OpenNext em Workers exige binding R2
+explícito como incremental cache para servir páginas SSG/ISR — sem R2,
+qualquer rota com `generateStaticParams` quebra em runtime. Isso já
+estava cravado no comentário do `wrangler.jsonc` ("todas as rotas são
+dinâmicas (ƒ). Revisitar quando entrar ISR/Cache Components") e na
+Issue #58 — só não foi conectado durante o plano. Lição: validar
+SSG/ISR em produção via `curl` empírico antes de mergear (CLAUDE.md §13).
+
+**Trade-off aceito:** sem SSG, primeira request paga DB round-trip; mas
+o cache de edge (Sprint 9.0 PR 9.0.3, TTL 7d) cobre revisitas. Paridade
+com `/parlamentares/[id]` e `/proposicoes/[tipo]/[numero]/[ano]` que
+também são dinâmicas + cached. Quando Issue #58 entregar R2, podemos
+reintroduzir SSG em todas as 3 rotas simultaneamente.
 
 ### D8 — Paginação da listagem
 
@@ -431,7 +445,7 @@ ao final do Sprint 9.5.
 
 **Objetivo:** alinhar a moldura do detalhe ao padrão Wave 7/8.
 
-- **PR 9.2.1** — Resolver D7: mover `?voto=X` para client component `VotosIndividuais`. Remove `force-dynamic`. Adiciona `generateStaticParams` top-200.
+- **PR 9.2.1** — Resolver D7: mover `?voto=X` para client component `VotosIndividuais`. Remove `force-dynamic`. (SSG via `generateStaticParams` foi tentada e revertida em fix #293 por incompatibilidade com Workers OpenNext sem R2 — ver D7 atualizada.)
 - **PR 9.2.2** — `VotacaoBreadcrumb` + Header v2 (sub-line com casa, órgão, data; chips aprovada/rejeitada com tone semântico).
 - **PR 9.2.3** — `CompartilharButton` adaptado. Template WhatsApp: `"Votação [descrição] — [Aprovada/Rejeitada] por [N] a [M] em [casa]. Veja como cada parlamentar votou: [URL]"`.
 - **PR 9.2.4** — KpiStrip híbrido conforme D1.

@@ -21,7 +21,6 @@ import {
 import {
   getDisciplinaPartidariaPorVotacao,
   getProposicaoVinculada,
-  getTopVotacoesParaSSG,
   getVotacaoById,
   getVotosByVotacao,
   getVotosResumoPorPartido,
@@ -32,14 +31,21 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
-// Wave 9 Sprint 9.2 PR1 (D7) — top-200 votações mais recentes geradas
-// estaticamente no build. Cobre >95% do tráfego (votações novas
-// concentram interesse). Restante cai em ISR fallback nativo do Next 16.
-// Filtro ?voto=X migrou para client-side em VotosIndividuais → página
-// não opta-out mais de SSG.
-export async function generateStaticParams() {
-  return getTopVotacoesParaSSG(200)
-}
+// Rota dinâmica (server-rendered on demand) + cache de edge nas queries
+// via cached() wrappers (Sprint 9.0 PR 9.0.3). Paridade com
+// /parlamentares/[id] e /proposicoes/[tipo]/[numero]/[ano] que também
+// são dinâmicas em Workers.
+//
+// Por que NÃO usamos SSG via generateStaticParams (lição empírica do
+// fix #293, revertendo PR 9.2.1): OpenNext em Workers exige binding R2
+// como incremental cache para servir páginas SSG/ISR (ver wrangler.jsonc
+// comentário + Issue #58). Sem R2, qualquer rota com generateStaticParams
+// quebra em runtime com 500. Quando Issue #58 entregar R2 cache, podemos
+// reintroduzir SSG aqui (e em parlamentares/proposicoes também).
+//
+// O cliente filter de ?voto=X em VotosIndividuais (parte boa do PR 9.2.1)
+// é PRESERVADO — não causa nenhum problema de SSG porque a página é
+// dinâmica anyway. Filter in-memory continua reativo via useSearchParams.
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
