@@ -271,10 +271,11 @@ Thresholds fundamentados:
 | [Resumo]  Parlamentares  Alertas  Configurações                      |
 +----------------------------------------------------------------------+
 |                                                                      |
-|  Acomp.    Movimentações   Reports recebidos   Período especial      |
-|  ╭─────╮   ╭─────────────╮  ╭───────────────╮  ╭─────────────╮       |
-|  │ 12  │   │     4       │  │       7       │  │  1 ativo    │       |
-|  ╰─────╯   ╰─────────────╯  ╰───────────────╯  ╰─────────────╯       |
+|  Acomp.    Movimentações   Reports recebidos                         |
+|  ╭─────╮   ╭─────────────╮  ╭───────────────╮                        |
+|  │ 12  │   │     4       │  │       7       │                        |
+|  ╰─────╯   ╰─────────────╯  ╰───────────────╯                        |
+|  (KPI "Período especial" removida em 2026-05-18; Etapa 8 deferida)   |
 |                                                                      |
 |  Último report  ·  03/05–09/05                                       |
 |  ╭───────────────────────────────────────────────────────────────╮   |
@@ -409,9 +410,9 @@ sequenceDiagram
 | Trigger | **Cloudflare Cron Trigger** semanal (dom 21:00 UTC = 18:00 BRT) | Nativo, sem peer dep; agendamento previsível; cabe no Workers Paid sem custo adicional. |
 | Backpressure / retry | **Workers Queues** entre trigger e envio | Retry transparente para falha de Resend; concorrência limitada evita rajada; queue tem dead-letter para diagnose. |
 | Idempotência | `idempotency_key = sha256(user_id + period_start + cadence)` | Cron rodando duas vezes não duplica; chave unique no banco bloqueia conflito. |
-| Modulação | Tabela `alert_period` admin-managed (sem UI Wave 10) | Eventos especiais são poucos e raros; manutenção via Drizzle Studio até ter volume que justifique UI. |
+| ~~Modulação~~ | ~~Tabela `alert_period` admin-managed (sem UI Wave 10)~~ — **deferida em 2026-05-18 para Wave 11+** (Etapa 8 fora do escopo). |
 | Sem novidades | **Não envia email**; registra `delivery(status=skipped)` para auditoria; agrega no próximo ciclo | LGPD do usuário (não receber comunicação inútil); auditoria preserva intenção. |
-| Modulação aplicada | Cron extra dispara fora da cadência se `alert_period.scope` matchar o usuário (UF, follows, temas) | Período eleitoral relevante para SP não dispara para usuário em RR. |
+| ~~Modulação aplicada~~ | ~~Cron extra dispara fora da cadência se `alert_period.scope` matchar o usuário (UF, follows, temas)~~ — **deferida em 2026-05-18 para Wave 11+** (Etapa 8 fora do escopo). |
 
 ### Estrutura editorial do email semanal
 
@@ -425,7 +426,7 @@ sequenceDiagram
 | Bloco Proposições | Apresentadas na semana + movimentações de proposições já marcadas pelos temas | se `topic_proposicoes` | omite |
 | Bloco Discursos | Plenário com palavras-chave dos temas (Câmara API) | se `topic_discursos` | omite |
 | Bloco Divergências | Lista de votações onde acompanhado divergiu da bancada | se `topic_divergencias` | omite |
-| Aviso de período especial | Banner topo "Eleições 2026 — frequência aumentada" | se `alert_period` ativo match | omite |
+| ~~Aviso de período especial~~ | ~~Banner topo "Eleições 2026 — frequência aumentada"~~ — **bloco removido em 2026-05-18** (Etapa 8 deferida; sem `alert_period` em Wave 10). | — | sempre omite na Wave 10 |
 | Footer | DPO contato · endereço · política · link gerenciar alertas · `delivery_id` | sempre | — |
 
 **Hierarquia de importância:** Votações nominais com divergência > Votações nominais > Gastos com anomalia > Proposições marcadas avançando > Apresentações novas > Discursos > Gastos rotineiros. Renderização do email mostra os primeiros N caracteres dos blocos prioritários acima da dobra.
@@ -502,11 +503,11 @@ Conteúdo descrito em §5.5. Mostra ao titular **tudo** que o sistema registra: 
 | 5 | `/painel/configuracoes` com Perfil (UF), Temas, Comunicação opt-ins + link `/meus-dados` | 1 | 0.5 | Update UF reflete em recomendações; consent_log inserido em toggle de marketing |
 | 6 | `usuario.alert_policy` + sub-tab Políticas em `/painel/alertas` + migração da config antiga "Preferências de acompanhamento" | 5 | 0.5 | Mudança de policy persiste; defaults preenchidos no primeiro acesso |
 | 7 | Resend setup (DNS, API key, suppression list) + cron handler + Workers Queue + sub-tab Recebidos + envio do primeiro report semanal | 6 | 1.5 | Primeiro email entregue (DKIM/SPF/DMARC ok); inbox renderiza; idempotency_key blocando duplicatas |
-| 8 | `usuario.alert_period` (admin-managed) + modulação por scope match + banner em `/painel` quando ativo | 7 | 0.5 | Período de teste dispara extra-cadência apenas para usuários no scope |
+| ~~8~~ | ~~`usuario.alert_period` (admin-managed) + modulação por scope match + banner em `/painel` quando ativo~~ — **deferida em 2026-05-18 para Wave 11+** (decisão owner: sem evidência empírica de "ciclo semanal insuficiente"; cadência semanal cobre Wave 10 com folga). Tabela `alert_period`, modulação extra-cadência e banner ficam fora do escopo. Reentrada documentada em §11. | — | — | — |
 | 9 | LGPD completo — `/privacidade` (SSG) + `consent_log` + `data_request` + `/meus-dados` (3 blocos) + endpoints export/erase/anonymize + Cloudflare Email Routing `lgpd@` + modal de re-aceite por versão + modal de migração `localStorage` (defensivo) + cron diário de lembrete pré-hard-delete aos 25d + template de email de reativação + cláusula de idade mínima nos termos de uso + procedimento de erase administrativo de menores documentado | 5, 7 | 2 | Política publicada com versão; export gera JSON; erase produz soft delete + lembrete aos 25d + cron diário de hard delete aos 30d |
 | 10 | Anti-abuse + closure — rate limit follows (Workers KV), cap 200 follows/user, métricas em `/api/stats`, smoke test signup→follow→resume→alerta, tag `v0.10.0`, release notes, ADRs -029/-030/-031 publicados, README/ROADMAP update | 9 | 1 | Smoke verde em produção; PR de release notes mergeado |
 
-**Total estimado:** 9 sprints. Sequencial até Etapa 5; Etapas 6–8 dependem de 5; Etapa 9 corre paralela após 5. Etapas 0–3 são bloqueantes do resto.
+**Total estimado:** 8.5 sprints (Etapa 8 deferida em 2026-05-18). Sequencial até Etapa 5; Etapas 6–7 dependem de 5; Etapa 9 corre paralela após 5. Etapas 0–3 são bloqueantes do resto.
 
 ---
 
@@ -518,9 +519,9 @@ Conteúdo descrito em §5.5. Mostra ao titular **tudo** que o sistema registra: 
 | Cron Worker CPU limit (50ms/request padrão) pode estourar agregando muitos usuários | Trigger só faz "SELECT users elegíveis" e enfileira; agregação por usuário acontece no consumer da Queue (jobs curtos) | sim |
 | Clerk webhook delay (~segundos) pode atrasar `user_profile.created` no primeiro hit do `/painel` | RSC do `/painel` faz lazy upsert se `clerk_user_id` não estiver no banco | sim |
 | Email cair em spam (SPF/DKIM/DMARC mal configurados) | Tarefa explícita na Etapa 7: setup DNS via Resend + warm-up de 100 emails antes de abrir geral | sim |
-| `alert_period` admin-managed via SQL frágil operacionalmente | OK para Wave 10 (poucos eventos por ano); UI vai para Wave 11+ se houver evidência | sim |
+| ~~`alert_period` admin-managed via SQL frágil operacionalmente~~ | ~~OK para Wave 10 (poucos eventos por ano); UI vai para Wave 11+ se houver evidência~~ — **risco neutralizado em 2026-05-18:** Etapa 8 deferida, `alert_period` sai do escopo Wave 10. | n/a |
 | Conceito de "anonimização" vs "eliminação" precisa de parecer legal | Etapa 9 documenta posição interna; revisar com advogado antes de v0.10.0 | **questão aberta** |
-| Custo Resend escalar não-linear se report semanal virar diário em período eleitoral | Cap por usuário: máximo 1 email por dia mesmo em período especial | sim |
+| ~~Custo Resend escalar não-linear se report semanal virar diário em período eleitoral~~ | ~~Cap por usuário: máximo 1 email por dia mesmo em período especial~~ — **mitigação não necessária na Wave 10:** Etapa 8 (extra-cadência) deferida em 2026-05-18; cadência semanal fixa. | n/a |
 | Migração localStorage defensiva pode parecer "código que nunca roda" | Aceitar; hedge barato; remover na Wave 11 se confirmado zero hits em telemetria | sim |
 | UX do custom sign-in via `<SignIn />` Clerk pode parecer estranho dependendo do tema | Tarefa de polimento na Etapa 1; QA visual com `appearance` prop; NÃO inventar CSS custom invasivo | sim |
 | Account Portal hosted Clerk continua acessível como fallback | Aceitar; design da Clerk; documentado em §4 | sim |
@@ -571,7 +572,7 @@ Os itens abaixo **não entram nesta wave**. Cada um pode reabrir como Wave 11+ s
 | Termômetro cidadão (sentimento) | Subjetividade + risco de manipulação | — |
 | Petições vinculadas | Fora do escopo "espelho, não juiz" | — |
 | Telegram / Webhook / Push como canais | Cada canal é peça de infra adicional; ADR-019 bloqueia preventivo | Reabrir só com pedido evidenciado |
-| UI para `alert_period` | Eventos raros; SQL direto basta para Wave 10 | Wave 11+ |
+| Modulação de cadência por período especial (`alert_period`, scope match, extra-cadência, banner em `/painel`) | **Deferida em 2026-05-18 da Etapa 8 original.** Sem evidência empírica de que cadência semanal é insuficiente; ADR-019 (gargalo concreto antes da peça nova). Volume Wave 10 (≤750 MAU) com folga no free tier Resend. | Wave 11+ se houver pedido evidenciado durante período eleitoral 2026 ou volume de feedback sinalizar gap |
 
 ---
 
