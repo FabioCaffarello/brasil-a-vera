@@ -8,7 +8,16 @@ import { useEffect, useId, useState } from 'react'
 import { SearchForm } from '@/components/busca/search-form'
 import { cn } from '@/lib/cn'
 
-import { isNavLinkActive, NAV_LINKS } from './nav-links'
+import { isNavLinkActive, NAV_LINKS, type NavLink } from './nav-links'
+
+interface Props {
+  /**
+   * Wave 10 Hotfix 10.3 — link único da área pessoal renderizado primeiro
+   * na lista do painel mobile. Espelha o contrato de `NavLinks`. Resolvido
+   * server-side no Navbar (regra: nada de `useAuth`/`useUser` aqui).
+   */
+  personalLink?: NavLink | null
+}
 
 /**
  * NavMobile — trigger + painel embutido para < md.
@@ -32,10 +41,13 @@ import { isNavLinkActive, NAV_LINKS } from './nav-links'
  * - Animação CSS pura (opacity + translate) respeita
  *   prefers-reduced-motion via override global em globals.css.
  */
-export function NavMobile() {
+export function NavMobile({ personalLink }: Props = {}) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const panelId = useId()
+  const links: NavLink[] = personalLink
+    ? [personalLink, ...NAV_LINKS]
+    : NAV_LINKS
 
   // Fecha quando a rota muda. pathname é o gatilho intencional; lemos
   // explicitamente para deixar a dependência óbvia ao linter.
@@ -115,7 +127,7 @@ export function NavMobile() {
         <div className="mx-auto max-w-6xl px-4 py-4">
           <SearchForm variant="page" />
           <ul className="mt-4 flex flex-col gap-0.5 text-sm">
-            {NAV_LINKS.map((link) => {
+            {links.map((link) => {
               const isActive = isNavLinkActive(pathname, link.href)
               return (
                 <li key={link.href}>

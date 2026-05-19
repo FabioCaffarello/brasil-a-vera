@@ -83,4 +83,22 @@ describe('NavMobile', () => {
     const active = screen.getByRole('link', { name: 'Proposições' })
     expect(active.getAttribute('aria-current')).toBe('page')
   })
+
+  it('com personalLink renderiza Painel como primeiro item da lista (Hotfix 10.3)', () => {
+    render(<NavMobile personalLink={{ href: '/painel', label: 'Painel' }} />)
+    fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
+    const dialog = screen.getByRole('dialog', { name: /menu principal/i })
+    const links = dialog.querySelectorAll('a[href]')
+    expect(links).toHaveLength(5)
+    expect(links[0].textContent).toBe('Painel')
+  })
+
+  it('sem personalLink, lista preserva 4 links públicos (paridade anônima)', () => {
+    render(<NavMobile personalLink={null} />)
+    fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
+    const dialog = screen.getByRole('dialog', { name: /menu principal/i })
+    const links = dialog.querySelectorAll('a[href]')
+    expect(links).toHaveLength(4)
+    expect(dialog.querySelector('a[href="/painel"]')).toBeNull()
+  })
 })
