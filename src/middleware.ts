@@ -36,8 +36,11 @@ import { NextResponse } from 'next/server'
  * O matcher abaixo segue o padrão Clerk:
  * - Exclui `_next` internals e extensões de asset estáticos
  * - Inclui rotas API
- * - Em modo "dormente" (sem `auth.protect()`). Sprint 4.5 adiciona
- *   `auth.protect()` para `/minha-area/*` quando rotas privadas existirem.
+ * - Em modo "dormente" (sem `auth.protect()`). Wave 10 adiciona
+ *   `auth.protect()` para `/painel/*` quando rotas privadas existirem.
+ *   Ver `docs/product/LOGGED-AREA-VISION.md` §4 e ADR-029. O escopo
+ *   originalmente previsto em `/minha-area/*` foi rebrandeado para
+ *   `/painel/*` na Wave 10 (addendum no ADR-022).
  *
  * ## Trade-offs aceitos com Workers Paid
  *

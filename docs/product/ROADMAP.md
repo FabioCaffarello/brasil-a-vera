@@ -771,6 +771,13 @@ polimento.
 
 #### Carryover para Sprint 4.5
 
+> **Atualização Wave 10 (2026-05-19):** Sprint 4.5 não foi executada
+> isoladamente; seu escopo migrou para a **Wave 10** com rebrand de
+> rota (`/minha-area/*` → `/painel/*`) e modelo de dados redesenhado
+> (sem `usuario_acompanhamento + flags`; ver `follows` flat em
+> [ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md)).
+> Doc canônico: [LOGGED-AREA-VISION](./LOGGED-AREA-VISION.md).
+
 Sprint 4.5 — Minha área (autenticada). Pré-requisitos da sprint (mantidos):
 - Definir o que persistir e schema de `usuario_acompanhamento`
 - ADR específico sobre persistência multi-tenant LGPD-aware antes de criar a tabela
@@ -1139,13 +1146,103 @@ A Wave 6 fecha quando, ao final da Sprint 6.6:
 Decisões D2/D5/D11 do prompt mestre rejeitam de antemão:
 
 - `/analise` (dashboard de stats agregados com Recharts) — sem ADR Recharts + sem evidência de engajamento com stats
-- `/minha-area/*` (issue [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174)) — sem demanda observada
+- `/minha-area/*` (issue [#174](https://github.com/FabioCaffarello/brasil-a-vera/issues/174)) — sem demanda observada na Wave 6; **endereçado na Wave 10** com rebrand para `/painel/*` (ver [LOGGED-AREA-VISION](./LOGGED-AREA-VISION.md) e [ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md))
 - 24 peer deps Radix Tier 2/3 preventivos do protótipo
 - TanStack Start, React Query no cliente, useQueries em loop (anti-patterns Lovable)
 - `framer-motion` como default — bloqueado por [ADR-023](../architecture/ADR/023-criterios-de-animacao-e-revealing.md) (critério)
 - Troca de Inter por Roboto — decisão Wave 4 PR 3 vale, sem ADR para reverter
 
 Gaps identificados durante a wave que não couberem na sprint atual viram `gh issue` com label `wave-6+` ou `wave-7+` (regra do prompt mestre §6.5). Princípio: cada gap não resolvido vira artefato rastreável, não dívida implícita.
+
+---
+
+## Wave 7 — Parlamentar 360° ✅
+
+Entregue em maio/2026. Release tratado como placeholder (sem tag git
+isolada; consolidação retroativa em `v0.8.0-proposicao-360`). Estabeleceu
+o padrão arquitetural reusado nas Waves 8 e 9:
+
+- Agregados pré-computados em tabela própria (reduz CU-hours em listagens)
+- Listagem com cursor pagination + checkpoint mobile
+- Perfil parlamentar com KpiStrip + Accordion mobile + Compartilhar
+- Filtros mini nas seções do detalhe
+- Dataviz com Recharts dynamic-imported
+
+ADRs publicados nesta wave:
+
+- [ADR-025](../architecture/ADR/025-chart-lib-wave-7.md) — Chart lib (Recharts)
+- [ADR-026](../architecture/ADR/026-paginacao-cursor-ssr.md) — Paginação cursor SSR
+
+---
+
+## Wave 8 — Proposição 360° ✅
+
+Fechada em 2026-05-18 (tag [`v0.8.0-proposicao-360`](https://github.com/FabioCaffarello/brasil-a-vera/releases/tag/v0.8.0-proposicao-360)).
+Estendeu ao eixo "artefato jurídico" (`/proposicoes`) o padrão arquitetural
+da Wave 7. 22 PRs em 5 sprints (8.0–8.4).
+
+Entregáveis principais:
+
+- Sprint 8.0 — HeroSection `variant="plain"` universal (reverte gradient da Wave 7); migration agregada; helpers globais e mediana
+- Sprint 8.1 — Listagem reskin: StatsGrid + busca SSR + Combobox tema + chips ativos + ProposicaoCard v2 + cursor pagination
+- Sprint 8.2 — Detalhe reskin + share: KpiStrip v2 + PerfilHeader v2 + Compartilhar + AutoresList com PartyBadge + Accordion mobile
+- Sprint 8.3 — Filtros mini + cursor no detalhe (tramitação + votações vinculadas + marcos importantes)
+- Sprint 8.4 — Dataviz: setup compartilhado + Chart "Apoio por partido" com dedup Recharts + Donut de votos consolidados
+
+Documento de planejamento: `docs/design/WAVE-8-PROPOSICOES-PLAN.md` (handoff v1.0).
+
+Eventos transversais durante o ciclo:
+
+- PR [#276](https://github.com/FabioCaffarello/brasil-a-vera/pull/276) — migração para licença PolyForm Noncommercial 1.0.0 ([ADR-027](../architecture/ADR/027-licenca-polyform-noncommercial.md))
+- PR [#277](https://github.com/FabioCaffarello/brasil-a-vera/pull/277) — remoção da rota `/o-meu-parlamentar` e código morto associado
+
+---
+
+## Wave 9 — Votações 360° ✅ (em fechamento)
+
+Sprints 9.0, 9.1 e 9.2 entregues entre 2026-05-18 e 2026-05-19 (PRs
+[#278](https://github.com/FabioCaffarello/brasil-a-vera/pull/278)–[#289](https://github.com/FabioCaffarello/brasil-a-vera/pull/289)).
+Aplica o padrão Wave 7/8 ao terceiro eixo do trium-virato cívico
+(parlamentar / proposição / **votação**).
+
+Entregáveis principais:
+
+- Sprint 9.0 — queries de disciplina + rebeldes + funções puras de domínio; cache wrappers nas queries de detalhe; cursor schema v1 versionado
+- Sprint 9.1 — HeroSection v2 com volume narrativo na listagem; StatsGrid; migração offset → cursor com compat `?offset=`; FiltrosAtivos chips
+- Sprint 9.2 — SSG + client filter no detalhe; breadcrumb "← Votações"; CompartilharVotacaoButton; KpiStrip híbrido SIM/NÃO/Margem/Disciplina
+
+ADR publicado nesta wave:
+
+- [ADR-028](../architecture/ADR/028-cursor-pagination-e-cache-ttl-para-votacoes.md) — Cursor pagination + cache TTL para votações
+
+Tag de release prevista ao fechamento da Sprint 9.2 (sem cronograma fixo).
+
+---
+
+## Wave 10 — Área logada
+
+Em planejamento desde 2026-05-19. Fundação da área autenticada do produto
+(`/painel/*`): acompanhamento de parlamentares, sistema de alertas
+semanais, framework LGPD, dashboard de transparência de dados pessoais.
+Sucessor do escopo `/minha-area/*` originalmente previsto na Sprint 4.5
+do [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) (rebrand
+de rota registrado no addendum daquele ADR).
+
+Documento canônico:
+[`LOGGED-AREA-VISION.md`](./LOGGED-AREA-VISION.md). Inclui tese, JTBD,
+modelo de domínio, arquitetura de rotas, detalhamento por tela, sistema
+de alertas, LGPD, plano em 10 etapas + Etapa 0 de higiene, riscos, custo
+operacional, fora de escopo, anti-patterns evitados.
+
+ADRs derivados:
+
+- [ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md) — Modelo de dados da área logada + topologia de auth
+- [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) — Sistema de alertas e Resend
+- [ADR-031](../architecture/ADR/031-framework-lgpd-area-logada.md) — Framework LGPD para área logada
+
+Plano de implementação em 11 PRs (Etapa 0 = higiene de repo, esta tarefa
+em curso; Etapas 1–10 = features). Detalhamento em
+[LOGGED-AREA-VISION §8](./LOGGED-AREA-VISION.md#8-plano-de-implementação-em-10-etapas--etapa-0).
 
 ---
 
