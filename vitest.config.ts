@@ -56,6 +56,10 @@ export default defineConfig({
         'src/lib/data-requests/export-user.ts',
         'src/lib/data-requests/erase-user.ts',
         'src/lib/data-requests/anonymize-user.ts',
+        // Wave 10 Etapa 9.6 — cron LGPD orquestrador + queries
+        // DB-bound. compose-reminder.ts (pure) PERMANECE coberta.
+        'src/lib/lgpd-cron/queries.ts',
+        'src/lib/lgpd-cron/orchestrator.ts',
       ],
       thresholds: {
         lines: 80,

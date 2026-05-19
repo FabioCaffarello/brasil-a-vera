@@ -22,10 +22,16 @@ export interface UpsertUserProfileInput {
  * também serve quando email/nome muda no Clerk Account Portal e usuário
  * abre o /painel depois). ON CONFLICT por `clerk_user_id` (unique index).
  *
- * NOTA: este upsert **NÃO** ressuscita conta soft-deletada. Se
- * `deleted_at` está setado, preserva — só atualiza `email` e
- * `display_name` (Clerk pode mudar enquanto Clerk session sobrevive).
- * Ressurreição é fluxo de re-autenticação (ADR-031 §Reativação, Etapa 9).
+ * **Wave 10 Etapa 9.6**: este upsert agora também REATIVA a conta —
+ * limpa `deleted_at = NULL` no ON CONFLICT. Comportamento intencional:
+ * o usuário que fez erase e volta antes do hard-delete (cron diário
+ * aos 30d) tem a conta ressuscitada automaticamente, conforme texto
+ * exibido no botão "Eliminar" de /painel/configuracoes/meus-dados e
+ * no email de lembrete enviado entre 25-29d.
+ *
+ * Race contra hard-delete: se o cron rodar entre o login e este
+ * upsert, a row é cascade-deletada e o upsert insere uma NOVA row
+ * com onboarded_at = NULL (perfil fresco) — comportamento aceitável.
  */
 export async function upsertUserProfileFromClerk(
   input: UpsertUserProfileInput,
@@ -42,6 +48,7 @@ export async function upsertUserProfileFromClerk(
       set: {
         email: input.email,
         displayName: input.displayName,
+        deletedAt: null,
         updatedAt: sql`now()`,
       },
     })
