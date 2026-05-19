@@ -1,23 +1,21 @@
-// POST /api/cron/alertas/run — Wave 10 Etapa 7 sub-PRs 7.1 + 7.2.
+// POST /api/cron/alertas/run — Wave 10 Etapa 7 sub-PRs 7.1 + 7.2 + 7.3.
 //
 // Endpoint disparado pelo cron semanal (GitHub Actions cron via curl
 // para este endpoint com header x-cron-secret). Auth via header
 // CRON_SECRET — não usa Clerk (caller é máquina).
 //
-// Sub-PR 7.1 (infra):
-//   - alert_delivery + idempotency_key sha256 unique
-//   - body placeholder + status pending
+// Sub-PR 7.1 (infra): alert_delivery + idempotency_key sha256 unique.
+// Sub-PR 7.2 (agregadores): body_md real + skipped quando vazio.
+// Sub-PR 7.3 (envio — esta camada):
+//   - Channel `inapp`: marca sent imediato após createDelivery
+//     (delivery já efetiva no banco; sub-tab Recebidos renderiza)
+//   - Channel `email`: chama Resend com markdown→HTML; sucesso marca
+//     sent + delivered_at; erro marca failed (sem retry transparente
+//     nesta wave — VISION §6 Workers Queues fica para evidência futura)
 //
-// Sub-PR 7.2 (agregadores — esta camada):
-//   - Para cada usuário+canal, agrega votações/divergências/proposições/
-//     gastos do período (apenas topics ligados na alert_policy do user)
-//   - Se Aggregate vazio: status=skipped (LOGGED-AREA-VISION §6 — "sem
-//     novidades, sem envio"). Próximo ciclo agrega período pulado.
-//   - Se não-vazio: status=pending + body_md gerado pelo composer
-//
-// Sub-PR 7.3 (próximo): substitui pending→sent via Resend.
-// Idempotente: rodar duas vezes na mesma janela NÃO duplica
-// deliveries (`onConflictDoNothing` no idempotency_key).
+// Idempotente: rodar duas vezes na mesma janela NÃO duplica deliveries
+// (`onConflictDoNothing` no idempotency_key) E NÃO reenvia email
+// (Resend só chamado quando `inserted=true` em createDelivery).
 
 import { and, count, eq, isNull } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
@@ -28,10 +26,14 @@ import {
 } from '@/lib/aggregators/alertas-semanais'
 import { composeReportMarkdown } from '@/lib/aggregators/compose-markdown'
 import { computeIdempotencyKey, currentWeeklyPeriod } from '@/lib/cron-period'
+import { renderMarkdown, wrapHtmlForEmail } from '@/lib/markdown'
 import {
   createDelivery,
   type DeliveryStatus,
+  markDeliveryFailed,
+  markDeliverySent,
 } from '@/lib/queries/alert-delivery'
+import { sendEmail } from '@/lib/resend-client'
 import {
   alertPolicy,
   follows,
@@ -43,8 +45,9 @@ export const dynamic = 'force-dynamic'
 
 interface RunStats {
   usersProcessed: number
-  deliveriesPending: number
+  deliveriesSent: number
   deliveriesSkipped: number
+  deliveriesFailed: number
   deliveriesAlreadyExisted: number
   errors: number
 }
@@ -96,8 +99,9 @@ export async function POST(req: Request) {
 
   const stats: RunStats = {
     usersProcessed: 0,
-    deliveriesPending: 0,
+    deliveriesSent: 0,
     deliveriesSkipped: 0,
+    deliveriesFailed: 0,
     deliveriesAlreadyExisted: 0,
     errors: 0,
   }
@@ -143,6 +147,10 @@ export async function POST(req: Request) {
             displayName: user.displayName,
           })
 
+      // Pre-render HTML uma vez (mesmo conteúdo para todos os canais
+      // email do user; channel inapp não usa HTML).
+      const htmlBody = empty ? '' : wrapHtmlForEmail(renderMarkdown(bodyMd))
+
       for (const channel of channels) {
         const idempotencyKey = await computeIdempotencyKey({
           userId: user.userId,
@@ -157,14 +165,56 @@ export async function POST(req: Request) {
           subject,
           bodyMd,
           scheduledFor: period.scheduledFor,
+          // Inicia tudo como `pending` (ou `skipped` se vazio); para
+          // channels que efetivam imediatamente abaixo (inapp / email
+          // OK), promovemos para `sent` na sequência.
           status,
         })
+
         if (!result.inserted) {
           stats.deliveriesAlreadyExisted += 1
-        } else if (status === 'skipped') {
+          continue
+        }
+
+        if (status === 'skipped') {
           stats.deliveriesSkipped += 1
+          continue
+        }
+
+        // Aqui: status=pending e a linha foi inserida agora.
+        const deliveryId = result.id
+        if (!deliveryId) {
+          // Defensivo — inserted=true sem id é impossível pelo schema
+          // (uuidv7 default), mas mantém type-safety.
+          stats.errors += 1
+          continue
+        }
+
+        if (channel === 'inapp') {
+          // Channel inapp: delivery já efetiva no banco. Marca sent
+          // imediato com delivered_at = now.
+          await markDeliverySent(deliveryId, new Date())
+          stats.deliveriesSent += 1
+          continue
+        }
+
+        // Channel email: chama Resend.
+        const emailResult = await sendEmail({
+          to: user.email,
+          subject,
+          html: htmlBody,
+          text: bodyMd,
+        })
+
+        if (emailResult.ok) {
+          await markDeliverySent(deliveryId, new Date())
+          stats.deliveriesSent += 1
         } else {
-          stats.deliveriesPending += 1
+          await markDeliveryFailed(deliveryId)
+          stats.deliveriesFailed += 1
+          console.error(
+            `[cron/alertas] envio falhou user=${user.userId} delivery=${deliveryId}: ${emailResult.error}`,
+          )
         }
       }
     } catch (err) {

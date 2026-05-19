@@ -24,12 +24,17 @@ export interface CreateDeliveryInput {
 export interface CreateDeliveryResult {
   /** `true` se a linha foi inserida; `false` se já existia (idempotency). */
   inserted: boolean
+  /** `id` da linha quando inserida; `null` se já existia. */
+  id: string | null
 }
 
 /**
  * Insere uma delivery se ainda não houver uma com a mesma
- * `idempotency_key`. Retorna `{ inserted: false }` quando o key já
- * existe (cron rodando duas vezes na mesma janela; não erro).
+ * `idempotency_key`. Retorna `{ inserted: false, id: null }` quando
+ * o key já existe (cron rodando duas vezes na mesma janela; não erro).
+ *
+ * Quando inserted=true, `id` retorna o uuidv7 gerado — caller (Etapa
+ * 7.3) usa para `markDeliverySent` após Resend confirmar envio.
  */
 export async function createDelivery(
   input: CreateDeliveryInput,
@@ -47,7 +52,8 @@ export async function createDelivery(
     })
     .onConflictDoNothing({ target: alertDelivery.idempotencyKey })
     .returning({ id: alertDelivery.id })
-  return { inserted: result.length > 0 }
+  const inserted = result.length > 0
+  return { inserted, id: inserted ? (result[0]?.id ?? null) : null }
 }
 
 export async function markDeliverySent(

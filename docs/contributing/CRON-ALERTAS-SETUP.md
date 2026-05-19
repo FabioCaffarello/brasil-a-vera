@@ -98,7 +98,7 @@ curl -X POST \
   https://brasilavera.org/api/cron/alertas/run
 ```
 
-Resposta:
+Resposta (Wave 10 Etapa 7.3 — após envio real via Resend):
 
 ```json
 {
@@ -110,20 +110,70 @@ Resposta:
   },
   "stats": {
     "usersProcessed": 42,
-    "deliveriesInserted": 84,
+    "deliveriesSent": 84,
     "deliveriesSkipped": 0,
+    "deliveriesFailed": 0,
+    "deliveriesAlreadyExisted": 0,
     "errors": 0
   }
 }
 ```
 
+`deliveriesSent` inclui tanto channel=email (passou pelo Resend OK)
+quanto channel=inapp (delivery efetiva no banco — sub-tab Recebidos
+renderiza). `deliveriesFailed` registra channel=email que falhou no
+Resend (channel=inapp não falha).
+
+## Resend setup (Wave 10 Etapa 7.3)
+
+1. Criar conta em https://resend.com.
+2. Adicionar domínio `brasilavera.org`.
+3. Wizard de DNS adiciona ~4 records (DKIM TXT × 2, SPF TXT, MX para
+   bounce). Aplicar no DNS do Cloudflare (zona `brasilavera.org`).
+4. Aguardar verificação ("Verified" no Resend Dashboard). Tipicamente
+   ~5min, mas pode levar até 72h pra propagação completa.
+5. **Recomendado**: enviar email de teste via "Send Test Email" no
+   Resend Dashboard antes do primeiro deploy real — verifica que o
+   DKIM/SPF/DMARC está OK end-to-end.
+6. Gerar API key em "API Keys" → "Create API Key" → scope "Sending
+   access". Não usar a key de teste.
+7. Configurar:
+   - `.env.local` e `.dev.vars`: `RESEND_API_KEY=re_...` + `RESEND_FROM="..."`
+   - GitHub Secrets: ambos
+   - Workers Secret: automatizado via `deploy.yml` bootstrap
+
+### Formato do `RESEND_FROM`
+
+Aceita 2 formas:
+- `alertas@brasilavera.org` (simples)
+- `Brasil à Vera <alertas@brasilavera.org>` (com display name; recomendado)
+
+O endereço local antes do `@` é livre; precisa apenas que o domínio
+seja o verificado.
+
+### Troubleshooting envio
+
+| Sintoma | Provável causa | Onde investigar |
+|---|---|---|
+| `resend_not_configured` no log | `RESEND_API_KEY` ou `RESEND_FROM` ausente no Worker | `wrangler secret list` |
+| `resend_api_error: ValidationError` | `from` não bate com domínio verificado, ou `to` inválido | Resend Dashboard → Domains |
+| `resend_api_error: AuthenticationError` | API key revogada/incorreta | Resend Dashboard → API Keys |
+| Email chega na pasta de spam | DKIM/SPF/DMARC incompleto, ou domínio com má reputação ainda (warm-up) | Resend Dashboard → Logs; ferramenta tipo mail-tester.com |
+| 5+ failures consecutivos | Possível rate limit ou suspensão | Resend Dashboard → Logs; contato suporte |
+
 ## Idempotência
 
 `idempotency_key = sha256(user_id + period_start + cadence + channel)`.
 
-Rodar o cron duas vezes na mesma janela é seguro: a segunda execução
-incrementa `deliveriesSkipped` em vez de duplicar. Útil para retry
-manual após falha transitória.
+Rodar o cron duas vezes na mesma janela é seguro:
+- Segundo run: `INSERT … ON CONFLICT DO NOTHING` no banco → não duplica linha
+- E porque Resend SÓ é chamado quando `createDelivery` retorna `inserted=true`, **email NÃO é reenviado** em re-execução
+
+Status flow:
+- `pending` → criado pela primeira insert
+- `sent` → channel=inapp imediato, ou channel=email após Resend OK
+- `failed` → channel=email após Resend retornar erro
+- `skipped` → período sem novidades (não envia, não muda)
 
 ## Sub-PRs da Etapa 7
 
