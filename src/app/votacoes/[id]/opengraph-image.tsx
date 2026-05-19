@@ -32,6 +32,22 @@ export default async function OgVotacao({ params }: Props) {
 
   const casaLabel = v.casa === 'CAMARA' ? 'Câmara' : 'Senado'
 
+  // Wave 9 Sprint 9.5 PR1 — barra de margem visível (mesma narrativa
+  // do MargemDecisaoBar do detalhe / Sprint 9.3 PR3). Reforça D1
+  // (margem como eixo central) no preview de share.
+  const totalBilateral = v.votosSim + v.votosNao
+  const pctSim = totalBilateral > 0 ? (v.votosSim / totalBilateral) * 100 : 50
+  const pctNao = 100 - pctSim
+  const margemAbs = Math.abs(v.votosSim - v.votosNao)
+  const margemLabel =
+    totalBilateral === 0
+      ? 'Votação simbólica'
+      : margemAbs === 0
+        ? 'Empate'
+        : v.aprovada
+          ? `+${margemAbs} votos a favor`
+          : `+${margemAbs} votos contra`
+
   return new ImageResponse(
     <div
       style={{
@@ -47,7 +63,7 @@ export default async function OgVotacao({ params }: Props) {
         style={{
           display: 'flex',
           flex: 1,
-          padding: '64px 80px',
+          padding: '56px 80px',
           flexDirection: 'column',
           justifyContent: 'space-between',
         }}
@@ -62,7 +78,7 @@ export default async function OgVotacao({ params }: Props) {
               color: '#71717a',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
-              marginBottom: '24px',
+              marginBottom: '20px',
             }}
           >
             <span>Votação · {casaLabel}</span>
@@ -73,13 +89,64 @@ export default async function OgVotacao({ params }: Props) {
           </div>
           <div
             style={{
-              fontSize: '40px',
+              fontSize: '38px',
               color: '#18181b',
               lineHeight: 1.25,
               fontWeight: 600,
             }}
           >
-            {truncate(v.descricao, 180)}
+            {truncate(v.descricao, 160)}
+          </div>
+        </div>
+
+        {/* MargemDecisaoBar — barra bilateral SIM↔NÃO. Quando simbólica,
+            renderiza barra cinza única com label explícita. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div
+            style={{
+              display: 'flex',
+              height: '24px',
+              width: '100%',
+              borderRadius: '999px',
+              overflow: 'hidden',
+              backgroundColor: '#e4e4e7',
+            }}
+          >
+            {totalBilateral > 0 ? (
+              <>
+                <div
+                  style={{
+                    display: 'flex',
+                    width: `${pctSim}%`,
+                    backgroundColor: '#059669',
+                  }}
+                />
+                <div
+                  style={{
+                    display: 'flex',
+                    width: `${pctNao}%`,
+                    backgroundColor: '#dc2626',
+                  }}
+                />
+              </>
+            ) : null}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '24px',
+              fontWeight: 600,
+            }}
+          >
+            <span style={{ color: '#059669' }}>
+              SIM {v.votosSim.toLocaleString('pt-BR')}
+            </span>
+            <span style={{ color: '#52525b' }}>{margemLabel}</span>
+            <span style={{ color: '#dc2626' }}>
+              {v.votosNao.toLocaleString('pt-BR')} NÃO
+            </span>
           </div>
         </div>
 
