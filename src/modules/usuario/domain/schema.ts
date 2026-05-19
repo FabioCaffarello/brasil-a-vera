@@ -3,12 +3,15 @@ import {
   char,
   index,
   pgSchema,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 import { uuidv7 } from 'uuidv7'
+
+import { parlamentar } from '@/modules/parlamentares/domain/schema'
 
 // Bounded context Usuário — schema isolado no Postgres (Wave 10 Etapa 1).
 // Tabelas previstas (LOGGED-AREA-VISION §3): user_profile, follows,
@@ -61,3 +64,40 @@ export const userProfile = usuarioSchema.table(
 
 export type UserProfile = typeof userProfile.$inferSelect
 export type NewUserProfile = typeof userProfile.$inferInsert
+
+// `follows` — Wave 10 Etapa 2. Relação flat usuário ↔ parlamentar
+// (ADR-029 §3). Sem flags, sem tri-state — um único toggle define a
+// relação. PK composta é a chave natural; índice separado em
+// `parlamentar_id` cobre agregação reversa (quantos seguem X).
+//
+// Cap operacional de 200 follows/usuário é enforçado a nível de API
+// (lib/queries/follows.ts), NÃO via CHECK constraint — mantém o banco
+// leve e permite ajuste de cap sem migration.
+//
+// ON DELETE CASCADE em ambos os FKs: se o usuário é hard-deleted
+// (LGPD Etapa 9, 30d após soft delete), seus follows somem juntos;
+// se um parlamentar é removido (caso raro: correção de duplicata),
+// os follows também limpam.
+export const follows = usuarioSchema.table(
+  'follows',
+  {
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => userProfile.id, { onDelete: 'cascade' }),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    followedAt: timestamp('followed_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.userId, table.parlamentarId] }),
+    // Cobre agregação reversa: "quantos seguem o parlamentar X".
+    // Sem isso, a query daria seq scan na tabela inteira.
+    index('follows_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
+export type Follow = typeof follows.$inferSelect
+export type NewFollow = typeof follows.$inferInsert

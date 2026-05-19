@@ -1,3 +1,4 @@
+import { auth } from '@clerk/nextjs/server'
 import { SearchX, Users } from 'lucide-react'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
@@ -8,6 +9,7 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
   type Casa,
   getListagemStats,
@@ -17,6 +19,7 @@ import {
   ORDENS_LISTAGEM,
   type OrdemListagem,
 } from '@/lib/queries/parlamentares'
+import { getOrCreateUserProfileId } from '@/lib/queries/user-profile'
 
 export const metadata = {
   title: 'Parlamentares — Brasil à Vera',
@@ -62,6 +65,20 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     getUfsDistintos(),
     getListagemStats(),
   ])
+
+  // Wave 10 Etapa 2 — resolve follows do usuário para popular o estado
+  // inicial dos botões "Acompanhar/Acompanhando". Anônimos NÃO triggam
+  // lazy upsert nem query de follows; renderizam botão como link a
+  // /sign-in (preserva path zero-JS-de-Clerk para anônimos).
+  const { userId: clerkUserId } = await auth()
+  const isAnonymous = clerkUserId === null
+  let followingIds: Set<string> = new Set()
+  if (clerkUserId) {
+    const internalUserId = await getOrCreateUserProfileId(clerkUserId)
+    if (internalUserId) {
+      followingIds = await getFollowsByUserId(internalUserId)
+    }
+  }
 
   return (
     <>
@@ -124,7 +141,13 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {parlamentares.map((p) => (
               <li key={p.id}>
-                <ParlamentarCard parlamentar={p} />
+                <ParlamentarCard
+                  follow={{
+                    isFollowing: followingIds.has(p.id),
+                    isAnonymous,
+                  }}
+                  parlamentar={p}
+                />
               </li>
             ))}
           </ul>

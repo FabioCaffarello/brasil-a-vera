@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { FollowButton } from '@/components/parlamentar/follow-button'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinhamento'
 
@@ -15,6 +16,20 @@ interface Props {
     pctAlinhamento?: string | null
     /** Integer do DB; 0 quando nunca votou ou agregado não rodou ainda. */
     votacoesAnalisadas?: number | null
+  }
+  /**
+   * Wave 10 Etapa 2 — exibe FollowButton se passado.
+   *
+   * `isFollowing`: estado inicial da relação usuário↔parlamentar.
+   * `isAnonymous`: se true, botão vira link para /sign-in.
+   *
+   * Quando `follow` é undefined (caso default), o card renderiza sem
+   * botão — preserva o comportamento pré-Etapa 2 onde for chamado de
+   * páginas que não consumiram `getFollowsByUserId` (ex.: /busca).
+   */
+  follow?: {
+    isFollowing: boolean
+    isAnonymous: boolean
   }
 }
 
@@ -66,7 +81,7 @@ function classifyAlinhamento(
  * Boundary OK: importa de `@/design-system/compositions/party-badge`
  * e de `@/modules/parlamentares/domain/alinhamento` (constante pública).
  */
-export function ParlamentarCard({ parlamentar }: Props) {
+export function ParlamentarCard({ parlamentar, follow }: Props) {
   const {
     id,
     nome,
@@ -80,38 +95,51 @@ export function ParlamentarCard({ parlamentar }: Props) {
 
   const state = classifyAlinhamento(votacoesAnalisadas, pctAlinhamento, casa)
 
+  // Wave 10 Etapa 2 — wrapper passou de `<Link>` para `<div>` para
+  // acomodar o FollowButton como sibling. `<Link>` interno cobre apenas
+  // a área de navegação (foto + texto). Sem botão, o `<Link>` ocupa
+  // toda a área e o card se comporta como antes da Etapa 2.
   return (
-    <Link
-      className="flex items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      href={`/parlamentares/${id}`}
-    >
-      {urlFoto ? (
-        // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
-        <img
-          alt=""
-          className="size-14 shrink-0 rounded-full object-cover"
-          height={56}
-          loading="lazy"
-          src={urlFoto}
-          width={56}
-        />
-      ) : (
-        <div
-          aria-hidden="true"
-          className="size-14 shrink-0 rounded-full bg-surface-elevated"
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-foreground">{nome}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-foreground-muted text-sm">
-          <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
-          <PartyBadge sigla={partidoSigla} size="sm" />
-          <span aria-hidden>·</span>
-          <span>{uf}</span>
+    <div className="group flex items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-within:border-border-strong">
+      <Link
+        className="flex min-w-0 flex-1 items-center gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+        href={`/parlamentares/${id}`}
+      >
+        {urlFoto ? (
+          // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
+          <img
+            alt=""
+            className="size-14 shrink-0 rounded-full object-cover"
+            height={56}
+            loading="lazy"
+            src={urlFoto}
+            width={56}
+          />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="size-14 shrink-0 rounded-full bg-surface-elevated"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-foreground">{nome}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-foreground-muted text-sm">
+            <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
+            <PartyBadge sigla={partidoSigla} size="sm" />
+            <span aria-hidden>·</span>
+            <span>{uf}</span>
+          </div>
+          <AlinhamentoStrip state={state} />
         </div>
-        <AlinhamentoStrip state={state} />
-      </div>
-    </Link>
+      </Link>
+      {follow ? (
+        <FollowButton
+          initialIsFollowing={follow.isFollowing}
+          isAnonymous={follow.isAnonymous}
+          parlamentarId={id}
+        />
+      ) : null}
+    </div>
   )
 }
 
