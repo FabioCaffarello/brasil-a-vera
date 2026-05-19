@@ -10,8 +10,12 @@
 // count(*) antes do INSERT. ADR-029 §5: valor calibrado para Câmara
 // (513 deputados) com folga.
 
-import { and, count, eq } from 'drizzle-orm'
+import { and, count, desc, eq, inArray } from 'drizzle-orm'
 
+import {
+  estatisticaParlamentarAgregada,
+  parlamentar,
+} from '@/modules/parlamentares/domain/schema'
 import { follows } from '@/modules/usuario/domain/schema'
 import { db } from '@/shared/db'
 
@@ -88,4 +92,54 @@ export async function removeFollow(
     .where(
       and(eq(follows.userId, userId), eq(follows.parlamentarId, parlamentarId)),
     )
+}
+
+/**
+ * Remove vários follows numa única operação. Usado pelo modal de
+ * revisão de UF (Wave 10 Etapa 4) que pode desacompanhar dezenas em
+ * um clique. Idempotente; lista vazia é no-op.
+ */
+export async function removeFollowsBatch(
+  userId: string,
+  parlamentarIds: string[],
+): Promise<void> {
+  if (parlamentarIds.length === 0) return
+  await db
+    .delete(follows)
+    .where(
+      and(
+        eq(follows.userId, userId),
+        inArray(follows.parlamentarId, parlamentarIds),
+      ),
+    )
+}
+
+/**
+ * Lista parlamentares acompanhados com metadados completos para
+ * renderização do `ParlamentarCard` (Wave 10 Etapa 4 sub-tab
+ * "Acompanhando"). JOIN com `parlamentar` para nome/foto/partido + LEFT
+ * JOIN com o agregado para a barra de alinhamento. Ordena por
+ * `followed_at DESC` (mais recente primeiro).
+ */
+export async function getFollowsWithParlamentarMeta(userId: string) {
+  return db
+    .select({
+      id: parlamentar.id,
+      nome: parlamentar.nome,
+      casa: parlamentar.casa,
+      partidoSigla: parlamentar.partidoSigla,
+      uf: parlamentar.uf,
+      urlFoto: parlamentar.urlFoto,
+      pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
+      votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
+      followedAt: follows.followedAt,
+    })
+    .from(follows)
+    .innerJoin(parlamentar, eq(follows.parlamentarId, parlamentar.id))
+    .leftJoin(
+      estatisticaParlamentarAgregada,
+      eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+    )
+    .where(eq(follows.userId, userId))
+    .orderBy(desc(follows.followedAt))
 }

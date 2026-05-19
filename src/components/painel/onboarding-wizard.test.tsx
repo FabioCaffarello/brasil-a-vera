@@ -27,7 +27,10 @@ describe('OnboardingWizard', () => {
     routerRefresh.mockClear()
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ ok: true, redirectTo: '/parlamentares?uf=SP' }),
+      json: async () => ({
+        ok: true,
+        redirectTo: '/painel/parlamentares?tab=da-minha-uf',
+      }),
     } as Response)
   })
 
@@ -125,7 +128,9 @@ describe('OnboardingWizard', () => {
     expect(callBody.topics).toMatchObject({ topicVotacoes: true })
 
     await waitFor(() => {
-      expect(routerPush).toHaveBeenCalledWith('/parlamentares?uf=SP')
+      expect(routerPush).toHaveBeenCalledWith(
+        '/painel/parlamentares?tab=da-minha-uf',
+      )
     })
   })
 
