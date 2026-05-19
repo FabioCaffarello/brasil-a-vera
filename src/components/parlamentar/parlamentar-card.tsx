@@ -18,18 +18,17 @@ interface Props {
     votacoesAnalisadas?: number | null
   }
   /**
-   * Wave 10 Etapa 2 — exibe FollowButton se passado.
+   * Wave 10 Hotfix 10.1 — gating server-side.
    *
-   * `isFollowing`: estado inicial da relação usuário↔parlamentar.
-   * `isAnonymous`: se true, botão vira link para /sign-in.
-   *
-   * Quando `follow` é undefined (caso default), o card renderiza sem
-   * botão — preserva o comportamento pré-Etapa 2 onde for chamado de
-   * páginas que não consumiram `getFollowsByUserId` (ex.: /busca).
+   * Quando `follow` é undefined, o card renderiza sem o footer-action.
+   * Preserva chamadas em /busca (sem contexto de follow) e cumpre a
+   * decisão de produto: anônimo não vê o botão de acompanhar (nem
+   * desabilitado, nem com cadeado — apenas não está lá). A página
+   * resolve `isFollowing` via `getFollowsByUserId` no Server Component
+   * e passa o objeto apenas para usuários autenticados.
    */
   follow?: {
     isFollowing: boolean
-    isAnonymous: boolean
   }
 }
 
@@ -66,20 +65,20 @@ function classifyAlinhamento(
 }
 
 /**
- * Card de listagem de parlamentar — Sprint 6.2 PR1 + Sprint 7.1 PR4
- * (Wave 7: ParlamentarCard v2 consumindo agregados).
+ * Card de listagem de parlamentar — Wave 10 Hotfix 10.1 (vertical com
+ * footer-action). Substitui o layout horizontal pré-Hotfix.
  *
- * Wave 7 PR4 adiciona barra horizontal de alinhamento (CSS puro, 6px,
- * --accent/30%) e linha de texto compacto. Render segue contrato de
- * fallback do handoff:
+ * Estrutura:
+ *  - <article> raiz (semântica de listagem)
+ *  - <Link> cobre identidade + meta + alinhamento (área navegável)
+ *  - Divider + footer-action (só quando `follow` é definido — anônimo
+ *    nem o HTML do botão recebe; gating server-side)
  *
- * - com_amostra (votacoes ≥ 50 AND pct != null): barra + "X% alinhado · N votações"
- * - amostra_insuficiente (0 < votacoes < 50): texto subtle, SEM barra
- * - sem_dado (votacoes = 0): texto subtle, SEM barra
- * - sem_dado em SENADO: + tooltip via title attr sobre cobertura parcial
- *
- * Boundary OK: importa de `@/design-system/compositions/party-badge`
- * e de `@/modules/parlamentares/domain/alinhamento` (constante pública).
+ * Contrato de fallback do alinhamento (preservado do PR4 Sprint 7.1):
+ *  - com_amostra (votacoes ≥ 50 AND pct != null): barra + "X% alinhado · N votações"
+ *  - amostra_insuficiente (0 < votacoes < 50): texto subtle, SEM barra
+ *  - sem_dado (votacoes = 0): texto subtle, SEM barra
+ *  - sem_dado em SENADO: + tooltip via title attr sobre cobertura parcial
  */
 export function ParlamentarCard({ parlamentar, follow }: Props) {
   const {
@@ -95,58 +94,63 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
 
   const state = classifyAlinhamento(votacoesAnalisadas, pctAlinhamento, casa)
 
-  // Wave 10 Etapa 2 — wrapper passou de `<Link>` para `<div>` para
-  // acomodar o FollowButton como sibling. `<Link>` interno cobre apenas
-  // a área de navegação (foto + texto). Sem botão, o `<Link>` ocupa
-  // toda a área e o card se comporta como antes da Etapa 2.
   return (
-    <div className="group flex items-center gap-4 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-within:border-border-strong">
+    <article className="group flex h-full flex-col rounded-lg border border-border bg-surface transition-colors hover:border-border-strong hover:bg-surface-elevated focus-within:border-border-strong">
       <Link
-        className="flex min-w-0 flex-1 items-center gap-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+        className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
         href={`/parlamentares/${id}`}
       >
-        {urlFoto ? (
-          // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
-          <img
-            alt=""
-            className="size-14 shrink-0 rounded-full object-cover"
-            height={56}
-            loading="lazy"
-            src={urlFoto}
-            width={56}
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="size-14 shrink-0 rounded-full bg-surface-elevated"
-          />
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-foreground">{nome}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-foreground-muted text-sm">
-            <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
-            <PartyBadge sigla={partidoSigla} size="sm" />
-            <span aria-hidden>·</span>
-            <span>{uf}</span>
+        <div className="flex items-start gap-3">
+          {urlFoto ? (
+            // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
+            <img
+              alt=""
+              className="size-14 shrink-0 rounded-full object-cover"
+              height={56}
+              loading="lazy"
+              src={urlFoto}
+              width={56}
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="size-14 shrink-0 rounded-full bg-surface-elevated"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 font-medium text-foreground leading-snug">
+              {nome}
+            </h3>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground-muted text-sm">
+              <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
+              <PartyBadge sigla={partidoSigla} size="sm" />
+              <span aria-hidden>·</span>
+              <span>{uf}</span>
+            </div>
           </div>
-          <AlinhamentoStrip state={state} />
         </div>
+        <AlinhamentoStrip state={state} />
       </Link>
       {follow ? (
-        <FollowButton
-          initialIsFollowing={follow.isFollowing}
-          isAnonymous={follow.isAnonymous}
-          parlamentarId={id}
-        />
+        <>
+          <div aria-hidden="true" className="mx-4 border-border border-t" />
+          <div className="flex justify-end px-2 py-1">
+            <FollowButton
+              initialIsFollowing={follow.isFollowing}
+              parlamentarId={id}
+              parlamentarNome={nome}
+            />
+          </div>
+        </>
       ) : null}
-    </div>
+    </article>
   )
 }
 
 function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
   if (state.kind === 'com_amostra') {
     return (
-      <div className="mt-2">
+      <div>
         <div
           aria-hidden
           className="h-1.5 w-full overflow-hidden rounded-full bg-accent/15"
@@ -168,7 +172,7 @@ function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
 
   if (state.kind === 'amostra_insuficiente') {
     return (
-      <p className="mt-2 text-foreground-subtle text-xs">
+      <p className="text-foreground-subtle text-xs">
         Amostra insuficiente · {state.votacoes}{' '}
         {state.votacoes === 1 ? 'votação' : 'votações'} no período
       </p>
@@ -178,7 +182,7 @@ function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
   // sem_dado
   return (
     <p
-      className="mt-2 text-foreground-subtle text-xs"
+      className="text-foreground-subtle text-xs"
       title={
         state.senadoLegacy
           ? 'Senado: cobertura parcial de orientação partidária'

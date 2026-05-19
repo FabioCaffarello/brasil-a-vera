@@ -66,12 +66,16 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     getListagemStats(),
   ])
 
-  // Wave 10 Etapa 2 — resolve follows do usuário para popular o estado
-  // inicial dos botões "Acompanhar/Acompanhando". Anônimos NÃO triggam
-  // lazy upsert nem query de follows; renderizam botão como link a
-  // /sign-in (preserva path zero-JS-de-Clerk para anônimos).
+  // Wave 10 Hotfix 10.1 — gating server-side do FollowButton.
+  //
+  // Anônimos não vêem o footer-action do card (decisão de produto).
+  // Logo, NÃO disparamos `getFollowsByUserId` para eles e o card recebe
+  // `follow={undefined}` — zero HTML do botão, zero JS de toggle.
+  //
+  // Autenticados: lazy upsert do user_profile + query de follows
+  // (preserva o path Wave 10 Etapa 2 — só perdemos o branch "link
+  // para /sign-in", já que anônimo nem chega ao botão).
   const { userId: clerkUserId } = await auth()
-  const isAnonymous = clerkUserId === null
   let followingIds: Set<string> = new Set()
   if (clerkUserId) {
     const internalUserId = await getOrCreateUserProfileId(clerkUserId)
@@ -142,10 +146,11 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
             {parlamentares.map((p) => (
               <li key={p.id}>
                 <ParlamentarCard
-                  follow={{
-                    isFollowing: followingIds.has(p.id),
-                    isAnonymous,
-                  }}
+                  follow={
+                    clerkUserId
+                      ? { isFollowing: followingIds.has(p.id) }
+                      : undefined
+                  }
                   parlamentar={p}
                 />
               </li>

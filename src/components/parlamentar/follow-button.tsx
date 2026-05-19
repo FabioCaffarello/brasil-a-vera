@@ -1,66 +1,36 @@
 'use client'
 
-// Botão "Acompanhar / Acompanhando ✓" — Wave 10 Etapa 2.
+// Botão "Acompanhar / Deixar de acompanhar" — Wave 10 Hotfix 10.1.
 //
-// Estados:
-//   - Anônimo (`isAnonymous=true`): renderiza como link para /sign-in,
-//     preservando o intent ("após login, mande pra cá") via returnBackUrl
-//     que o Clerk processa automaticamente
-//   - Autenticado + não acompanhando: button "Acompanhar"
-//   - Autenticado + acompanhando: button "Acompanhando ✓"
-//   - Loading: button disabled
-//   - Erro: toast (sonner) + revert do optimistic update
+// Redesign:
+//   - Icon-only (Bell / BellRing) com aria-label dinâmico e title nativo
+//   - Variant ghost, h-11 w-11 (44×44 touch target WCAG 2.5.5)
+//   - Estado ativo combina forma de ícone + cor + preenchimento (3 dimensões
+//     de diferenciação visual — acessibilidade para daltonismo)
+//   - Sem branch anônimo: gating é server-side na page (anônimo não renderiza
+//     o footer-action). FollowButton só existe para usuários autenticados.
 //
 // Optimistic update: clica → state vira pro destino imediatamente →
-// fetch em background → se falha, reverte + toast. UX responsiva para
-// uma ação naturalmente "rápida e binária".
+// fetch em background → se falha, reverte + toast. Mesmo padrão pré-Hotfix.
 
-import { Check, Plus } from 'lucide-react'
-import Link from 'next/link'
+import { Bell, BellRing } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/design-system/primitives/button'
+import { cn } from '@/lib/cn'
 
 interface Props {
   parlamentarId: string
+  parlamentarNome: string
   initialIsFollowing: boolean
-  /** Se `true`, o botão vira link para /sign-in (preserva intent). */
-  isAnonymous: boolean
 }
 
 export function FollowButton({
   parlamentarId,
+  parlamentarNome,
   initialIsFollowing,
-  isAnonymous,
 }: Props) {
-  // Anônimo: link estático. Sem state, sem fetch.
-  if (isAnonymous) {
-    return (
-      <Button asChild size="sm" variant="outline">
-        <Link href="/sign-in">
-          <Plus aria-hidden="true" />
-          Acompanhar
-        </Link>
-      </Button>
-    )
-  }
-
-  return (
-    <AuthenticatedFollowButton
-      initialIsFollowing={initialIsFollowing}
-      parlamentarId={parlamentarId}
-    />
-  )
-}
-
-function AuthenticatedFollowButton({
-  parlamentarId,
-  initialIsFollowing,
-}: {
-  parlamentarId: string
-  initialIsFollowing: boolean
-}) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [pending, startTransition] = useTransition()
 
@@ -75,7 +45,6 @@ function AuthenticatedFollowButton({
           body: JSON.stringify({ parlamentarId }),
         })
         if (!res.ok) {
-          // Revert optimistic
           setIsFollowing(!next)
           const body = (await res.json().catch(() => ({}))) as {
             error?: string
@@ -96,24 +65,30 @@ function AuthenticatedFollowButton({
     })
   }
 
+  const label = isFollowing
+    ? `Deixar de acompanhar ${parlamentarNome}`
+    : `Acompanhar ${parlamentarNome}`
+
   return (
     <Button
+      aria-label={label}
       aria-pressed={isFollowing}
+      className={cn(
+        'h-11 w-11',
+        isFollowing
+          ? 'text-brand hover:text-brand'
+          : 'text-foreground-subtle hover:text-foreground',
+      )}
       disabled={pending}
       onClick={handleClick}
-      size="sm"
-      variant={isFollowing ? 'secondary' : 'outline'}
+      size="icon"
+      title={label}
+      variant="ghost"
     >
       {isFollowing ? (
-        <>
-          <Check aria-hidden="true" />
-          Acompanhando
-        </>
+        <BellRing aria-hidden="true" fill="currentColor" fillOpacity={0.15} />
       ) : (
-        <>
-          <Plus aria-hidden="true" />
-          Acompanhar
-        </>
+        <Bell aria-hidden="true" />
       )}
     </Button>
   )
