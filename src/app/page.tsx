@@ -9,7 +9,6 @@ import {
 import Link from 'next/link'
 
 import { CardParlamentares } from '@/components/home/card-parlamentares'
-import { CardStats } from '@/components/home/card-stats'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
@@ -100,6 +99,7 @@ export default async function Home() {
         kpis={
           <KpiCard
             aria-label="Métricas do Brasil à Vera"
+            floatingBadge={<TrustBadge trustLevel="L1" />}
             items={[
               {
                 icon: <Users className="h-6 w-6" />,
@@ -157,10 +157,9 @@ export default async function Home() {
           >
             Comece por aqui
           </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="flex flex-col gap-4">
             <CardParlamentares />
             <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
-            <CardStats stats={stats} />
           </div>
         </section>
 

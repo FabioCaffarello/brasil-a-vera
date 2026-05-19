@@ -110,6 +110,31 @@ describe('KpiCard composition', () => {
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
   })
 
+  it('renderiza floatingBadge quando fornecido (com pt-10)', () => {
+    const { container } = render(
+      <KpiCard
+        floatingBadge={<span data-testid="floating">L1</span>}
+        items={baseItems}
+      />,
+    )
+    const badge = screen.getByTestId('floating')
+    expect(badge.textContent).toBe('L1')
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).toContain('relative')
+    expect(wrapper.className).toContain('pt-10')
+    const badgeContainer = badge.parentElement
+    expect(badgeContainer?.className).toContain('absolute')
+    expect(badgeContainer?.className).toContain('top-0')
+    expect(badgeContainer?.className).toContain('-translate-y-1/2')
+  })
+
+  it('omite floatingBadge wrapper e pt-10 quando ausente', () => {
+    const { container } = render(<KpiCard items={baseItems} />)
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).not.toContain('pt-10')
+    expect(container.querySelector('.absolute')).toBeNull()
+  })
+
   it('aceita hint como ReactNode complexo (não apenas string)', () => {
     render(
       <KpiCard
