@@ -45,17 +45,21 @@ export async function recordConsent(input: RecordConsentInput): Promise<void> {
 
 /**
  * Retorna o estado atual (linha mais recente) de cada scope para
- * um usuário. Útil para checar "consentiu com marketing?" sem
- * materializar o log inteiro.
+ * um usuário. Útil para checar "consentiu com marketing?" e para
+ * o `<ConsentGate />` (Etapa 9.3) comparar a versão aceita contra
+ * a versão corrente da política.
  */
 export async function getLatestConsentByScope(
   userId: string,
   scope: string,
-): Promise<{ granted: boolean; consentedAt: Date } | undefined> {
+): Promise<
+  { granted: boolean; consentedAt: Date; policyVersion: string } | undefined
+> {
   const rows = await db
     .select({
       granted: consentLog.granted,
       consentedAt: consentLog.consentedAt,
+      policyVersion: consentLog.policyVersion,
     })
     .from(consentLog)
     .where(and(eq(consentLog.userId, userId), eq(consentLog.scope, scope)))

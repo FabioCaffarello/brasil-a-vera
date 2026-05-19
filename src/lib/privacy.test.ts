@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  isPrivacyConsentCurrent,
   PRIVACY_CONTACT_EMAIL,
   PRIVACY_MIN_AGE_WITH_GUARDIAN,
   PRIVACY_MIN_AGE_WITHOUT_GUARDIAN,
@@ -47,5 +48,58 @@ describe('privacy constants', () => {
 
   it('idade com guardião é 16 (Código Civil art. 4º)', () => {
     expect(PRIVACY_MIN_AGE_WITH_GUARDIAN).toBe(16)
+  })
+})
+
+describe('isPrivacyConsentCurrent', () => {
+  it('false quando undefined (nunca aceitou)', () => {
+    expect(isPrivacyConsentCurrent(undefined)).toBe(false)
+  })
+
+  it('false quando granted=false (revogou)', () => {
+    expect(
+      isPrivacyConsentCurrent({
+        granted: false,
+        policyVersion: PRIVACY_POLICY_VERSION,
+      }),
+    ).toBe(false)
+  })
+
+  it('false quando policyVersion antiga (texto atualizado)', () => {
+    expect(
+      isPrivacyConsentCurrent({
+        granted: true,
+        policyVersion: '2020-01-01',
+      }),
+    ).toBe(false)
+  })
+
+  it('true quando aceitou a versão corrente', () => {
+    expect(
+      isPrivacyConsentCurrent({
+        granted: true,
+        policyVersion: PRIVACY_POLICY_VERSION,
+      }),
+    ).toBe(true)
+  })
+
+  it('aceita override de currentVersion (testes/dev)', () => {
+    expect(
+      isPrivacyConsentCurrent(
+        { granted: true, policyVersion: '2030-01-01' },
+        '2030-01-01',
+      ),
+    ).toBe(true)
+  })
+
+  it('false quando version aceita ≠ override mesmo se mais recente', () => {
+    // Edge: usuário aceitou "2030-01-01"; código foi rolled back para
+    // "2026-05-19". Por segurança, exige re-aceite.
+    expect(
+      isPrivacyConsentCurrent(
+        { granted: true, policyVersion: '2030-01-01' },
+        '2026-05-19',
+      ),
+    ).toBe(false)
   })
 })

@@ -36,3 +36,33 @@ export const PRIVACY_CONTACT_EMAIL = 'lgpd@brasilavera.org'
  */
 export const PRIVACY_MIN_AGE_WITHOUT_GUARDIAN = 18
 export const PRIVACY_MIN_AGE_WITH_GUARDIAN = 16
+
+/**
+ * Estado do consent registrado para um usuário em relação à política
+ * de privacidade. `undefined` significa que nunca aceitou (usuário
+ * novo ou histórico sem aceite).
+ */
+export interface PrivacyConsentState {
+  granted: boolean
+  policyVersion: string
+}
+
+/**
+ * Decide se o usuário está "em dia" com a política. True quando:
+ *   - existe consent registrado (granted=true) AND
+ *   - a versão aceita é exatamente a versão corrente.
+ *
+ * Comparação por igualdade exata (não "≥"): versões são datas
+ * ISO e bump = novo texto = exige novo aceite, mesmo se a versão
+ * anterior aceita fosse mais recente que a corrente — caso só
+ * possível por downgrade/bug, que vai exigir re-aceite por
+ * segurança.
+ */
+export function isPrivacyConsentCurrent(
+  consent: PrivacyConsentState | undefined,
+  currentVersion: string = PRIVACY_POLICY_VERSION,
+): boolean {
+  if (!consent) return false
+  if (!consent.granted) return false
+  return consent.policyVersion === currentVersion
+}
