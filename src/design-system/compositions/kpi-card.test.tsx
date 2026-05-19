@@ -148,16 +148,15 @@ describe('KpiCard composition', () => {
 
   it('omite container de floatingBadge quando ausente', () => {
     const { container } = render(<KpiCard items={baseItems} />)
-    const badgeContainer = container.querySelector('[class*="absolute"][class*="top-0"]')
+    const badgeContainer = container.querySelector(
+      '[class*="absolute"][class*="top-0"]',
+    )
     expect(badgeContainer).toBeNull()
   })
 
   it('aplica pt-10 ao container quando floatingBadge está presente', () => {
     const { container } = render(
-      <KpiCard
-        items={baseItems}
-        floatingBadge={<span>L1</span>}
-      />,
+      <KpiCard items={baseItems} floatingBadge={<span>L1</span>} />,
     )
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.className).toContain('pt-10')
