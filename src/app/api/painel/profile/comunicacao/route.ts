@@ -1,8 +1,16 @@
-// POST /api/painel/profile/comunicacao — Wave 10 Etapa 5.
+// POST /api/painel/profile/comunicacao — Wave 10 Etapa 5 (refinada em 9.2).
 //
 // Atualiza opt-ins de comunicação E registra cada mudança em
 // consent_log (audit trail LGPD — ADR-031). Compara com estado
 // anterior; só insere consent_log quando o flag mudou.
+//
+// Wave 10 Etapa 9.2:
+//   - `policy_version` agora referencia `PRIVACY_POLICY_VERSION`
+//     (era `comunicacao_v1` hardcoded; consents são sempre
+//     contextualizados pela política de privacidade vigente,
+//     não por uma "política de comunicação" separada).
+//   - `ip_hash` computado de verdade via `hashIpFromRequest` (era
+//     string vazia stub).
 //
 // Body: { marketingOptedIn: boolean, surveyOptedIn: boolean }
 
@@ -11,6 +19,8 @@ import { eq } from 'drizzle-orm'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { hashIpFromRequest } from '@/lib/ip-hash'
+import { PRIVACY_POLICY_VERSION } from '@/lib/privacy'
 import { recordConsent } from '@/lib/queries/consent-log'
 import {
   getOrCreateUserProfileId,
@@ -26,8 +36,6 @@ const bodySchema = z.object({
   surveyOptedIn: z.boolean(),
 })
 
-// Versão da política de comunicação. Bump quando o texto mudar.
-const COMUNICACAO_POLICY_VERSION = 'comunicacao_v1'
 // LGPD art. 7º I — consentimento (opt-in livre, podendo ser revogado).
 const LEGAL_BASIS_CONSENTIMENTO = 'art_7_I'
 
@@ -69,6 +77,11 @@ export async function POST(req: Request) {
 
   await updateUserProfileComunicacao(internalUserId, parsed.data)
 
+  // ip_hash é computado uma vez (mesmo timestamp + IP) e reusado nos
+  // 2 possíveis consent_log inserts do mesmo request. Hashar duas
+  // vezes não muda o resultado, mas evita 2 chamadas a crypto.subtle.
+  const ipHash = await hashIpFromRequest(req)
+
   const consentInserts: Promise<void>[] = []
   if (!previous || previous.marketingOptedIn !== parsed.data.marketingOptedIn) {
     consentInserts.push(
@@ -77,8 +90,9 @@ export async function POST(req: Request) {
         scope: 'marketing',
         granted: parsed.data.marketingOptedIn,
         legalBasis: LEGAL_BASIS_CONSENTIMENTO,
-        policyVersion: COMUNICACAO_POLICY_VERSION,
+        policyVersion: PRIVACY_POLICY_VERSION,
         source: 'painel_configuracoes',
+        ipHash,
       }),
     )
   }
@@ -89,8 +103,9 @@ export async function POST(req: Request) {
         scope: 'survey',
         granted: parsed.data.surveyOptedIn,
         legalBasis: LEGAL_BASIS_CONSENTIMENTO,
-        policyVersion: COMUNICACAO_POLICY_VERSION,
+        policyVersion: PRIVACY_POLICY_VERSION,
         source: 'painel_configuracoes',
+        ipHash,
       }),
     )
   }
