@@ -157,7 +157,7 @@ export default async function Home() {
           >
             Comece por aqui
           </h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="mx-auto flex max-w-2xl flex-col gap-4">
             <CardParlamentares />
             <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
           </div>
