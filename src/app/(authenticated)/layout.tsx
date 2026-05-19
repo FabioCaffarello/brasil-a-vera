@@ -22,11 +22,21 @@
 // o modal aparece — aceitável; o usuário não deveria estar lá.
 
 import { ConsentGate } from '@/components/painel/consent-gate/consent-gate'
+import { MigracaoLocalStorageModal } from '@/components/painel/migracao-localstorage/modal'
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <ConsentGate>{children}</ConsentGate>
+  return (
+    <ConsentGate>
+      {children}
+      {/* Modal defensivo Wave 10 Etapa 9.7: detecta favoritos legados
+          em localStorage (caso real esperado: nenhum hit; o codebase
+          nunca gravou essa chave em produção). Renderiza null se LS
+          vazio, modal se chave presente. ADR-019 (hedge consciente). */}
+      <MigracaoLocalStorageModal />
+    </ConsentGate>
+  )
 }
