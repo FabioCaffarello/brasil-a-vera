@@ -587,3 +587,12 @@ Os itens abaixo **não entram nesta wave**. Cada um pode reabrir como Wave 11+ s
 | 5 | **Não criei Worker dedicado para email.** | O mesmo Worker do app responde ao cron trigger; consumer da Queue mora ali também. Um Worker, um runtime, um bundle. |
 | 6 | **Não inventei microservice para LGPD.** | `/painel/configuracoes/meus-dados` é RSC com 3 SELECTs. `data_request` é tabela com 4 colunas funcionais. Jobs de export/erase rodam no mesmo cron Worker. |
 | 7 | **Não modelei "ex-parlamentar" como tabela separada.** | `parlamentar.situacao_mandato` já existe (ENUM). Cron consulta esse campo e modula o report. Sem `historico_parlamentar` paralelo. |
+
+---
+
+## 13. Hotfixes pós-aprovação
+
+Hotfixes mergeados após o fechamento da Wave 10 (`v0.10.0-area-logada`, 2026-05-19) que ajustam a rota pública `/parlamentares` e cristalizam um princípio de gating server-side. Não alteraram o release.
+
+- **Hotfix 10.1** — [PR #335](https://github.com/FabioCaffarello/brasil-a-vera/pull/335): redesign vertical do `ParlamentarCard` com footer-action (`<article>` + `<h3>` + `line-clamp-2` no nome, fim da ellipsis); `FollowButton` icon-only `Bell`/`BellRing` com gating server-side. Anônimo não recebe o HTML do botão — `isAnonymous` removido do contrato do componente; gating passa para a página via `follow={clerkUserId ? { isFollowing } : undefined}`.
+- **Hotfix 10.2** — [PR #336](https://github.com/FabioCaffarello/brasil-a-vera/pull/336): `canExport()` centralizado em `src/lib/auth-guards.ts`; `<ExportCsvLink>` gateado server-side em 4 rotas (parlamentares, proposicoes, votacoes, votacao detalhe — 5 sites de render). Cristaliza o princípio *"toda funcionalidade que produz saída de dados em massa (export, download, geração de relatório) exige autenticação prévia"*. ADR formal deferida — promove se padrão se replicar em PDF/bulk JSON/reports.
