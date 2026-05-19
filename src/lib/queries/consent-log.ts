@@ -1,14 +1,14 @@
-// Queries para `usuario.consent_log` — Wave 10 Etapa 5 (antecipada).
+// Queries para `usuario.consent_log` — Wave 10 Etapa 5 (antecipada),
+// refinada em 9.2.
 //
 // Audit trail de consentimentos LGPD. Inserts são append-only — não
 // atualizamos linhas existentes; cada mudança de opt-in gera nova
 // linha. Permite reconstruir histórico para exercício de direitos
 // LGPD (Etapa 9 dashboard /meus-dados).
 //
-// `ip_hash` (ADR-031 §D2): aceita string vazia até Etapa 9 implementar
-// salt diário completo. Por enquanto registramos `''` — log do consent
-// continua funcional para audit; reidentificação via IP fica para
-// quando o framework completo entrar.
+// `ipHash` é responsabilidade do caller — compute via
+// `hashIpFromRequest` de `src/lib/ip-hash.ts`. Aceita string vazia
+// (default) para preservar o log quando IP ou salt indisponíveis.
 
 import { and, desc, eq } from 'drizzle-orm'
 

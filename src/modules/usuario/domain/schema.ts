@@ -166,18 +166,23 @@ export type NewAlertPolicy = typeof alertPolicy.$inferInsert
 // setamos NULL preservando o log como comprovação histórica de
 // consentimento sem identificar o titular (art. 8º §6º).
 //
-// `ip_hash` (ADR-031 §D2): coluna existe agora como `text` mas vamos
-// gravar string vazia até Etapa 9 implementar o salt diário completo.
-// Trade-off temporário consciente — log do consent funcional para
-// auditoria; reidentificação via IP fica para quando o framework
-// completo entrar.
+// `ip_hash` (ADR-031 §D2) — implementado em Etapa 9.2:
+//   SHA-256(`ip + ":" + YYYY-MM-DD + ":" + salt`). Salt fixo via
+//   Workers Secret `IP_HASH_SALT`. Quando IP ou salt indisponíveis
+//   (dev local, request anômalo), grava string vazia preservando o
+//   log sem fingir origem. Ver `src/lib/ip-hash.ts`.
+//
+// `policy_version`: ISO date que casa com `PRIVACY_POLICY_VERSION`
+// de `src/lib/privacy.ts` — comprova qual versão do texto da política
+// estava vigente quando o consent foi prestado.
 //
 // Escopos esperados em produção (não enum DB para permitir extensão
 // sem migration; validado no boundary Zod):
 //   - 'marketing'         — opt-in comunicações esporádicas do projeto
 //   - 'survey'            — opt-in convite para survey ocasional
-//   - 'privacy_policy_v1' — aceite da política de privacidade vigente
-//     (introduzido na Etapa 9)
+//   - 'privacy_policy'    — aceite da política de privacidade vigente
+//     (introduzido na Etapa 9.3; nome de escopo estável, a versão
+//     identifica o texto específico)
 export const consentLog = usuarioSchema.table(
   'consent_log',
   {

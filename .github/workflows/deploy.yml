@@ -73,6 +73,7 @@ jobs:
           printf '%s' "$CRON_SECRET_VALUE" | npx wrangler secret put CRON_SECRET
           printf '%s' "$RESEND_API_KEY_VALUE" | npx wrangler secret put RESEND_API_KEY
           printf '%s' "$RESEND_FROM_VALUE" | npx wrangler secret put RESEND_FROM
+          printf '%s' "$IP_HASH_SALT_VALUE" | npx wrangler secret put IP_HASH_SALT
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -89,6 +90,12 @@ jobs:
           # Resend Dashboard (DKIM/SPF/DMARC).
           RESEND_API_KEY_VALUE: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_VALUE: ${{ secrets.RESEND_FROM }}
+          # Wave 10 Etapa 9.2 — Salt para hash de IP em consent_log
+          # (LGPD art. 6º X). Sem o salt, ip_hash vira string vazia e
+          # o log perde comprovação de origem. NÃO rotacionar sem
+          # coordenação — invalida comparabilidade dos hashes
+          # anteriores. Ver src/lib/ip-hash.ts.
+          IP_HASH_SALT_VALUE: ${{ secrets.IP_HASH_SALT }}
 
       # ADMIN_API_KEY não é bootstrappada (single-source no Cloudflare por
       # design — não vive em GitHub Secrets). Verificação explícita aqui
