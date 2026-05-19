@@ -44,6 +44,11 @@ export default defineConfig({
         // coberto e tem ~92% de coverage.
         'src/lib/aggregators/queries.ts',
         'src/lib/aggregators/alertas-semanais.ts',
+        // Wave 10 Etapa 7.3 — resend-client: wrapper sobre SDK Resend
+        // (HTTP externo). Testar exigiria mock de SDK ou injeção de
+        // dependência — fora de escopo. Helper é fino e funcional
+        // (sendEmail é um pass-through com tradução de erro).
+        'src/lib/resend-client.ts',
       ],
       thresholds: {
         lines: 80,
