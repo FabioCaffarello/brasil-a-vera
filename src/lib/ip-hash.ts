@@ -74,6 +74,9 @@ export function extractIpFromRequest(req: Request): string | null {
  * (dev local sem salt configurado).
  */
 export function getIpSalt(): string | null {
+  // Leitura intencionalmente lazy (per-request) — schema central em
+  // `src/env.ts` documenta a var; aqui retornamos null em vez de
+  // crashar para preservar a degradação graciosa descrita acima.
   const salt = process.env.IP_HASH_SALT
   if (!salt || salt.length === 0) return null
   return salt

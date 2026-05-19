@@ -11,6 +11,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    // `@/env` valida no module load via @t3-oss/env-nextjs. Em testes
+    // não há Workers Secrets nem .env.local carregado, então pulamos a
+    // validação. Os testes que precisam de envs específicas (ip-hash,
+    // admin-auth) continuam mutando process.env diretamente — leitura
+    // lazy nesses módulos preserva o comportamento.
+    env: { SKIP_ENV_VALIDATION: 'true' },
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
       'ingestion/**/*.{test,spec}.{ts,tsx}',

@@ -11,6 +11,9 @@ const adminKeySchema = z
   .min(32, 'ADMIN_API_KEY deve ter pelo menos 32 caracteres')
 
 export function getExpectedAdminKey(): string | null {
+  // Leitura intencionalmente lazy (per-request) — schema central em
+  // `src/env.ts` documenta a var, mas aqui queremos degradar para 500
+  // logado, não crashar o Worker no boot quando ADMIN_API_KEY falta.
   const result = adminKeySchema.safeParse(process.env.ADMIN_API_KEY)
   return result.success ? result.data : null
 }

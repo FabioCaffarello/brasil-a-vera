@@ -7,10 +7,12 @@
 //   2. http://localhost:3000 SÓ se NODE_ENV === 'development'
 //   3. Domínio canônico de produção como default
 
+import { env } from '@/env'
+
 export function getSiteUrl(): string {
   return (
-    process.env.SITE_URL ??
-    (process.env.NODE_ENV === 'development'
+    env.SITE_URL ??
+    (env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
       : 'https://brasilavera.org')
   )

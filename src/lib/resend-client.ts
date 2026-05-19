@@ -28,6 +28,9 @@ export type SendEmailResult =
  * faltam credenciais (caller decide se loga e segue, ou aborta).
  */
 function getResendClient(): { resend: Resend; from: string } | null {
+  // Leitura intencionalmente lazy (per-request) — schema central em
+  // `src/env.ts` documenta as vars; aqui devolvemos null em vez de
+  // crashar quando faltam, mantendo a degradação graciosa.
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM
   if (!apiKey || !from) return null

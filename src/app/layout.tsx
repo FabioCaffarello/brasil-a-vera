@@ -6,6 +6,7 @@ import { Geist_Mono, Inter } from 'next/font/google'
 import { Footer } from '@/components/site/footer'
 import { Navbar } from '@/components/site/navbar'
 import { Toaster } from '@/design-system/primitives/sonner'
+import { env } from '@/env'
 import './globals.css'
 
 // Inter — tipografia principal do Brasil à Vera a partir da Sprint 4.1.
@@ -39,8 +40,8 @@ const geistMono = Geist_Mono({
 //      cai aqui em vez de localhost. Inversão proposital vs. lógica
 //      anterior (depender de NODE_ENV='production' explicitamente).
 const SITE_URL =
-  process.env.SITE_URL ??
-  (process.env.NODE_ENV === 'development'
+  env.SITE_URL ??
+  (env.NODE_ENV === 'development'
     ? 'http://localhost:3000'
     : 'https://brasilavera.org')
 
