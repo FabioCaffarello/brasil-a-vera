@@ -1,0 +1,62 @@
+name: Alertas semanais (cron)
+
+# Dispara o cron de envio de alertas para usuários da área logada
+# (Wave 10 Etapa 7). Endpoint `POST /api/cron/alertas/run` em
+# brasilavera.org agrega votos/proposições/gastos/divergências da
+# semana e registra deliveries pendentes (sub-PR 7.3 enviará via
+# Resend; sub-PRs 7.1/7.2 já entregam infra + body real).
+#
+# Cadência: domingo 21:00 UTC = 18:00 BRT (Brasil sem horário de
+# verão desde Decreto 9.772/2019). Cron Trigger nativo Cloudflare
+# poderia ter latência menor mas exige customização do worker
+# OpenNext — adiar até evidência empírica de drift.
+#
+# Idempotência: o endpoint usa idempotency_key = sha256(user_id +
+# period_start + cadence + channel) com UNIQUE no banco. Rodar duas
+# vezes na mesma janela não duplica.
+
+on:
+  schedule:
+    - cron: '0 21 * * 0'
+  workflow_dispatch:
+
+concurrency:
+  group: alertas-cron
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  trigger:
+    name: Trigger /api/cron/alertas/run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: POST com x-cron-secret
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET não configurado nos GitHub Secrets"
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --max-time 300 \
+            -X POST \
+            -H "x-cron-secret: $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            https://brasilavera.org/api/cron/alertas/run \
+            | tee /tmp/cron-response.json
+          echo
+          echo "--- stats ---"
+          jq '.stats // empty' /tmp/cron-response.json || true
+
+      - name: Notify on failure
+        if: failure()
+        uses: ./.github/actions/notify-failure
+        with:
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          context: alertas-cron-semanal
