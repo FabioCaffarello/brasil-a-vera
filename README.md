@@ -2,7 +2,7 @@
 
 > **Você escolheu quem te representa. Agora veja o que ele faz.**
 
-![Status](https://img.shields.io/badge/status-Wave%203%20em%20andamento%20%E2%80%94%20estabilizado-green)
+![Status](https://img.shields.io/badge/status-Wave%2010%20fechada%20%E2%80%94%20%C3%A1rea%20logada-green)
 ![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange)
 ![Node](https://img.shields.io/badge/node-22-green)
 
@@ -10,6 +10,13 @@ Plataforma de transparência política brasileira com código publicamente
 auditável (source-available). Consolida dados públicos do Legislativo
 (Câmara, Senado, TSE, Portal da Transparência) em uma interface acessível
 para qualquer cidadão.
+
+Desde a Wave 10 (2026-05-19), o cidadão pode opcionalmente criar conta
+em `/sign-up` e acompanhar parlamentares específicos para receber um
+**resumo semanal por email** com votações, gastos, proposições e
+divergências de bancada — sem garimpo. Toda a área `/painel/*` é
+opt-in; o uso anônimo continua sendo o caminho principal e cobre 100%
+das features de leitura.
 
 ## O que é?
 

@@ -1231,30 +1231,43 @@ Decisão transversal observada: **1 tag final por wave, sem `-alpha.X`/`-rc.X` i
 
 ---
 
-## Wave 10 — Área logada
+## Wave 10 — Área logada ✅
 
-Em planejamento desde 2026-05-19. Fundação da área autenticada do produto
-(`/painel/*`): acompanhamento de parlamentares, sistema de alertas
-semanais, framework LGPD, dashboard de transparência de dados pessoais.
-Sucessor do escopo `/minha-area/*` originalmente previsto na Sprint 4.5
-do [ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md) (rebrand
-de rota registrado no addendum daquele ADR).
+Fechada em 2026-05-19 com tag [`v0.10.0-area-logada`](https://github.com/FabioCaffarello/brasil-a-vera/releases/tag/v0.10.0-area-logada).
+Fundação da área autenticada do produto (`/painel/*`): acompanhamento de
+parlamentares, sistema de alertas semanais via Resend, framework LGPD
+completo, dashboard de transparência de dados pessoais. Sucessor do
+escopo `/minha-area/*` originalmente previsto na Sprint 4.5 do
+[ADR-022](../architecture/ADR/022-clerk-para-autenticacao.md).
 
 Documento canônico:
-[`LOGGED-AREA-VISION.md`](./LOGGED-AREA-VISION.md). Inclui tese, JTBD,
-modelo de domínio, arquitetura de rotas, detalhamento por tela, sistema
-de alertas, LGPD, plano em 10 etapas + Etapa 0 de higiene, riscos, custo
-operacional, fora de escopo, anti-patterns evitados.
-
-ADRs derivados:
+[`LOGGED-AREA-VISION.md`](./LOGGED-AREA-VISION.md). ADRs derivados:
 
 - [ADR-029](../architecture/ADR/029-modelo-dados-area-logada-e-topologia-auth.md) — Modelo de dados da área logada + topologia de auth
 - [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) — Sistema de alertas e Resend
 - [ADR-031](../architecture/ADR/031-framework-lgpd-area-logada.md) — Framework LGPD para área logada
 
-Plano de implementação em 11 PRs (Etapa 0 = higiene de repo, esta tarefa
-em curso; Etapas 1–10 = features). Detalhamento em
-[LOGGED-AREA-VISION §8](./LOGGED-AREA-VISION.md#8-plano-de-implementação-em-10-etapas--etapa-0).
+### Etapas entregues
+
+| Etapa | Conteúdo | PRs |
+|---|---|---|
+| 0 | Higiene de referências `/minha-area` → `/painel` | #308 |
+| 1 | `usuario.user_profile` + custom sign-in/up + middleware `auth.protect()` | #310, #315 (fix Clerk Provider) |
+| 2 | `usuario.follows` + API POST/DELETE + botão Acompanhar | #311 |
+| 3 | `/painel` Resumo com 4 estados + wizard de onboarding | #313 |
+| 4 | `/painel/parlamentares` com sub-tabs Acompanhando \| Da minha UF | #314 |
+| 5 | `/painel/configuracoes` (Perfil, Temas, Comunicação opt-ins + consent_log) | #316 |
+| 6 | `usuario.alert_policy` + sub-tab Políticas em `/painel/alertas` | #317 |
+| 7 | Resend setup + cron handler + sub-tab Recebidos + envio do primeiro report semanal | #318 (7.1), #320 (7.2), #321 (workflow), #322 (7.3), #323 (7.4) |
+| ~~8~~ | ~~`alert_period` modulação por scope~~ — **deferida para Wave 11+** | #324 (decisão) |
+| 9 | LGPD completo — `/privacidade` SSG + `consent_log` writes com `ip_hash` real + `<ConsentGate />` re-aceite + `data_request` endpoints + `/meus-dados` dashboard + cron LGPD diário + modal defensivo `localStorage` + runbook Cloudflare Email Routing | #325 (9.1), #326 (9.2), #327 (9.3), #328 (9.4), #329 (9.5), #330 (9.6), #331 (9.7), #332 (9.8) |
+| 10 | Anti-abuse + closure — métricas Wave 10 em `/api/stats` + smoke probes; release notes + tag | #333 (10.1), #334 (10.2 — este) |
+
+26 PRs entregues. Divergências conscientes do plano original:
+
+- **Etapa 8 (modulação `alert_period`) deferida** — sem evidência empírica de que cadência semanal é insuficiente; ADR-019.
+- **Rate limit follows via Workers KV não entrou na Etapa 10** — cap 200 já protege contra abuso; volume Wave 10 (≤750 MAU) não justifica infra nova.
+- **Smoke E2E signup→follow→alerta deferido** — Clerk signup automatizado exige bot account; smoke anônimo cobre breakages das rotas públicas.
 
 ---
 
