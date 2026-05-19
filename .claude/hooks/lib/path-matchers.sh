@@ -3,14 +3,26 @@
 # Matchers de path por role. Espelha a matriz em .claude/docs/ROLES.md.
 # Mudanças aqui exigem refletir lá (e vice-versa).
 
-# Paths sempre proibidos (mesmo para engineer via Claude). Workflows e
-# migrations exigem PR humano deliberado fora da sessão Claude.
+# Paths sempre proibidos (mesmo para engineer via Claude).
+# Wave 10 (2026-05-19): refinado pelo owner.
+#
+# Originalmente bloqueava .env*, migrations e workflows como regra
+# absoluta — "PR humano deliberado fora da sessão Claude". Decisão
+# revisada: migrations e workflows são autoríveis via Claude pelo
+# engineer (não designer); permanecem bloqueados para designer via
+# `is_blocked_for_designer`. Aqui ficam apenas secrets reais
+# (arquivos .env com chaves, .dev.vars do Wrangler).
+#
+# `.env.example` é safe (documentação; committed) — não entra na lista.
 is_always_blocked() {
   local path="$1"
   path="${path#./}"
-  [[ "$path" =~ ^\.env(\..+)?$ ]] && return 0
-  [[ "$path" =~ ^src/shared/db/migrations/ ]] && return 0
-  [[ "$path" =~ ^\.github/workflows/ ]] && return 0
+  case "$path" in
+    .env|.env.local|.env.development|.env.production|.env.test)
+      return 0 ;;
+    .dev.vars)
+      return 0 ;;
+  esac
   return 1
 }
 
@@ -38,6 +50,12 @@ is_blocked_for_designer() {
   [[ "$path" =~ ^\.claude/settings\.json$ ]] && return 0
   [[ "$path" =~ ^CLAUDE\.md$ ]] && return 0
   [[ "$path" =~ ^AGENTS\.md$ ]] && return 0
+  # Wave 10: migrations + workflows não são mais "always blocked".
+  # Designer continua bloqueado aqui; engineer (Frente C — env var
+  # BAV_CLAUDE_ROLE=engineer ou via .claude/settings.local.json)
+  # destrava ambos.
+  [[ "$path" =~ ^src/shared/db/migrations/ ]] && return 0
+  [[ "$path" =~ ^\.github/workflows/ ]] && return 0
   return 1
 }
 
