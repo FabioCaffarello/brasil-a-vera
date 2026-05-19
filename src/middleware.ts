@@ -65,8 +65,9 @@ const CANONICAL_HOST = 'brasilavera.org'
 
 // Rotas privadas — Wave 10 Etapa 1. `auth.protect()` redireciona anônimo
 // para `signInUrl` configurado no `<ClerkProvider>` (route group
-// `(authenticated)/`). Webhook do Clerk em `/api/webhooks/clerk` NÃO
-// entra aqui — auth é via Svix HMAC, não session Clerk.
+// `(authenticated)/`). Wave 10 Etapa 1 NÃO usa webhook do Clerk —
+// sincronização do user_profile acontece via lazy upsert na RSC do
+// /painel (método tradicional). Decisão documentada no PR.
 const isProtectedRoute = createRouteMatcher(['/painel(.*)', '/api/painel(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {

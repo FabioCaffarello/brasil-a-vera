@@ -21,13 +21,6 @@ Adicione ao seu `.env.local` (gitignored):
 #   API Keys → Secret keys → Secret key
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
-
-# Wave 10 Etapa 1 — webhook do Clerk (sincroniza usuario.user_profile).
-# Em Clerk Dashboard → Webhooks → Add Endpoint, criar com:
-#   URL:     https://brasilavera.org/api/webhooks/clerk
-#   Eventos: user.created, user.updated, user.deleted
-# Copiar o "Signing secret" gerado pelo Clerk (prefixado por whsec_).
-CLERK_WEBHOOK_SECRET=whsec_...
 ```
 
 Notas:
@@ -40,8 +33,6 @@ Notas:
   ```
 - `CLERK_SECRET_KEY` é apenas runtime (middleware + RSC server). Não
   precisa estar disponível no build.
-- `CLERK_WEBHOOK_SECRET` é apenas runtime (handler em `app/api/webhooks/clerk`).
-  Mesma regra do `CLERK_SECRET_KEY`.
 
 ## `cf:preview` localmente
 
@@ -70,7 +61,6 @@ Configurar uma vez via Wrangler:
 ```bash
 wrangler secret put NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 wrangler secret put CLERK_SECRET_KEY
-wrangler secret put CLERK_WEBHOOK_SECRET   # Wave 10 Etapa 1
 ```
 
 Mas atenção — `NEXT_PUBLIC_*` precisa estar disponível em **build time**,
@@ -84,8 +74,6 @@ Em `Settings → Secrets and variables → Actions`, adicione:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` — exposto via `env:` no step de build
 - `CLERK_SECRET_KEY` — exposto via `env:` no step de build (runtime do
   Worker pode usar Workers Secret também, mas duplicar não machuca)
-- `CLERK_WEBHOOK_SECRET` — apenas runtime (handler em `app/api/webhooks/clerk`);
-  preferir Workers Secret e omitir do build env
 
 No workflow `.github/workflows/deploy.yml`:
 
@@ -158,25 +146,9 @@ group `(authenticated)/` (decisão pendente para Sprint 4.5).
 - [Clerk Webhooks (Svix)](https://clerk.com/docs/webhooks/overview)
 - [OpenNext + middleware.ts](https://github.com/opennextjs/opennextjs-cloudflare/issues/962) — por que mantemos `middleware.ts`, não `proxy.ts`
 
-## Webhook do Clerk — Wave 10 Etapa 1
+## Setup no Clerk Dashboard (Wave 10 Etapa 1)
 
-Endpoint: `POST /api/webhooks/clerk` em `src/app/api/webhooks/clerk/route.ts`.
-Auth via assinatura HMAC do Svix (NÃO usa session do Clerk). Sincroniza
-`usuario.user_profile` em resposta a eventos `user.created` / `user.updated`
-/ `user.deleted`.
-
-### Setup no Clerk Dashboard
-
-1. Dashboard → seu projeto → **Webhooks** → **Add Endpoint**
-2. URL: `https://brasilavera.org/api/webhooks/clerk`
-3. Em "Subscribe to events", marcar: `user.created`, `user.updated`, `user.deleted`
-4. Copiar **Signing secret** (formato `whsec_...`)
-5. Configurar como `CLERK_WEBHOOK_SECRET` em `.env.local`, `.dev.vars` e
-   Workers Secret (ver seções acima)
-
-### Setup no Clerk Dashboard (custom sign-in/sign-up)
-
-Wave 10 Etapa 1 introduz rotas custom de sign-in/sign-up dentro do site.
+Wave 10 Etapa 1 introduz rotas custom de sign-in/sign-up dentro do site:
 
 1. Dashboard → **Customization → Paths**:
    - Sign-in URL: `/sign-in`
@@ -186,22 +158,23 @@ Wave 10 Etapa 1 introduz rotas custom de sign-in/sign-up dentro do site.
 2. Em **Domains → Authorized origins**, garantir que `https://brasilavera.org`
    está autorizado (já estava desde Sprint 4.1; só confirmar)
 
-### Testes locais
+## Sincronização do `user_profile` — método tradicional (sem webhook)
 
-Webhook precisa de URL pública para o Clerk alcançar. Em dev local, usar
-ngrok / cloudflared tunnel / Clerk CLI:
+A Wave 10 Etapa 1 **não usa webhook do Clerk**. A sincronização da tabela
+`usuario.user_profile` com o Clerk acontece via **lazy upsert** na RSC do
+`/painel`:
 
-```bash
-# Opção A — Clerk CLI (recomendado)
-clerk webhook forward --endpoint /api/webhooks/clerk
+1. Usuário autentica via custom sign-in/sign-up.
+2. Clerk redireciona para `/painel`.
+3. A RSC do `/painel` busca o profile por `clerk_user_id`. Se não existir,
+   chama `currentUser()` do `@clerk/nextjs/server`, extrai email primário
+   e display name, e faz `INSERT … ON CONFLICT DO UPDATE`.
+4. A mesma rotina cobre mudanças posteriores (alterar email/nome no Clerk
+   Account Portal) — basta o usuário abrir o `/painel` para a tabela
+   refletir.
 
-# Opção B — ngrok
-ngrok http 3000
-# Copiar a URL pública para o endpoint do Clerk Dashboard
-```
-
-### Troubleshooting webhook
-
-- `400 Invalid webhook` no log → headers `svix-*` ausentes (request não vem do Clerk) ou assinatura inválida (secret errado). Confirmar que `CLERK_WEBHOOK_SECRET` bate com o do Dashboard.
-- `500 Server misconfigured` → `CLERK_WEBHOOK_SECRET` não está no ambiente. Workers: rodar `wrangler secret list`.
-- Webhook 5xx fica em retry exponencial pelo Clerk; entradas com 4xx vão para Dead Letter no Dashboard.
+Justificativa: método tradicional é suficiente para o escopo Wave 10
+(login funciona, profile criado, dashboard mostra dados certos). Se uma
+wave futura precisar reagir a `user.deleted` em tempo real ou cobrir
+mudanças que NÃO passam pelo `/painel`, reabrir webhook nessa wave com
+`svix` + endpoint POST `/api/webhooks/clerk`.
