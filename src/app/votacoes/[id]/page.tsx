@@ -2,6 +2,7 @@ import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplina-chart-client'
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
@@ -165,7 +166,8 @@ export default async function VotacaoPage({ params }: PageProps) {
       </div>
 
       {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
-          Wave 9 Sprint 9.2 PR5 (espelha padrão Wave 7 / Wave 8). */}
+          Wave 9 Sprint 9.2 PR5 (espelha padrão Wave 7 / Wave 8). Item
+          "Disciplina" é condicional (D5 — só renderiza com orientações). */}
       <SectionNav
         className="mt-6 hidden sm:block"
         items={[
@@ -184,6 +186,15 @@ export default async function VotacaoPage({ params }: PageProps) {
             label: 'Por partido',
             icon: <Users className="h-4 w-4" />,
           },
+          ...(disciplinas.length > 0
+            ? [
+                {
+                  id: 'disciplina',
+                  label: 'Disciplina',
+                  icon: <BarChart3 className="h-4 w-4" />,
+                },
+              ]
+            : []),
           {
             id: 'individuais',
             label: 'Individuais',
@@ -253,6 +264,22 @@ export default async function VotacaoPage({ params }: PageProps) {
             </details>
           </AccordionContent>
         </AccordionItem>
+
+        {/* Disciplina partidária — D5: condicional, só renderiza se há
+            orientações de bancada registradas (disciplinas.length > 0). */}
+        {disciplinas.length > 0 ? (
+          <AccordionItem
+            className="rounded-lg border-border bg-surface px-4"
+            value="disciplina"
+          >
+            <AccordionTrigger className="font-semibold text-base">
+              Disciplina partidária
+            </AccordionTrigger>
+            <AccordionContent>
+              <DisciplinaPartidariaChart data={disciplinas} />
+            </AccordionContent>
+          </AccordionItem>
+        ) : null}
 
         <AccordionItem
           className="rounded-lg border-border bg-surface px-4"
@@ -365,6 +392,20 @@ export default async function VotacaoPage({ params }: PageProps) {
             </details>
           </div>
         </SectionCard>
+
+        {/* Disciplina partidária — D5: condicional, só renderiza se há
+            orientações de bancada registradas. Quando ausente, a seção
+            inteira some (sem placeholder vazio). */}
+        {disciplinas.length > 0 ? (
+          <SectionCard
+            className="scroll-mt-28"
+            id="disciplina"
+            subtitle="% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem."
+            title="Disciplina partidária"
+          >
+            <DisciplinaPartidariaChart data={disciplinas} />
+          </SectionCard>
+        ) : null}
 
         <SectionCard
           className="scroll-mt-28"

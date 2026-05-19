@@ -23,5 +23,6 @@
 export { GastosChart } from '@/components/parlamentar/gastos-chart'
 export { ApoioPartidoChart } from '@/components/proposicao/apoio-partido-chart'
 export { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart'
+export { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplina-chart'
 export { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart'
 export { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart'
