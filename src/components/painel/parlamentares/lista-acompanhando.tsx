@@ -48,10 +48,7 @@ export function ListaAcompanhando({ acompanhados }: Props) {
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {acompanhados.map((p) => (
         <li key={p.id}>
-          <ParlamentarCard
-            follow={{ isFollowing: true, isAnonymous: false }}
-            parlamentar={p}
-          />
+          <ParlamentarCard follow={{ isFollowing: true }} parlamentar={p} />
         </li>
       ))}
     </ul>

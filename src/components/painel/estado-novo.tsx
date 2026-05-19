@@ -50,7 +50,7 @@ export async function EstadoNovo({ uf }: Props) {
             {recomendacoes.map((p) => (
               <li key={p.id}>
                 <ParlamentarCard
-                  follow={{ isFollowing: false, isAnonymous: false }}
+                  follow={{ isFollowing: false }}
                   parlamentar={p}
                 />
               </li>

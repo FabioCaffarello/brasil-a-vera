@@ -61,7 +61,6 @@ export async function ListaDaMinhaUf({ uf, followingIds }: Props) {
           <ParlamentarCard
             follow={{
               isFollowing: followingIds.has(p.id),
-              isAnonymous: false,
             }}
             parlamentar={p}
           />
