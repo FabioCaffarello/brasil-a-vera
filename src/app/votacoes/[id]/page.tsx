@@ -2,6 +2,7 @@ import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
@@ -227,8 +228,16 @@ export default async function VotacaoPage({ params }: PageProps) {
           <AccordionTrigger className="font-semibold text-base">
             Por partido
           </AccordionTrigger>
-          <AccordionContent>
-            <VotosPorPartido porPartido={resumoPorPartido} />
+          <AccordionContent className="space-y-3">
+            <VotacaoPorPartidoChart data={resumoPorPartido} />
+            <details className="text-sm">
+              <summary className="cursor-pointer text-foreground-muted hover:text-foreground">
+                Ver tabela numérica
+              </summary>
+              <div className="mt-3">
+                <VotosPorPartido porPartido={resumoPorPartido} />
+              </div>
+            </details>
           </AccordionContent>
         </AccordionItem>
 
@@ -319,7 +328,17 @@ export default async function VotacaoPage({ params }: PageProps) {
           subtitle="Como cada bancada se posicionou (soma dos votos individuais)."
           title="Por partido"
         >
-          <VotosPorPartido porPartido={resumoPorPartido} />
+          <div className="space-y-3">
+            <VotacaoPorPartidoChart data={resumoPorPartido} />
+            <details className="text-sm">
+              <summary className="cursor-pointer text-foreground-muted hover:text-foreground">
+                Ver tabela numérica
+              </summary>
+              <div className="mt-3">
+                <VotosPorPartido porPartido={resumoPorPartido} />
+              </div>
+            </details>
+          </div>
         </SectionCard>
 
         <SectionCard
