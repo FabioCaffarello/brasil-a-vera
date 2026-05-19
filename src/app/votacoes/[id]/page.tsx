@@ -11,6 +11,12 @@ import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/design-system/primitives/accordion'
+import {
   getDisciplinaPartidariaPorVotacao,
   getProposicaoVinculada,
   getTopVotacoesParaSSG,
@@ -148,8 +154,10 @@ export default async function VotacaoPage({ params }: PageProps) {
         />
       </div>
 
+      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
+          Wave 9 Sprint 9.2 PR5 (espelha padrão Wave 7 / Wave 8). */}
       <SectionNav
-        className="mt-6"
+        className="mt-6 hidden sm:block"
         items={[
           {
             id: 'resumo',
@@ -175,7 +183,87 @@ export default async function VotacaoPage({ params }: PageProps) {
         stickyTop="3.5rem"
       />
 
-      <div className="mt-6 space-y-5">
+      {/* Mobile: Accordion colapsável. defaultValue=['resumo','partido']
+          abre os dois macros (visão consolidada + bancadas) — mantém peso
+          cognitivo similar ao Accordion Wave 8 (2 seções abertas). Ordem
+          narrativa mobile: resumo → partido → individuais → proposição. */}
+      <Accordion
+        className="mt-6 space-y-3 sm:hidden"
+        defaultValue={['resumo', 'partido']}
+        type="multiple"
+      >
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="resumo"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Resumo
+          </AccordionTrigger>
+          <AccordionContent>
+            <VotosResumo
+              totais={{
+                sim: v.votosSim,
+                nao: v.votosNao,
+                abstencoes: v.abstencoes,
+                ausentes: v.ausentes,
+              }}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="partido"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Por partido
+          </AccordionTrigger>
+          <AccordionContent>
+            <VotosPorPartido porPartido={resumoPorPartido} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="individuais"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Individuais
+          </AccordionTrigger>
+          <AccordionContent className="space-y-3">
+            <div className="flex justify-end">
+              <ExportCsvLink
+                href={`/api/export/votacoes/${v.id}/votos`}
+                label="Exportar todos os votos (CSV)"
+              />
+            </div>
+            <VotosIndividuais votacaoId={v.id} votos={votos} />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          className="rounded-lg border-border bg-surface px-4"
+          value="proposicao"
+        >
+          <AccordionTrigger className="font-semibold text-base">
+            Proposição vinculada
+          </AccordionTrigger>
+          <AccordionContent>
+            {proposicao ? (
+              <ProposicaoVinculada proposicao={proposicao} />
+            ) : (
+              <p className="text-foreground-muted text-sm">
+                Nenhuma proposição foi vinculada a esta votação na base atual.
+              </p>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors
+          do SectionNav). Ordem preserva grid 2-col em resumo+proposição
+          no md+, depois Por partido e Individuais em largura total. */}
+      <div className="mt-6 hidden space-y-5 sm:block">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <SectionCard className="scroll-mt-28" id="resumo" title="Resumo">
             <VotosResumo
