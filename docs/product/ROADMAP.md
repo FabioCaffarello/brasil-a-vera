@@ -1198,24 +1198,36 @@ Eventos transversais durante o ciclo:
 
 ---
 
-## Wave 9 — Votações 360° ✅ (em fechamento)
+## Wave 9 — Votações 360° ✅
 
-Sprints 9.0, 9.1 e 9.2 entregues entre 2026-05-18 e 2026-05-19 (PRs
-[#278](https://github.com/FabioCaffarello/brasil-a-vera/pull/278)–[#289](https://github.com/FabioCaffarello/brasil-a-vera/pull/289)).
+Fechada em 2026-05-19 (tag [`v0.9.0-votacao-360`](https://github.com/FabioCaffarello/brasil-a-vera/releases/tag/v0.9.0-votacao-360)).
 Aplica o padrão Wave 7/8 ao terceiro eixo do trium-virato cívico
-(parlamentar / proposição / **votação**).
+(parlamentar / proposição / **votação**) e introduz a primeira feature
+de **identidade narrativa única** do produto: Disciplina partidária +
+Rebeldes — só faz sentido em votação, não porta de parlamentar nem
+proposição.
+
+24 PRs em 6 sprints (9.0–9.5) + 1 fix de runtime (#293, ver achados).
 
 Entregáveis principais:
 
-- Sprint 9.0 — queries de disciplina + rebeldes + funções puras de domínio; cache wrappers nas queries de detalhe; cursor schema v1 versionado
-- Sprint 9.1 — HeroSection v2 com volume narrativo na listagem; StatsGrid; migração offset → cursor com compat `?offset=`; FiltrosAtivos chips
-- Sprint 9.2 — SSG + client filter no detalhe; breadcrumb "← Votações"; CompartilharVotacaoButton; KpiStrip híbrido SIM/NÃO/Margem/Disciplina
+- Sprint 9.0 — Fundamentos: [ADR-028](../architecture/ADR/028-cursor-pagination-e-cache-ttl-para-votacoes.md) (cursor + cache TTL) + plano; queries de disciplina/rebeldes + funções puras de domínio; cache wrappers em detalhe; `listVotacoesCursor` v1 page-size 24
+- Sprint 9.1 — Listagem reskin: HeroSection v2 com volume narrativo; StatsGrid narrativa; migração offset → cursor com compat `?offset=`; FiltrosAtivos chips
+- Sprint 9.2 — Detalhe moldura: SSG + client filter (D7); breadcrumb "← Votações"; CompartilharVotacaoButton; KpiStrip híbrido SIM/NÃO/Margem/Disciplina; Accordion mobile
+- Sprint 9.3 — Charts (identidade visual): Donut consolidado; Bar horizontal por partido + tabela em `<details>`; MargemDecisaoBar CSS-only; Hemiciclo SVG desktop
+- Sprint 9.4 — Identidade narrativa (D5): DisciplinaPartidariaChart condicional; RebeldesList condicional; VotacoesRelacionadasFooter cross-links
+- Sprint 9.5 — Polish + tag: OG image v2 com barra de margem; `loading.tsx` + `error.tsx` no detalhe; auditoria a11y; fix sintaxe `hsl(var())` quebrada em 7 charts + opacidade decrescente em rankings; release notes + tag
 
 ADR publicado nesta wave:
 
 - [ADR-028](../architecture/ADR/028-cursor-pagination-e-cache-ttl-para-votacoes.md) — Cursor pagination + cache TTL para votações
 
-Tag de release prevista ao fechamento da Sprint 9.2 (sem cronograma fixo).
+Achados-chave (ver [release v0.9.0-votacao-360](../releases/v0.9.0-votacao-360.md) §Achados-chave):
+
+- **Bug histórico em todos os charts SVG/Recharts (Wave 7+8+9)**: `fill="hsl(var(--chart-X))"` expande para `hsl(oklch(...))` inválido com tokens OKLCH-completos do Sprint 4.0 → fills pretos. Fix #304 corrigiu 30 ocorrências em 7 arquivos. Memória operacional `feedback_visual_empirical_validation.md`.
+- **OpenNext em Workers sem R2 → `generateStaticParams` quebra em runtime**: PR 9.2.1 introduziu SSG top-200; todas as URLs de detalhe retornaram HTTP 500 em produção. Fix #293 reverteu, preservando client-side filter via `useSearchParams`. Memória `feedback_ssg_workers_r2.md`.
+
+Decisão transversal observada: **1 tag final por wave, sem `-alpha.X`/`-rc.X` intermediários**. Padrão das Waves 7/8/9 → `v0.7.0`/`v0.8.0`/`v0.9.0` puras. Memória `feedback_release_cadence.md`.
 
 ---
 
