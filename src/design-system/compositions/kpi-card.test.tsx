@@ -130,4 +130,36 @@ describe('KpiCard composition', () => {
     expect(hint.querySelector('strong')?.textContent).toBe('L1')
     expect(hint.textContent).toBe('L1 · Câmara')
   })
+
+  it('renderiza floatingBadge quando fornecido', () => {
+    render(
+      <KpiCard
+        items={baseItems}
+        floatingBadge={<span data-testid="floating-badge">L1</span>}
+      />,
+    )
+    const badge = screen.getByTestId('floating-badge')
+    expect(badge.textContent).toBe('L1')
+    const badgeContainer = badge.parentElement
+    expect(badgeContainer?.className).toContain('absolute')
+    expect(badgeContainer?.className).toContain('top-0')
+    expect(badgeContainer?.className).toContain('-translate-y-1/2')
+  })
+
+  it('omite container de floatingBadge quando ausente', () => {
+    const { container } = render(<KpiCard items={baseItems} />)
+    const badgeContainer = container.querySelector('[class*="absolute"][class*="top-0"]')
+    expect(badgeContainer).toBeNull()
+  })
+
+  it('aplica pt-10 ao container quando floatingBadge está presente', () => {
+    const { container } = render(
+      <KpiCard
+        items={baseItems}
+        floatingBadge={<span>L1</span>}
+      />,
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).toContain('pt-10')
+  })
 })

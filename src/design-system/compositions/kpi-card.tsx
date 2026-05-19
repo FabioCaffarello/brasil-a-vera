@@ -35,6 +35,13 @@ export type KpiCardProps = {
   className?: string
   /** Aria-label do `role="list"` wrapper. */
   'aria-label'?: string
+  /**
+   * Badge flutuante centralizado no topo do card — renderizado com
+   * `absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2`.
+   * Consumer controla o shape: `<TrustBadge>`, `<DataBadge>` ou
+   * qualquer ReactNode compacto.
+   */
+  floatingBadge?: ReactNode
 }
 
 /**
@@ -65,16 +72,23 @@ export function KpiCard({
   items,
   className,
   'aria-label': ariaLabel,
+  floatingBadge,
 }: KpiCardProps) {
   if (items.length === 0) return null
 
   return (
     <div
       className={cn(
-        'rounded-2xl border border-border bg-surface-elevated px-6 py-6 sm:py-8',
+        'relative rounded-2xl border border-border bg-surface-elevated px-6 py-6 sm:py-8',
+        floatingBadge && 'pt-10',
         className,
       )}
     >
+      {floatingBadge ? (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+          {floatingBadge}
+        </div>
+      ) : null}
       <ul
         aria-label={ariaLabel}
         className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 sm:gap-x-6 sm:gap-y-0"

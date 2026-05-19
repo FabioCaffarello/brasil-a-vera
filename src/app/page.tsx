@@ -99,6 +99,7 @@ export default async function Home() {
         kpis={
           <KpiCard
             aria-label="Métricas do Brasil à Vera"
+            floatingBadge={<TrustBadge trustLevel="L1" />}
             items={[
               {
                 icon: <Users className="h-6 w-6" />,
