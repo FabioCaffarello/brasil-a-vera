@@ -1,17 +1,19 @@
-// `/painel/alertas` — Wave 10 Etapa 6.
+// `/painel/alertas` — Wave 10 Etapa 6 + 7.4.
 //
 // 2 sub-tabs com URL state em `?tab=`:
-//   - recebidos: inbox de alert_delivery (stub até Etapa 7)
+//   - recebidos: inbox de alert_delivery (channel=inapp)
 //   - politicas: form completo de gerenciamento da alert_policy
 //
-// Default tab: politicas (recebidos é stub; políticas é a feature útil
-// dessa etapa).
+// Default tab até Etapa 7.4: políticas. Após cron rodar e popular
+// deliveries, owner pode mudar default para recebidos via copy
+// adjustment. Por enquanto mantém políticas (form útil pra setup).
 
 import { auth } from '@clerk/nextjs/server'
 
 import { FormPoliticas } from '@/components/painel/alertas/form-politicas'
 import { ListaRecebidos } from '@/components/painel/alertas/lista-recebidos'
 import { SubTabs, type TabKey } from '@/components/painel/alertas/sub-tabs'
+import { listInappDeliveriesByUserId } from '@/lib/queries/alert-delivery'
 import { getAlertPolicyOrDefaults } from '@/lib/queries/alert-policy'
 import { getOrCreateUserProfileId } from '@/lib/queries/user-profile'
 
@@ -44,11 +46,12 @@ export default async function PainelAlertasPage({ searchParams }: PageProps) {
   }
 
   const params = await searchParams
-  // Default `politicas` — recebidos é stub até Etapa 7; políticas é a
-  // feature ativa desta etapa.
   const activeTab = normalizeTab(params.tab) ?? 'politicas'
 
-  const policy = await getAlertPolicyOrDefaults(internalUserId)
+  const [policy, deliveries] = await Promise.all([
+    getAlertPolicyOrDefaults(internalUserId),
+    listInappDeliveriesByUserId(internalUserId, 12),
+  ])
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
@@ -61,11 +64,19 @@ export default async function PainelAlertasPage({ searchParams }: PageProps) {
         </p>
       </header>
 
-      <SubTabs active={activeTab} recebidosCount={null} />
+      <SubTabs active={activeTab} recebidosCount={deliveries.length} />
 
       <div className="mt-6">
         {activeTab === 'recebidos' ? (
-          <ListaRecebidos />
+          <ListaRecebidos
+            deliveries={deliveries.map((d) => ({
+              id: d.id,
+              subject: d.subject,
+              bodyMd: d.bodyMd,
+              scheduledFor: d.scheduledFor,
+              readAt: d.readAt,
+            }))}
+          />
         ) : (
           <FormPoliticas initial={policy} />
         )}
