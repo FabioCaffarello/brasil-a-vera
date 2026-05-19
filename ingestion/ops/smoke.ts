@@ -61,6 +61,21 @@ const PROBES: readonly Probe[] = [
     concurrency: 5,
     expectedStatuses: [401, 503],
   },
+  // Wave 10 — rotas públicas da área logada (sign-in landing e
+  // política de privacidade). /painel/* exige Clerk; smoke anônimo
+  // só pode bater as públicas.
+  {
+    name: 'sign-in',
+    path: '/sign-in',
+    concurrency: 3,
+    expectedStatuses: [200],
+  },
+  {
+    name: 'privacidade',
+    path: '/privacidade',
+    concurrency: 3,
+    expectedStatuses: [200],
+  },
 ] as const
 
 // Rotas verificadas para OG canônico no smoke. Cobertura: home, listas e
