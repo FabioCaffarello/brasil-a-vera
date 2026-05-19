@@ -10,9 +10,9 @@
 - Responsável legal solicita eliminação de conta criada com assistência mas
   cuja autorização foi posteriormente retirada.
 
-## Diferenças vs `/painel/meus-dados`
+## Diferenças vs `/painel?tab=meus-dados`
 
-A interface de auto-serviço em `/painel/meus-dados` (Etapa 9.5) cobre o caso
+A interface de auto-serviço em `/painel?tab=meus-dados` (Etapa 9.5) cobre o caso
 "usuário maior de idade pede para eliminar a própria conta". Os casos acima
 **não** passam por essa interface: o solicitante não é o titular dos dados, e
 a identidade do solicitante (responsável legal) precisa ser verificada antes
@@ -116,7 +116,7 @@ storage pessoal do controlador (não dentro do repositório).
   documentação; não executar o erase enquanto não houver verificação.
 - **Solicitação de pessoa que não é responsável legal** (parente próximo,
   por exemplo): explicar que o erase auto-serviço pelo próprio titular
-  (`/painel/meus-dados`) é o caminho.
+  (`/painel?tab=meus-dados`) é o caminho.
 - **Suspeita de coerção do menor**: caso o conteúdo da solicitação ou da
   conversa sugira que o menor está sendo forçado a eliminar a conta contra
   sua vontade, pausar o atendimento e consultar advogado antes de executar.

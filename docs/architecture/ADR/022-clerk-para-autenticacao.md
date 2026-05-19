@@ -1,8 +1,35 @@
 # ADR-022: Clerk para autenticação na Sprint 4.5+
 
-> Brasil a Vera · Arquitetura · v0.3
-> Última atualização: 2026-05-19 (addendum Wave 10 — rebrand de rota e ponteiros para LOGGED-AREA-VISION.md)
+> Brasil a Vera · Arquitetura · v0.4
+> Última atualização: 2026-05-19 (addendum pós-Wave 10 — refator do painel para tabs via Parallel Routes)
 > Status: accepted
+
+---
+
+## Addendum pós-Wave 10 (2026-05-19) — refator do painel
+
+A topologia de rotas multi-segmento (`/painel/parlamentares`, `/painel/alertas`,
+`/painel/configuracoes`, `/painel/configuracoes/meus-dados`) descrita neste ADR
+foi **revertida** para rota única `/painel` com 5 tabs via Parallel Routes
+(`@slot/`) após revisão de produto pós-entrega. Detalhes do refator em
+[ADR-032](./032-painel-tabs-parallel-routes.md) + [RFC](../../product/REFACTOR-PAINEL-TABS.md).
+
+**O que muda neste ADR**:
+- Auth via Clerk (decisão central) continua válida sem alteração
+- `<ClerkProvider>` único no root layout (revisão empírica do ADR-029 — Wave 10
+  fix) permanece
+- `auth.protect()` no middleware para `/painel(.*)` continua cobrindo a rota
+  única corretamente
+- Custom sign-in/sign-up em `/sign-in/[[...sign-in]]` e `/sign-up/[[...sign-up]]`
+  permanecem
+- Redirect pós-login para `/painel` (root da área logada) permanece — agora
+  resolve para o slot Resumo via tab default
+
+**O que muda fora deste ADR**:
+- Referências internas a `/painel/parlamentares`, `/painel/alertas`,
+  `/painel/configuracoes`, `/painel/configuracoes/meus-dados` deixam de existir;
+  todas resolvem por `?tab=` no `/painel` raiz
+- `CLERK-SETUP.md` atualizado para refletir o destino único `/painel`
 
 ---
 
