@@ -1,8 +1,25 @@
 # ADR-030: Sistema de alertas e Resend
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-19
-> Status: accepted
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-05-18
+> Status: accepted (com decisão #5 deferida para Wave 11+ em 2026-05-18)
+
+---
+
+## Addendum v0.2 (2026-05-18) — Modulação `alert_period` deferida
+
+A **decisão #5** ("Modulação: tabela `alert_period` admin-managed", linha 85 abaixo) e a modulação por scope match descrita ao longo deste ADR ficam **fora do escopo da Wave 10**. Detalhes:
+
+- Tabela `alert_period` **não será criada** na migration de Wave 10.
+- Cron handler **não consulta** `alert_period`; cadência fixa semanal (dom 21:00 UTC).
+- Banner em `/painel` para período especial **não será renderizado** na Wave 10.
+- Bloco "Aviso de período especial" no template de email **fica omitido**.
+
+**Justificativa (ADR-019):** sem evidência empírica de que cadência semanal é insuficiente em período eleitoral. Volume Wave 10 (≤750 MAU) cabe no free tier Resend com folga. Reabrir como feature futura se houver pedido evidenciado durante eleições 2026 ou volume de feedback sinalizar gap.
+
+**Cross-refs:** [LOGGED-AREA-VISION §8](../../product/LOGGED-AREA-VISION.md#8-plano-de-implementação-em-10-etapas--etapa-0) (Etapa 8 deferida); §11 (Fora de escopo).
+
+O conteúdo abaixo permanece como referência de design para reentry futuro — não como decisão ativa.
 
 ---
 
