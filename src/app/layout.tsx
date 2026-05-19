@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/nextjs'
+import { dark } from '@clerk/themes'
 import type { Metadata } from 'next'
 import { Geist_Mono, Inter } from 'next/font/google'
 
@@ -74,44 +76,73 @@ export const metadata: Metadata = {
 // 4.2 fará reskinning completo das listagens. Inconsistência visual
 // transitória aceita (D4 do plano).
 //
-// ClerkProvider — registrado em ADR-022 §4 (Opção B + refinamento empírico
-// do PR 2). Provider mora dentro do <AuthIslandLoader /> (lazy via
-// next/dynamic), não em <html>. Anônimos baixam zero JS de Clerk.
+// ClerkProvider — Wave 10 fix (fix/wave-10-single-clerk-provider).
+//
+// Histórico: ADR-022 §4 escolheu Opção B (Provider escopado em
+// auth-island.tsx, lazy) para evitar +50kb gzip em rotas anônimas.
+// ADR-029 §6 escolheu Opção C (Provider em route group `(authenticated)/`).
+// Wave 10 descobriu empiricamente que Opções B + C coexistindo
+// resultam em DOIS ClerkProviders em árvores siblings (auth-island
+// dentro de <Navbar> vs route group dentro de <main>), e Clerk reclama:
+//
+//   @clerk/nextjs: You've added multiple <ClerkProvider> components
+//   in your React component tree. Wrap your components in a single
+//   <ClerkProvider>.
+//
+// Solução: Provider único aqui no root layout (Opção C1 revisada).
+// Aceita o custo de +50kb gzip em rotas anônimas em troca de auth
+// funcional em rotas privadas. Princípio 13 do CLAUDE.md (validação
+// empírica). Addendum no ADR-029 documenta a revisão.
+//
+// Props consumidas em rotas privadas:
+//   - signInUrl/signUpUrl: rotas custom (Wave 10 Etapa 1)
+//   - signInFallbackRedirectUrl: pós-login vai para /painel
+//   - afterSignOutUrl: logout volta à home
+//   - appearance.baseTheme: dark (combina com shell hardcoded dark)
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html
-      lang="pt-BR"
-      className={`dark ${inter.variable} ${geistMono.variable} h-full antialiased`}
+    <ClerkProvider
+      afterSignOutUrl="/"
+      appearance={{ baseTheme: dark }}
+      signInFallbackRedirectUrl="/painel"
+      signInUrl="/sign-in"
+      signUpFallbackRedirectUrl="/painel"
+      signUpUrl="/sign-up"
     >
-      {/* suppressHydrationWarning no <body> — extensões de browser
-          (ColorZilla, Grammarly, LastPass, etc.) frequentemente injetam
-          atributos (`cz-shortcut-listen`, `data-gramm`, etc.) no <body>
-          ANTES do React hidratar, causando warning de mismatch que NÃO
-          é bug nosso. Padrão React 19 recomendado para isolar a injeção
-          ao nível em que ocorre (não cobre descendentes). */}
-      <body
-        className="min-h-full bg-background text-foreground"
-        suppressHydrationWarning
+      <html
+        lang="pt-BR"
+        className={`dark ${inter.variable} ${geistMono.variable} h-full antialiased`}
       >
-        <a
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-surface focus:px-3 focus:py-2 focus:font-medium focus:text-foreground focus:text-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          href="#conteudo"
+        {/* suppressHydrationWarning no <body> — extensões de browser
+            (ColorZilla, Grammarly, LastPass, etc.) frequentemente injetam
+            atributos (`cz-shortcut-listen`, `data-gramm`, etc.) no <body>
+            ANTES do React hidratar, causando warning de mismatch que NÃO
+            é bug nosso. Padrão React 19 recomendado para isolar a injeção
+            ao nível em que ocorre (não cobre descendentes). */}
+        <body
+          className="min-h-full bg-background text-foreground"
+          suppressHydrationWarning
         >
-          Pular para o conteúdo
-        </a>
-        <Navbar />
-        <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
-          {children}
-        </main>
-        <Footer />
-        {/* Toaster global (Wave 7 Sprint 7.2 PR3) — habilita toast em
-            qualquer rota. Hardcoded theme="dark" no primitive (sonner.tsx). */}
-        <Toaster />
-      </body>
-    </html>
+          <a
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-surface focus:px-3 focus:py-2 focus:font-medium focus:text-foreground focus:text-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            href="#conteudo"
+          >
+            Pular para o conteúdo
+          </a>
+          <Navbar />
+          <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
+            {children}
+          </main>
+          <Footer />
+          {/* Toaster global (Wave 7 Sprint 7.2 PR3) — habilita toast em
+              qualquer rota. Hardcoded theme="dark" no primitive (sonner.tsx). */}
+          <Toaster />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

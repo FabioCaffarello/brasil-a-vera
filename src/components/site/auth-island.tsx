@@ -1,43 +1,35 @@
 'use client'
 
-import { ClerkProvider, Show, SignInButton } from '@clerk/nextjs'
-import { dark } from '@clerk/themes'
+import { Show, SignInButton } from '@clerk/nextjs'
 import dynamic from 'next/dynamic'
 
 import { Button } from '@/design-system/primitives/button'
 import { Skeleton } from '@/design-system/primitives/skeleton'
 
 /**
- * AuthIsland — Sprint 4.1 PR 2.
+ * AuthIsland — Sprint 4.1 PR 2, revisado em Wave 10 (fix em
+ * fix/wave-10-single-clerk-provider).
  *
- * Ilha cliente isolada que carrega ClerkProvider + componentes de auth
- * APENAS quando este componente hidrata. Decisão Opção B do PR 1
- * (ADR-022 §4): Provider NÃO mora em <html>, mora aqui.
+ * **Mudança Wave 10**: o `<ClerkProvider>` que vivia aqui foi removido.
+ * Provider agora mora UMA SÓ VEZ no root layout (`src/app/layout.tsx`)
+ * — descoberta empírica: múltiplos `<ClerkProvider>` em árvores
+ * siblings (auth-island na Navbar vs route group `(authenticated)/`)
+ * faz Clerk throwar:
+ *
+ *   @clerk/nextjs: You've added multiple <ClerkProvider> components
+ *
+ * Esta ilha consome o Provider do root via Context React. ADR-022 §4
+ * Opção B (Provider escopado em ilha) está **revisado** pelo
+ * addendum Wave 10 do ADR-029.
  *
  * API do Clerk:
- *   `<Show when="signed-in" />` / `<Show when="signed-out" />` — NÃO
- *   `<SignedIn>` / `<SignedOut>`. Descoberta empírica durante PR 2:
- *   Clerk 7.x (Core 3) REMOVEU `<SignedIn>`/`<SignedOut>` dos exports
- *   do `@clerk/nextjs`. Apenas `Show` é exportado agora.
- *   Documentado em ADR-022 §2.
+ *   `<Show when="signed-in" />` / `<Show when="signed-out" />` — única
+ *   exportada em @clerk/nextjs Core 3+. ADR-022 §2.
  *
- * Topologia:
- * - <ClerkProvider> envolve só os filhos desta ilha (scoped)
- * - <UserButton> via next/dynamic com ssr: false — não vai no SSR
- *   bundle, e o JS só baixa quando ilha hidrata
- * - <Show> é client-side e leve (apenas condicional sobre state)
- *
- * Por que SSR: false no UserButton:
- * - UserButton é puramente client (avatar + dropdown stateful)
- * - SSR-rendering aumentaria HTML inicial sem benefício
- * - ssr: false economiza bundle do server-side render também
- *
- * Skeleton de loading mostra um círculo placeholder até o JS hidratar.
- *
- * Props do Provider (ver ADR-022 §4):
- * - afterSignOutUrl="/" — logout volta à home, não ao Account Portal
- * - appearance={{ baseTheme: dark }} — alinha com shell dark-first
- * - Sem signInUrl/signUpUrl — Account Portal hosted cobre a Sprint 4.1
+ * Topologia atual:
+ * - `<Show>` é client-side e leve (condicional sobre state do Provider)
+ * - `<UserButton>` via `next/dynamic` com `ssr: false` — só baixa no
+ *   client quando a ilha hidrata
  */
 const UserButton = dynamic(
   () => import('@clerk/nextjs').then((m) => m.UserButton),
@@ -54,7 +46,7 @@ const UserButton = dynamic(
 
 export function AuthIsland() {
   return (
-    <ClerkProvider afterSignOutUrl="/" appearance={{ baseTheme: dark }}>
+    <>
       <Show when="signed-out">
         <Button asChild size="sm" variant="outline">
           <SignInButton>Entrar</SignInButton>
@@ -69,6 +61,6 @@ export function AuthIsland() {
           }}
         />
       </Show>
-    </ClerkProvider>
+    </>
   )
 }

@@ -1,8 +1,44 @@
 # ADR-029: Modelo de dados da área logada e topologia de auth
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-19
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-05-19 (addendum: topologia de Provider revisada empíricamente)
 > Status: accepted
+
+---
+
+## Addendum Wave 10 — topologia revisada (2026-05-19)
+
+A decisão original de §6 (Provider em route group `(authenticated)/layout.tsx`,
+Opção C3) foi **revisada empíricamente** após primeiro acesso autenticado em
+produção retornar erro do Clerk:
+
+```
+Uncaught Error: @clerk/nextjs: You've added multiple <ClerkProvider>
+components in your React component tree. Wrap your components in a
+single <ClerkProvider>.
+```
+
+**Causa raiz**: Clerk detecta múltiplos Providers mesmo em **árvores siblings**.
+A topologia da decisão original tinha:
+- `<ClerkProvider>` #1 dentro de `<AuthIslandLoader />` na `<Navbar>` (root layout)
+- `<ClerkProvider>` #2 dentro de `(authenticated)/layout.tsx` envolvendo
+  `<main>{children}</main>`
+
+Esses dois Providers vivem em árvores irmãs no DOM (Navbar é sibling de main no
+`<body>` do root layout), mas o Clerk SDK ainda os detecta como duplicados.
+
+**Decisão revisada (Opção C1)**: `<ClerkProvider>` único no root layout
+(`src/app/layout.tsx`), envolvendo todo o `<html>`. Removido do `auth-island.tsx`
+e do `(authenticated)/layout.tsx`. O custo de bundle (+50kb gzip em rotas
+anônimas, medido empíricamente no ADR-022 §4 PR 1 da Sprint 4.1) é aceito —
+princípio 13 do CLAUDE.md: a hipótese de "Providers siblings não conflitam" foi
+falsificada empiricamente em produção.
+
+`(authenticated)/layout.tsx` permanece como pass-through para preservar o
+route group como organização lógica das rotas privadas (não-funcional do ponto
+de vista do React, mas semanticamente útil para futuro layout privado).
+
+Implementação no PR fix/wave-10-single-clerk-provider.
 
 ---
 

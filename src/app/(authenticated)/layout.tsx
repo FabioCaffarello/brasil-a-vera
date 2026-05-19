@@ -1,38 +1,24 @@
-// Layout do route group `(authenticated)/` — Wave 10 Etapa 1.
+// Route group `(authenticated)/` — Wave 10 Etapa 1, revisado em
+// fix/wave-10-single-clerk-provider.
 //
-// Decisão ADR-029 §6: `<ClerkProvider>` mora aqui (e não em <html>).
-// Rotas anônimas (home, listagens, perfis públicos) NÃO pagam o Provider
-// no bundle. Apenas as rotas `/painel/*`, `/sign-in/[[...]]`,
-// `/sign-up/[[...]]` ficam dentro deste route group e ganham acesso a
-// hooks client de Clerk.
+// **Mudança Wave 10 fix**: o `<ClerkProvider>` que vivia aqui foi
+// removido. Provider agora mora UMA SÓ VEZ no root layout
+// (`src/app/layout.tsx`) — descoberta empírica: múltiplos Providers
+// em árvores siblings causam erro do Clerk:
 //
-// ADR-022 §4 Opção B preservada — `<AuthIslandLoader />` na navbar do
-// root layout continua mantendo seu próprio Provider escopado para
-// rotas anônimas. Os dois Providers vivem em árvores irmãs no DOM
-// (root layout renderiza Navbar fora de `{children}`), não aninhados —
-// ambos lêem o mesmo cookie de sessão Clerk.
-
-import { ClerkProvider } from '@clerk/nextjs'
-import { dark } from '@clerk/themes'
-
-// Não há `dynamic = 'force-dynamic'` aqui — cada `page.tsx` filho declara
-// se precisa. Em geral, rotas privadas são dynamic por `auth()`.
+//   @clerk/nextjs: You've added multiple <ClerkProvider> components
+//
+// Este layout permanece como pass-through para preservar o route
+// group como organização lógica (rotas `/painel/*`, `/sign-in/[[...]]`,
+// `/sign-up/[[...]]` vivem aqui mesmo sem layout próprio adicionar
+// JSX). Future-proof: se precisar de UI específica de rotas
+// autenticadas (ex.: navbar privada, breadcrumbs), entra aqui sem
+// reorganizar arquivos. ADR-029 §6 v2 (addendum Wave 10).
 
 export default function AuthenticatedLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <ClerkProvider
-      appearance={{ baseTheme: dark }}
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/painel"
-      signUpFallbackRedirectUrl="/painel"
-      afterSignOutUrl="/"
-    >
-      {children}
-    </ClerkProvider>
-  )
+  return children
 }
