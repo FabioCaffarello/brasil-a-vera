@@ -9,6 +9,7 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { CursorVotacoesV1 } from '@/lib/queries/cursor-schemas'
@@ -143,11 +144,12 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     permanentRedirect(buildPageHref(params, { after: null }))
   }
 
-  const [page, anos, stats, totalFiltrado] = await Promise.all([
+  const [page, anos, stats, totalFiltrado, canExportData] = await Promise.all([
     listVotacoesCursor(filtros, { cursor }),
     getAnosVotacaoDistintos(),
     getEstatisticasGlobaisVotacoes(),
     countVotacoes(filtros),
+    canExport(),
   ])
   const votacoes = page.rows
   // "Mostrar mais (N restantes)" só faz sentido na primeira página (sem
@@ -231,7 +233,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
               ? 'Nenhum resultado'
               : `${formatNumeroAbreviado(totalFiltrado)} ${totalFiltrado === 1 ? 'resultado' : 'resultados'}`}
           </span>
-          {votacoes.length > 0 && (
+          {canExportData && votacoes.length > 0 && (
             <ExportCsvLink
               href={`/api/export/votacoes?${new URLSearchParams(
                 Object.entries({
