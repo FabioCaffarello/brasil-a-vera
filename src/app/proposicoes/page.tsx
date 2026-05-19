@@ -9,6 +9,7 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { CursorProposicoesV1 } from '@/lib/queries/cursor-schemas'
@@ -140,13 +141,15 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
     permanentRedirect(buildPageHref(params, { after: null }))
   }
 
-  const [page, anos, temas, stats, totalFiltrado] = await Promise.all([
-    listProposicoes(filtros, { cursor }),
-    getAnosDistintos(),
-    getTemasDistintos(),
-    getEstatisticasGlobaisProposicoes(),
-    countProposicoes(filtros),
-  ])
+  const [page, anos, temas, stats, totalFiltrado, canExportData] =
+    await Promise.all([
+      listProposicoes(filtros, { cursor }),
+      getAnosDistintos(),
+      getTemasDistintos(),
+      getEstatisticasGlobaisProposicoes(),
+      countProposicoes(filtros),
+      canExport(),
+    ])
   const proposicoes = page.rows
   // "Mostrar mais (N restantes)" só faz sentido na primeira página (cursor
   // = undefined). Em páginas subsequentes não sabemos quantos itens já
@@ -222,7 +225,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
               ? 'Nenhum resultado'
               : `${formatNumeroAbreviado(totalFiltrado)} ${totalFiltrado === 1 ? 'resultado' : 'resultados'}`}
           </span>
-          {proposicoes.length > 0 && (
+          {canExportData && proposicoes.length > 0 && (
             <ExportCsvLink
               href={`/api/export/proposicoes?${new URLSearchParams(
                 Object.entries({

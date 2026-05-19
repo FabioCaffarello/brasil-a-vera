@@ -9,6 +9,7 @@ import { DataBadge } from '@/design-system/compositions/data-badge'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
+import { canExport } from '@/lib/auth-guards'
 import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
   type Casa,
@@ -59,12 +60,14 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     ordem: normalizeOrdem(params.ordem),
   }
 
-  const [parlamentares, partidos, ufs, stats] = await Promise.all([
-    listParlamentares(filtros),
-    getPartidosDistintos(),
-    getUfsDistintos(),
-    getListagemStats(),
-  ])
+  const [parlamentares, partidos, ufs, stats, canExportData] =
+    await Promise.all([
+      listParlamentares(filtros),
+      getPartidosDistintos(),
+      getUfsDistintos(),
+      getListagemStats(),
+      canExport(),
+    ])
 
   // Wave 10 Hotfix 10.1 — gating server-side do FollowButton.
   //
@@ -117,7 +120,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
             {parlamentares.length}{' '}
             {parlamentares.length === 1 ? 'resultado' : 'resultados'}
           </span>
-          {parlamentares.length > 0 && (
+          {canExportData && parlamentares.length > 0 && (
             <ExportCsvLink
               href={`/api/export/parlamentares?${new URLSearchParams(
                 Object.entries({

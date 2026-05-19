@@ -31,6 +31,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/design-system/primitives/accordion'
+import { canExport } from '@/lib/auth-guards'
 import {
   getDisciplinaPartidariaPorVotacao,
   getProposicaoVinculada,
@@ -89,6 +90,7 @@ export default async function VotacaoPage({ params }: PageProps) {
     disciplinas,
     rebeldes,
     relacionadas,
+    canExportData,
   ] = await Promise.all([
     getProposicaoVinculada(v.proposicaoId),
     getVotosByVotacao(v.id),
@@ -96,6 +98,7 @@ export default async function VotacaoPage({ params }: PageProps) {
     getDisciplinaPartidariaPorVotacao(v.id),
     getRebeldesByVotacao(v.id),
     getVotacoesRelacionadas(v.id, 4),
+    canExport(),
   ])
 
   // KpiStrip híbrido (D1 do WAVE-9-VOTACOES-PLAN.md) — SIM/NÃO como
@@ -333,12 +336,14 @@ export default async function VotacaoPage({ params }: PageProps) {
             Individuais
           </AccordionTrigger>
           <AccordionContent className="space-y-3">
-            <div className="flex justify-end">
-              <ExportCsvLink
-                href={`/api/export/votacoes/${v.id}/votos`}
-                label="Exportar todos os votos (CSV)"
-              />
-            </div>
+            {canExportData && (
+              <div className="flex justify-end">
+                <ExportCsvLink
+                  href={`/api/export/votacoes/${v.id}/votos`}
+                  label="Exportar todos os votos (CSV)"
+                />
+              </div>
+            )}
             <VotosIndividuais votacaoId={v.id} votos={votos} />
           </AccordionContent>
         </AccordionItem>
@@ -471,12 +476,14 @@ export default async function VotacaoPage({ params }: PageProps) {
           subtitle="Clique no nome para ver o perfil 360° do parlamentar. Use os filtros para ver só uma direção."
           title="Votos individuais"
         >
-          <div className="mb-3 flex justify-end">
-            <ExportCsvLink
-              href={`/api/export/votacoes/${v.id}/votos`}
-              label="Exportar todos os votos (CSV)"
-            />
-          </div>
+          {canExportData && (
+            <div className="mb-3 flex justify-end">
+              <ExportCsvLink
+                href={`/api/export/votacoes/${v.id}/votos`}
+                label="Exportar todos os votos (CSV)"
+              />
+            </div>
+          )}
           <VotosIndividuais votacaoId={v.id} votos={votos} />
         </SectionCard>
       </div>
