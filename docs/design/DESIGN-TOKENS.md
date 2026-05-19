@@ -352,3 +352,87 @@ Se em wave futura algum par fg/bg envolvendo `--accent` reprovar AA
 recalibrar `L` (lightness) iterativamente até passar, com output
 literal `wcag-check.ts` antes/depois no corpo do PR. Sem pausa, sem
 pergunta — registro empírico é o gate.
+
+## Padrões de uso em charts (Wave 9 Sprint 9.5 PR5 — fix sintático)
+
+Elaboração do ADR-021 para charts SVG/Recharts. Não introduz tokens
+novos; cristaliza o uso correto dos `--chart-*` e tokens semânticos
+existentes.
+
+### Sintaxe — CRÍTICO
+
+**Tokens em `globals.css` são OKLCH-completos** (ex: `--chart-1: oklch(0.6 0.13 240)`), não componentes HSL crus.
+
+| Cenário | ❌ ERRADO (produz fill preto) | ✓ CERTO |
+|---|---|---|
+| Recharts inline `fill` | `fill="hsl(var(--chart-1))"` | `fill="var(--chart-1)"` |
+| Recharts `stroke` | `stroke="hsl(var(--chart-3))"` | `stroke="var(--chart-3)"` |
+| Tooltip CSS prop | `fill: 'hsl(var(--foreground))'` | `fill: 'var(--foreground)'` |
+| Tailwind arbitrary | `bg-[hsl(var(--chart-1))]` | `bg-[var(--chart-1)]` |
+| Opacidade transparente | `hsl(var(--accent) / 0.06)` | `color-mix(in oklch, var(--accent) 6%, transparent)` |
+
+**Por que `hsl(var(--X))` quebra:** expande para `hsl(oklch(0.6 0.13 240))` — função aninhada CSS inválida → browser cai em fallback (`#000` para SVG fill, `transparent` para background). Bug histórico em `gastos-chart.tsx` (Wave 7), `apoio-partido-chart.tsx` (Wave 8) e todos os charts da Wave 9 até o fix #304.
+
+### Quando usar `--chart-*` vs tokens semânticos
+
+| Tipo de chart | Token correto | Por quê |
+|---|---|---|
+| **Ranking de magnitudes** (gastos por categoria, autores por partido, disciplina por bancada) | `--chart-1` único + opacidade decrescente | "Quantos" não tem semântica bom/ruim |
+| **Comparativo categórico genuíno** (parlamentar vs mediana da casa) | `--chart-1` (entidade focal) + `--foreground-muted` dashed (referência) | Par Okabe-Ito clássico para bar+line |
+| **Decisão semântica** (SIM/NÃO/Abstenção/Ausente em votação) | `--success` / `--destructive` / `--foreground-muted` / `--warning` | SIM é genuinamente "afirmativo", NÃO é "negativo" — semântica real |
+| **Tipo/categoria sem semântica polarizada** (em wave futura, se chart-2..5 entrar em uso) | `--chart-2..5` distintos | Okabe-Ito colorblind-safe |
+
+**NÃO usar** em charts: `--primary` (CTA/brand — ADR-021), `--accent` (inflexão narrativa — ADR-024).
+
+### Regra de opacidade decrescente para rankings
+
+Quando o chart mostra ranking de magnitudes (ex: 7 categorias de
+gasto ordenadas por R$ decrescente), use **uma cor única** (`--chart-1`)
+com **opacidade decrescente por posição**:
+
+```typescript
+const RANKING_OPACITY = [1, 0.85, 0.7, 0.6, 0.5, 0.4, 0.3] as const
+
+// Cap em 0.3 para o último item; nunca abaixo.
+function rankingOpacity(idx: number): number {
+  return RANKING_OPACITY[Math.min(idx, RANKING_OPACITY.length - 1)] ?? 0.3
+}
+```
+
+**Por quê:** reforça hierarquia visual sem virar arco-íris. Manter "uma
+cor" preserva a leitura categórica (todos são "categorias de gasto" do
+mesmo parlamentar, não competidores de cores diferentes).
+
+**Trade-off WCAG conhecido:** opacidade 0.3 em `--chart-1` light
+(`oklch(0.6 0.13 240)`) contra `--background` light (`oklch(0.985 0 0)`)
+produz contraste visual `~1.3:1` — **abaixo do WCAG 1.4.11 (3:1)** para
+componentes gráficos. Cap maior (0.5+) ainda falha em light theme até
+~0.85. Trade-off aceito por 3 motivos:
+
+1. Estado anterior (`hsl(var(--X))` quebrado) era contraste ~1:1
+   (preto puro sobre fundo claro — invisível). O fix entrega ≥1.3:1
+   no pior caso e ~3.9:1 no melhor — **melhoria significativa mesmo
+   abaixo de WCAG no extremo do ranking**.
+2. Dark theme funciona melhor (cap 0.3 dá 2.5:1, perto do 3:1).
+   Projeto é dark-first; light está dormente.
+3. Alternativa "uma cor + lightness ladder via color-mix" perderia a
+   regra "uma cor" e adicionaria complexidade ao helper.
+
+**Issue aberta:** reavaliar regra em wave futura se light theme deixar
+de ser dormente (ex.: toggler theme público), considerando:
+- `color-mix(in oklch, var(--chart-1), var(--foreground) X%)` para
+  ladder de lightness em vez de opacity
+- Cap mais alto (0.6+) com `--chart-1` calibrado mais escuro em light
+
+### Charts atuais — mapeamento
+
+| Chart | Tokens | Padrão |
+|---|---|---|
+| `GastosChart` bar (parlamentar) | `--chart-1` | Ranking de magnitudes (7 categorias) + opacidade decrescente |
+| `GastosChart` line (parlamentar) | `--chart-1` + `--chart-3` dashed | Comparativo categórico (parlamentar vs mediana casa) |
+| `ApoioPartidoChart` (proposicao) | `--chart-1` | Ranking de magnitudes (6 partidos + "Outros") + opacidade decrescente |
+| `VotosConsolidadosChart` (proposicao + votação) | `--success`/`--destructive`/`--warning`/`--foreground-muted` | Decisão semântica (Donut SIM/NÃO/Abst/Aus) |
+| `VotacaoPorPartidoChart` | tokens semânticos | Decisão semântica (segmentos empilhados) |
+| `VotacaoHemicicloChart` | tokens semânticos | Decisão semântica (pontos por tipo de voto) |
+| `MargemDecisaoBar` | `--success`/`--destructive`/`--surface-elevated` | Decisão semântica (barra bilateral) |
+| `DisciplinaPartidariaChart` | `--chart-1` | Ranking de disciplina + opacidade decrescente. NÃO usa `--success` (P2: % disciplina não é "bom") |
