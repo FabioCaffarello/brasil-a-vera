@@ -70,7 +70,7 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
               key={r.parlamentarId}
             >
               <Link
-                className="min-w-0 flex-1 truncate text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
+                className="min-w-0 flex-1 truncate rounded text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 href={`/parlamentares/${r.parlamentarId}`}
               >
                 {r.nome}

@@ -95,7 +95,12 @@ export function VotacaoVotosConsolidadosChart({ data }: Props) {
   }).filter((d) => d.valor > 0)
 
   return (
-    <div className="space-y-3">
+    <figure
+      aria-label={`Distribuição de ${total} votos: ${chartData
+        .map((d) => `${d.label} ${d.valor} (${d.pct}%)`)
+        .join(', ')}`}
+      className="space-y-3"
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[180px_1fr] sm:items-center">
         {/* Donut */}
         <div className="relative h-44 w-full sm:h-44 sm:w-44">
@@ -154,6 +159,6 @@ export function VotacaoVotosConsolidadosChart({ data }: Props) {
           ))}
         </ul>
       </div>
-    </div>
+    </figure>
   )
 }

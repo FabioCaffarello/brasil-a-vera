@@ -59,8 +59,8 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
             <Link
               className={
                 isAtivo
-                  ? 'rounded bg-foreground px-2.5 py-1 font-medium text-background'
-                  : 'rounded border border-border-strong px-2.5 py-1 text-foreground hover:bg-surface-elevated'
+                  ? 'rounded bg-foreground px-2.5 py-1 font-medium text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                  : 'rounded border border-border-strong px-2.5 py-1 text-foreground hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
               }
               href={href}
               key={t.value}
@@ -94,7 +94,7 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
                   key={v.id}
                 >
                   <Link
-                    className="min-w-0 flex-1 truncate text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
+                    className="min-w-0 flex-1 truncate rounded text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     href={`/parlamentares/${v.parlamentarId}`}
                   >
                     {v.parlamentarNome}

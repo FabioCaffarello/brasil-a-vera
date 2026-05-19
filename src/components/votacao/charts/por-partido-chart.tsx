@@ -109,7 +109,11 @@ export function VotacaoPorPartidoChart({ data }: Props) {
   const height = data.length * 28 + 24
 
   return (
-    <div className="w-full" style={{ height }}>
+    <figure
+      aria-label={`Distribuição de votos por partido — ${data.length} ${data.length === 1 ? 'partido' : 'partidos'} com voto nominal registrado`}
+      className="w-full"
+      style={{ height }}
+    >
       <ResponsiveContainer height="100%" width="100%">
         <BarChart
           data={[...data]}
@@ -150,6 +154,6 @@ export function VotacaoPorPartidoChart({ data }: Props) {
           ))}
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </figure>
   )
 }
