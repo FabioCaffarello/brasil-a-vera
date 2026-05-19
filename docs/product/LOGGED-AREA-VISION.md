@@ -479,7 +479,7 @@ Conteúdo descrito em §5.5. Mostra ao titular **tudo** que o sistema registra: 
 ### Política de privacidade e DPO
 
 - Página `/privacidade` (SSG, `policy_version` no metadata).
-- DPO: **Fabio Caffarello**. Contato: `lgpd@brasilavera.org` (placeholder; MX no Cloudflare Email Routing tarefa explícita na Etapa 9).
+- DPO: **Fabio Caffarello**. Contato: `lgpd@brasilavera.org` (Cloudflare Email Routing ativado na Etapa 9.8 — setup em [`docs/contributing/LGPD-EMAIL-SETUP.md`](../contributing/LGPD-EMAIL-SETUP.md)).
 - Toda mudança de versão da política força modal de re-aceite no próximo login + insert em `consent_log`.
 
 ### Idade mínima e tratamento de menores

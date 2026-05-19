@@ -22,8 +22,10 @@ de qualquer ação.
 
 ### Passo 1 — Recepção
 
-A solicitação chega via `lgpd@brasilavera.org` (Cloudflare Email Routing,
-configurado na Etapa 9.8). O remetente deve identificar:
+A solicitação chega via `lgpd@brasilavera.org`
+(Cloudflare Email Routing — setup em
+[`LGPD-EMAIL-SETUP.md`](LGPD-EMAIL-SETUP.md)). O remetente deve
+identificar:
 
 - Nome completo do menor e email da conta no Brasil à Vera.
 - Nome completo, CPF e relação de responsabilidade legal do solicitante.
