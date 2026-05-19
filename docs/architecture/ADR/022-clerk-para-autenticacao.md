@@ -1,8 +1,40 @@
 # ADR-022: Clerk para autenticação na Sprint 4.5+
 
-> Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-05-15 (Sprint 4.1 PR 1 — decisões de implementação)
+> Brasil a Vera · Arquitetura · v0.3
+> Última atualização: 2026-05-19 (addendum Wave 10 — rebrand de rota e ponteiros para LOGGED-AREA-VISION.md)
 > Status: accepted
+
+---
+
+## Addendum Wave 10 (2026-05-19)
+
+Este ADR foi escrito antes da Wave 10 e cita repetidamente `/minha-area/*`
+como rota da área autenticada (§Decisão, §Decisões de implementação,
+`CLERK-SETUP.md`, comentários em `src/middleware.ts` e
+`src/app/sign-in/page.tsx`). A Wave 10 rebrandeia essa rota para
+**`/painel/*`**. A migração de referências legadas (middleware, sign-in stub,
+CLERK-SETUP, ROADMAP, issue #174) é tarefa explícita — Etapa 0 do plano
+Wave 10.
+
+O escopo concreto da área logada — modelo de dados (`usuario.user_profile`,
+`usuario.follows`, `usuario.alert_policy`, `usuario.alert_delivery`,
+`usuario.consent_log`, `usuario.data_request`, `usuario.alert_period`),
+arquitetura de rotas, detalhamento por tela, sistema de alertas e LGPD —
+é ground-truthed em
+[`docs/product/LOGGED-AREA-VISION.md`](../../product/LOGGED-AREA-VISION.md).
+
+ADRs derivados (a publicar após aprovação do VISION):
+
+- **ADR-029** — Modelo de dados da área logada + topologia de auth
+  (`<ClerkProvider>` em route group `(authenticated)/` vs `<html>` raiz
+  vs `auth-island.tsx` atual; alternativas com fundamentação)
+- **ADR-030** — Sistema de alertas e Resend (cron, modulação por períodos
+  especiais, estrutura editorial do email semanal)
+- **ADR-031** — Framework LGPD (bases legais, retenção, dashboard
+  `/painel/configuracoes/meus-dados`, idade mínima)
+
+A promessa de §Consequências/Neutras deste ADR — *"ADR separado se schema
+de acompanhamento for não-trivial"* — é cumprida pelo ADR-029.
 
 ---
 
