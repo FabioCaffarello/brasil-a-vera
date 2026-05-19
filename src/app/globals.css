@@ -117,9 +117,20 @@
   --accent: oklch(0.45 0.18 295);
   --accent-foreground: oklch(1 0 0);
 
-  --chart-1: oklch(0.32 0.06 248);
+  /* Paleta categórica para charts (não-semântica). Wave 9 Sprint 9.5 PR5
+     ajustou chart-1 e chart-3 light theme (Okabe-Ito colorblind-safe,
+     padrão-ouro em dataviz):
+       chart-1 era oklch(0.32 0.06 248) → preto azulado em light theme.
+       chart-3 era oklch(0.5 0.18 27)   → vermelho podia confundir com
+                                           --destructive (sinal "negativo").
+     Sky blue + orange é par clássico Okabe-Ito para bar+line: ambos
+     legíveis em light, distância de matiz suficiente para daltonismo,
+     sem colisão semântica com --success/--destructive.
+     chart-2/4/5 mantidos (não usados hoje em produção; revisitar com
+     Okabe-Ito completo quando entrarem em uso). */
+  --chart-1: oklch(0.6 0.13 240); /* sky blue (Okabe-Ito) */
   --chart-2: oklch(0.5 0.13 150);
-  --chart-3: oklch(0.5 0.18 27);
+  --chart-3: oklch(0.65 0.15 70); /* orange (Okabe-Ito) */
   --chart-4: oklch(0.45 0.18 295);
   --chart-5: oklch(0.55 0.16 60);
 }
