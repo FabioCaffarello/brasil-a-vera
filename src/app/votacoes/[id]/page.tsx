@@ -2,6 +2,7 @@ import { BarChart3, Check, CircleSlash, FileText, Users, X } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
@@ -199,7 +200,15 @@ export default async function VotacaoPage({ params }: PageProps) {
           <AccordionTrigger className="font-semibold text-base">
             Resumo
           </AccordionTrigger>
-          <AccordionContent>
+          <AccordionContent className="space-y-4">
+            <VotacaoVotosConsolidadosChart
+              data={{
+                sim: v.votosSim,
+                nao: v.votosNao,
+                abstencao: v.abstencoes,
+                ausentes: v.ausentes ?? 0,
+              }}
+            />
             <VotosResumo
               totais={{
                 sim: v.votosSim,
@@ -266,14 +275,24 @@ export default async function VotacaoPage({ params }: PageProps) {
       <div className="mt-6 hidden space-y-5 sm:block">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <SectionCard className="scroll-mt-28" id="resumo" title="Resumo">
-            <VotosResumo
-              totais={{
-                sim: v.votosSim,
-                nao: v.votosNao,
-                abstencoes: v.abstencoes,
-                ausentes: v.ausentes,
-              }}
-            />
+            <div className="space-y-4">
+              <VotacaoVotosConsolidadosChart
+                data={{
+                  sim: v.votosSim,
+                  nao: v.votosNao,
+                  abstencao: v.abstencoes,
+                  ausentes: v.ausentes ?? 0,
+                }}
+              />
+              <VotosResumo
+                totais={{
+                  sim: v.votosSim,
+                  nao: v.votosNao,
+                  abstencoes: v.abstencoes,
+                  ausentes: v.ausentes,
+                }}
+              />
+            </div>
           </SectionCard>
 
           <SectionCard
