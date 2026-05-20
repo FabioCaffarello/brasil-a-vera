@@ -3,8 +3,6 @@ import { dark } from '@clerk/themes'
 import type { Metadata } from 'next'
 import { Geist_Mono, Inter } from 'next/font/google'
 
-import { Footer } from '@/components/site/footer'
-import { Navbar } from '@/components/site/navbar'
 import { Toaster } from '@/design-system/primitives/sonner'
 import { env } from '@/env'
 import './globals.css'
@@ -134,11 +132,7 @@ export default function RootLayout({
           >
             Pular para o conteúdo
           </a>
-          <Navbar />
-          <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
-            {children}
-          </main>
-          <Footer />
+          {children}
           {/* Toaster global (Wave 7 Sprint 7.2 PR3) — habilita toast em
               qualquer rota. Hardcoded theme="dark" no primitive (sonner.tsx). */}
           <Toaster />

@@ -20,8 +20,7 @@
 import { auth } from '@clerk/nextjs/server'
 
 import { ActiveSlotPicker } from '@/components/painel/active-slot-picker'
-import { PainelHeader } from '@/components/painel/painel-header'
-import { TabBar } from '@/components/painel/tab-bar'
+import { DashboardShell } from '@/components/painel/dashboard-shell'
 import { countUnreadInappDeliveriesByUserId } from '@/lib/queries/alert-delivery'
 import { countFollowsByUserId } from '@/lib/queries/follows'
 import {
@@ -75,20 +74,13 @@ export default async function PainelLayout({
   ])
 
   return (
-    <>
-      {profile ? (
-        <PainelHeader
-          displayName={profile.displayName}
-          email={profile.email}
-          uf={profile.uf}
-        />
-      ) : null}
-      <TabBar
-        counters={{
-          parlamentares: followsCount,
-          alertas: unreadAlertsCount,
-        }}
-      />
+    <DashboardShell
+      displayName={profile?.displayName ?? null}
+      email={profile?.email ?? ''}
+      uf={profile?.uf ?? null}
+      followsCount={followsCount}
+      unreadAlertsCount={unreadAlertsCount}
+    >
       <ActiveSlotPicker
         alertas={alertas}
         configuracoes={configuracoes}
@@ -96,6 +88,6 @@ export default async function PainelLayout({
         parlamentares={parlamentares}
         resumo={resumo}
       />
-    </>
+    </DashboardShell>
   )
 }
