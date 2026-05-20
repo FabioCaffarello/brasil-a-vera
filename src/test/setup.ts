@@ -5,11 +5,14 @@ import { vi } from 'vitest'
 // futuros baseados em Radix que observam tamanho) dependem dele. Mock global
 // mínimo: reporta zero dimensões, sem observação real — suficiente para testes
 // de render e interação que não dependem de layout calculado.
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}))
+//
+// Vitest 4 não permite mais arrow function em mockImplementation quando o
+// código chama `new` no resultado (ResizeObserver é construtor). Class explícita.
+global.ResizeObserver = class ResizeObserver {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
 
 // scrollIntoView não existe em jsdom. cmdk chama scrollIntoView no item
 // selecionado para garantir visibilidade dentro da lista. Mock no-op.
