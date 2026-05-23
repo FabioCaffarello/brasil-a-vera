@@ -22,6 +22,10 @@ export const TTL = {
   // /votacoes, Wave 9 Sprint 9.1). Mesma cadência de proposicoesStatsGlobais
   // — 6h alinha com cron de ingestão de votações.
   votacoesStatsGlobais: 21_600,
+  // Stats agregadas consumidas por componentes server-side em rotas públicas
+  // (home cards, OGs de listagem). 6h alinha com cron de ingestão de votações
+  // (4×/dia) — mesma cadência de proposicoesStatsGlobais.
+  publicStats: 21_600,
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
@@ -158,6 +162,19 @@ export async function cached<T>(
   }
 
   stats.misses++
+  // TODO(investigate-neon-wake): remover quando ofensor identificado.
+  // Ver docs/ops/INVESTIGATE-NEON-WAKE.md. Sem ua/path: a versão atual
+  // de @opennextjs/cloudflare expõe getCloudflareContext() mas não o
+  // Request corrente — cruze cf_ray via log do middleware.
+  console.log(
+    JSON.stringify({
+      event: 'cache_miss',
+      key,
+      ttl,
+      schemaVersion: SCHEMA_VERSION,
+      buildVersion: BUILD_VERSION,
+    }),
+  )
   const fresh = await loader()
 
   try {

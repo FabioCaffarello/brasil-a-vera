@@ -71,6 +71,20 @@ const CANONICAL_HOST = 'brasilavera.org'
 const isProtectedRoute = createRouteMatcher(['/painel(.*)', '/api/painel(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
+  // TODO(investigate-neon-wake): remover quando ofensor identificado.
+  // Ver docs/ops/INVESTIGATE-NEON-WAKE.md. Volume alto (toda request).
+  // Sem PII: nada de IP, cookie, ou query string. cf-ipcountry é só país
+  // (2 letras). cf-ray ajuda a correlacionar com Analytics da Cloudflare.
+  console.log(
+    JSON.stringify({
+      event: 'request',
+      ua: req.headers.get('user-agent') ?? 'unknown',
+      path: new URL(req.url).pathname,
+      cf_ray: req.headers.get('cf-ray') ?? null,
+      cf_ipcountry: req.headers.get('cf-ipcountry') ?? null,
+    }),
+  )
+
   if (req.headers.get('host') === LEGACY_PROD_HOST) {
     const url = new URL(req.url)
     url.host = CANONICAL_HOST

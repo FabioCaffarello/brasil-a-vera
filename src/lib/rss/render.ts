@@ -26,11 +26,17 @@ export function votacaoToFeedItem(
     `<p><em>Casa:</em> ${casaLabel}</p>`,
   ].join('\n')
 
+  // `dataHora` vem como Date no path direto (Node/CI/dev sem
+  // `caches.default`) e como string ISO após cache round-trip JSON.
+  // Normaliza para o `buildRssFeed`, que chama `.toUTCString()`.
+  const pubDate =
+    row.dataHora instanceof Date ? row.dataHora : new Date(row.dataHora)
+
   return {
     title: row.descricao,
     link,
     guid: link,
-    pubDate: row.dataHora,
+    pubDate,
     description,
   }
 }

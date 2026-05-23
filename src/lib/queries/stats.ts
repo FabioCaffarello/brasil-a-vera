@@ -82,6 +82,13 @@ const LAST_INGESTION_TABLES = [
 ] as const
 
 export async function getDbStats(): Promise<DbStats> {
+  // TODO(investigate-neon-wake): remover quando ofensor identificado.
+  console.log(
+    JSON.stringify({
+      event: 'db_query_uncached',
+      fn: 'getDbStats',
+    }),
+  )
   const [sizeBytes, rowCounts, lastIngestion, usuario] = await Promise.all([
     getDatabaseSize(),
     getRowCounts(),

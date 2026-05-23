@@ -51,6 +51,17 @@ export async function busca(query: string): Promise<ResultadosBusca> {
   const pattern = escapeIlike(termo)
   const proposicaoRef = parseProposicaoRef(termo)
 
+  // TODO(investigate-neon-wake): remover quando ofensor identificado.
+  // Termo do usuário NÃO entra no log (PII potencial — pode conter nome
+  // próprio em buscas livres); só o comprimento, suficiente pra correlacionar.
+  console.log(
+    JSON.stringify({
+      event: 'db_query_uncached',
+      fn: 'busca',
+      termoLen: termo.length,
+    }),
+  )
+
   const [parlamentares, proposicoes, votacoes] = await Promise.all([
     db
       .select({

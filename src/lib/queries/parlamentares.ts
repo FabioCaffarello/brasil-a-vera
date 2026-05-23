@@ -98,7 +98,20 @@ export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
 export async function getParlamentarById(id: string) {
   return cached(`parlamentar:id:${id}`, TTL.parlamentarPerfil, async () => {
     const rows = await db
-      .select()
+      .select({
+        id: parlamentar.id,
+        nome: parlamentar.nome,
+        nomeCivil: parlamentar.nomeCivil,
+        casa: parlamentar.casa,
+        partidoSigla: parlamentar.partidoSigla,
+        partidoNome: parlamentar.partidoNome,
+        uf: parlamentar.uf,
+        urlFoto: parlamentar.urlFoto,
+        situacaoMandato: parlamentar.situacaoMandato,
+        legislatura: parlamentar.legislatura,
+        trustLevel: parlamentar.trustLevel,
+        sourceUrl: parlamentar.sourceUrl,
+      })
       .from(parlamentar)
       .where(eq(parlamentar.id, id))
       .limit(1)
