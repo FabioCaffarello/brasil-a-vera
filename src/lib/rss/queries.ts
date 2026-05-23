@@ -1,4 +1,5 @@
 import { desc, eq, sql } from 'drizzle-orm'
+import { cached, TTL } from '@/lib/cache'
 import type { Casa } from '@/lib/queries/votacoes'
 import { parlamentar } from '@/modules/parlamentares/domain/schema'
 import { proposicaoTema } from '@/modules/proposicoes/domain/schema'
@@ -9,12 +10,17 @@ import { db } from '@/shared/db'
 // até `limit` votações ordenadas por data desc, com os campos necessários
 // para o item RSS (id, casa, data, descrição, resultado).
 //
-// Sprint 3.2 Tarefa 2.
+// Sprint 3.2 Tarefa 2. Cache via `cached()` adicionado porque Cloudflare
+// Workers não respeita s-maxage automaticamente — sem cache explícito
+// crawlers e leitores RSS martelam o Neon a cada hit. `dataHora` volta
+// como string após o round-trip JSON; `votacaoToFeedItem` em render.ts
+// reconstrói o Date a partir da string.
 
 export type RssVotacaoRow = {
   id: string
   casa: Casa
-  dataHora: Date
+  /** Date no path direto (cache miss/bypass); string ISO após cache round-trip. */
+  dataHora: Date | string
   descricao: string
   aprovada: boolean
   votosSim: number
@@ -36,23 +42,33 @@ const SELECT_VOTACAO = {
 export async function getRssVotacoesGlobal(
   limit: number,
 ): Promise<RssVotacaoRow[]> {
-  return db
-    .select(SELECT_VOTACAO)
-    .from(votacao)
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  return cached(
+    `rss:votacoes:global:limit=${limit}`,
+    TTL.votacaoRecente,
+    async () =>
+      db
+        .select(SELECT_VOTACAO)
+        .from(votacao)
+        .orderBy(desc(votacao.dataHora))
+        .limit(limit),
+  )
 }
 
 export async function getRssVotacoesByCasa(
   casa: Casa,
   limit: number,
 ): Promise<RssVotacaoRow[]> {
-  return db
-    .select(SELECT_VOTACAO)
-    .from(votacao)
-    .where(eq(votacao.casa, casa))
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  return cached(
+    `rss:votacoes:casa=${casa}:limit=${limit}`,
+    TTL.votacaoRecente,
+    async () =>
+      db
+        .select(SELECT_VOTACAO)
+        .from(votacao)
+        .where(eq(votacao.casa, casa))
+        .orderBy(desc(votacao.dataHora))
+        .limit(limit),
+  )
 }
 
 // Para UF/partido: pega votações com pelo menos 1 voto de parlamentar
@@ -62,44 +78,59 @@ export async function getRssVotacoesByUf(
   uf: string,
   limit: number,
 ): Promise<RssVotacaoRow[]> {
-  return db
-    .selectDistinct(SELECT_VOTACAO)
-    .from(votacao)
-    .innerJoin(votoNominal, eq(votoNominal.votacaoId, votacao.id))
-    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
-    .where(eq(parlamentar.uf, uf))
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  return cached(
+    `rss:votacoes:uf=${uf}:limit=${limit}`,
+    TTL.votacaoRecente,
+    async () =>
+      db
+        .selectDistinct(SELECT_VOTACAO)
+        .from(votacao)
+        .innerJoin(votoNominal, eq(votoNominal.votacaoId, votacao.id))
+        .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+        .where(eq(parlamentar.uf, uf))
+        .orderBy(desc(votacao.dataHora))
+        .limit(limit),
+  )
 }
 
 export async function getRssVotacoesByPartido(
   partidoSigla: string,
   limit: number,
 ): Promise<RssVotacaoRow[]> {
-  return db
-    .selectDistinct(SELECT_VOTACAO)
-    .from(votacao)
-    .innerJoin(votoNominal, eq(votoNominal.votacaoId, votacao.id))
-    .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
-    .where(eq(parlamentar.partidoSigla, partidoSigla))
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  return cached(
+    `rss:votacoes:partido=${partidoSigla}:limit=${limit}`,
+    TTL.votacaoRecente,
+    async () =>
+      db
+        .selectDistinct(SELECT_VOTACAO)
+        .from(votacao)
+        .innerJoin(votoNominal, eq(votoNominal.votacaoId, votacao.id))
+        .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
+        .where(eq(parlamentar.partidoSigla, partidoSigla))
+        .orderBy(desc(votacao.dataHora))
+        .limit(limit),
+  )
 }
 
 export async function getRssVotacoesByTema(
   codigoTema: number,
   limit: number,
 ): Promise<RssVotacaoRow[]> {
-  return db
-    .selectDistinct(SELECT_VOTACAO)
-    .from(votacao)
-    .innerJoin(
-      proposicaoTema,
-      eq(proposicaoTema.proposicaoId, votacao.proposicaoId),
-    )
-    .where(eq(proposicaoTema.codigoTema, codigoTema))
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  return cached(
+    `rss:votacoes:tema=${codigoTema}:limit=${limit}`,
+    TTL.votacaoRecente,
+    async () =>
+      db
+        .selectDistinct(SELECT_VOTACAO)
+        .from(votacao)
+        .innerJoin(
+          proposicaoTema,
+          eq(proposicaoTema.proposicaoId, votacao.proposicaoId),
+        )
+        .where(eq(proposicaoTema.codigoTema, codigoTema))
+        .orderBy(desc(votacao.dataHora))
+        .limit(limit),
+  )
 }
 
 export type TemaInfo = {
@@ -112,19 +143,21 @@ export type TemaInfo = {
 // /feed index para listar feeds disponíveis por tema. Limite implícito:
 // catálogo oficial da Câmara tem ~30 temas — sem paginação.
 export async function getTemasDistintos(): Promise<TemaInfo[]> {
-  const rows = await db
-    .select({
-      codigo: proposicaoTema.codigoTema,
-      nome: proposicaoTema.nomeTema,
-      total: sql<number>`count(distinct ${proposicaoTema.proposicaoId})::int`,
-    })
-    .from(proposicaoTema)
-    .groupBy(proposicaoTema.codigoTema, proposicaoTema.nomeTema)
-    .orderBy(proposicaoTema.nomeTema)
+  return cached('rss:temas:distintos', TTL.filiacaoHistorica, async () => {
+    const rows = await db
+      .select({
+        codigo: proposicaoTema.codigoTema,
+        nome: proposicaoTema.nomeTema,
+        total: sql<number>`count(distinct ${proposicaoTema.proposicaoId})::int`,
+      })
+      .from(proposicaoTema)
+      .groupBy(proposicaoTema.codigoTema, proposicaoTema.nomeTema)
+      .orderBy(proposicaoTema.nomeTema)
 
-  return rows.map((r) => ({
-    codigo: r.codigo,
-    nome: r.nome,
-    totalProposicoes: r.total,
-  }))
+    return rows.map((r) => ({
+      codigo: r.codigo,
+      nome: r.nome,
+      totalProposicoes: r.total,
+    }))
+  })
 }

@@ -83,7 +83,21 @@ export async function listVotacoes(filtros: FiltrosVotacao = {}, limit = 50) {
 export async function getVotacaoById(id: string) {
   return cached(`votacoes:byid:${id}`, TTL.votacaoHistorica, async () => {
     const rows = await db
-      .select()
+      .select({
+        id: votacao.id,
+        casa: votacao.casa,
+        proposicaoId: votacao.proposicaoId,
+        dataHora: votacao.dataHora,
+        descricao: votacao.descricao,
+        orgao: votacao.orgao,
+        votosSim: votacao.votosSim,
+        votosNao: votacao.votosNao,
+        abstencoes: votacao.abstencoes,
+        ausentes: votacao.ausentes,
+        aprovada: votacao.aprovada,
+        trustLevel: votacao.trustLevel,
+        sourceUrl: votacao.sourceUrl,
+      })
       .from(votacao)
       .where(eq(votacao.id, id))
       .limit(1)
@@ -259,25 +273,30 @@ export interface VotacaoRecente {
 
 // Votações mais recentes para o card narrativo da home (Sprint 3.1 Tarefa 2).
 // Filtra por janela temporal — caller decide quantos dias e quantos itens.
-// Sem cache aqui — página da home tem `revalidate = 3600` que cobre.
+// Cache via `cached()` — home é `force-dynamic` (ver `src/app/page.tsx`
+// comentário sobre R2 incremental cache pendente / issue #58); até lá esta
+// função é a única camada de cache entre a home e o Neon.
 export async function getVotacoesRecentes(
   diasJanela: number,
   limit: number,
 ): Promise<VotacaoRecente[]> {
-  return db
-    .select({
-      id: votacao.id,
-      casa: votacao.casa,
-      dataHora: votacao.dataHora,
-      descricao: votacao.descricao,
-      aprovada: votacao.aprovada,
-    })
-    .from(votacao)
-    .where(
-      sql`${votacao.dataHora} >= now() - make_interval(days => ${diasJanela})`,
-    )
-    .orderBy(desc(votacao.dataHora))
-    .limit(limit)
+  const key = `votacoes:recentes:dias=${diasJanela}:limit=${limit}`
+  return cached(key, TTL.votacaoRecente, async () => {
+    return db
+      .select({
+        id: votacao.id,
+        casa: votacao.casa,
+        dataHora: votacao.dataHora,
+        descricao: votacao.descricao,
+        aprovada: votacao.aprovada,
+      })
+      .from(votacao)
+      .where(
+        sql`${votacao.dataHora} >= now() - make_interval(days => ${diasJanela})`,
+      )
+      .orderBy(desc(votacao.dataHora))
+      .limit(limit)
+  })
 }
 
 export interface VotacaoListaItem {

@@ -260,7 +260,23 @@ export async function getProposicaoByChave(
   ano: number,
 ) {
   const rows = await db
-    .select()
+    .select({
+      id: proposicao.id,
+      sourceId: proposicao.sourceId,
+      sourceIdCamara: proposicao.sourceIdCamara,
+      sourceIdSenado: proposicao.sourceIdSenado,
+      tipo: proposicao.tipo,
+      numero: proposicao.numero,
+      ano: proposicao.ano,
+      ementa: proposicao.ementa,
+      ementaDetalhada: proposicao.ementaDetalhada,
+      situacao: proposicao.situacao,
+      regime: proposicao.regime,
+      trustLevel: proposicao.trustLevel,
+      sourceUrl: proposicao.sourceUrl,
+      sourceUrlCamara: proposicao.sourceUrlCamara,
+      sourceUrlSenado: proposicao.sourceUrlSenado,
+    })
     .from(proposicao)
     .where(
       and(

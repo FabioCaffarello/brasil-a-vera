@@ -22,6 +22,10 @@ export const TTL = {
   // /votacoes, Wave 9 Sprint 9.1). Mesma cadência de proposicoesStatsGlobais
   // — 6h alinha com cron de ingestão de votações.
   votacoesStatsGlobais: 21_600,
+  // Stats agregadas consumidas por componentes server-side em rotas públicas
+  // (home cards, OGs de listagem). 6h alinha com cron de ingestão de votações
+  // (4×/dia) — mesma cadência de proposicoesStatsGlobais.
+  publicStats: 21_600,
   gastoAnoCorrente: 21_600,
   filiacaoHistorica: 86_400,
   alinhamentoPartidario: 86_400,
