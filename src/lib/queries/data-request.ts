@@ -14,6 +14,13 @@ import { desc, eq, sql } from 'drizzle-orm'
 import { dataRequest } from '@/modules/usuario/domain/schema'
 import { db } from '@/shared/db'
 
+// TODO(investigate-neon-wake): remover quando ofensor identificado.
+// Helper local — só nome de função, sem PII (userId/kind/resultUrl ficam
+// de fora do log; resultUrl pode conter signed URL com token).
+function logDbHit(fn: string): void {
+  console.log(JSON.stringify({ event: 'db_query_uncached', fn }))
+}
+
 export type DataRequestKind = 'export' | 'erase' | 'rectify' | 'anonymize'
 export type DataRequestStatus = 'queued' | 'running' | 'done' | 'failed'
 
@@ -32,6 +39,7 @@ export interface CreateDataRequestInput {
 export async function createDataRequest(
   input: CreateDataRequestInput,
 ): Promise<string> {
+  logDbHit('createDataRequest')
   const rows = await db
     .insert(dataRequest)
     .values({
@@ -47,6 +55,7 @@ export async function markDataRequestDone(
   id: string,
   resultUrl?: string,
 ): Promise<void> {
+  logDbHit('markDataRequestDone')
   await db
     .update(dataRequest)
     .set({
@@ -58,6 +67,7 @@ export async function markDataRequestDone(
 }
 
 export async function markDataRequestFailed(id: string): Promise<void> {
+  logDbHit('markDataRequestFailed')
   await db
     .update(dataRequest)
     .set({
@@ -85,6 +95,7 @@ export async function listDataRequestsByUser(
     resultUrl: string | null
   }[]
 > {
+  logDbHit('listDataRequestsByUser')
   return await db
     .select({
       id: dataRequest.id,

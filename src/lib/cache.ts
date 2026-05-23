@@ -162,6 +162,19 @@ export async function cached<T>(
   }
 
   stats.misses++
+  // TODO(investigate-neon-wake): remover quando ofensor identificado.
+  // Ver docs/ops/INVESTIGATE-NEON-WAKE.md. Sem ua/path: a versão atual
+  // de @opennextjs/cloudflare expõe getCloudflareContext() mas não o
+  // Request corrente — cruze cf_ray via log do middleware.
+  console.log(
+    JSON.stringify({
+      event: 'cache_miss',
+      key,
+      ttl,
+      schemaVersion: SCHEMA_VERSION,
+      buildVersion: BUILD_VERSION,
+    }),
+  )
   const fresh = await loader()
 
   try {

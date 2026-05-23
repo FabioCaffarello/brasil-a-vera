@@ -10,6 +10,13 @@ import { eq, sql } from 'drizzle-orm'
 import { userProfile } from '@/modules/usuario/domain/schema'
 import { db } from '@/shared/db'
 
+// TODO(investigate-neon-wake): remover quando ofensor identificado.
+// Helper local — só nome de função, sem PII (Clerk userId, email, displayName,
+// themes ficam fora do log).
+function logDbHit(fn: string): void {
+  console.log(JSON.stringify({ event: 'db_query_uncached', fn }))
+}
+
 export interface UpsertUserProfileInput {
   clerkUserId: string
   email: string
@@ -36,6 +43,7 @@ export interface UpsertUserProfileInput {
 export async function upsertUserProfileFromClerk(
   input: UpsertUserProfileInput,
 ): Promise<void> {
+  logDbHit('upsertUserProfileFromClerk')
   await db
     .insert(userProfile)
     .values({
@@ -66,6 +74,7 @@ export async function upsertUserProfileFromClerk(
 export async function softDeleteUserProfile(
   clerkUserId: string,
 ): Promise<void> {
+  logDbHit('softDeleteUserProfile')
   await db
     .update(userProfile)
     .set({
@@ -82,6 +91,7 @@ export async function softDeleteUserProfile(
  * `getOrCreateUserProfileId()` ou direto via `upsertUserProfileFromClerk()`.
  */
 export async function findUserProfileByClerkId(clerkUserId: string) {
+  logDbHit('findUserProfileByClerkId')
   const rows = await db
     .select()
     .from(userProfile)
@@ -97,6 +107,7 @@ export async function findUserProfileByClerkId(clerkUserId: string) {
  * mostrando "Seus dados").
  */
 export async function findUserProfileById(internalUserId: string) {
+  logDbHit('findUserProfileById')
   const rows = await db
     .select()
     .from(userProfile)
@@ -118,6 +129,7 @@ export async function findUserProfileById(internalUserId: string) {
 export async function getOrCreateUserProfileId(
   clerkUserId: string,
 ): Promise<string | null> {
+  logDbHit('getOrCreateUserProfileId')
   const existing = await findUserProfileByClerkId(clerkUserId)
   if (existing) return existing.id
 
@@ -159,6 +171,7 @@ export async function updateUserProfileBasic(
   internalUserId: string,
   input: { displayName?: string | null; uf?: string | null },
 ): Promise<void> {
+  logDbHit('updateUserProfileBasic')
   const patch: Partial<typeof userProfile.$inferInsert> = {
     updatedAt: new Date(),
   }
@@ -179,6 +192,7 @@ export async function updateUserProfileThemes(
   internalUserId: string,
   themes: string[],
 ): Promise<void> {
+  logDbHit('updateUserProfileThemes')
   await db
     .update(userProfile)
     .set({ themes, updatedAt: sql`now()` })
@@ -193,6 +207,7 @@ export async function updateUserProfileComunicacao(
   internalUserId: string,
   input: { marketingOptedIn: boolean; surveyOptedIn: boolean },
 ): Promise<void> {
+  logDbHit('updateUserProfileComunicacao')
   await db
     .update(userProfile)
     .set({
@@ -219,6 +234,7 @@ export async function commitOnboarding(
   internalUserId: string,
   input: { uf: string | null; themes: string[] },
 ): Promise<void> {
+  logDbHit('commitOnboarding')
   await db
     .update(userProfile)
     .set({

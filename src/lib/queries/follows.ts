@@ -21,6 +21,12 @@ import { db } from '@/shared/db'
 
 export const FOLLOWS_CAP_PER_USER = 200
 
+// TODO(investigate-neon-wake): remover quando ofensor identificado.
+// Helper local — só nome de função, sem PII (userId/parlamentarId fora do log).
+function logDbHit(fn: string): void {
+  console.log(JSON.stringify({ event: 'db_query_uncached', fn }))
+}
+
 /**
  * Retorna o `Set<parlamentarId>` que o usuário acompanha. Set facilita
  * lookups O(1) ao renderizar listagem de parlamentares com botão
@@ -30,6 +36,7 @@ export const FOLLOWS_CAP_PER_USER = 200
  * Caller resolve via `getOrCreateUserProfileId()`.
  */
 export async function getFollowsByUserId(userId: string): Promise<Set<string>> {
+  logDbHit('getFollowsByUserId')
   const rows = await db
     .select({ parlamentarId: follows.parlamentarId })
     .from(follows)
@@ -42,6 +49,7 @@ export async function getFollowsByUserId(userId: string): Promise<Set<string>> {
  * /painel sem ter que materializar o Set inteiro.
  */
 export async function countFollowsByUserId(userId: string): Promise<number> {
+  logDbHit('countFollowsByUserId')
   const [row] = await db
     .select({ n: count() })
     .from(follows)
@@ -61,6 +69,7 @@ export async function countFollowsByUserId(userId: string): Promise<number> {
 export async function getAvgAlinhamentoForFollows(
   userId: string,
 ): Promise<{ pct: number; sampleSize: number } | null> {
+  logDbHit('getAvgAlinhamentoForFollows')
   const [row] = await db
     .select({
       avg: sql<
@@ -100,6 +109,7 @@ export async function addFollow(
   userId: string,
   parlamentarId: string,
 ): Promise<AddFollowResult> {
+  logDbHit('addFollow')
   // Check cap antes do INSERT. Tem race condition teórica
   // (count = 199 → outra request entra → cap = 201) mas tolerável
   // dado que o cap é orientação operacional, não invariante de banco.
@@ -123,6 +133,7 @@ export async function removeFollow(
   userId: string,
   parlamentarId: string,
 ): Promise<void> {
+  logDbHit('removeFollow')
   await db
     .delete(follows)
     .where(
@@ -140,6 +151,7 @@ export async function removeFollowsBatch(
   parlamentarIds: string[],
 ): Promise<void> {
   if (parlamentarIds.length === 0) return
+  logDbHit('removeFollowsBatch')
   await db
     .delete(follows)
     .where(
@@ -158,6 +170,7 @@ export async function removeFollowsBatch(
  * `followed_at DESC` (mais recente primeiro).
  */
 export async function getFollowsWithParlamentarMeta(userId: string) {
+  logDbHit('getFollowsWithParlamentarMeta')
   return db
     .select({
       id: parlamentar.id,
