@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "@opennextjs/cloudflare": "^1.19.10",
+    "@opennextjs/cloudflare": "^1.19.11",
     "@tailwindcss/postcss": "^4",
     "@testcontainers/postgresql": "^11.14.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -83,7 +83,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.6",
     "culori": "^4.0.2",
     "drizzle-kit": "^0.31.10",
@@ -92,10 +92,10 @@
     "pg": "^8.21.0",
     "tailwindcss": "^4",
     "testcontainers": "^11.14.0",
-    "tsx": "^4.22.2",
+    "tsx": "^4.22.3",
     "typescript": "^5",
     "vitest": "^4.1.6",
-    "wrangler": "^4.92.0",
-    "ws": "^8.20.1"
+    "wrangler": "^4.94.0",
+    "ws": "^8.21.0"
   }
 }
