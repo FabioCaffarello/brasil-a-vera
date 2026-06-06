@@ -1,0 +1,59 @@
+// Cópia-rds de src/components/partido/bancada-list.tsx para a rota piloto.
+// Server Component puro. <img> cru + next/link preservados (zero-JS).
+
+import { Text } from '@fabio.caffarello/react-design-system/server'
+import Link from 'next/link'
+
+import type { PartidoMembro } from '@/lib/queries/partidos'
+
+interface Props {
+  membros: PartidoMembro[]
+}
+
+export function BancadaList({ membros }: Props) {
+  if (membros.length === 0) {
+    return (
+      <Text variant="bodySmall" className="text-fg-tertiary">
+        Sem parlamentares registrados nesta sigla.
+      </Text>
+    )
+  }
+
+  return (
+    <ul className="grid gap-2 sm:grid-cols-2">
+      {membros.map((m) => (
+        <li key={m.id}>
+          <Link
+            className="flex items-center gap-3 rounded-lg border border-line-default bg-surface-base p-2.5 transition hover:border-line-emphasis hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+            href={`/parlamentares/${m.id}`}
+          >
+            {m.urlFoto ? (
+              // biome-ignore lint/performance/noImgElement: foto remota; CLS evitado com width/height.
+              <img
+                alt=""
+                className="size-10 shrink-0 rounded-full object-cover"
+                height={40}
+                loading="lazy"
+                src={m.urlFoto}
+                width={40}
+              />
+            ) : (
+              <div
+                aria-hidden="true"
+                className="size-10 shrink-0 rounded-full bg-surface-raised"
+              />
+            )}
+            <div className="min-w-0">
+              <Text variant="label" className="truncate text-fg-primary">
+                {m.nome}
+              </Text>
+              <Text variant="caption" className="text-fg-tertiary">
+                {m.casa === 'CAMARA' ? 'Deputado' : 'Senador'}/{m.uf}
+              </Text>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
