@@ -28,29 +28,29 @@ Ordenada por score (alta → baixa), depois por nº total catalogado.
 `Total` = soma. Chrome do root layout (Navbar/Footer/Toaster) entra em todas
 as rotas que não sobrescrevem o root layout — toda a coluna conta com eles.
 
-| Rota | Total | cat. 1 | cat. 2 | cat. 3 | cat. 4 | Bloqueadores cat. 3 | Score |
-| --- | ---: | ---: | ---: | ---: | ---: | --- | :---: |
-| `/feed` | 3 | 0 | 1 | 0 | 2 | — | alta |
-| `/privacidade` | 3 | 0 | 1 | 0 | 2 | — | alta |
-| `/sign-in` | 5 | 0 | 1 | 0 | 4 | — | alta |
-| `/sign-up` | 5 | 0 | 1 | 0 | 4 | — | alta |
-| `/partidos/[sigla]` | 7 | 0 | 1 | 0 | 6 | — | alta |
-| `/parlamentares/[id]/gastos` | 6 | 0 | 3 | 1 | 2 | FilterChips (N2) | alta |
-| `/comparar` | 8 | 0 | 2 | 2 | 4 | HeroSection (N3), SectionCard (N1) | média |
-| `/busca` | 10 | 0 | 2 | 2 | 6 | HeroSection (N3), SectionCard (N1) | média |
-| `/parlamentares` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média |
-| `/proposicoes` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média |
-| `/votacoes` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média |
-| `/` (home) | 12 | 0 | 3 | 3 | 6 | HeroSection (N3), KpiCard (N5), SectionCard (N1) | média |
-| `/painel` (entry) | 7 | 0 | 1 | 1 | 5 | TabBar (N8) | média |
-| `/painel ?tab=resumo` | 11 | 0 | 1 | 1 | 9 | TabBar (N8) | média |
-| `/painel ?tab=meus-dados` | 8 | 0 | 1 | 1 | 6 | TabBar (N8) | média |
-| `/painel ?tab=configuracoes` | 10 | 0 | 1 | 1 | 8 | TabBar (N8) | média |
-| `/painel ?tab=alertas` | 10 | 0 | 1 | 2 | 7 | TabBar (N8), SubTabs alertas (N8) | média |
-| `/painel ?tab=parlamentares` | 11 | 0 | 1 | 2 | 8 | TabBar (N8), SubTabs parl. (N8) | média |
-| `/parlamentares/[id]` | 11 | 0 | 2 | 3 | 6 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa |
-| `/proposicoes/[tipo]/[numero]/[ano]` | 15 | 0 | 2 | 3 | 10 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa |
-| `/votacoes/[id]` | 17 | 0 | 2 | 3 | 12 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa |
+| Rota | Total | cat. 1 | cat. 2 | cat. 3 | cat. 4 | Bloqueadores cat. 3 | Score | Faixa #358 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | :---: | :---: |
+| `/feed` | 3 | 0 | 1 | 0 | 2 | — | alta | B-periférico |
+| `/privacidade` | 3 | 0 | 1 | 0 | 2 | — | alta | B |
+| `/sign-in` | 5 | 0 | 1 | 0 | 4 | — | alta | A |
+| `/sign-up` | 5 | 0 | 1 | 0 | 4 | — | alta | A |
+| `/partidos/[sigla]` | 7 | 0 | 1 | 0 | 6 | — | alta | A (piloto migrada) |
+| `/parlamentares/[id]/gastos` | 6 | 0 | 3 | 1 | 2 | FilterChips (N2) | alta | B |
+| `/comparar` | 8 | 0 | 2 | 2 | 4 | HeroSection (N3), SectionCard (N1) | média | B |
+| `/busca` | 10 | 0 | 2 | 2 | 6 | HeroSection (N3), SectionCard (N1) | média | B |
+| `/parlamentares` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média | B |
+| `/proposicoes` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média | B |
+| `/votacoes` | 10 | 0 | 4 | 2 | 4 | HeroSection (N3), StatsGrid (N7) | média | B |
+| `/` (home) | 12 | 0 | 3 | 3 | 6 | HeroSection (N3), KpiCard (N5), SectionCard (N1) | média | B |
+| `/painel` (entry) | 7 | 0 | 1 | 1 | 5 | TabBar (N8) | média | B |
+| `/painel ?tab=resumo` | 11 | 0 | 1 | 1 | 9 | TabBar (N8) | média | B |
+| `/painel ?tab=meus-dados` | 8 | 0 | 1 | 1 | 6 | TabBar (N8) | média | B |
+| `/painel ?tab=configuracoes` | 10 | 0 | 1 | 1 | 8 | TabBar (N8) | média | B |
+| `/painel ?tab=alertas` | 10 | 0 | 1 | 2 | 7 | TabBar (N8), SubTabs alertas (N8) | média | B |
+| `/painel ?tab=parlamentares` | 11 | 0 | 1 | 2 | 8 | TabBar (N8), SubTabs parl. (N8) | média | B |
+| `/parlamentares/[id]` | 11 | 0 | 2 | 3 | 6 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa | B |
+| `/proposicoes/[tipo]/[numero]/[ano]` | 15 | 0 | 2 | 3 | 10 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa | B |
+| `/votacoes/[id]` | 17 | 0 | 2 | 3 | 12 | KpiStrip (N4), SectionCard (N1), SectionNav (N6) | baixa | B |
 
 Notas sobre a tabela:
 
@@ -363,6 +363,85 @@ incrementais.
    primeiro, espera N2 fechar, migra.
 6. As 5 rotas que dependem de N3 + N7 esperam essas issues fecharem.
 7. Os 3 perfis de detalhe são a última onda — esperam N1 + N4 + N6.
+
+## §3.5 — Partição por dependência da issue #358 (resíduo `--primary`)
+
+A issue
+[#358](https://github.com/FabioCaffarello/brasil-a-vera/issues/358) registra
+o resíduo `--primary` no consumidor: 14 classes (`bg-brand`, `text-brand`,
+`bg-primary`, `text-primary`, `ring-ring`, `bg-accent`, `text-accent`,
+`border-brand`, `border-accent`, `hover:bg-brand`, `hover:text-brand`,
+`focus:ring-brand`, `focus:ring-ring`, `focus-visible:ring-ring`) apontam
+para azul vibrante `#438aff` em vez da navy do RDS. Migrar uma rota que
+consome essas classes ANTES da #358 resolver = a rota fica navy enquanto o
+resto do app é vibrante (duas marcas visíveis).
+
+### Classificação
+
+- **A** — não consome cor de marca de forma significativa; migrável já.
+- **B-periférico** — só consome em hover/focus discreto
+  (`hover:border-brand/60`, `hover:bg-brand/5`, `ring-ring`); tolerável.
+- **B** — consome em estado padrão visível: `bg-brand` em CTA primário
+  (Button default variant), `text-brand` em link textual, `bg-brand` em
+  chip selecionado, `text-brand` em active state de tabs/section-nav,
+  badges/cards de identidade. Espera a #358 para evitar duas marcas.
+
+### Achado crítico — Button default é central
+
+`src/design-system/primitives/button.tsx` define `default` variant como
+`bg-brand text-brand-foreground hover:bg-brand/90`. **Todo `<Button>` sem
+variant explícito é uso central do resíduo.** Listagens, formulários e
+home usam Button default abundantemente — daí ficarem em B.
+
+### Distribuição por score × faixa
+
+| Score | A | B-periférico | B | Total |
+|---|---:|---:|---:|---:|
+| alta | 3 | 1 | 2 | 6 |
+| média | 0 | 0 | 12 | 12 |
+| baixa | 0 | 0 | 3 | 3 |
+| **Total** | **3** | **1** | **17** | **21** |
+
+Das 21 rotas, **17 (~81%) são Faixa B**: bloqueadas pela #358. Apenas 4
+são migráveis sem esperar (3 A + 1 B-periférico), e dessas:
+
+- `/partidos/[sigla]` — A — **já migrada (piloto-1)**.
+- `/sign-in`, `/sign-up` — A — conteúdo principal é widget Clerk fora
+  do escopo do RDS; aprendizado limitado.
+- `/feed` — B-periférico — um único hover de card. Aprendizado pequeno
+  (rota textual sem componentes catalogados).
+
+### Recomendação estratégica
+
+**Próxima ação: resolver a #358, não migrar mais uma rota.**
+
+Justificativa quantitativa:
+
+- 17 de 21 rotas (81%) estão bloqueadas pela #358 em uso central.
+- 4 alta-prontidão estão em B (`/privacidade`, `/parlamentares/[id]/gastos`,
+  e a piloto que já foi); 1 está B-periférico (`/feed`); 2 são "vazias"
+  Clerk (sign-in/sign-up).
+- Resolver #358 destrava **17 rotas de uma vez**. Migrar mais uma rota A
+  (das 2 candidatas restantes) destrava 1 rota com aprendizado
+  marginal e deixa o resto do plano de migração travado.
+
+Análogo ao padrão `asChild` no RDS (issue #154 do RDS): resolver o
+bloqueador único que destrava muitos casos é mais alavancado que migrar
+um caso neutro. Aqui o paralelo é direto.
+
+### Sequência operacional sugerida
+
+1. **Próximo PR** = correção do resíduo `--primary`/`--ring`/`--chart-1`
+   (e revisão de `--accent`) seguindo o critério de aceite da #358.
+   Revisão visual antes/depois nas rotas mais visíveis (home,
+   `/parlamentares`, `/parlamentares/[id]`, `/painel`).
+2. **Após #358 fechar**, retomar a fila pela ordem da §3 atualizada:
+   `/parlamentares/[id]/gastos` (1 bloqueador cat. 3 — N2 do RDS),
+   depois `/privacidade` e `/feed` como rotas de aprendizado, e então
+   as listagens conforme N3/N7 (e demais) fecharem upstream.
+3. **`/sign-in` e `/sign-up`** ficam como rotas-cosmético: chrome puro,
+   migráveis a qualquer momento para fechar o painel de cobertura
+   (não bloqueiam nada).
 
 ## §4 — Notas e premissas
 
