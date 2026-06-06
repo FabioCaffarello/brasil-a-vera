@@ -6,8 +6,8 @@ import { getSiteUrl } from '@/lib/site-url'
 //
 // Estratégia:
 // - Permitir crawlers principais (Google, Bing) com disallow das rotas
-//   privadas (painel, API, dev, auth) e da busca (`?q=` é único por hit
-//   — indexar gera N misses sem benefício).
+//   privadas (painel, API, dev, rds-staging, auth) e da busca (`?q=` é
+//   único por hit — indexar gera N misses sem benefício).
 // - Bloquear crawlers comerciais de SEO (Ahrefs, Semrush, Dot, MJ12) —
 //   gastam CU-hours no Neon sem benefício para projeto cívico. Esses
 //   bots respeitam robots.txt.
@@ -17,7 +17,14 @@ import { getSiteUrl } from '@/lib/site-url'
 //   signals. Owner pode reverter caso decida diferente.
 // - Default `*`: permitir, mas disallow nas rotas privadas/dinâmicas.
 
-const PRIVATE_PATHS = ['/painel', '/api/', '/dev/', '/sign-in', '/sign-up']
+const PRIVATE_PATHS = [
+  '/painel',
+  '/api/',
+  '/dev/',
+  '/rds/',
+  '/sign-in',
+  '/sign-up',
+]
 
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = getSiteUrl()
