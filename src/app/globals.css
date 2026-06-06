@@ -105,7 +105,13 @@
   --surface-overlay: oklch(0.205 0.005 260 / 0.5);
   --border: oklch(0.9 0.005 250);
   --border-strong: oklch(0.83 0.005 250);
-  --primary: oklch(0.32 0.06 248);
+  /* --primary e --ring alinhados à escala navy `--color-primary-*`
+     (issue #358). Antes: OKLCH descolado (`0.32 / 0.36`) que herdava
+     identidade antiga. Agora aponta para a escala canônica definida no
+     @theme acima — mesmo HEX usado pela `brand-primary-*` do RDS 3.x.
+     Light: 700 (navy escuro #243b53) sobre fundo claro; ring 600 (#334e68)
+     como halo um tom mais claro que o BG do botão. */
+  --primary: var(--color-primary-700);
   --primary-foreground: oklch(1 0 0);
   --success: oklch(0.5 0.13 150);
   --success-foreground: oklch(1 0 0);
@@ -113,7 +119,7 @@
   --warning-foreground: oklch(1 0 0);
   --destructive: oklch(0.5 0.18 27);
   --destructive-foreground: oklch(1 0 0);
-  --ring: oklch(0.36 0.06 248);
+  --ring: var(--color-primary-600);
   --accent: oklch(0.45 0.18 295);
   --accent-foreground: oklch(1 0 0);
 
@@ -162,7 +168,13 @@
     --surface-overlay: oklch(0.07 0.006 260 / 0.6);
     --border: oklch(0.3 0.014 260);
     --border-strong: oklch(0.4 0.014 260);
-    --primary: oklch(0.65 0.19 260);
+    /* --primary, --ring e --chart-1 alinhados à escala navy
+       `--color-primary-*` (issue #358). Antes: `oklch(0.65 0.19 260)`
+       = #438aff (vibrante) que NÃO era a identidade exportada ao RDS.
+       Agora: navy-500 para BG de botão, navy-400 para focus ring e
+       primeira série de chart (mais claro = legível sobre fundo dark).
+       chart-1 light segue Okabe-Ito (Wave 9 PR5) — só o dark muda. */
+    --primary: var(--color-primary-500);
     --primary-foreground: oklch(0.14 0.012 260);
     --success: oklch(0.72 0.18 150);
     --success-foreground: oklch(0.12 0 0);
@@ -170,11 +182,11 @@
     --warning-foreground: oklch(0.15 0 0);
     --destructive: oklch(0.55 0.2 27);
     --destructive-foreground: oklch(0.99 0 0);
-    --ring: oklch(0.65 0.19 260);
+    --ring: var(--color-primary-400);
     --accent: oklch(0.62 0.22 295);
     --accent-foreground: oklch(0.14 0.012 260);
 
-    --chart-1: oklch(0.65 0.19 260);
+    --chart-1: var(--color-primary-400);
     --chart-2: oklch(0.72 0.18 150);
     --chart-3: oklch(0.66 0.22 25);
     --chart-4: oklch(0.62 0.22 295);
@@ -192,7 +204,9 @@
   --surface-overlay: oklch(0.07 0.006 260 / 0.6);
   --border: oklch(0.3 0.014 260);
   --border-strong: oklch(0.4 0.014 260);
-  --primary: oklch(0.65 0.19 260);
+  /* Espelho byte-idêntico do bloco @media acima (issue #358):
+     --primary navy-500, --ring navy-400, --chart-1 navy-400. */
+  --primary: var(--color-primary-500);
   --primary-foreground: oklch(0.14 0.012 260);
   --success: oklch(0.72 0.18 150);
   --success-foreground: oklch(0.12 0 0);
@@ -200,11 +214,11 @@
   --warning-foreground: oklch(0.15 0 0);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --ring: oklch(0.65 0.19 260);
+  --ring: var(--color-primary-400);
   --accent: oklch(0.62 0.22 295);
   --accent-foreground: oklch(0.14 0.012 260);
 
-  --chart-1: oklch(0.65 0.19 260);
+  --chart-1: var(--color-primary-400);
   --chart-2: oklch(0.72 0.18 150);
   --chart-3: oklch(0.66 0.22 25);
   --chart-4: oklch(0.62 0.22 295);
