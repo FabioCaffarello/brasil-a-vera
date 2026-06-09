@@ -1,25 +1,31 @@
-## Prontidão de migração por rota — brasil-a-vera × RDS 3.3.1
+## Prontidão de migração por rota — brasil-a-vera × RDS
 
-> Data 2026-06-06 · Branch `docs/route-readiness` · Read-only
+> Análise original: 2026-06-06 com RDS 3.3.1 · Branch `docs/route-readiness`.
+> Reavaliação: 2026-06-09 (§3.6, §3.7) com RDS 3.7.0 publicado e fix #358
+> resolvido.
 >
 > Fonte de categorias: `docs/migration/migration-matrix.md` (mergeado em #355).
 > Inventário-base: `docs/migration/component-inventory.md`. Drafts E1–E12
 > (enhancements) e N1–N9 (novos componentes) referenciam essa matriz.
 
-## Resumo executivo
+## Resumo executivo (atualizado 2026-06-09)
 
 - 21 rotas de produção analisadas (`app/**/page.tsx`, excluindo `rds/`, `dev/`,
   `docs/`, `api/`).
-- **Alta prontidão:** 6 rotas (`/feed`, `/privacidade`, `/partidos/[sigla]`,
-  `/sign-in`, `/sign-up`, `/parlamentares/[id]/gastos`).
-- **Média prontidão:** 12 rotas (todas as listagens, home, e as 6 superfícies do
-  painel).
-- **Baixa prontidão:** 3 rotas — exatamente os 3 perfis de detalhe
-  (`/parlamentares/[id]`, `/proposicoes/[tipo]/[numero]/[ano]`,
-  `/votacoes/[id]`), todos com o mesmo trio de bloqueadores estruturais.
-- **Recomendação:** migrar primeiro **`/partidos/[sigla]`** — zero bloqueadores
-  cat. 3, exercita o padrão dominante (componentes domain-coupled consumindo
-  primitivas do RDS).
+- **Alta prontidão hoje: 8 rotas** (subiu de 6 pós-fix #358 + RDS 3.7.0).
+  Inclui agora **os 3 perfis de detalhe**, que estavam em baixa por causa do
+  trio `KpiStrip + SectionCard + SectionNav` — os três bloqueadores fecharam
+  upstream no RDS.
+- **Média prontidão hoje: 12 rotas** (todas com 1 bloqueador único pendente
+  — geralmente `HeroSection #163` ou `FilterChips #162`).
+- **Baixa prontidão: 0** (era 3 — todos os perfis subiram).
+- **Recomendação original:** `/partidos/[sigla]` — **migrada** como piloto-1.
+- **Recomendação atualizada:** próxima rota é um dos **3 perfis de detalhe**,
+  preferencialmente **`/parlamentares/[id]`** (menos denso, lote único com os
+  outros dois). Detalhamento em §3.7.
+
+> Tabelas e narrativa originais preservadas abaixo (§1–§3) para histórico.
+> Reavaliação em §3.6 e §3.7.
 
 ## §1 — Tabela de prontidão
 
@@ -27,6 +33,9 @@ Ordenada por score (alta → baixa), depois por nº total catalogado.
 `cat.X` = quantidade de componentes da matriz naquela categoria que a rota usa.
 `Total` = soma. Chrome do root layout (Navbar/Footer/Toaster) entra em todas
 as rotas que não sobrescrevem o root layout — toda a coluna conta com eles.
+
+> **Esta tabela é da análise original (2026-06-06).** Para a reavaliação com
+> o estado atual do RDS (3.7.0) e o efeito do fix #358, ver §3.6 e §3.7 abaixo.
 
 | Rota | Total | cat. 1 | cat. 2 | cat. 3 | cat. 4 | Bloqueadores cat. 3 | Score | Faixa #358 |
 | --- | ---: | ---: | ---: | ---: | ---: | --- | :---: | :---: |
@@ -442,6 +451,159 @@ um caso neutro. Aqui o paralelo é direto.
 3. **`/sign-in` e `/sign-up`** ficam como rotas-cosmético: chrome puro,
    migráveis a qualquer momento para fechar o painel de cobertura
    (não bloqueiam nada).
+
+## §3.6 — Reavaliação (2026-06-09): bloqueadores resolvidos
+
+Desde a análise original, três coisas mudaram que alteram materialmente a
+fila de prontidão:
+
+### Fix #358 + follow-up #363: resíduo `--primary` resolvido
+
+A coluna "Faixa #358" da tabela §1 é **histórica**. O resíduo foi corrigido
+em `main` por:
+
+- [PR #361](https://github.com/FabioCaffarello/brasil-a-vera/pull/361) — repontou `--primary`, `--ring`,
+  `--chart-1` para a escala navy local.
+- [PR #363](https://github.com/FabioCaffarello/brasil-a-vera/pull/363) — ajustou contraste (navy-500 →
+  navy-400 dark + cascata) após detecção retroativa de regressões AA.
+
+O app inteiro consome a identidade navy correta em ambos os temas, com AA
+body confirmado em todos os pares texto/marca. **Toda rota que estava em
+"Faixa B" por uso central de cor de marca agora migra sem conflito.**
+
+Dívida estrutural rastreada (não bloqueia esta fila): issue
+[#362](https://github.com/FabioCaffarello/brasil-a-vera/issues/362) — promover `wcag-check` ao CI.
+
+### RDS 3.7.0 publicado — 4 dos 6 bloqueadores cat. 3 fechados
+
+Confirmação factual (versões publicadas no npm registry, lista de exports
+real da 3.7.0 inspecionada):
+
+| Issue RDS | Draft | Componente | Status | Como o RDS cobre |
+|---|---|---|:---:|---|
+| #164 | N7 | `StatsGrid` | ✅ closed | `StatGroup` com `layout="grid"` (`./server`, divisores 1px via `bg-line-default gap-px`) |
+| #165 | N1 | `SectionCard` | ✅ closed | Padrão **compound** com `Card + CardHeader + CardTitle + CardSubtitle + CardBody + CardActions` (todos em `./server`) |
+| #166 | N4 | `KpiStrip` | ✅ closed | `StatGroup` com `layout="strip"` — **mesmo componente** que cobre N7 |
+| #167 | N6 | `SectionNav` | ✅ closed | Hook `useScrollSpy` em `.` (client). Componente visual da nav fica como composição do consumer (`<nav>` + `<NavLink>` + plumbing do hook). |
+| #162 | N2 | `FilterChips` | ⚠️ **open** | Stack v3.7 não tem prop `wrap` (confirmado em `dist/ui/.../Stack.d.ts`); FilterChips wrapper segue aberto |
+| #163 | N3 | `HeroSection` | ⚠️ **open** | sem componente equivalente exportado |
+
+**Confirmação independente:**
+
+```
+$ node -e "import('@fabio.caffarello/react-design-system').then(m => {
+    const k = Object.keys(m);
+    for (const n of ['StatGroup','Stat','useScrollSpy','HeroSection','FilterChips'])
+      console.log((k.includes(n)?'✓':'✗'), n);
+})"
+✓ StatGroup
+✓ Stat
+✓ useScrollSpy
+✗ HeroSection
+✗ FilterChips
+```
+
+`./server` agora expõe 32 componentes (era 21 na 3.3.1) incluindo `Stack`,
+`PageHeader`, `CardHeader/Title/Subtitle/Body/Actions`, `Stat`, `StatGroup`,
+`Label`, `Separator`, `Badge`, `Card`, `Chip` — a expansão de
+apresentacionais (anteriormente issue #155) está consolidada.
+
+### Estado da versão no consumidor
+
+`package.json` declara `^3.3.1`; latest publicado é **3.7.0**. **Próxima rota
+exige bumpar.** Atualizar para `^3.7.0` (ou `^3.4.0` se quiser mínimo viável)
+é pré-requisito operacional, não bloqueador conceitual.
+
+## §3.7 — Prontidão revisada (2026-06-09)
+
+Mantendo a contagem original de componentes catalogados, só atualizando a
+coluna "Bloqueadores cat. 3 (abertos)" e o "Score":
+
+| Rota | Total | Bloqueadores cat. 3 (atualizado) | Score (atualizado) |
+| --- | ---: | --- | :---: |
+| `/feed` | 3 | — | **alta** |
+| `/privacidade` | 3 | — | **alta** |
+| `/sign-in` | 5 | — | **alta** |
+| `/sign-up` | 5 | — | **alta** |
+| `/partidos/[sigla]` | 7 | — (piloto migrada) | **alta** |
+| `/parlamentares/[id]` | 11 | — (N1, N4, N6 resolvidos) | **alta** ⬆ era baixa |
+| `/proposicoes/[tipo]/[numero]/[ano]` | 15 | — (N1, N4, N6 resolvidos) | **alta** ⬆ era baixa |
+| `/votacoes/[id]` | 17 | — (N1, N4, N6 resolvidos) | **alta** ⬆ era baixa |
+| `/parlamentares/[id]/gastos` | 6 | `FilterChips (#162 N2)` | média |
+| `/comparar` | 8 | `HeroSection (#163 N3)` (N1 resolvido) | média |
+| `/busca` | 10 | `HeroSection (#163 N3)` (N1 resolvido) | média |
+| `/parlamentares` | 10 | `HeroSection (#163 N3)` (N7 resolvido) | média |
+| `/proposicoes` | 10 | `HeroSection (#163 N3)` (N7 resolvido) | média |
+| `/votacoes` | 10 | `HeroSection (#163 N3)` (N7 resolvido) | média |
+| `/` (home) | 12 | `HeroSection (#163 N3)` (N1, N5 — KpiCard ainda draft) | média |
+| `/painel` (entry) + 5 slots | 7–11 | `TabBar / SubTabs (N8, sem issue aberta)` | média |
+
+### Movimento principal: os 3 perfis subiram de baixa → alta
+
+Os perfis `/parlamentares/[id]`, `/proposicoes/[tipo]/[numero]/[ano]` e
+`/votacoes/[id]` compartilhavam o mesmo trio de bloqueadores
+`KpiStrip + SectionCard + SectionNav`. **Os três foram resolvidos no RDS** — N7
+(StatGroup), N1 (Card compound), N6 (useScrollSpy). As três rotas continuam
+estruturalmente idênticas em prontidão; agora as três são **alta** com
+**zero bloqueador aberto**.
+
+### Distribuição atualizada
+
+| Score | Quantidade | Rotas |
+|---|---:|---|
+| Alta (0 bloqueador aberto) | **8** | `/feed`, `/privacidade`, `/sign-in`, `/sign-up`, `/partidos/[sigla]` (migrada), `/parlamentares/[id]`, `/proposicoes/[…]`, `/votacoes/[id]` |
+| Média (1 bloqueador aberto) | 12 | listagens + home + painel |
+| Baixa | 0 | — |
+
+### Recomendação da próxima rota
+
+**Migrar um dos 3 perfis de detalhe — preferencialmente `/parlamentares/[id]`.**
+
+Por quê:
+
+- **Zero bloqueador aberto.** As issues #164/#165/#166/#167 que travavam o
+  trio fecharam upstream.
+- **Alto valor de validação.** Exercita pela primeira vez `StatGroup`
+  (`layout="strip"` no `KpiStrip` semântico do perfil), o padrão `Card`
+  compound (substituindo o `SectionCard` local), e `useScrollSpy`
+  (substituindo o `SectionNav` local). Três componentes novos do RDS
+  validados em uso real numa mesma rota.
+- **Lote único.** Os 3 perfis compartilham estrutura — migrar
+  `/parlamentares/[id]` **ensina os outros dois**. Padrão depois replicado
+  para proposições e votações com fricção marginal.
+- **Por que `/parlamentares/[id]` e não os outros dois.** É a **menos densa**
+  do trio (11 componentes catalogados vs 15 de proposições e 17 de votações;
+  votações tem cauda complexa com hemiciclo SVG + charts; proposições tem
+  tramitação + autores). Para piloto de "exercitar 3 componentes novos do
+  RDS", `/parlamentares/[id]` é o menor playground útil que valida o trio
+  sem distração de cauda específica de domínio.
+
+### Bloqueadores abertos para a rota recomendada — nenhum
+
+- N1 (SectionCard) — ✅ closed
+- N4 (KpiStrip) — ✅ closed
+- N6 (SectionNav) — ✅ closed
+- Cat. 2 — `Accordion` (E4) usado no perfil. RDS tem `Accordion` declarativo
+  (`items: []`); padrão diverge do shadcn-compound. Pode ser migrado
+  ajustando a chamada, sem precisar de issue. Não bloqueia.
+- Outras dependências (`Card`, `Text`, `Skeleton`, `Badge`, `Progress`) já
+  estavam disponíveis em `./server` desde 3.3.1.
+
+### Pré-requisitos operacionais
+
+- **Bump do RDS para 3.7.0** (consumidor está em 3.3.1; `^3.7.0` ou `^3.4.0`).
+- Após o bump, repetir o smoke das rotas `/rds/smoke-*` para confirmar que
+  não houve regressão das fundações que validamos na adoção 3.3.1.
+- A piloto `/rds/partidos/[sigla]` por construção (não usa nenhum dos
+  componentes que mudaram entre 3.3.1 e 3.7.0) deve permanecer idêntica;
+  útil como regression check.
+
+### Ordem da segunda onda (após o lote dos 3 perfis)
+
+- `/parlamentares/[id]/gastos` — aguarda **#162 (FilterChips)**.
+- Home + 5 listagens — aguardam **#163 (HeroSection)**.
+- Painel + 5 slots — aguardam **N8 (TabsAsLinks/SubTabs)**, que não tem
+  issue aberta no RDS ainda (ainda é só draft no `migration-matrix.md`).
 
 ## §4 — Notas e premissas
 
