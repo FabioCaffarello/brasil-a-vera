@@ -28,6 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      # Matriz determinística dos hooks do .claude/ (shell + jq, ~5s).
+      # Roda SEMPRE, sem path filter: a suíte ficou vermelha por ~3
+      # semanas pós-Wave 10 porque só rodava manualmente (PR #365), e
+      # path filter criaria check "expected" eterno se fosse promovido
+      # a required. Inclui o caso de consistência ROLES.md ↔ matchers.
+      - name: Hooks test matrix (.claude)
+        run: bash .claude/hooks/__tests__/test-hooks.sh
+
       - uses: actions/setup-node@v6
         with:
           node-version: 22
