@@ -117,13 +117,17 @@ src/
 └── lib/                  # Utilitários gerais
 ingestion/                # Scripts ETL standalone (não Next.js)
 docs/
-├── adr/                  # Architecture Decision Records ativos
-├── future/               # Visão futura, não compromisso de implementação
+├── architecture/         # Modelos, diagramas, princípios; ADRs ativos em ADR/
 ├── product/              # PRODUCT-VISION, ROADMAP, PERSONAS, METRICS
-├── architecture/         # Modelos, diagramas, princípios
 ├── domain/               # Glossário e processo legislativo
-├── contributing/         # Guias para contribuidores
-└── features/             # Specs de features em escopo (Wave 0-2)
+├── contributing/         # Guias para contribuidores (inclui WORKFLOWS.md)
+├── features/             # Specs de features em escopo
+├── design/               # Tokens, planos de design e handoffs
+├── migration/            # Migração RDS em curso (matriz, playbook, débitos)
+├── ops/                  # Runbooks operacionais
+├── releases/             # Release notes por versão
+├── seeds/                # Documentos fundacionais (não alterar)
+└── future/               # Visão futura, não compromisso de implementação
 
 ## Convenções
 
