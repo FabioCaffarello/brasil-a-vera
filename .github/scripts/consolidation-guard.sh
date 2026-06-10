@@ -25,6 +25,11 @@
 #                                        por mandato do playbook)
 #   criada (A) fora da tabela          → checagem 3 (assert inverso)
 #   modificada (M/D/R) sem o original  → checagem 2 (drift de espelho)
+#
+# Rename (R/R100/renamed) é deliberadamente não-A: o path antigo some
+# da tabela, então o aviso (checagem 2 no path registrado, checagem 3
+# no path novo) é o comportamento desejado — a política de espelhamento
+# manda PARAR em mudança estrutural, e rename é mudança estrutural.
 set -uo pipefail
 
 DEBT_MD="${1:-docs/migration/consolidation-debt.md}"

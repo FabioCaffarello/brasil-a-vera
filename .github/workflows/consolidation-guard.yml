@@ -20,6 +20,12 @@ on:
       - 'src/components/**'
       - 'src/app/rds/**'
       - 'docs/migration/consolidation-debt.md'
+      # Auto-referência: PR que toca o guard exercita o guard — o
+      # chamador (API → status\tpath) roda de ponta a ponta mesmo com
+      # zero pares, eliminando por construção o gap "metade nova do
+      # workflow nunca rodou" (lição do fix #380/#381).
+      - '.github/workflows/consolidation-guard.yml'
+      - '.github/scripts/consolidation-guard.sh'
 
 permissions:
   pull-requests: write
