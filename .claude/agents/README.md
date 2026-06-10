@@ -1,7 +1,5 @@
 # .claude/agents/ — subagents
 
-> Placeholder do PR 1. Primeiro subagent entra no PR 5 da Sprint 5.0.
-
 Subagents são Claudes com contexto isolado, system prompt próprio e
 ferramentas limitadas. Cada um vive em um arquivo `.md` com frontmatter
 YAML (`name`, `description`, `tools`, `model`).
@@ -15,11 +13,20 @@ YAML (`name`, `description`, `tools`, `model`).
 - Description orienta o orchestrator quando invocar; usar "USE
   PROATIVAMENTE quando..." quando o caso for óbvio.
 
-## Subagents previstos para a Sprint 5.0
+## Subagents ativos
 
-| Nome | Função | PR |
-|---|---|---|
-| `design-system-curator` | Adicionar/revisar primitivas shadcn-curadas seguindo os 7 passos do ADR-021 | PR 5 |
+| Nome | Função |
+|---|---|
+| `design-system-curator` | Adicionar/revisar primitivas curadas seguindo o ADR-021 (regras remanescentes pós-[ADR-033](../../docs/architecture/ADR/033-adocao-react-design-system-externo.md)) |
 
-Não criar outros subagents nesta sprint. Evidência empírica primeiro,
-agente depois.
+## Histórico
+
+- `frontend-skin-helper` — criado na Sprint 6.0 para o reskin Wave 6
+  (composições HeroSection/KpiStrip/SectionCard etc.); aposentado em
+  2026-06-10: o reskin terminou na Wave 6 e o contrato (label
+  `auto-merged-wave-6`, prompt mestre Wave 6, "tokens fechados na
+  Sprint 6.0") ficou 4 waves desatualizado enquanto a description
+  proativa continuava disparando. Eventual sucessor para a migração
+  RDS exige gargalo próprio (ADR-019), não substituição automática.
+
+Evidência empírica primeiro, agente depois.

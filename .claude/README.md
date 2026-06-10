@@ -31,7 +31,7 @@ projeto. O `.gitignore` permite apenas estado verdadeiramente local:
 
 | Caminho | Conteúdo |
 |---|---|
-| `agents/` | Subagents (`.md` com YAML frontmatter). Hoje: `design-system-curator` e `frontend-skin-helper`. |
+| `agents/` | Subagents (`.md` com YAML frontmatter). Hoje: `design-system-curator`. |
 | `skills/` | Slash commands. Hoje: 6 (`add-primitive`, `design-token-check`, `visual-qa`, `plan-sprint`, `new-adr`, `release-notes`). |
 | `hooks/` | Hooks shell (PreToolUse / PostToolUse). Hoje: 3 hooks + 2 libs + matriz de teste. |
 | `docs/` | Onboarding humanos + `ROLES.md`. |
