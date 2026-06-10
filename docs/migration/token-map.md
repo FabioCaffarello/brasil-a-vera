@@ -103,7 +103,22 @@ Idênticos em ambos os lados (utilities Tailwind padrão, não tokens semântico
 `justify-*`, `rounded-*`, `size-*`, `shrink-0`, `transition`,
 `hover:*`, `focus-visible:*`, `outline-none`.
 
-## Como aplicar — regra de uso na migração
+## Extensão piloto-2 (`/rds/parlamentares/[id]`)
+
+Tokens que apareceram na piloto-2 e não estavam previstos na tabela
+original. Valores dark comparados (BaV `globals.css` × RDS 3.7.0
+`react-design-system.css`).
+
+| classe BaV | classe RDS | valor BaV (dark) | valor RDS (dark) | Δ | nota |
+|---|---|---|---|---|---|
+| `bg-success/N` | `bg-success/N` (sem tradução) | `--success` `oklch(0.72 0.18 150)` ≈ `#2fc26b` | `--color-success` → `emerald-400` `#34d399` | próximo | RDS também define `--color-success`; utility homônima. Usos: DistribuicaoBar (`/30`), badges voto (`/20` via lib) |
+| `bg-warning/N`, `border-warning/N` | (sem tradução) | `--warning` `oklch(0.78 0.16 75)` | `--color-warning` → `amber-400` `#fbbf24` | próximo | idem; usos: caixas de pares (`/40`, `/5`, `/10`) |
+| `bg-destructive/N` | `bg-error/N` | `--destructive` `oklch(0.55 0.2 27)` ≈ `#cc2827` | `--color-error` → `rose-400` `#fb7185` | aceitável | RDS error é rose (mais claro/rosado). Calibragem prevista na tabela original (§Status) confirmada na piloto-2 |
+| `text-destructive` | `text-fg-error` | idem acima | `fg-error` → `rose-400` | aceitável | já previsto na tabela original; primeiro uso real |
+| `stroke-border` | `stroke-line-default` | `--border` `#2a2e35` | `line-default` → `slate-700` `#334155` | próximo | linha de referência 50% da Sparkline |
+| `text-brand` (active state) | `text-fg-brand` | `--primary` → navy-400 `#7390ad` (pós-#358) | `fg-brand` → `brand-primary-400` `#7390ad` | **idêntico** | pós-#358 a marca é byte-idêntica dos dois lados |
+| `bg-brand/10` (active state) | `bg-fg-brand/10` | navy-400 @10% | brand-primary-400 @10% | **idêntico** | pixel match contra semântica (mesmo precedente do `line-emphasis`); `surface-brand` seria brand-500, mais escuro |
+| `text-accent`, `fill-accent` | **sem equivalente — MANTIDO** | `--accent` `oklch(0.62 0.22 295)` (roxo data-viz) | `brand-accent` → `cyan-400` | **divergente** | roxo de data-viz do BaV não existe no RDS (accent upstream é cyan). Mantido o token BaV na cópia (Sparkline, link drill-down). Candidato a issue upstream futura se o padrão se repetir nos outros perfis |
 
 A tabela canônica acima é a **fonte única de cor**. Sua aplicação na migração
 segue duas regras objetivas:
