@@ -11,7 +11,7 @@ export default function RdsStagingLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="dark min-h-screen bg-background text-foreground">
+    <div className="dark min-h-screen bg-surface-canvas text-fg-primary">
       {children}
     </div>
   )
