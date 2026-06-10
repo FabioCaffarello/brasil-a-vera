@@ -42,6 +42,8 @@ Três capacidades diferenciadoras:
 | [ADR-009 — Cloudflare Workers](architecture/ADR/009-cloudflare-pages.md) | Deploy em Cloudflare Workers (substitui Vercel) |
 | [ADR-011 — Driver de Banco](architecture/ADR/011-database-driver.md) | `drizzle-orm/neon-serverless` + `@neondatabase/serverless` |
 | [ADR-020 — Permanência do Monolito TypeScript](architecture/ADR/020-permanencia-monolito-typescript.md) | Monolito Next.js é a arquitetura-alvo; Go/microserviços descartados (supersede parte dos ADR-002 e ADR-007) |
+| [ADR-021 — Design System shadcn curado](architecture/ADR/021-design-system-shadcn-curado.md) | DS próprio in-repo; parcialmente superseded pelo ADR-033 (curadoria, tokens e boundary permanecem) |
+| [ADR-033 — Adoção do RDS como pacote externo](architecture/ADR/033-adocao-react-design-system-externo.md) | Migração para `@fabio.caffarello/react-design-system` via strangler fig por rota (processo em `migration/`) |
 | [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md) | Mapa de contextos DDD com responsabilidades e relações |
 | [Modelo de Domínio](architecture/DOMAIN-MODEL.md) | Aggregates, entities, value objects e domain events |
 | [Pirâmide de Confiança](architecture/TRUST-PYRAMID.md) | Arquitetura de credibilidade L1–L4 |
@@ -71,6 +73,41 @@ Três capacidades diferenciadoras:
 | [Guia de Contribuição](contributing/CONTRIBUTING.md) | Como contribuir para o projeto |
 | [Estilo de Código](contributing/CODE-STYLE.md) | Padrões de código e linting |
 | [Convenção de Commits](contributing/COMMIT-CONVENTION.md) | Padrão de mensagens de commit |
+| [Workflows do GitHub Actions](contributing/WORKFLOWS.md) | Mapa dos workflows ativos (tabela mantida por convenção) |
+| [Branch Protection](contributing/BRANCH-PROTECTION.md) | Proteção da main vigente |
+
+### Design
+
+| Documento | Descrição |
+|-----------|-----------|
+| [Design Tokens](design/DESIGN-TOKENS.md) | Paleta, contraste WCAG e padrões de uso (inclui §charts) |
+| [Planos de wave (7–9)](design/) | `WAVE-N-*-PLAN*.md` — planos e handoffs de design por wave (registro histórico; wave é metadata, não diretório) |
+
+### Migração RDS (temporário — em curso)
+
+| Documento | Descrição |
+|-----------|-----------|
+| [Matriz de migração](migration/migration-matrix.md) | 133 componentes em 4 categorias × RDS |
+| [Prontidão por rota](migration/route-readiness.md) | 21 rotas classificadas (alta/média/baixa) |
+| [Playbook rota-a-rota](migration/route-migration-playbook.md) | Processo destilado da rota piloto |
+| [Token map](migration/token-map.md) | Tabela canônica de tradução BaV × RDS — fonte única |
+| [Dívida de consolidação](migration/consolidation-debt.md) | Pares cópia-rds × original (vigiada pelo `consolidation-guard` no CI) |
+| [Inventário de componentes](migration/component-inventory.md) | Inventário-base da matriz |
+
+Regra de extinção ([ADR-033 §4](architecture/ADR/033-adocao-react-design-system-externo.md)): quando a migração consolidar, este diretório é **congelado como registro histórico** (banner no topo, sem mudanças posteriores) e o `consolidation-guard.yml` é removido junto.
+
+### Operações
+
+| Documento | Descrição |
+|-----------|-----------|
+| [Higiene do Neon](ops/NEON-HYGIENE.md) | Checklist para o banco continuar scale-to-zero |
+| [Investigação Neon-acordado](ops/INVESTIGATE-NEON-WAKE.md) | Runbook para identificar o que impede o banco de dormir |
+
+### Releases
+
+| Documento | Descrição |
+|-----------|-----------|
+| [Release notes por versão](releases/) | Registro primário por tag (`v0.X.Y-*`) — único eixo temporal de `docs/`; cronologia transversal em [HISTORY.md](HISTORY.md) |
 
 ### Sementes
 
@@ -88,6 +125,16 @@ Três capacidades diferenciadoras:
 4. **Trust level em tudo** — cada dado ou métrica indica seu trust_level (L1, L2, L3, L4)
 5. **Diagramas em Mermaid** — todos os diagramas inline nos markdowns
 6. **Português do Brasil** — exceto termos técnicos consagrados em inglês
+7. **Tipo, não tempo** — `docs/` é organizado por tipo atemporal; wave é metadata
+   no nome/header do arquivo, nunca diretório (`docs/wave-N/` é proibido). O único
+   eixo temporal é `releases/`, uma nota por tag. Planos de wave vivem em
+   `design/` (handoffs) e `product/` (prompts mestres); a cronologia transversal
+   vive em [HISTORY.md](HISTORY.md), alimentado pelo ritual `/release-notes`.
+   Diretórios de esforço temporário (ex.: `migration/`) nascem com regra de
+   extinção registrada em ADR e são congelados como histórico ao concluir.
+8. **Doc vivo exige ritual** — toda tabela/índice que se declara "mantido"
+   precisa de um gatilho que o alimente (skill, convenção de PR ou check no CI);
+   doc sem ritual apodrece (lição WORKFLOWS.md/HISTORY, auditoria 2026-06).
 
 ---
 
