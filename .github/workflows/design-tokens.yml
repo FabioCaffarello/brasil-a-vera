@@ -1,19 +1,29 @@
 name: Design tokens advisory
 
-# Análise estática de tokens legacy em PRs que tocam UI.
-# Roda os mesmos greps do /design-token-check skill (com filtros para
-# JSDoc e issue refs). Advisory inicial — comenta no PR sem falhar.
-# Promoção a required check após 2 sprints sem falsos positivos
-# (Sprint 5.0, princípio 13).
+# Guardião dos tokens — duas guerras (decisão F8 da auditoria do harness,
+# 2026-06-10; dados e teste empírico no PR de decisão):
+#
+# Job "zinc / HEX / primary-N legacy" — legado pré-Wave 4. 50+ runs sem
+#   falso positivo desde a Sprint 5.0 → apto a promoção a required check.
+#   SEM path filter no trigger: required check em workflow path-filtered
+#   fica "expected" para sempre em PR que não toca UI e bloqueia o merge
+#   (comprovado empiricamente — ver PR de decisão). O skip é interno: o
+#   primeiro passo lê os arquivos do PR; sem paths de UI, o job conclui
+#   verde sem rodar os greps.
+#
+# Job "RDS leak advisory" — guerra atual (ADR-033): classes BaV não
+#   traduzidas em src/app/rds/** (tabela canônica:
+#   docs/migration/token-map.md). Check NOVO, sem histórico — nasce
+#   advisory e só é promovível a required após o mesmo critério de 2
+#   sprints sem falso positivo que validou o job legacy. Misturar check
+#   sem histórico num required violaria o próprio critério. Escaneia
+#   apenas os arquivos do PR (achado pré-existente vai em issue, não em
+#   ruído a cada PR).
 #
 # Ver docs/contributing/WORKFLOWS.md.
 
 on:
   pull_request:
-    paths:
-      - 'src/design-system/**'
-      - 'src/components/**'
-      - 'src/app/globals.css'
 
 permissions:
   pull-requests: write
@@ -30,7 +40,22 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Detectar paths de UI no PR (skip interno)
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only > /tmp/changed.txt
+          if grep -qE '^(src/design-system/|src/components/|src/app/globals\.css$)' /tmp/changed.txt; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui=false" >> "$GITHUB_OUTPUT"
+            echo "PR não toca paths de UI — scans pulados, job conclui verde."
+          fi
+
       - name: Scan zinc legacy
+        if: steps.paths.outputs.ui == 'true'
         id: zinc
         run: |
           set +e
@@ -51,6 +76,7 @@ jobs:
           fi
 
       - name: Scan HEX inline in DS/components
+        if: steps.paths.outputs.ui == 'true'
         id: hex
         run: |
           set +e
@@ -73,6 +99,7 @@ jobs:
           fi
 
       - name: Scan bg-primary-N in design-system
+        if: steps.paths.outputs.ui == 'true'
         id: primary
         run: |
           set +e
@@ -93,14 +120,14 @@ jobs:
           fi
 
       - name: Comment on PR if violations
-        if: steps.zinc.outputs.matches != '' || steps.hex.outputs.matches != '' || steps.primary.outputs.matches != ''
+        if: steps.paths.outputs.ui == 'true' && (steps.zinc.outputs.matches != '' || steps.hex.outputs.matches != '' || steps.primary.outputs.matches != '')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ZINC: ${{ steps.zinc.outputs.matches }}
           HEX: ${{ steps.hex.outputs.matches }}
           PRIMARY: ${{ steps.primary.outputs.matches }}
         run: |
-          body="## Design tokens advisory\n\nThis PR introduces or keeps legacy design token usage. The workflow is advisory only (does not block merge) for the first 2 sprints — see Sprint 5.0 plan.\n\n"
+          body="## Design tokens advisory\n\nThis PR introduces or keeps legacy design token usage.\n\n"
           if [ -n "$ZINC" ]; then
             body+="### zinc-\\d+ classes\n\n\`\`\`\n${ZINC}\n\`\`\`\n\n"
           fi
@@ -111,4 +138,57 @@ jobs:
             body+="### bg-primary-N in src/design-system\n\n\`\`\`\n${PRIMARY}\n\`\`\`\n\n"
           fi
           body+="Run \`/design-token-check\` locally for the same scan. See the design-system-curator subagent for token translation guidance."
+          printf '%b' "$body" | gh pr comment ${{ github.event.pull_request.number }} -F -
+
+  rds-leak:
+    name: RDS leak advisory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Detectar paths /rds/ no PR (skip interno)
+        id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only > /tmp/changed.txt
+          files=$(grep -E '^src/app/rds/.*\.(tsx|ts)$' /tmp/changed.txt || true)
+          if [ -n "$files" ]; then
+            echo "rds=true" >> "$GITHUB_OUTPUT"
+            printf '%s\n' "$files" > /tmp/rds-files.txt
+          else
+            echo "rds=false" >> "$GITHUB_OUTPUT"
+            echo "PR não toca src/app/rds/ — scan pulado, job conclui verde."
+          fi
+
+      - name: Scan classes BaV não traduzidas (token-map.md)
+        if: steps.paths.outputs.rds == 'true'
+        id: leak
+        run: |
+          set +e
+          matches=$(xargs -a /tmp/rds-files.txt grep -En \
+            'foreground|border-border|bg-background|ring-ring|surface-elevated|surface-overlay|text-(success|warning|destructive)([^-a-z]|$)|bg-zinc-[0-9]+|text-zinc-[0-9]+|#[0-9a-fA-F]{3,8}' \
+            2>/dev/null \
+            | grep -vE ':\s*(//|\*|/\*)' \
+            | grep -vE '#[0-9]+([^0-9a-fA-F]|$)')
+          if [ -n "$matches" ]; then
+            echo "Found BaV classes in /rds/:"
+            echo "$matches"
+            {
+              echo 'matches<<EOF'
+              echo "$matches"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "RDS LEAK: clean"
+          fi
+
+      - name: Comment on PR if leaks
+        if: steps.paths.outputs.rds == 'true' && steps.leak.outputs.matches != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LEAK: ${{ steps.leak.outputs.matches }}
+        run: |
+          body="## RDS leak advisory\n\nClasses do design system BaV (não traduzidas) em arquivos deste PR sob \`src/app/rds/\`:\n\n\`\`\`\n${LEAK}\n\`\`\`\n\nFonte única de tradução: \`docs/migration/token-map.md\` (regra do playbook: nenhuma tradução ad-hoc). Se o uso for deliberado, registre a exceção no token-map.\n\n_Advisory sem histórico de falsos positivos — promoção a required só após 2 sprints limpos (mesmo critério do job legacy)._"
           printf '%b' "$body" | gh pr comment ${{ github.event.pull_request.number }} -F -
