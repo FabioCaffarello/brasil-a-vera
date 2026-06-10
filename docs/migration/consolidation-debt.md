@@ -57,6 +57,26 @@ Composições substituídas por upstream SEM cópia: `KpiStrip` → `StatGroup`+
 do `/server` direto no `page.tsx` (borda externa via className; tone map
 `default/muted→neutral`, `destructive→error`).
 
+### Piloto-3 — `/rds/proposicoes/[tipo]/[numero]/[ano]`
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/components/proposicao/perfil-header.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/perfil-header.tsx` | médio | badge sólido TRANSFORMADA_EM_NORMA mantém `bg-success text-success-foreground` (resíduo on-color, extensão piloto-3 do token-map) |
+| `src/components/proposicao/autores-list.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/autores-list.tsx` | baixo | PartyBadge local mantido |
+| `src/components/proposicao/barra-progresso-tramitacao.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/barra-progresso-tramitacao.tsx` | médio | `brand→fg-brand` (byte-idêntico pós-#358); usada também pelo ProposicaoCard da listagem — original intocado |
+| `src/components/proposicao/footer-cross-links.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/footer-cross-links.tsx` | baixo | contratos de fallback exatos |
+| `src/components/proposicao/temas-list.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/temas-list.tsx` | baixo | zero deps |
+| `src/components/proposicao/tramitacao-timeline.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/tramitacao-timeline.tsx` | médio | filtros + cursor pagination; FilterChips local (#162) |
+| `src/components/proposicao/votacoes-vinculadas.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/votacoes-vinculadas.tsx` | médio | filtros mini exatos; FilterChips local (#162) |
+| `src/design-system/compositions/section-card.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 (Card compound) |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia da piloto-2 (IntersectionObserver; swap em RDS #203) |
+
+Client islands importados dos originais (sem cópia, precedente
+piloto-2): `ApoioPartidoChart`/`VotosConsolidadosChart` (recharts,
+dynamic ssr:false), `CompartilharProposicaoButton`, `TrustBadge`.
+`KpiStrip` → `StatGroup`+`Stat` do `/server` direto no `page.tsx`
+(tone map `STAT_TONE` no próprio arquivo).
+
 ### Pendências upstream / client islands (piloto-2)
 
 - **Accordion mobile**: primitiva Radix LOCAL (`src/design-system/primitives/accordion`)

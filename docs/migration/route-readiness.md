@@ -667,7 +667,63 @@ Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
 data-viz nas Sparklines e links de drill-down). É token do projeto
 (ADR-024) sem razão para o RDS absorver — a não-equivalência registrada
 na extensão piloto-2 do `token-map.md` é o destino final, não um estado
-transitório.
+transitório. O `text-success-foreground` (extensão piloto-3) tem o
+mesmo regime.
+
+## §3.10 — Execução da piloto-3 (2026-06-10) + medição de fricção
+
+**`/rds/proposicoes/[tipo]/[numero]/[ano]` no ar** (PR piloto-3),
+repetindo o padrão da piloto-2. O mandato desta fase era duplo: migrar
+E medir quanto do trabalho é receita mecânica vs julgamento — o dado
+que a decisão B (agent `rds-route-migrator`) esperava.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 7 componentes de domínio duplicados+traduzidos (tabela canônica cobriu
+  todas as classes exceto 1; tradução 1:1, zero hesitação).
+- `section-card`/`section-nav`: reuso **verbatim** das cópias da
+  piloto-2 (zero adaptação — só o header de comentário).
+- `page.tsx`: substituições idênticas à piloto-2 (StatGroup+Stat com o
+  tone map já estabelecido, Accordion local via §3.9, base href `/rds/`,
+  metadata `(rds-pilot)`).
+- Client islands (charts recharts, CompartilharButton, TrustBadge,
+  PartyBadge, FilterChips): precedente da piloto-2 aplicado sem
+  reanálise.
+- Validação: mesmo protocolo (build + check + curl lado a lado + delta
+  de chunk: **+19 bytes**, idêntico à piloto-2).
+
+**Julgamento** — decisão caso-a-caso:
+
+1. `text-success-foreground` (badge sólido TRANSFORMADA_EM_NORMA):
+   token fora do mapa → manter como resíduo (RDS sem par on-color).
+   **Mas a decisão é da classe já conhecida** — é a mesma régua do
+   `accent` da piloto-2 (token do projeto sem razão de absorção
+   upstream), aplicada a um caso novo. Custo: ~minutos.
+2. Escolha da rota (proposições vs votações): lógica da §3.7 reaplicada
+   (menor playground útil). Trivial.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Os percalços upstream da
+piloto-2 (#202 Accordion, #203 hooks) foram contornados pela §3.9 sem
+redescoberta. Nenhum gap upstream novo; nenhuma issue nova no RDS.
+
+### Leitura para a decisão B
+
+Pelo critério fixado ("se o piloto-3 sair majoritariamente mecânico e
+os percalços forem da classe já conhecida, o gargalo ADR-019 está
+documentado e o agent nasce"): **o critério foi satisfeito.** 10
+arquivos criados, 1 decisão de token (de classe conhecida), zero
+falsificação. O trabalho de julgamento residual é exatamente o que um
+agent escala para o humano: token fora do mapa → parar e perguntar.
+Contrato do agent deve REFERENCIAR `docs/migration/*` (playbook,
+token-map, §3.9), não inliná-los.
+
+### Efeito na fila
+
+Resta **`/votacoes/[id]`** para fechar o trio (17 componentes, cauda
+com hemiciclo SVG — o teste de stress natural do padrão, e candidato a
+primeira rota do agent se a decisão B confirmar).
 
 ## §4 — Notas e premissas
 

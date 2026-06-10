@@ -188,6 +188,21 @@ Exemplos da rota piloto:
 A regra reduz o `<Text>` ao seu valor real (escala tipográfica centralizada)
 e mantém a tabela como única fonte de cor.
 
+## Extensão piloto-3 (`/rds/proposicoes/[tipo]/[numero]/[ano]`)
+
+Um token novo e uma classe de pendência:
+
+| classe BaV | classe RDS | valor BaV (dark) | valor RDS (dark) | Δ | nota |
+|---|---|---|---|---|---|
+| `text-success-foreground` | **sem equivalente — MANTIDO** | `--success-foreground` `oklch(0.12 0 0)` (on-color quase-preto) | n/a — RDS tem `success-bg` (tint emerald-950) e `fg-success`, mas nenhum token on-success para bg sólido | **divergente** | usado no badge sólido `bg-success text-success-foreground` (TRANSFORMADA_EM_NORMA — "virou lei" como pinnacle). Mesmo destino do `accent`: token do projeto, resíduo registrado. Reavaliar se o RDS ganhar par on-color |
+
+Pendência (não traduzida, fora do escopo de classe Tailwind): os charts
+recharts (`apoio-partido-chart.tsx`, `votos-consolidados-chart.tsx`)
+usam `hsl(var(--success))`/`var(--accent)` e `color-mix(in oklch, …)`
+inline em props. São client islands compartilhados importados dos
+originais (precedente piloto-2) — calibram na promoção, junto com
+`getTipoVotoStyle`.
+
 ## Tokens idênticos (sem tradução)
 
 Estes são aliases que **não precisam ser substituídos** porque o nome é o
