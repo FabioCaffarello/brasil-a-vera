@@ -146,6 +146,31 @@ chamada. O contraste no mesmo dia: a validação do consolidation-guard
 tinha como pior caso um merge — e ele aconteceu. O artefato foi removido
 no #374 e o incidente registrado com transparência no próprio #373.
 
+### A trilogia do contrafactual — verde só vale com vermelho demonstrado (#368, #372, #379)
+
+Três validações da mesma família, em escalada de custo decrescente, que
+cristalizaram o padrão: **check verde não prova semântica; prova é
+demonstrar o vermelho que apareceria se o invariante quebrasse.**
+
+1. **#368** — o caso de consistência ROLES.md ↔ matchers no CI: depois
+   de 3 semanas de suíte vermelha invisível, o fix incluiu um teste que
+   *falha* quando a tabela e o matcher divergirem de novo.
+2. **#372** — validação e2e do consolidation-guard via PR descartável:
+   antes de confiar no guard, provocou-se deliberadamente o aviso que
+   ele deveria emitir.
+3. **#379** — a forma mais barata: na primeira carga real do guard (9
+   pares de uma vez), um comando local rodou o script contra a tabela
+   **pré-PR** e contou os 9 avisos que teriam aparecido sem o registro
+   — prova de que o verde era "tabela atualizada", não "silêncio
+   acidental". Custo: um comando. De quebra, expôs o falso positivo da
+   checagem 2 (#380, corrigido com a mesma disciplina: fixture do #379
+   zerando avisos + caso sintético mantendo o aviso legítimo).
+
+O padrão é repertório, não cerimônia: sempre que um guard novo passar
+verde pela primeira vez em carga real, perguntar "qual comando me
+mostra o vermelho contrafactual?" — se a resposta custa um comando,
+não há desculpa para não rodá-lo.
+
 ---
 
 ## Origem dos princípios 8–13 do CLAUDE.md
