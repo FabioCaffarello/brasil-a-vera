@@ -33,7 +33,11 @@ Antes de gerar o draft, pergunte ao usuário (uma de cada vez se preferir):
 7. **Dependências novas** (com justificativa ADR-019).
 8. **Riscos identificados**.
 
-## 3. Gere o draft em `docs/sprints/SPRINT-X-Y-plan.md`
+## 3. Gere o draft em `docs/design/SPRINT-X-Y-plan.md`
+
+(`docs/sprints/` nunca existiu na prática — planos de wave/sprint reais
+vivem em `docs/design/`, como os `WAVE-N-PLAN-HANDOFF.md` das Waves 7–9;
+prompts mestres de wave ficam em `docs/product/`.)
 
 Estrutura padrão (replicada das Waves 3-4):
 
@@ -76,13 +80,11 @@ Estrutura padrão (replicada das Waves 3-4):
 - <bullet 2>
 ```
 
-Se `docs/sprints/` não existir, crie-o no primeiro `Write`.
-
 ## 4. Apresente para revisão
 
 Após gerar, **NÃO commite**. Mostre o caminho do arquivo e diga:
 
-> Draft em `docs/sprints/SPRINT-X-Y-plan.md`. Revise e me avise quando
+> Draft em `docs/design/SPRINT-X-Y-plan.md`. Revise e me avise quando
 > aprovar para o primeiro PR.
 
 O owner aprova antes de qualquer arquivo de implementação ser tocado

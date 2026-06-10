@@ -182,18 +182,15 @@ Adições ao ecossistema (skill, hook, agent) seguem ADR-019: gargalo
 concreto observado antes da peça nova. Teste empírico em sessão real
 com output literal copiado para o PR.
 
-## Auto-merge — Wave 6 (operacional, transitório)
+## Auto-merge — Wave 6 (encerrado)
 
-Durante a Wave 6 (Sprint 6.0–6.6), o owner em role `engineer`
-autoriza o Claude Code a abrir E mergear PRs sem aprovação humana
-externa, condicionado às barreiras técnicas detalhadas no prompt
-mestre Wave 6 §6 ([`docs/product/PROMPT-MESTRE-WAVE-6.md`](docs/product/PROMPT-MESTRE-WAVE-6.md)).
-
-Aplicabilidade: apenas Wave 6, apenas owner, apenas PRs com label
-`auto-merged-wave-6`. Outros contribuidores e outras waves seguem
-o regime normal de revisão humana via CODEOWNERS.
-
-Auditoria: métrica de PRs auto-merged vai no release v0.6.0.
+A cláusula transitória que autorizava o Claude Code a abrir E mergear
+PRs com label `auto-merged-wave-6` valeu apenas durante a Wave 6
+(Sprint 6.0–6.6) e está **encerrada** desde 2026-06-10. Regime vigente:
+revisão normal via CODEOWNERS; merge executado pelo owner ou por
+instrução explícita dele na sessão. Histórico: prompt mestre Wave 6 §6
+([`docs/product/PROMPT-MESTRE-WAVE-6.md`](docs/product/PROMPT-MESTRE-WAVE-6.md))
+e métrica de PRs auto-merged no release v0.6.0.
 
 ## Notas
 

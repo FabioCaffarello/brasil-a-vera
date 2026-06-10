@@ -1,18 +1,20 @@
 # .claude/hooks/ — hooks
 
-> Placeholder do PR 1. Hooks reais entram no PR 4 da Sprint 5.0.
-
 Hooks são scripts shell determinísticos disparados em eventos do Claude
 Code (PreToolUse, PostToolUse, etc.). Não dependem do LLM interpretar
-nada — são regras enforçadas pelo runtime.
+nada — são regras enforçadas pelo runtime. Ativos desde a Sprint 5.0.
 
-## Hooks previstos para a Sprint 5.0
+## Hooks ativos
 
-| Hook | Evento | Função | PR |
-|---|---|---|---|
-| `pre-edit-guardrail.sh` | PreToolUse: Edit/Write/MultiEdit | Bloqueia edição em paths protegidos por role (lê `BAV_CLAUDE_ROLE`) | PR 4 |
-| `pre-commit-quality.sh` | PreToolUse: Bash `git commit*` | Roda `vitest run --related` em arquivos staged TS/TSX. Husky cobre Biome. | PR 4 |
-| `post-edit-tokens.sh` | PostToolUse: Edit/Write/MultiEdit | Lembrete não-bloqueante de rodar `/design-token-check` após editar UI | PR 4 |
+| Hook | Evento | Função |
+|---|---|---|
+| `pre-edit-guardrail.sh` | PreToolUse: Edit/Write/MultiEdit | Bloqueia edição em paths protegidos por role (lê `BAV_CLAUDE_ROLE`; matriz em `../docs/ROLES.md`) |
+| `pre-commit-quality.sh` | PreToolUse: Bash `git commit*` | Roda `vitest run --related` em arquivos staged TS/TSX. Husky cobre Biome. |
+| `post-edit-tokens.sh` | PostToolUse: Edit/Write/MultiEdit | Lembrete não-bloqueante de rodar `/design-token-check` após editar UI |
+
+A matriz determinística vive em `__tests__/test-hooks.sh` e inclui o
+caso de consistência ROLES.md ↔ `lib/path-matchers.sh` — roda no CI
+(job `quality` do `ci.yml`) em todo PR, além de manualmente.
 
 ## Convenções de hook
 
