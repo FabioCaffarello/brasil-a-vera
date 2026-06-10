@@ -605,6 +605,70 @@ Por quê:
 - Painel + 5 slots — aguardam **N8 (TabsAsLinks/SubTabs)**, que não tem
   issue aberta no RDS ainda (ainda é só draft no `migration-matrix.md`).
 
+## §3.8 — Execução da piloto-2 (2026-06-10): `/parlamentares/[id]` migrada
+
+A recomendação da §3.7 foi executada — **`/rds/parlamentares/[id]` no ar**
+(PR piloto-2). O que a execução confirmou e o que falsificou:
+
+### Confirmado
+
+- **N1 (Card compound)** adotado integralmente: `asSection` +
+  `aria-labelledby` + `Card.Title as="h2"` + `Card.Subtitle`/`Card.Body`
+  cobrem o contrato inteiro do `SectionCard` local (cópia fina em
+  `_components/section-card.tsx` só preserva a API).
+- **N4 (StatGroup+Stat)** adotado direto no `page.tsx` (`layout="grid"`
+  `cols={4}`; tone map `default/muted→neutral`, `destructive→error`;
+  borda externa via className).
+- Bump 3.3.1 → 3.7.0 sem regressão nas rotas `/rds/smoke-*` e na
+  piloto-1 (build + 788 testes verdes).
+
+### Falsificado pela execução
+
+- **N6 via `useScrollSpy` é inviável hoje por custo de bundle** — o hook
+  só existe no entry raiz, que é barrel client único (488K, banner
+  `"use client"`, opaco pra tree-shaking). Medição em build de produção:
+  importar só o hook custou **+277.593 bytes** no chunk da rota (JS total
+  950.758 → 1.228.157, +29%). Cópia-rds mantém IntersectionObserver
+  local até
+  [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203)
+  (entry granular `./hooks`) fechar.
+- **"Accordion migra ajustando a chamada, sem issue" (§3.7) estava
+  errado** — o Accordion do RDS corta conteúdo aberto acima de 1000px
+  (`max-h-[1000px]` + `overflow-hidden`), tem typography fixa no trigger
+  e não aceita `className` por item. As seções do perfil (votos
+  paginados, gastos com chart) estouram o clamp com folga. Reportado em
+  [RDS #202](https://github.com/FabioCaffarello/react-design-system/issues/202);
+  a view mobile mantém a primitiva Radix local até fechar.
+
+### Efeito na fila
+
+Os outros 2 perfis (`/proposicoes/[tipo]/[numero]/[ano]`, `/votacoes/[id]`)
+seguem **alta prontidão** com o mesmo workaround de Accordion/SectionNav
+da piloto-2 — são as próximas rotas naturais, reusando
+`section-card`/`section-nav` e o padrão StatGroup. Tokens novos da
+execução registrados na extensão piloto-2 do `token-map.md` (status `/N`,
+`destructive→error`, resíduo `accent` data-viz).
+
+## §3.9 — Workarounds ativos
+
+Workaround sem trigger de revisão é o folclore de amanhã. Esta tabela é
+o relógio: **todo piloto começa com bump de versão do RDS** (3.3.1 →
+3.7.0 na piloto-2) — é nesse momento que ela é varrida, linha a linha,
+contra o changelog upstream. Issue fechada = executar a "ação quando
+fechar" e remover a linha.
+
+| Workaround | Issue upstream | Ação quando fechar |
+|---|---|---|
+| Accordion Radix local na view mobile dos perfis (cópias-rds importam `@/design-system/primitives/accordion`) | [RDS #202](https://github.com/FabioCaffarello/react-design-system/issues/202) — clipping `max-h-[1000px]` + typography fixa do trigger + sem className por item | Trocar pelo Accordion do RDS nas cópias-rds dos perfis migrados; validar conteúdo alto (votos paginados, gastos com chart) num viewport mobile real |
+| `SectionNav` cópia-rds com IntersectionObserver local (lógica duplicada que o useScrollSpy upstream existia pra eliminar) | [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203) — hook só existe no barrel client de 488K; importá-lo custou +277KB no chunk da rota | Trocar pelo `useScrollSpy` via entry granular; **re-medir o chunk em build de produção** antes de aceitar (mesmo protocolo da medição original) |
+| `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos` |
+
+Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
+data-viz nas Sparklines e links de drill-down). É token do projeto
+(ADR-024) sem razão para o RDS absorver — a não-equivalência registrada
+na extensão piloto-2 do `token-map.md` é o destino final, não um estado
+transitório.
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na

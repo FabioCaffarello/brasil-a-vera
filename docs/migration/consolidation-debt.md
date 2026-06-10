@@ -39,6 +39,44 @@ Helper local `<Section>` do `page.tsx` original NÃO virou arquivo separado
 nem no original nem na cópia. Na cópia-rds, foi reconstruído usando `<Card>`
 do `/server` + `<Text>` para hint + `<h2>` cru para título.
 
+### Piloto-2 — `/rds/parlamentares/[id]`
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/components/parlamentar/perfil-header.tsx` | `src/app/rds/parlamentares/[id]/_components/perfil-header.tsx` | médio | estrutura semântica (header/dl) preservada; consome DataBadge/PartyBadge/TrustBadge/CompartilharButton dos ORIGINAIS (ver §"client islands") |
+| `src/components/parlamentar/votos-recentes.tsx` | `src/app/rds/parlamentares/[id]/_components/votos-recentes.tsx` | médio | filtros + cursor pagination; `DistribuicaoBar` CSS-only preservada; `getTipoVotoStyle` da lib (classes BaV não traduzidas) |
+| `src/components/parlamentar/alinhamento.tsx` | `src/app/rds/parlamentares/[id]/_components/alinhamento.tsx` | médio | limiares de cor exatos (≥80/≥50/<50); `Sparkline12m` SVG preservada — `text-accent`/`fill-accent` MANTIDOS (resíduo, sem equivalente RDS) |
+| `src/components/parlamentar/proposicoes-autor.tsx` | `src/app/rds/parlamentares/[id]/_components/proposicoes-autor.tsx` | baixo | filtros + cursor pagination, espelho do padrão votos-recentes |
+| `src/components/parlamentar/gastos-resumo.tsx` | `src/app/rds/parlamentares/[id]/_components/gastos-resumo.tsx` | médio | `GastosChart` (recharts, dynamic ssr:false) importado do original; link drill-down `text-accent` mantido (resíduo) |
+| `src/components/parlamentar/afinidade-voto.tsx` | `src/app/rds/parlamentares/[id]/_components/afinidade-voto.tsx` | baixo | lista ranqueada simples |
+| `src/components/parlamentar/pares-contraditorios.tsx` | `src/app/rds/parlamentares/[id]/_components/pares-contraditorios.tsx` | médio | acento warning subtle preservado; badges direção: `destructive→error` (tradução estendida piloto-2) |
+| `src/design-system/compositions/section-card.tsx` | `src/app/rds/parlamentares/[id]/_components/section-card.tsx` | baixo | **reconstruída sobre Card compound do RDS 3.5.0** (asSection + Card.Title icon/badge); API local preservada |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/parlamentares/[id]/_components/section-nav.tsx` | médio | IntersectionObserver local mantido — `useScrollSpy` do RDS puxa o barrel client inteiro (+277KB minificado, medição no PR); swap quando RDS #203 (entry `./hooks`) fechar |
+
+Composições substituídas por upstream SEM cópia: `KpiStrip` → `StatGroup`+`Stat`
+do `/server` direto no `page.tsx` (borda externa via className; tone map
+`default/muted→neutral`, `destructive→error`).
+
+### Pendências upstream / client islands (piloto-2)
+
+- **Accordion mobile**: primitiva Radix LOCAL (`src/design-system/primitives/accordion`)
+  mantida na rota staging. Gap reportado em
+  [RDS #202](https://github.com/FabioCaffarello/react-design-system/issues/202)
+  (clipping `max-h-[1000px]` + typography fixa do trigger + sem className
+  por item). Swap quando fechar.
+- **useScrollSpy**: pedido entry granular em
+  [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203)
+  com medição literal (+277.593 bytes no chunk da rota, +29% de JS).
+- **FilterChips**: composição local consumida pelas cópias (votos +
+  proposições). Upstream [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) aberta.
+- **Client islands compartilhados, importados dos originais (sem tradução
+  neste PR)**: `TrustBadge`, `CompartilharButton`, `GastosChart`
+  (recharts). Tokens BaV internos; traduzir na promoção ou quando o RDS
+  cobrir os respectivos padrões.
+- **`getTipoVotoStyle`** (`src/lib/format.ts`): retorna classes BaV
+  (`bg-success/20 text-success` etc.) consumidas pelas cópias. Lógica de
+  domínio única — NÃO duplicada; classes traduzem na promoção.
+
 ## Política de espelhamento (enquanto a dívida existir)
 
 1. **Modificar o original** (`src/components/partido/*.tsx`) sem espelhar:
