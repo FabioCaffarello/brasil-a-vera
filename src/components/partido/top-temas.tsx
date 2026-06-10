@@ -1,3 +1,4 @@
+// Edição artificial para validação e2e do consolidation-guard (PR descartável — ver #371).
 import type { TemaContagem } from '@/lib/queries/partidos'
 
 interface Props {
