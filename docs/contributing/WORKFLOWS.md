@@ -20,6 +20,7 @@
 | `design-tokens.yml` | `pull_request` (paths de UI) | — | Análise estática de tokens legacy (mesmos greps do `/design-token-check`). Advisory — comenta sem falhar. | `design-tokens-${PR}` (cancel-in-progress) |
 | `close-external-prs.yml` | `pull_request_target` (opened, reopened) | — | Fecha PRs de não-membros com comentário orientando issue (política [ADR-027](../architecture/ADR/027-licenca-polyform-noncommercial.md)). Sem checkout do código do fork. | — (sem concurrency; evento administrativo pontual) |
 | `labels-sync.yml` | `workflow_dispatch` | — | Sincroniza `.github/labels.yml` com o repo via `gh label create --force`. Idempotente; disparo manual apenas. | `labels-sync` (no cancel) |
+| `consolidation-guard.yml` | `pull_request` (paths: `src/components/**`, `src/app/rds/**`, `consolidation-debt.md`) | — | Advisory da dívida de espelhamento RDS ([ADR-033](../architecture/ADR/033-adocao-react-design-system-externo.md)): lado do par alterado sem o outro + cópia-rds sem registro na tabela (assert inverso). Falha fechado se a tabela for ilegível. Lógica testável em `.github/scripts/consolidation-guard.sh`. Temporário — remove-se quando a migração consolidar. | `consolidation-guard-${PR}` (cancel-in-progress) |
 
 ## Convenções aplicadas (audit 2026-05-13, issue #69)
 
