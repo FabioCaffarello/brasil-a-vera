@@ -62,6 +62,8 @@ assert_exit "designer BLOCKED on biome.json" 2 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Edit","tool_input":{"file_path":"biome.json"}}' designer)"
 assert_exit "designer BLOCKED on .github/CODEOWNERS" 2 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Write","tool_input":{"file_path":".github/CODEOWNERS"}}' designer)"
+assert_exit "designer BLOCKED on workflows" 2 \
+  "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Write","tool_input":{"file_path":".github/workflows/ci.yml"}}' designer)"
 assert_exit "designer BLOCKED on .env.local" 2 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Edit","tool_input":{"file_path":".env.local"}}' designer)"
 assert_exit "designer BLOCKED on migrations" 2 \
@@ -83,9 +85,9 @@ assert_exit "engineer can edit ADR" 0 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Write","tool_input":{"file_path":"docs/architecture/ADR/023-x.md"}}' engineer)"
 assert_exit "engineer BLOCKED on .env.local" 2 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Edit","tool_input":{"file_path":".env.local"}}' engineer)"
-assert_exit "engineer BLOCKED on migrations" 2 \
+assert_exit "engineer can edit migrations (revisão Wave 10)" 0 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Write","tool_input":{"file_path":"src/shared/db/migrations/0010_add_x.sql"}}' engineer)"
-assert_exit "engineer BLOCKED on workflows" 2 \
+assert_exit "engineer can edit workflows (revisão Wave 10)" 0 \
   "$(run_hook pre-edit-guardrail.sh '{"tool_name":"Write","tool_input":{"file_path":".github/workflows/ci.yml"}}' engineer)"
 
 echo ""

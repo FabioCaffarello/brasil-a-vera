@@ -45,17 +45,14 @@ Em relação ao designer:
 
 Por design, mesmo engineer não toca via Claude:
 
-- `.env*` — secrets vivem em Wrangler ou GitHub Actions, sempre.
-- `src/shared/db/migrations/**` — migrations entram via PR humano
-  explícito, não via sessão Claude (escape deliberado).
-- `.github/workflows/**` — workflows mudam via PR humano
-  explícito (esta foi exatamente a justificativa por trás da
-  hook bloqueante).
+- `.env*` (exceto `.env.example`) e `.dev.vars` — secrets vivem em
+  Wrangler ou GitHub Actions, sempre. Nunca no repo, nunca via sessão.
 
-Se você **precisa** editar um workflow ou migration, edite no
-seu editor fora da sessão Claude, depois commit + push manual.
-O Claude pode ajudar no diff conceitualmente, mas não escreve
-o arquivo.
+> Revisão Wave 10 (2026-05-19): `src/shared/db/migrations/**` e
+> `.github/workflows/**` eram bloqueados mesmo para engineer. O owner
+> revisou a decisão em `.claude/hooks/lib/path-matchers.sh` — engineer
+> edita ambos via Claude; designer segue bloqueado. A revisão extra
+> dessas áreas continua existindo, mas no PR (CODEOWNERS), não no hook.
 
 ## 4. Auditoria local de edições engineer
 
@@ -105,11 +102,12 @@ Hooks devem ter:
 
 ## 6. Quando precisar fugir de uma proteção
 
-### Path bloqueado para engineer (workflows, migrations)
+### Path bloqueado para engineer (secrets)
 
-Edite fora do Claude. Não use `--no-verify`, não use
-`bypassPermissions` na sessão. A regra existe porque PR humano
-nessas áreas tem revisão extra (CODEOWNERS).
+Não existe bypass legítimo: `.env*` e `.dev.vars` não entram no repo
+de forma alguma. Configure o valor em Wrangler secrets ou GitHub
+Actions secrets. Não use `--no-verify` nem `bypassPermissions` na
+sessão.
 
 ### Bypass temporário de um hook específico
 

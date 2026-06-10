@@ -41,9 +41,9 @@ Esse caminho é protegido pela matriz em .claude/docs/ROLES.md.
 Como prosseguir:
   - Designer: abrir issue com label "design" descrevendo a necessidade,
     ou solicitar pareamento com um engineer no canal do time.
-  - Engineer: se o bloqueio é intencional (workflows, migrations, .env*),
-    esse path requer PR humano explícito fora da sessão Claude.
-    Verifique .claude/docs/ROLES.md.
+  - Engineer: bloqueio para engineer significa secret real (.env*,
+    .dev.vars) — secrets nunca entram no repo; configure em Wrangler
+    secrets ou GitHub Actions secrets. Verifique .claude/docs/ROLES.md.
 
 Para mudar de role temporariamente em outra sessão:
   export BAV_CLAUDE_ROLE=engineer
