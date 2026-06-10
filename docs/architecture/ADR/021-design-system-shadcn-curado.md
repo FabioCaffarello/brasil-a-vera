@@ -1,8 +1,10 @@
 # ADR-021: Design System próprio com shadcn/ui curado
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-15
-> Status: accepted
+> Última atualização: 2026-06-09
+> Status: accepted — parcialmente superseded pelo [ADR-033](033-adocao-react-design-system-externo.md)
+> (a proibição de dependência npm de UI e o pipeline shadcn-CLI para novas
+> primitivas foram revistos; curadoria, tokens e import boundary permanecem)
 
 ---
 

@@ -147,10 +147,13 @@ docs/
 - NÃO escreva código especulativo. Não crie interfaces "para o caso de".
   Reaja a necessidade real, não a possibilidade futura.
 - NÃO use ESLint nem Prettier. Use Biome (`npm run check`).
-- shadcn/ui curado autorizado conforme [ADR-021](docs/architecture/ADR/021-design-system-shadcn-curado.md):
-  componentes copiados via CLI para `src/design-system/primitives/`, um PR
-  isolado por componente, adaptação aos tokens. Bibliotecas de UI seguem
-  critério leve (justificativa no PR), não exigem ADR específico por dep.
+- Design system: em migração para o pacote `@fabio.caffarello/react-design-system`
+  conforme [ADR-033](docs/architecture/ADR/033-adocao-react-design-system-externo.md)
+  (strangler fig por rota sob `/rds/`, processo em `docs/migration/`). Gap de
+  componente genérico vira issue no repo do RDS, não primitiva shadcn nova.
+  Curadoria, tokens semânticos e import boundary do
+  [ADR-021](docs/architecture/ADR/021-design-system-shadcn-curado.md) permanecem;
+  bibliotecas de UI seguem critério leve (justificativa no PR), sem ADR por dep.
 - Erros da API da Câmara são esperados. APIs públicas brasileiras são instáveis.
   Sempre retry com backoff, sempre log estruturado de falha, nunca crash silencioso.
 - Plan mode antes de mudanças amplas. Para qualquer task que toque mais de 3
