@@ -34,13 +34,14 @@ Três capacidades diferenciadoras:
 |-----------|-----------|
 | [ADRs](architecture/ADR/) | Architecture Decision Records ativos |
 | [ADR-001 — Monorepo](architecture/ADR/001-monorepo-strategy.md) | Estratégia de monorepo com módulos por bounded context |
-| [ADR-002 — Backend (TS → Go)](architecture/ADR/002-backend-language-and-framework.md) | TypeScript na Wave 0–2; Go na Wave 3 — `proposed` |
+| [ADR-002 — Backend](architecture/ADR/002-backend-language-and-framework.md) | TypeScript; o plano "Go na Wave 3" foi descartado pelo ADR-020 |
 | [ADR-003 — Banco no Neon](architecture/ADR/003-database-neon.md) | PostgreSQL no Neon (substitui Supabase) |
 | [ADR-006 — Stack Frontend](architecture/ADR/006-frontend-stack.md) | Next.js + TypeScript + Drizzle + Biome |
-| [ADR-007 — Monolith First](architecture/ADR/007-monolith-first-strategy.md) | Monolito Next.js nas Waves 0–2; Strangler Fig na Wave 3 |
+| [ADR-007 — Monolith First](architecture/ADR/007-monolith-first-strategy.md) | Monolito Next.js modular; a extração Strangler Fig foi descartada pelo ADR-020 |
 | [ADR-008 — Tooling Frontend](architecture/ADR/008-frontend-tooling.md) | Biome, Husky e React Flow |
 | [ADR-009 — Cloudflare Workers](architecture/ADR/009-cloudflare-pages.md) | Deploy em Cloudflare Workers (substitui Vercel) |
 | [ADR-011 — Driver de Banco](architecture/ADR/011-database-driver.md) | `drizzle-orm/neon-serverless` + `@neondatabase/serverless` |
+| [ADR-020 — Permanência do Monolito TypeScript](architecture/ADR/020-permanencia-monolito-typescript.md) | Monolito Next.js é a arquitetura-alvo; Go/microserviços descartados (supersede parte dos ADR-002 e ADR-007) |
 | [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md) | Mapa de contextos DDD com responsabilidades e relações |
 | [Modelo de Domínio](architecture/DOMAIN-MODEL.md) | Aggregates, entities, value objects e domain events |
 | [Pirâmide de Confiança](architecture/TRUST-PYRAMID.md) | Arquitetura de credibilidade L1–L4 |
@@ -90,15 +91,15 @@ Três capacidades diferenciadoras:
 
 ---
 
-## Arquitetura: Monolith First
+## Arquitetura: Monolito Permanente
 
-Nas Waves 0–2, o Brasil a Vera é um **monolito Next.js modular** (TypeScript) deployado no Cloudflare Workers, com PostgreSQL no Neon e ingestão via GitHub Actions. Custo total: ~R$3,30/mês (só o domínio).
+O Brasil a Vera é um **monolito Next.js modular** (TypeScript) deployado no Cloudflare Workers, com PostgreSQL no Neon e ingestão via GitHub Actions. Custo total: ~R$3,30/mês (só o domínio).
 
-Na Wave 3+, módulos são extraídos para **microserviços Go** via Strangler Fig, com NATS JetStream para eventos e Caddy como API Gateway. Detalhes no [ADR-007](architecture/ADR/007-monolith-first-strategy.md).
+A extração para microserviços Go via Strangler Fig, prevista no plano original do [ADR-007](architecture/ADR/007-monolith-first-strategy.md), foi **descartada** pelo [ADR-020](architecture/ADR/020-permanencia-monolito-typescript.md): o monolito é a arquitetura-alvo permanente enquanto o projeto for solo e otimizado por custo operacional próximo de zero.
 
 ## Como Navegar
 
 - **Novo no projeto?** Comece pelo [Product Vision](product/PRODUCT-VISION.md) e depois [Bounded Contexts](architecture/BOUNDED-CONTEXTS.md)
-- **Quer entender a arquitetura?** Leia os [ADRs](architecture/ADR/) em ordem numérica — especialmente o [ADR-007 (Monolith First)](architecture/ADR/007-monolith-first-strategy.md)
+- **Quer entender a arquitetura?** Leia os [ADRs](architecture/ADR/) em ordem numérica — especialmente o [ADR-007 (Monolith First)](architecture/ADR/007-monolith-first-strategy.md) junto do [ADR-020 (permanência do monolito)](architecture/ADR/020-permanencia-monolito-typescript.md), que o revisa
 - **Quer contribuir?** Vá direto para [Guia de Contribuição](contributing/CONTRIBUTING.md)
 - **Quer entender o domínio?** Comece pelo [Processo Legislativo](domain/LEGISLATIVE-PROCESS.md)
