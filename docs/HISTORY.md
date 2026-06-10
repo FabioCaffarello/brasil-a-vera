@@ -7,6 +7,11 @@
 > de ferramenta vira cache, não fonte única. Release notes em
 > `docs/releases/` continuam sendo o registro primário por versão; este
 > documento é o índice narrativo transversal.
+>
+> **Ritual de manutenção:** a skill `/release-notes` inclui o passo de
+> atualizar a cronologia (e promover incidentes) aqui ao fechar cada
+> wave — este doc é alimentado pelo único ritual que comprovadamente
+> roda toda wave, para não apodrecer como a tabela do WORKFLOWS.md.
 
 ---
 
