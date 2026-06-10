@@ -122,6 +122,64 @@ assert_exit "non-Bash tool → exit 0" 0 \
 # manualmente no PR (output literal anexado).
 
 echo ""
+echo "=== consistência ROLES.md ↔ path-matchers.sh ==="
+# Caso meta (incidente Wave 10 → PR #365): a matriz em ROLES.md e os
+# matchers divergiram por ~3 semanas sem que nada quebrasse. Este bloco
+# percorre as linhas da tabela "Matriz role × path" e confronta cada
+# expectativa (✅/❌ por role) com o comportamento real do guardrail —
+# divergência futura entre a escritura e o matcher falha a suíte.
+#
+# Tradução de path: padrões `dir/**` testam `dir/zz-consistency.txt`;
+# paths exatos testam literal; células com múltiplos paths usam o
+# primeiro; wildcards não-triviais (`.env*`, `format*.ts`) são pulados
+# e contados — esses ficam nos casos estáticos acima.
+ROLES_MD="$HOOKS_DIR/../docs/ROLES.md"
+CONSISTENCY_SKIPPED=0
+CONSISTENCY_CHECKED=0
+CONSISTENCY_COVERED=""
+while IFS= read -r line; do
+  cell_path=$(printf '%s' "$line" | awk -F'|' '{print $2}')
+  cell_des=$(printf '%s' "$line" | awk -F'|' '{print $3}')
+  cell_eng=$(printf '%s' "$line" | awk -F'|' '{print $4}')
+  path=$(printf '%s' "$cell_path" | sed -n 's/[^`]*`\([^`]*\)`.*/\1/p')
+  [ -z "$path" ] && continue
+  case "$cell_des" in *✅*) expect_des=0 ;; *❌*) expect_des=2 ;; *) continue ;; esac
+  case "$cell_eng" in *✅*) expect_eng=0 ;; *❌*) expect_eng=2 ;; *) continue ;; esac
+  case "$path" in
+    *"**")
+      test_path="${path%\*\*}zz-consistency.txt" ;;
+    *"*"*)
+      CONSISTENCY_SKIPPED=$((CONSISTENCY_SKIPPED + 1))
+      continue ;;
+    *)
+      test_path="$path" ;;
+  esac
+  payload="{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$test_path\"}}"
+  assert_exit "consistency designer $path" "$expect_des" \
+    "$(run_hook pre-edit-guardrail.sh "$payload" designer)"
+  assert_exit "consistency engineer $path" "$expect_eng" \
+    "$(run_hook pre-edit-guardrail.sh "$payload" engineer)"
+  CONSISTENCY_CHECKED=$((CONSISTENCY_CHECKED + 1))
+  CONSISTENCY_COVERED="$CONSISTENCY_COVERED $path"
+done < <(grep '^|' "$ROLES_MD")
+echo "  (linhas com wildcard não-trivial puladas: $CONSISTENCY_SKIPPED)"
+
+# Falha fechado: "0 divergências em 0 linhas" não é consistência — é
+# parser cego (tabela reformatada, arquivo movido, regex quebrada).
+# Piso de linhas + sentinelas conhecidas distinguem "consistente" de
+# "não consegui ler". Se a matriz encolher legitimamente abaixo do piso,
+# atualizar o piso aqui é parte consciente dessa mudança.
+CONSISTENCY_FLOOR=20
+floor_ok=1
+[ "$CONSISTENCY_CHECKED" -ge "$CONSISTENCY_FLOOR" ] && floor_ok=0
+assert_exit "consistency parser leu >= $CONSISTENCY_FLOOR linhas da matriz (leu: $CONSISTENCY_CHECKED)" 0 "$floor_ok"
+for sentinel in 'src/lib/queries/**' '.github/workflows/**' 'CLAUDE.md'; do
+  seen=1
+  [[ " $CONSISTENCY_COVERED " == *" $sentinel "* ]] && seen=0
+  assert_exit "consistency sentinela coberta: $sentinel" 0 "$seen"
+done
+
+echo ""
 echo "=== Summary ==="
 echo "  PASS: $PASS"
 echo "  FAIL: $FAIL"
