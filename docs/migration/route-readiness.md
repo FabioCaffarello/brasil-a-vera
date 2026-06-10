@@ -649,6 +649,26 @@ da piloto-2 — são as próximas rotas naturais, reusando
 execução registrados na extensão piloto-2 do `token-map.md` (status `/N`,
 `destructive→error`, resíduo `accent` data-viz).
 
+## §3.9 — Workarounds ativos
+
+Workaround sem trigger de revisão é o folclore de amanhã. Esta tabela é
+o relógio: **todo piloto começa com bump de versão do RDS** (3.3.1 →
+3.7.0 na piloto-2) — é nesse momento que ela é varrida, linha a linha,
+contra o changelog upstream. Issue fechada = executar a "ação quando
+fechar" e remover a linha.
+
+| Workaround | Issue upstream | Ação quando fechar |
+|---|---|---|
+| Accordion Radix local na view mobile dos perfis (cópias-rds importam `@/design-system/primitives/accordion`) | [RDS #202](https://github.com/FabioCaffarello/react-design-system/issues/202) — clipping `max-h-[1000px]` + typography fixa do trigger + sem className por item | Trocar pelo Accordion do RDS nas cópias-rds dos perfis migrados; validar conteúdo alto (votos paginados, gastos com chart) num viewport mobile real |
+| `SectionNav` cópia-rds com IntersectionObserver local (lógica duplicada que o useScrollSpy upstream existia pra eliminar) | [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203) — hook só existe no barrel client de 488K; importá-lo custou +277KB no chunk da rota | Trocar pelo `useScrollSpy` via entry granular; **re-medir o chunk em build de produção** antes de aceitar (mesmo protocolo da medição original) |
+| `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos` |
+
+Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
+data-viz nas Sparklines e links de drill-down). É token do projeto
+(ADR-024) sem razão para o RDS absorver — a não-equivalência registrada
+na extensão piloto-2 do `token-map.md` é o destino final, não um estado
+transitório.
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
