@@ -20,7 +20,27 @@
 | `design-tokens.yml` | `pull_request` (todo PR; skip interno por paths) | — | 2 jobs: `zinc / HEX / primary-N legacy` (greps do `/design-token-check`; **required check** — o skip interno evita o "expected" eterno de path filter em workflow required) e `RDS leak advisory` (classes BaV não traduzidas em `src/app/rds/**` vs `token-map.md`; advisory até 2 sprints sem falso positivo). | `design-tokens-${PR}` (cancel-in-progress) |
 | `close-external-prs.yml` | `pull_request_target` (opened, reopened) | — | Fecha PRs de não-membros com comentário orientando issue (política [ADR-027](../architecture/ADR/027-licenca-polyform-noncommercial.md)). Sem checkout do código do fork. | — (sem concurrency; evento administrativo pontual) |
 | `labels-sync.yml` | `workflow_dispatch` | — | Sincroniza `.github/labels.yml` com o repo via `gh label create --force`. Idempotente; disparo manual apenas. | `labels-sync` (no cancel) |
-| `consolidation-guard.yml` | `pull_request` (paths: `src/components/**`, `src/app/rds/**`, `consolidation-debt.md`) | — | Advisory da dívida de espelhamento RDS ([ADR-033](../architecture/ADR/033-adocao-react-design-system-externo.md)): lado do par alterado sem o outro + cópia-rds sem registro na tabela (assert inverso). Falha fechado se a tabela for ilegível. Lógica testável em `.github/scripts/consolidation-guard.sh`. Temporário — remove-se quando a migração consolidar. | `consolidation-guard-${PR}` (cancel-in-progress) |
+| `consolidation-guard.yml` | `pull_request` (paths: `src/components/**`, `src/app/rds/**`, `consolidation-debt.md`) | — | Advisory da dívida de espelhamento RDS ([ADR-033](../architecture/ADR/033-adocao-react-design-system-externo.md)): lado do par alterado sem o outro + cópia-rds sem registro na tabela (assert inverso). Cópia com status **A** (criada) é isenta da checagem de espelho — criação é território do assert inverso (fix #380; primeira carga real no PR #379). Falha fechado se a tabela for ilegível. Lógica testável em `.github/scripts/consolidation-guard.sh`. Temporário — remove-se quando a migração consolidar. **Sem relógio de promoção, por desenho** (ver seção abaixo). | `consolidation-guard-${PR}` (cancel-in-progress) |
+
+## Regime advisory — dois relógios e uma exceção deliberada
+
+Três checks comentam sem bloquear, mas só **dois** têm relógio de
+promoção a required:
+
+- **`pr-sanity`** e **`RDS leak advisory`** — advisory por falta de
+  histórico: promovem-se a required após 2 sprints sem falso positivo
+  (critério registrado na decisão F8, PR #374).
+- **`consolidation-guard`** — advisory **permanente, por desenho, não
+  por esquecimento**. Ele é auto-extinguível (a tabela esvazia quando a
+  migração consolida; o workflow sai junto — ADR-033 §4) e seu trabalho
+  é avisar, não bloquear: par órfão de espelhamento é dívida a
+  registrar, não merge a impedir. Promovê-lo a required transformaria
+  registro de dívida em gate, invertendo a política de espelhamento do
+  `consolidation-debt.md`. O falso positivo da primeira carga (#380,
+  corrigido) não zerou relógio nenhum — não havia relógio correndo.
+
+Se daqui a algumas waves alguém perguntar "por que este advisory nunca
+foi promovido?": esta seção é a resposta, escrita antes da pergunta.
 
 ## Convenções aplicadas (audit 2026-05-13, issue #69)
 

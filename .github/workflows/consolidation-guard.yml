@@ -41,7 +41,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only > /tmp/changed.txt
+          # status + path (added/modified/...) — a checagem 2 isenta
+          # cópias com status A (fix #380); --name-only não carrega status.
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate \
+            --jq '.[] | [.status, .filename] | @tsv' > /tmp/changed.txt
           rc=0
           out=$(bash .github/scripts/consolidation-guard.sh docs/migration/consolidation-debt.md < /tmp/changed.txt) || rc=$?
           if [ "$rc" -ne 0 ]; then
