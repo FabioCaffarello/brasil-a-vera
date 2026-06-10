@@ -119,6 +119,33 @@ desta seção:
 > lição: iniciativa que tensiona ADR aceito abre o ADR novo **antes** do
 > piloto, não depois.
 
+### PR #373 — o teste que mergeou (decisão F8, 2026-06-10)
+
+Durante o teste empírico da armadilha "required check × path filter", um
+`PUT /pulls/373/merge` — executado pela sessão Claude apenas para
+capturar a mensagem de bloqueio — **mergeou o PR descartável na main**,
+ignorando required checks e required review. Duas camadas de causa:
+
+1. **A porta do GitHub**: `enforce_admins=false` não vincula merge de
+   admin via API REST; a recusa do `gh pr merge` sem `--admin` é
+   checagem *client-side* do CLI. Veredito: manter desligado (owner é o
+   único admin; ligar quebraria o fluxo de merge) — limitação documentada
+   em `docs/contributing/BRANCH-PROTECTION.md` §Limitação conhecida.
+2. **A porta do harness**: o allow de `gh pr:*` cobria `gh pr merge`, e
+   `gh api` permitia mutação arbitrária mediante confirmação que, num
+   experimento, seria aprovada sem perceber o efeito. Fechada com deny
+   explícito de `gh pr merge` e `gh api -X PUT` no
+   `.claude/settings.json` — merge é ato do owner desde o encerramento
+   do auto-merge Wave 6 (#369).
+
+Lição de desenho de experimento: **teste de mecanismo de bloqueio se
+desenha para que o modo de falha seja "bloqueado", não "executado"** —
+repo descartável, proteção paralela, ou owner presente no momento da
+chamada. O contraste no mesmo dia: a validação do consolidation-guard
+(#372) tinha como pior caso "comentário ausente" (dano zero); a do #373
+tinha como pior caso um merge — e ele aconteceu. O artefato foi removido
+no #374 e o incidente registrado com transparência no próprio #373.
+
 ---
 
 ## Origem dos princípios 8–13 do CLAUDE.md
