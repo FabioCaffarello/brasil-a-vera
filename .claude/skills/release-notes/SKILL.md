@@ -128,7 +128,16 @@ git push origin <tag-name>
 ```
 ```
 
-## 5. Não fazer
+## 5. Atualizar `docs/HISTORY.md` (ritual de fechamento de wave)
+
+Junto com o draft de release notes, adicione/atualize a entrada da wave
+na cronologia de `docs/HISTORY.md` (tema, fechamento, marcos/ADRs). Se a
+wave teve incidente com lição durável (padrão dos Achados-chave), avalie
+promovê-lo a "incidente nomeado" na seção correspondente. Doc sem ritual
+que o alimente apodrece — este passo existe para o HISTORY.md não virar
+o próximo WORKFLOWS.md desatualizado.
+
+## 6. Não fazer
 
 - Não invente PRs — só liste o que está no git log.
 - Não invente Achados-chave — pergunte ao usuário se você não
@@ -138,10 +147,10 @@ git push origin <tag-name>
 - Não comprometa-se com data exata de "Próximo" — Wave 5+ é open
   ground, sem cronograma fixo.
 
-## 6. Apresente para revisão
+## 7. Apresente para revisão
 
 Após gerar, mostre o caminho e diga:
 
-> Draft em `docs/releases/<tag-name>.md`. Revise os achados-chave e
-> decisões. Quando aprovar, abrimos PR e executamos o `git tag`
-> manualmente.
+> Draft em `docs/releases/<tag-name>.md` (+ entrada na cronologia de
+> `docs/HISTORY.md`). Revise os achados-chave e decisões. Quando
+> aprovar, abrimos PR e executamos o `git tag` manualmente.
