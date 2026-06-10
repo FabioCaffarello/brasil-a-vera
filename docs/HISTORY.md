@@ -157,3 +157,5 @@ deixa de ser órfã para quem não opera o Claude Code:
 
 Novas lições seguem o fluxo da decisão D-MEM: o durável entra aqui (ou
 em ADR/release note); a memória local da ferramenta é cache de sessão.
+
+<!-- linha artificial: teste e2e da armadilha required+path-filter (PR descartável, ver PR de decisão F8) -->
