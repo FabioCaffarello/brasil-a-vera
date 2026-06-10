@@ -103,3 +103,4 @@ A extração para microserviços Go via Strangler Fig, prevista no plano origina
 - **Quer entender a arquitetura?** Leia os [ADRs](architecture/ADR/) em ordem numérica — especialmente o [ADR-007 (Monolith First)](architecture/ADR/007-monolith-first-strategy.md) junto do [ADR-020 (permanência do monolito)](architecture/ADR/020-permanencia-monolito-typescript.md), que o revisa
 - **Quer contribuir?** Vá direto para [Guia de Contribuição](contributing/CONTRIBUTING.md)
 - **Quer entender o domínio?** Comece pelo [Processo Legislativo](domain/LEGISLATIVE-PROCESS.md)
+- **Quer o histórico?** [HISTORY.md](HISTORY.md) — cronologia de waves, incidentes nomeados e a origem dos princípios do CLAUDE.md
