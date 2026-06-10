@@ -1,6 +1,6 @@
 # ROLES — Matriz canônica de permissão por role
 
-> Brasil a Vera · Wave 5 Sprint 5.0 · v0.1
+> Brasil a Vera · Wave 5 Sprint 5.0 · v0.2 (revisão Wave 10 refletida em 2026-06-09)
 > Lida por hooks (`.claude/hooks/pre-edit-guardrail.sh`) e por humanos.
 
 Este projeto opera com roles. Cada role tem escopo distinto. A matriz
@@ -39,8 +39,8 @@ no próprio `.zshrc` / `.bashrc`.
 | `src/shared/db/schema.ts` | ❌ | ✅ | Schema é fonte da migration |
 | `src/shared/**` (resto) | ❌ | ✅ | Shared kernel |
 | `ingestion/**` | ❌ | ✅ | ETL crítica, dados oficiais |
-| `src/shared/db/migrations/**` | ❌ | ❌ | Migrations entram via PR humano explícito (hook bloqueia mesmo engineer pelo Claude) |
-| `.env*` | ❌ | ❌ | Sempre via Wrangler secrets / GitHub Actions secrets |
+| `src/shared/db/migrations/**` | ❌ | ✅ | Liberado para engineer na Wave 10 (2026-05-19); antes bloqueado mesmo para engineer |
+| `.env*` (exceto `.env.example`), `.dev.vars` | ❌ | ❌ | Secrets reais — sempre via Wrangler secrets / GitHub Actions secrets |
 | `docs/design/**` | ✅ | ✅ | Design é coautor |
 | `docs/contributing/**` | ✅ | ✅ | Onboarding e processos abertos |
 | `docs/features/**` | ✅ | ✅ | Specs de features |
@@ -48,7 +48,7 @@ no próprio `.zshrc` / `.bashrc`.
 | `docs/architecture/ADR/**` | ❌ | ✅ | ADRs requerem contexto sistêmico |
 | `docs/releases/**` | ❌ | ✅ | Release notes (operação) |
 | `public/**` | ✅ | ✅ | Assets estáticos |
-| `.github/workflows/**` | ❌ | ❌ | Workflows mudam por PR humano deliberado (hook bloqueia mesmo engineer pelo Claude) |
+| `.github/workflows/**` | ❌ | ✅ | Liberado para engineer na Wave 10 (2026-05-19); antes bloqueado mesmo para engineer |
 | `.github/actions/**` | ❌ | ✅ | Composite actions |
 | `.github/labels.yml` | ❌ | ✅ | Vocabulário canônico |
 | `.github/CODEOWNERS` | ❌ | ✅ | Governança de revisão |
@@ -70,9 +70,13 @@ no próprio `.zshrc` / `.bashrc`.
 
 - **Designer ganha em empate.** Se um path serve UI e também aparece em
   domínio (raro), default é bloquear para designer.
-- **Engineer não é admin.** Há paths que **engineer também não toca via
-  Claude**: migrations e workflows. Bypass exige edit manual fora do
-  Claude (assumido como ato deliberado e revisado).
+- **Engineer não é admin.** Os únicos paths que engineer também não
+  toca via Claude são secrets reais: `.env*` (exceto `.env.example`) e
+  `.dev.vars`. Secrets vivem em Wrangler / GitHub Actions secrets,
+  nunca no repo. Migrations e workflows eram bloqueados mesmo para
+  engineer até a Wave 10 (2026-05-19), quando o owner revisou a
+  decisão em `.claude/hooks/lib/path-matchers.sh` — ambos seguem sob
+  revisão extra via CODEOWNERS no PR.
 - **Hooks são determinísticos.** A matriz acima vira matcher de path em
   `.claude/hooks/lib/path-matchers.sh` (PR 4). Mudanças aqui exigem
   refletir lá.

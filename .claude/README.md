@@ -31,7 +31,7 @@ projeto. O `.gitignore` permite apenas estado verdadeiramente local:
 
 | Caminho | Conteúdo |
 |---|---|
-| `agents/` | Subagents (`.md` com YAML frontmatter). Hoje: `design-system-curator`. |
+| `agents/` | Subagents (`.md` com YAML frontmatter). Hoje: `design-system-curator` e `frontend-skin-helper`. |
 | `skills/` | Slash commands. Hoje: 6 (`add-primitive`, `design-token-check`, `visual-qa`, `plan-sprint`, `new-adr`, `release-notes`). |
 | `hooks/` | Hooks shell (PreToolUse / PostToolUse). Hoje: 3 hooks + 2 libs + matriz de teste. |
 | `docs/` | Onboarding humanos + `ROLES.md`. |
@@ -68,8 +68,9 @@ SKILL.md viram subagent dedicado (regra registrada em
 `settings.json` segue **deny aggressive, allow minimal**:
 
 - **Deny**: destrutivos (`sudo`, `rm -rf`, `git push --force`), deploy
-  (`cf:deploy`, `wrangler deploy`, `db:push`), edição em paths sensíveis
-  (`.env*`, `.github/workflows/**`, `src/shared/db/migrations/**`).
+  (`cf:deploy`, `wrangler deploy`, `db:push`), edição em secrets
+  (`.env*`, `.dev.vars`). Workflows e migrations saíram do deny na
+  revisão Wave 10 (ver `docs/ROLES.md`).
 - **Allow**: scripts npm de dev/build/test, git ops em branches feature,
   `gh pr/issue/workflow`, `npx shadcn add`.
 
