@@ -77,6 +77,37 @@ dynamic ssr:false), `CompartilharProposicaoButton`, `TrustBadge`.
 `KpiStrip` → `StatGroup`+`Stat` do `/server` direto no `page.tsx`
 (tone map `STAT_TONE` no próprio arquivo).
 
+### Piloto-4 — `/rds/votacoes/[id]`
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/components/votacao/perfil-header.tsx` | `src/app/rds/votacoes/[id]/_components/perfil-header.tsx` | médio | consome DataBadge/TrustBadge/CompartilharVotacaoButton dos ORIGINAIS (precedente piloto-2); breadcrumb → `/votacoes` produção |
+| `src/components/votacao/votos-resumo.tsx` | `src/app/rds/votacoes/[id]/_components/votos-resumo.tsx` | baixo | `<dl>` simples; tradução 1:1 pela tabela |
+| `src/components/votacao/votos-por-partido.tsx` | `src/app/rds/votacoes/[id]/_components/votos-por-partido.tsx` | baixo | tabela; `text-brand→text-fg-brand` (extensão piloto-2, byte-idêntico) |
+| `src/components/votacao/votos-individuais.tsx` | `src/app/rds/votacoes/[id]/_components/votos-individuais.tsx` | médio | client island duplicado (hrefs de filtro contidos em `/rds/`); pill ativo `bg-foreground/text-background → bg-fg-primary/text-surface-canvas` (extensão piloto-4, CP3 aprovado); `getTipoVotoStyle` da lib (classes BaV não traduzidas) |
+| `src/components/votacao/rebeldes-list.tsx` | `src/app/rds/votacoes/[id]/_components/rebeldes-list.tsx` | médio | `getTipoVotoStyle` da lib; `text-foreground-subtle→fg-quaternary` |
+| `src/components/votacao/proposicao-vinculada.tsx` | `src/app/rds/votacoes/[id]/_components/proposicao-vinculada.tsx` | baixo | link-card; href → `/proposicoes/...` produção |
+| `src/components/votacao/footer-relacionadas.tsx` | `src/app/rds/votacoes/[id]/_components/footer-relacionadas.tsx` | médio | `bg-brand/15 → bg-fg-brand/15` (generalização `bg-brand/N` da extensão piloto-4, CP4 aprovado); links → `/votacoes/[id]` produção |
+| `src/design-system/compositions/section-card.tsx` | `src/app/rds/votacoes/[id]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia das pilotos 2/3 (Card compound) |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/votacoes/[id]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia das pilotos 2/3 (IntersectionObserver; swap em RDS #203) |
+
+Client islands importados dos originais (sem cópia, precedente
+piloto-2/3): `DisciplinaPartidariaChart`/`VotacaoPorPartidoChart`/
+`VotacaoVotosConsolidadosChart` (recharts, dynamic ssr:false),
+`ExportCsvLink`, `CompartilharVotacaoButton`, `TrustBadge`, `DataBadge`.
+`KpiStrip` → `StatGroup`+`Stat` do `/server` direto no `page.tsx`
+(tones inline: success/error/neutral).
+
+**Checkpoints resolvidos (decisão do owner, PR piloto-4):**
+`VotacaoHemicicloChart` (`src/components/votacao/charts/hemiciclo.tsx`,
+SVG inline com `fill: var(--success)` etc.) e `MargemDecisaoBar`
+(`src/components/votacao/margem-decisao.tsx`, barra CSS-only
+`bg-success`/`bg-destructive`) permanecem **imports dos ORIGINAIS**, sem
+cópia e sem tradução — mesma classe da pendência piloto-3 (cor via var
+em prop/atributo). Razão: consistência cross-chart na seção Resumo
+(mesmos verdes/vermelhos do donut recharts ao lado). Calibram na
+promoção, junto com os charts recharts e `getTipoVotoStyle`.
+
 ### Pendências upstream / client islands (piloto-2)
 
 - **Accordion mobile**: primitiva Radix LOCAL (`src/design-system/primitives/accordion`)
