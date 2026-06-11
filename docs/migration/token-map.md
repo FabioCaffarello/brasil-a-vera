@@ -203,6 +203,26 @@ inline em props. São client islands compartilhados importados dos
 originais (precedente piloto-2) — calibram na promoção, junto com
 `getTipoVotoStyle`.
 
+## Extensão piloto-4 (`/rds/votacoes/[id]`)
+
+Dois tokens novos (pill invertido de filtro ativo) e uma generalização.
+Valores dark comparados (BaV `globals.css` × RDS `react-design-system.css`),
+aprovados pelo owner nos checkpoints da piloto-4:
+
+| classe BaV | classe RDS | valor BaV (dark) | valor RDS (dark) | Δ | nota |
+|---|---|---|---|---|---|
+| `bg-foreground` | `bg-fg-primary` | `--foreground` `#f3f5f8` | `fg-primary` → `slate-50` `#f8fafc` | próximo | par invertido do pill ativo (filtro de votos individuais). Mesmo delta já aceito no par direto `text-foreground → text-fg-primary` da tabela canônica, em papel de bg |
+| `text-background` | `text-surface-canvas` | `--background` `#07090e` | `surface-canvas` → `slate-950` `#020617` | aceitável | on-color do pill invertido. Mesmo delta já aceito no par direto `bg-background → bg-surface-canvas`, em papel de texto |
+| `bg-brand/N` | `bg-fg-brand/N` (qualquer N) | navy-400 `#7390ad` @N% | brand-primary-400 `#7390ad` @N% | **idêntico** | **generaliza** a entrada `bg-brand/10` da extensão piloto-2: a base é byte-idêntica pós-#358 e a opacidade é aritmética — nenhum stop novo por opacidade. Primeiro uso da generalização: `/15` (tag "Mesma proposição" do footer de relacionadas) |
+
+Pendência da mesma classe da piloto-3 (não traduzida — decisão do owner
+nos checkpoints CP1/CP2 da piloto-4): `VotacaoHemicicloChart` (SVG
+inline com `fill: var(--success)` etc.) e `MargemDecisaoBar` (barra
+CSS-only `bg-success`/`bg-destructive`) são importados dos ORIGINAIS
+pela rota staging, sem cópia e sem tradução — consistência cross-chart
+na seção Resumo (mesmos verdes/vermelhos do donut recharts ao lado).
+Calibram na promoção, junto com os charts recharts e `getTipoVotoStyle`.
+
 ## Tokens idênticos (sem tradução)
 
 Estes são aliases que **não precisam ser substituídos** porque o nome é o

@@ -725,6 +725,78 @@ Resta **`/votacoes/[id]`** para fechar o trio (17 componentes, cauda
 com hemiciclo SVG — o teste de stress natural do padrão, e candidato a
 primeira rota do agent se a decisão B confirmar).
 
+## §3.11 — Execução da piloto-4 (2026-06-11) + medição de fricção
+
+**`/rds/votacoes/[id]` no ar** (PR piloto-4) — fecha o trio de perfis.
+Primeira rota executada pelo agent `rds-route-migrator` (decisão B), em
+duas fases: fase 1 mecânica + 4 checkpoints escalados ao owner; fase 2
+aplicando as decisões. O dado central: **onde o agent parou e perguntou
+vs. onde seguiu receita.**
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 7 componentes de domínio duplicados+traduzidos (tabela canônica +
+  extensões cobriram todas as classes exceto as 2 dos checkpoints
+  CP3/CP4; tradução 1:1, zero hesitação).
+- `section-card`/`section-nav`: reuso **verbatim** das cópias das
+  pilotos 2/3 (só o header de comentário).
+- `page.tsx`: substituições idênticas às pilotos 2/3 (StatGroup+Stat
+  com tone map estabelecido, Accordion local via §3.9, hrefs de filtro
+  contidos em `/rds/`, cross-links de entidade pra produção, metadata
+  `(rds-pilot)`).
+- Client islands (3 charts recharts, ExportCsvLink, TrustBadge,
+  DataBadge, CompartilharVotacaoButton): precedente piloto-2/3 sem
+  reanálise.
+- Validação: mesmo protocolo (check + build 3.6s + 788 testes + curl
+  lado a lado + delta de chunk: **−1.842 bytes**, −0,19% — ~neutro,
+  zero chunk RDS no client path).
+
+**Julgamento** — onde o agent PAROU e perguntou (4 checkpoints, todos
+previstos no scoping; recomendações do agent aprovadas integralmente):
+
+1. **CP1 — `VotacaoHemicicloChart`** (regra 2, SVG inline com
+   `fill: var(--success)`): mantido **import do original**, sem cópia —
+   classe conhecida (pendência piloto-3: cor via var em prop). Calibra
+   na promoção.
+2. **CP2 — `MargemDecisaoBar`** (regra 2, barra CSS-only
+   `bg-success`/`bg-destructive`): idem CP1. Argumento decisivo:
+   consistência cross-chart na seção Resumo (traduzir só a barra
+   criaria dois verdes/vermelhos lado a lado).
+3. **CP3 — pill invertido `bg-foreground`/`text-background`** (regra 1,
+   token fora do mapa): traduzido via **extensão piloto-4**
+   (`bg-fg-primary`/`text-surface-canvas`, prova de valor HEX — mesmos
+   deltas já aceitos nos pares diretos da tabela). Classe NOVA de
+   decisão: par conhecido em papel invertido.
+4. **CP4 — `bg-brand/15`** (regra 1): **generalização** da entrada
+   piloto-2 para `bg-brand/N → bg-fg-brand/N` (base byte-idêntica
+   pós-#358; opacidade aritmética) — elimina stops futuros por
+   opacidade.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Workarounds §3.9 aplicados
+sem redescoberta; nenhum gap upstream novo; nenhuma issue nova no RDS.
+Ajuste menor ao scoping: 7 cópias em vez de 8 — `margem-decisao` virou
+import pendente (regra 2 manda parar ANTES de copiar/traduzir; cópia
+verbatim seria só superfície de drift).
+
+### Leitura para a decisão B (primeira rodada com agent)
+
+O contrato funcionou como desenhado: 100% do trabalho de tradução foi
+mecânico ou escalado; os 4 stops eram exatamente os previstos pelo
+scoping; as 4 recomendações vieram fundamentadas em precedente e foram
+aprovadas sem alteração. Custo de coordenação: 1 rodada de perguntas.
+Nenhuma tradução ad-hoc escapou (grep de tokens BaV residuais limpo,
+fora os imports pendentes registrados).
+
+### Efeito na fila
+
+**Trio de perfis completo** (parlamentar, proposição, votação). Próximas
+ondas seguem a §3.7: `/parlamentares/[id]/gastos` aguarda RDS #162
+(FilterChips); home + 5 listagens aguardam RDS #163 (HeroSection);
+painel aguarda N8 (sem issue upstream ainda). Workarounds §3.9
+inalterados (varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
