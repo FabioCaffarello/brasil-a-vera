@@ -51,7 +51,7 @@ do `/server` + `<Text>` para hint + `<h2>` cru para título.
 | `src/components/parlamentar/afinidade-voto.tsx` | `src/app/rds/parlamentares/[id]/_components/afinidade-voto.tsx` | baixo | lista ranqueada simples |
 | `src/components/parlamentar/pares-contraditorios.tsx` | `src/app/rds/parlamentares/[id]/_components/pares-contraditorios.tsx` | médio | acento warning subtle preservado; badges direção: `destructive→error` (tradução estendida piloto-2) |
 | `src/design-system/compositions/section-card.tsx` | `src/app/rds/parlamentares/[id]/_components/section-card.tsx` | baixo | **reconstruída sobre Card compound do RDS 3.5.0** (asSection + Card.Title icon/badge); API local preservada |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/parlamentares/[id]/_components/section-nav.tsx` | médio | IntersectionObserver local mantido — `useScrollSpy` do RDS puxa o barrel client inteiro (+277KB minificado, medição no PR); swap quando RDS #203 (entry `./hooks`) fechar |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/parlamentares/[id]/_components/section-nav.tsx` | médio | `useScrollSpy` via entry `./hooks` (RDS 3.8.0, #205 fecha #203; +396 bytes medidos na varredura 2026-06-11) — IntersectionObserver local aposentado |
 
 Composições substituídas por upstream SEM cópia: `KpiStrip` → `StatGroup`+`Stat`
 do `/server` direto no `page.tsx` (borda externa via className; tone map
@@ -69,7 +69,7 @@ do `/server` direto no `page.tsx` (borda externa via className; tone map
 | `src/components/proposicao/tramitacao-timeline.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/tramitacao-timeline.tsx` | médio | filtros + cursor pagination; FilterChips local (#162) |
 | `src/components/proposicao/votacoes-vinculadas.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/votacoes-vinculadas.tsx` | médio | filtros mini exatos; FilterChips local (#162) |
 | `src/design-system/compositions/section-card.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 (Card compound) |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia da piloto-2 (IntersectionObserver; swap em RDS #203) |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia da piloto-2 (`useScrollSpy` via `./hooks` desde a varredura 2026-06-11) |
 
 Client islands importados dos originais (sem cópia, precedente
 piloto-2): `ApoioPartidoChart`/`VotosConsolidadosChart` (recharts,
@@ -89,7 +89,7 @@ dynamic ssr:false), `CompartilharProposicaoButton`, `TrustBadge`.
 | `src/components/votacao/proposicao-vinculada.tsx` | `src/app/rds/votacoes/[id]/_components/proposicao-vinculada.tsx` | baixo | link-card; href → `/proposicoes/...` produção |
 | `src/components/votacao/footer-relacionadas.tsx` | `src/app/rds/votacoes/[id]/_components/footer-relacionadas.tsx` | médio | `bg-brand/15 → bg-fg-brand/15` (generalização `bg-brand/N` da extensão piloto-4, CP4 aprovado); links → `/votacoes/[id]` produção |
 | `src/design-system/compositions/section-card.tsx` | `src/app/rds/votacoes/[id]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia das pilotos 2/3 (Card compound) |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/votacoes/[id]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia das pilotos 2/3 (IntersectionObserver; swap em RDS #203) |
+| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/votacoes/[id]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia das pilotos 2/3 (`useScrollSpy` via `./hooks` desde a varredura 2026-06-11) |
 
 Client islands importados dos originais (sem cópia, precedente
 piloto-2/3): `DisciplinaPartidariaChart`/`VotacaoPorPartidoChart`/

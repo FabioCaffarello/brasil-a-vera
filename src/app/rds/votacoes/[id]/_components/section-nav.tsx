@@ -1,22 +1,20 @@
 'use client'
 
-// Cópia-rds de src/design-system/compositions/section-nav.tsx
-// (piloto-4; idêntica às cópias das pilotos 2/3 — reuso verbatim).
-// Tokens traduzidos pela tabela canônica; lógica IntersectionObserver
-// EXATA preservada.
+// Cópia-rds de src/design-system/compositions/section-nav.tsx.
+// RDS 3.8.0: o useScrollSpy agora tem entry granular `/hooks` (#205,
+// fecha RDS #203) — 855 bytes standalone, sem o barrel client de 488K
+// que a medição da piloto-2 rejeitou (+277KB). O IntersectionObserver
+// local que existia aqui como workaround (§3.9) foi aposentado.
+// rootMargin preservado do original ('-30% 0px -60% 0px' — ativa o
+// link quando a seção cruza ~30% do top, evita flicker).
 //
-// NOTA (decisão empírica, princípio 13): o RDS 3.6.0 expõe useScrollSpy
-// como hook público (#167) e a primeira versão desta cópia o consumia.
-// Medição em build de produção mostrou que importar o hook puxa o barrel
-// client INTEIRO do RDS para o chunk da rota: +277.593 bytes minificados
-// (JS total da rota: 950.758 → 1.228.157 bytes, +29%) contendo
-// ColorPicker, CommandPalette, DataGrid, DatePicker, FormWizard etc. —
-// o dist é bundle único com banner "use client", opaco pra tree-shaking.
-// Issue upstream pedindo entry granular: RDS #203. Swap quando fechar.
-// Ver PR piloto-2 para o output literal da medição.
+// Contrato do hook: retorna null até a primeira interseção (SSR-safe);
+// fallback `?? items[0]?.id` mantém o primeiro link ativo no primeiro
+// paint, igual ao useState inicial do original.
 
+import { useScrollSpy } from '@fabio.caffarello/react-design-system/hooks'
 import type { ReactNode } from 'react'
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 
 import { cn } from '@/lib/cn'
 
@@ -44,30 +42,11 @@ export function SectionNav({
   stickyTop = '0',
   className,
 }: SectionNavProps) {
-  const [activeId, setActiveId] = useState<string | null>(items[0]?.id ?? null)
-
-  useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined') return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveId(entry.target.id)
-            break
-          }
-        }
-      },
-      { rootMargin: '-30% 0px -60% 0px', threshold: 0 },
-    )
-
-    for (const item of items) {
-      const el = document.getElementById(item.id)
-      if (el) observer.observe(el)
-    }
-
-    return () => observer.disconnect()
-  }, [items])
+  // useScrollSpy exige referência estável de ids (sentinela join
+  // interno recria o observer a cada mudança) — useMemo nos derivados.
+  const ids = useMemo(() => items.map((item) => item.id), [items])
+  const active = useScrollSpy(ids, { rootMargin: '-30% 0px -60% 0px' })
+  const activeId = active ?? items[0]?.id ?? null
 
   if (items.length === 0) return null
 

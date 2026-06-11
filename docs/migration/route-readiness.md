@@ -659,9 +659,25 @@ fechar" e remover a linha.
 
 | Workaround | Issue upstream | Ação quando fechar |
 |---|---|---|
-| Accordion Radix local na view mobile dos perfis (cópias-rds importam `@/design-system/primitives/accordion`) | [RDS #202](https://github.com/FabioCaffarello/react-design-system/issues/202) — clipping `max-h-[1000px]` + typography fixa do trigger + sem className por item | Trocar pelo Accordion do RDS nas cópias-rds dos perfis migrados; validar conteúdo alto (votos paginados, gastos com chart) num viewport mobile real |
-| `SectionNav` cópia-rds com IntersectionObserver local (lógica duplicada que o useScrollSpy upstream existia pra eliminar) | [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203) — hook só existe no barrel client de 488K; importá-lo custou +277KB no chunk da rota | Trocar pelo `useScrollSpy` via entry granular; **re-medir o chunk em build de produção** antes de aceitar (mesmo protocolo da medição original) |
-| `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos` |
+| Accordion Radix local na view mobile dos perfis (cópias-rds importam `@/design-system/primitives/accordion`) | [RDS #208](https://github.com/FabioCaffarello/react-design-system/issues/208) — o componente foi entregue na 3.8.0 (#204 fecha a #202: sem clamp, className/triggerClassName por item), mas SÓ existe no barrel client; swap medido e **reprovado** (+264.196 bytes, +28%) | Quando houver entry granular de componentes (ou `preserveModules`): re-converter para a API data-driven `items[]` (conversão já validada — compila e renderiza; revertida só pelo bundle) e **re-medir antes de aceitar** |
+| `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos`; **atenção ao modo de import** (lição da #208: componente client via barrel = +264KB) |
+
+### Varredura 2026-06-11 (bump 3.7.0 → 3.8.0) — primeira execução do ritual
+
+- **RDS #203 (useScrollSpy) — RESOLVIDA, linha removida.** Entry
+  granular `./hooks` (#205, 855 bytes) adotado nas 3 cópias de
+  `section-nav`: **+396 bytes** no JS da rota, contra os +277KB que o
+  barrel custava na medição original. IntersectionObserver local
+  aposentado.
+- **RDS #202 (Accordion) — fechada upstream, swap REPROVADO pela
+  re-medição.** O componente do #204 é exatamente o pedido, mas
+  importar `{ Accordion }` do entry raiz puxa o barrel inteiro:
+  951.173 → 1.215.369 bytes (**+264.196, +28%**). Conversão revertida;
+  workaround Radix local permanece; o relógio agora aponta para a
+  [RDS #208](https://github.com/FabioCaffarello/react-design-system/issues/208).
+- A re-medição obrigatória da coluna "ação quando fechar" provou seu
+  valor na primeira varredura: sem ela, o +28% teria entrado por fé na
+  issue fechada.
 
 Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
 data-viz nas Sparklines e links de drill-down). É token do projeto
