@@ -126,9 +126,9 @@ mesma vigilância de drift das checagens 1/2:
 
 | Original | Cópia-rds | Risco | Notas |
 |---|---|:---:|---|
-| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/parlamentares/[id]/_components/rds-accordion.ts` | baixo | wrapper 'use client' de 1 linha: faz o import do barrel `/granular` cruzar o boundary DENTRO de módulo client (tree-shaking poda ~200 re-exports; import direto de SC custava +294KB — medição na varredura 3.9.0) |
-| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
-| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/votacoes/[id]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
+| `(novo — sem original; re-export do RDS)` | `src/app/rds/parlamentares/[id]/_components/rds-accordion.ts` | baixo | wrapper 'use client' de 1 linha: faz o import do barrel `/granular` cruzar o boundary DENTRO de módulo client (tree-shaking poda ~200 re-exports; import direto de SC custava +294KB — medição na varredura 3.9.0) |
+| `(novo — sem original; re-export do RDS)` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
+| `(novo — sem original; re-export do RDS)` | `src/app/rds/votacoes/[id]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
 
 O Accordion Radix local (`src/design-system/primitives/accordion`)
 segue em uso pelas rotas de PRODUÇÃO; as rotas `/rds/` não o consomem
