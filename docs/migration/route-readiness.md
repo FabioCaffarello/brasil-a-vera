@@ -833,6 +833,75 @@ ondas seguem a §3.7: `/parlamentares/[id]/gastos` aguarda RDS #162
 painel aguarda N8 (sem issue upstream ainda). Workarounds §3.9
 inalterados (varrer no próximo bump do RDS).
 
+## §3.12 — Execução da piloto-5 (2026-06-11) + medição de fricção
+
+**`/rds/privacidade` e `/rds/feed` no ar** (PR piloto-5, único PR para as
+duas) — as duas rotas de alta prontidão sem bloqueador que restavam fora
+do trio de perfis. Objetivo declarado: fechar cobertura com custo
+mínimo, não aprender (a §3.5 já as classificava como baixo aprendizado).
+Executada pelo agent `rds-route-migrator`, empilhada na varredura 3.9.0.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 2 páginas duplicadas+traduzidas. ZERO componentes em `_components/`:
+  os helpers locais (`Section`, `ContactLink`, `FeedGroup`) foram
+  reconstruídos inline no `page.tsx` (precedente piloto-1). Tabela
+  canônica + extensões cobriram todas as classes exceto as 2 do
+  checkpoint único (abaixo).
+- `<Text>` aplicado pela regra dura ≤1 override (body/bodySmall/
+  bodyLarge/caption/label); h1/h2 com 3–4 props de typography ficaram
+  HTML cru — mesmos casos da piloto-1.
+- `dynamic = 'force-dynamic'`, metadata `(rds-pilot)`, chrome do root
+  layout herdado, hrefs: feeds RSS e cross-link `/painel` → produção
+  (classe conhecida: cross-link de entidade, pilotos 2–4).
+- Validação: protocolo integral (check limpo + build 3.7s + 788 testes
+  + curl lado a lado nas 4 URLs com dados reais + `X-Robots-Tag:
+  noindex` + zero chunk RDS no client path). **Delta de JS: 0 bytes
+  exatos nas duas rotas** (892.857 bytes / 17 chunks dos dois lados —
+  rotas server-only, nenhum JS novo).
+
+**Julgamento** — onde o agent PAROU e perguntou (1 checkpoint):
+
+1. **CP1 — brand com opacidade em papéis text/border**
+   (`hover:text-brand/80` em /privacidade, `hover:border-brand/60` em
+   /feed; regra 1, sem linha literal no mapa): aprovada a **extensão
+   piloto-5** generalizando `text-brand/N` e `border-brand/N` →
+   `*-fg-brand/N` — base byte-idêntica `#7390ad` dos dois lados
+   (prova no token-map), prefixo utility só escolhe a propriedade CSS,
+   opacidade aritmética (princípio CP4 da piloto-4). Classe de decisão:
+   conhecida-adjacente (composição de duas regras já aprovadas).
+
+Micro-decisões de classe conhecida sem stop: link "texto-fonte" da
+política aponta pro arquivo da rota ORIGINAL (fonte canônica do texto
+enquanto /rds/ é staging); pares de consolidação registrados **em nível
+de página** (primeira rota sem `_components/` — sem isso o guard não
+vigiaria drift do texto legal versionado).
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (FilterChips #162) não tocado.
+
+### O dado de custo — a §3.5 estava certa?
+
+**Confirmada, com nuance.** Aprendizado ≈ zero (1 checkpoint, e ainda
+assim de classe adjacente a decisões já tomadas; zero componente novo;
+zero medição surpreendente). MAS o custo real também foi mínimo: sessão
+única, 2 arquivos de rota + 3 docs, 100% do trabalho de tradução
+mecânico. Com o playbook maduro, rotas textuais custam quase nada — o
+veredito da §3.5 ("pouco aprendizado para o esforço") era correto
+QUANDO esforço era caro (pilotos 1–2); pós-agent, o denominador caiu e
+fechar cobertura barata passou a valer a pena. Não generalizar para
+rotas com client islands.
+
+### Efeito na fila
+
+Cobertura: **7 de 21 rotas** sob `/rds/` (partidos, 3 perfis,
+privacidade, feed). Restam: `/sign-in`/`/sign-up` (chrome puro, custo
+~zero, sem data); `/parlamentares/[id]/gastos` aguarda RDS #162;
+home + 5 listagens aguardam RDS #163; painel aguarda N8 (sem issue
+upstream). Workarounds §3.9 inalterados.
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na

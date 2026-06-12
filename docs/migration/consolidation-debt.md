@@ -108,6 +108,20 @@ em prop/atributo). Razão: consistência cross-chart na seção Resumo
 (mesmos verdes/vermelhos do donut recharts ao lado). Calibram na
 promoção, junto com os charts recharts e `getTipoVotoStyle`.
 
+### Piloto-5 — `/rds/privacidade` + `/rds/feed` (pares em nível de página)
+
+Rotas textuais sem componentes de domínio em `src/components/` — os
+helpers locais (`Section`, `ContactLink`, `FeedGroup`) vivem DENTRO do
+`page.tsx` e foram reconstruídos inline na cópia (precedente piloto-1:
+helper local não vira arquivo separado). Sem `_components/`, o
+espelhamento é em nível de página — os pares abaixo dão ao guard a
+mesma vigilância de drift das checagens 1/2:
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/app/privacidade/page.tsx` | `src/app/rds/privacidade/page.tsx` | médio | texto legal versionado (`PRIVACY_POLICY_VERSION` em `src/lib/privacy.ts`) — bump de texto no original PRECISA espelhar na cópia; links brand `hover:text-brand/80 → hover:text-fg-brand/80` (extensão piloto-5); cross-link `/painel?tab=meus-dados` e link "texto-fonte" apontam pra produção/original |
+| `src/app/feed/page.tsx` | `src/app/rds/feed/page.tsx` | baixo | índice de feeds; hrefs apontam pros endpoints RSS de produção (`/feed/votacoes/...` — são o produto, não navegação com contraparte /rds/); hover de card `hover:border-brand/60 → hover:border-fg-brand/60` (extensão piloto-5) |
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
