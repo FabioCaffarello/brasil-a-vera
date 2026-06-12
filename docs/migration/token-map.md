@@ -223,6 +223,17 @@ pela rota staging, sem cópia e sem tradução — consistência cross-chart
 na seção Resumo (mesmos verdes/vermelhos do donut recharts ao lado).
 Calibram na promoção, junto com os charts recharts e `getTipoVotoStyle`.
 
+## Extensão piloto-5 (`/rds/privacidade` + `/rds/feed`)
+
+Uma generalização (sem cor nova): a base brand com opacidade apareceu em
+dois papéis utility ainda sem linha literal. Valores dark comparados
+(BaV `globals.css` × RDS `react-design-system.css` 3.9.0), aprovados
+pelo owner no checkpoint da piloto-5:
+
+| classe BaV | classe RDS | valor BaV (dark) | valor RDS (dark) | Δ | nota |
+|---|---|---|---|---|---|
+| `text-brand/N`, `border-brand/N` | `text-fg-brand/N`, `border-fg-brand/N` | `--primary` → navy-400 `#7390ad` @N% | `fg-brand` → `brand-primary-400` `#7390ad` @N% | **idêntico** | **generaliza** as entradas piloto-2 (`text-brand`, byte-idêntico) e piloto-4 (`bg-brand/N`, qualquer N) para a base brand em qualquer papel utility: o prefixo (`text-`/`bg-`/`border-`) só escolhe a propriedade CSS que recebe o MESMO valor byte-idêntico pós-#358, e a opacidade é aritmética (princípio CP4 da piloto-4). Nenhum stop futuro por papel utility ou opacidade da base brand. Primeiros usos: `hover:text-brand/80` (links de /privacidade), `hover:border-brand/60` (cards de /feed) |
+
 ## Tokens idênticos (sem tradução)
 
 Estes são aliases que **não precisam ser substituídos** porque o nome é o

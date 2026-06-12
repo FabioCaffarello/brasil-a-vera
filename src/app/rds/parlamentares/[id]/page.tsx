@@ -32,12 +32,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL } from '@/lib/format'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
@@ -69,13 +63,13 @@ import {
   type VotosAlinhamentoFilter,
   type VotosPeriodoFilter,
 } from '@/lib/queries/parlamentares'
-
 import { Top5Afinidade } from './_components/afinidade-voto'
 import { AlinhamentoBancada } from './_components/alinhamento'
 import { GastosResumoBlock } from './_components/gastos-resumo'
 import { ParesContraditorios } from './_components/pares-contraditorios'
 import { PerfilHeader } from './_components/perfil-header'
 import { ProposicoesAutor } from './_components/proposicoes-autor'
+import { Accordion } from './_components/rds-accordion'
 import { SectionCard } from './_components/section-card'
 import { SectionNav } from './_components/section-nav'
 import { VotosRecentes } from './_components/votos-recentes'
@@ -459,108 +453,93 @@ export default async function ParlamentarPerfilPage({
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável — primitiva Radix LOCAL (gap do
-          Accordion RDS reportado upstream; swap quando fechar). Header +
-          Votos + Alinhamento default-expanded como no original. */}
+      {/* Mobile: Accordion do RDS via entry /granular (3.9.0, #209 fecha
+          RDS #208 — preserveModules; só o módulo do Accordion atravessa o
+          client boundary). Componente do #204: painel sem clamp
+          (grid-template-rows 0fr→1fr) + className/triggerClassName por
+          item. Radix local aposentado nesta rota. Header + Votos +
+          Alinhamento default-expanded como no original. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['votos', 'alinhamento']}
+        defaultOpen={['votos', 'alinhamento']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="votos"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Votos recentes
-          </AccordionTrigger>
-          <AccordionContent>
-            <VotosRecentes
-              votos={votos}
-              filtros={votosFiltros}
-              distribuicao={votosDistribuicao}
-              buildFiltroHref={buildVotosFiltroHref}
-              proximaPaginaHref={votosProximaPaginaHref}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="alinhamento"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Alinhamento à bancada
-          </AccordionTrigger>
-          <AccordionContent>
-            <AlinhamentoBancada
-              alinhamento={alinhamento}
-              casa={parlamentar.casa}
-              mensal={alinhamentoMensal}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="proposicoes"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Proposições onde é autor ou coautor
-          </AccordionTrigger>
-          <AccordionContent>
-            <ProposicoesAutor
-              proposicoes={proposicoes}
-              filtros={proposicoesFiltros}
-              buildFiltroHref={buildProposicoesFiltroHref}
-              proximaPaginaHref={proposicoesProximaPaginaHref}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="gastos"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Gastos parlamentares — {anoCorrente}
-          </AccordionTrigger>
-          <AccordionContent>
-            <GastosResumoBlock
-              ano={anoCorrente}
-              mensal={gastosMensal}
-              resumo={gastos}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="afinidade"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Top 5 maior afinidade de voto
-          </AccordionTrigger>
-          <AccordionContent>
-            <Top5Afinidade afinidades={afinidades} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="pares"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Pares de votos em direções opostas
-          </AccordionTrigger>
-          <AccordionContent>
-            <ParesContraditorios
-              pares={paresContraditorios}
-              stats={coerenciaStats}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        items={[
+          {
+            id: 'votos',
+            title: 'Votos recentes',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <VotosRecentes
+                votos={votos}
+                filtros={votosFiltros}
+                distribuicao={votosDistribuicao}
+                buildFiltroHref={buildVotosFiltroHref}
+                proximaPaginaHref={votosProximaPaginaHref}
+              />
+            ),
+          },
+          {
+            id: 'alinhamento',
+            title: 'Alinhamento à bancada',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <AlinhamentoBancada
+                alinhamento={alinhamento}
+                casa={parlamentar.casa}
+                mensal={alinhamentoMensal}
+              />
+            ),
+          },
+          {
+            id: 'proposicoes',
+            title: 'Proposições onde é autor ou coautor',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <ProposicoesAutor
+                proposicoes={proposicoes}
+                filtros={proposicoesFiltros}
+                buildFiltroHref={buildProposicoesFiltroHref}
+                proximaPaginaHref={proposicoesProximaPaginaHref}
+              />
+            ),
+          },
+          {
+            id: 'gastos',
+            title: `Gastos parlamentares — ${anoCorrente}`,
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <GastosResumoBlock
+                ano={anoCorrente}
+                mensal={gastosMensal}
+                resumo={gastos}
+              />
+            ),
+          },
+          {
+            id: 'afinidade',
+            title: 'Top 5 maior afinidade de voto',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <Top5Afinidade afinidades={afinidades} />,
+          },
+          {
+            id: 'pares',
+            title: 'Pares de votos em direções opostas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <ParesContraditorios
+                pares={paresContraditorios}
+                stats={coerenciaStats}
+              />
+            ),
+          },
+        ]}
+      />
 
       {/* Desktop: stack linear de SectionCards (Card compound do RDS —
           ver ./_components/section-card.tsx). Anchors do scroll-spy

@@ -108,6 +108,32 @@ em prop/atributo). Razão: consistência cross-chart na seção Resumo
 (mesmos verdes/vermelhos do donut recharts ao lado). Calibram na
 promoção, junto com os charts recharts e `getTipoVotoStyle`.
 
+### Piloto-5 — `/rds/privacidade` + `/rds/feed` (pares em nível de página)
+
+Rotas textuais sem componentes de domínio em `src/components/` — os
+helpers locais (`Section`, `ContactLink`, `FeedGroup`) vivem DENTRO do
+`page.tsx` e foram reconstruídos inline na cópia (precedente piloto-1:
+helper local não vira arquivo separado). Sem `_components/`, o
+espelhamento é em nível de página — os pares abaixo dão ao guard a
+mesma vigilância de drift das checagens 1/2:
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/app/privacidade/page.tsx` | `src/app/rds/privacidade/page.tsx` | médio | texto legal versionado (`PRIVACY_POLICY_VERSION` em `src/lib/privacy.ts`) — bump de texto no original PRECISA espelhar na cópia; links brand `hover:text-brand/80 → hover:text-fg-brand/80` (extensão piloto-5); cross-link `/painel?tab=meus-dados` e link "texto-fonte" apontam pra produção/original |
+| `src/app/feed/page.tsx` | `src/app/rds/feed/page.tsx` | baixo | índice de feeds; hrefs apontam pros endpoints RSS de produção (`/feed/votacoes/...` — são o produto, não navegação com contraparte /rds/); hover de card `hover:border-brand/60 → hover:border-fg-brand/60` (extensão piloto-5) |
+
+### Wrappers de entry granular (varredura 3.9.0 — sem original)
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/parlamentares/[id]/_components/rds-accordion.ts` | baixo | wrapper 'use client' de 1 linha: faz o import do barrel `/granular` cruzar o boundary DENTRO de módulo client (tree-shaking poda ~200 re-exports; import direto de SC custava +294KB — medição na varredura 3.9.0) |
+| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
+| `sem-original--wrapper-re-export-do-rds` | `src/app/rds/votacoes/[id]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
+
+O Accordion Radix local (`src/design-system/primitives/accordion`)
+segue em uso pelas rotas de PRODUÇÃO; as rotas `/rds/` não o consomem
+mais (Accordion do RDS via wrapper desde a varredura 3.9.0).
+
 ### Pendências upstream / client islands (piloto-2)
 
 - **Accordion mobile**: primitiva Radix LOCAL (`src/design-system/primitives/accordion`)
