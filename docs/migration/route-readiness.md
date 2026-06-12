@@ -659,7 +659,6 @@ fechar" e remover a linha.
 
 | Workaround | Issue upstream | Ação quando fechar |
 |---|---|---|
-| Accordion Radix local na view mobile dos perfis (cópias-rds importam `@/design-system/primitives/accordion`) | [RDS #208](https://github.com/FabioCaffarello/react-design-system/issues/208) — o componente foi entregue na 3.8.0 (#204 fecha a #202: sem clamp, className/triggerClassName por item), mas SÓ existe no barrel client; swap medido e **reprovado** (+264.196 bytes, +28%) | Quando houver entry granular de componentes (ou `preserveModules`): re-converter para a API data-driven `items[]` (conversão já validada — compila e renderiza; revertida só pelo bundle) e **re-medir antes de aceitar** |
 | `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos`; **atenção ao modo de import** (lição da #208: componente client via barrel = +264KB) |
 
 ### Varredura 2026-06-11 (bump 3.7.0 → 3.8.0) — primeira execução do ritual
@@ -678,6 +677,27 @@ fechar" e remover a linha.
 - A re-medição obrigatória da coluna "ação quando fechar" provou seu
   valor na primeira varredura: sem ela, o +28% teria entrado por fé na
   issue fechada.
+
+### Varredura 2026-06-11 (bump 3.8.0 → 3.9.0) — segunda execução
+
+- **RDS #208 (Accordion via entry granular) — RESOLVIDA, linha
+  removida.** A 3.9.0 entregou `./granular` (#209, preserveModules,
+  ~200 módulos). A adoção exigiu uma descoberta de consumidor:
+  importar o barrel granular **direto de um Server Component** cria
+  client reference do entry inteiro — medido **1.245.968 bytes**
+  (pior que o barrel raiz reprovado), falsificando a afirmação do
+  README upstream ("a Server Component can import any granular module
+  and Next places exactly that module graph behind the boundary").
+  `experimental.optimizePackageImports` não teve efeito (testado nas
+  duas formas). O padrão que funciona: **re-export wrapper `'use
+  client'` local** (`_components/rds-accordion.ts`) — o import do
+  barrel acontece dentro de módulo client, tree-shaking ESM normal
+  poda os re-exports. Resultado nas 3 rotas de perfil:
+  **−5.905 bytes cada** (o Accordion RDS sai MENOR que o Radix local
+  que substitui). Radix local aposentado nas rotas `/rds/`;
+  reportado upstream para caveat no README.
+- Restante da tabela: só FilterChips (#162).
+
 
 Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
 data-viz nas Sparklines e links de drill-down). É token do projeto

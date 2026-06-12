@@ -24,12 +24,6 @@ import { notFound, permanentRedirect } from 'next/navigation'
 
 import { ApoioPartidoChart } from '@/components/proposicao/apoio-partido-chart-client'
 import { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart-client'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatProposicaoRef } from '@/lib/format'
 import { CursorTramitacaoV1 } from '@/lib/queries/cursor-schemas'
@@ -63,11 +57,11 @@ import {
   inferirMarcoAtual,
   isSituacaoTerminalNegativa,
 } from '@/modules/proposicoes/domain/tramitacao-card'
-
 import { AutoresList } from './_components/autores-list'
 import { BarraProgressoTramitacao } from './_components/barra-progresso-tramitacao'
 import { FooterCrossLinks } from './_components/footer-cross-links'
 import { PerfilProposicaoHeader } from './_components/perfil-header'
+import { Accordion } from './_components/rds-accordion'
 import { SectionCard } from './_components/section-card'
 import { SectionNav } from './_components/section-nav'
 import { TemasList } from './_components/temas-list'
@@ -403,86 +397,81 @@ export default async function ProposicaoDetalhePage({
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável — primitiva Radix LOCAL (RDS #202;
-          ver §3.9). defaultValue narrativo preservado do original. */}
+      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
+          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
+          varredura). defaultOpen narrativo preservado do original. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['tramitacao', 'autores']}
+        defaultOpen={['tramitacao', 'autores']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="tramitacao"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Tramitação
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {barraMarcoAtual !== null && ultimoOrgao !== null ? (
-              <BarraProgressoTramitacao
-                ariaLabel={`Tramitação em ${ultimoOrgao}`}
-                currentStep={barraMarcoAtual}
-                terminalNegativo={barraTerminalNegativo}
-                variant="full"
-              />
-            ) : null}
-            <TramitacaoTimeline
-              buildFiltroHref={buildTramitacaoFiltroHref}
-              eventos={tramitacaoPage.rows}
-              filtro={tramitacaoFiltro}
-              mostrarMaisHref={tramitacaoMostrarMaisHref}
-              restantes={tramitacaoRestantes}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="autores"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Autores
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {apoioPartido.length > 0 ? (
-              <ApoioPartidoChart data={apoioPartido} />
-            ) : null}
-            <AutoresList autores={autores} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="votacoes"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Votações vinculadas
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {votosConsolidados ? (
-              <VotosConsolidadosChart data={votosConsolidados} />
-            ) : null}
-            <VotacoesVinculadas
-              buildFiltroHref={buildVotacoesFiltroHref}
-              casa={votacoesCasa}
-              resultado={votacoesResultado}
-              votacoes={votacoes}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="temas"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Temas
-          </AccordionTrigger>
-          <AccordionContent>
-            <TemasList temas={temas} />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        items={[
+          {
+            id: 'tramitacao',
+            title: 'Tramitação',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {barraMarcoAtual !== null && ultimoOrgao !== null ? (
+                  <BarraProgressoTramitacao
+                    ariaLabel={`Tramitação em ${ultimoOrgao}`}
+                    currentStep={barraMarcoAtual}
+                    terminalNegativo={barraTerminalNegativo}
+                    variant="full"
+                  />
+                ) : null}
+                <TramitacaoTimeline
+                  buildFiltroHref={buildTramitacaoFiltroHref}
+                  eventos={tramitacaoPage.rows}
+                  filtro={tramitacaoFiltro}
+                  mostrarMaisHref={tramitacaoMostrarMaisHref}
+                  restantes={tramitacaoRestantes}
+                />
+              </div>
+            ),
+          },
+          {
+            id: 'autores',
+            title: 'Autores',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {apoioPartido.length > 0 ? (
+                  <ApoioPartidoChart data={apoioPartido} />
+                ) : null}
+                <AutoresList autores={autores} />
+              </div>
+            ),
+          },
+          {
+            id: 'votacoes',
+            title: 'Votações vinculadas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {votosConsolidados ? (
+                  <VotosConsolidadosChart data={votosConsolidados} />
+                ) : null}
+                <VotacoesVinculadas
+                  buildFiltroHref={buildVotacoesFiltroHref}
+                  casa={votacoesCasa}
+                  resultado={votacoesResultado}
+                  votacoes={votacoes}
+                />
+              </div>
+            ),
+          },
+          {
+            id: 'temas',
+            title: 'Temas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <TemasList temas={temas} />,
+          },
+        ]}
+      />
 
       {/* Desktop: stack linear de SectionCards (Card compound do RDS via
           cópia local; scroll-mt-28 embutido). Ordem das âncoras casa com

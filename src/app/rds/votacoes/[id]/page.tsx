@@ -45,12 +45,6 @@ import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
 import { canExport } from '@/lib/auth-guards'
 import {
   getDisciplinaPartidariaPorVotacao,
@@ -62,10 +56,10 @@ import {
   getVotosResumoPorPartido,
 } from '@/lib/queries/votacoes'
 import { calcularDisciplinaMedia } from '@/modules/votacoes/domain/disciplina'
-
 import { VotacoesRelacionadasFooter } from './_components/footer-relacionadas'
 import { PerfilVotacaoHeader } from './_components/perfil-header'
 import { ProposicaoVinculada } from './_components/proposicao-vinculada'
+import { Accordion } from './_components/rds-accordion'
 import { RebeldesList } from './_components/rebeldes-list'
 import { SectionCard } from './_components/section-card'
 import { SectionNav } from './_components/section-nav'
@@ -258,138 +252,123 @@ export default async function VotacaoPage({ params }: PageProps) {
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável — primitiva Radix LOCAL (RDS #202;
-          ver §3.9). defaultValue=['resumo','partido'] preservado do
-          original (2 macros abertos). */}
+      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
+          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
+          varredura). defaultOpen=['resumo','partido'] preservado (2
+          macros abertos). Itens de disciplina/rebeldes seguem
+          condicionais (D5) via spread. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['resumo', 'partido']}
+        defaultOpen={['resumo', 'partido']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="resumo"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Resumo
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            <MargemDecisaoBar
-              aprovada={v.aprovada}
-              votosNao={v.votosNao}
-              votosSim={v.votosSim}
-            />
-            <VotacaoVotosConsolidadosChart
-              data={{
-                sim: v.votosSim,
-                nao: v.votosNao,
-                abstencao: v.abstencoes,
-                ausentes: v.ausentes ?? 0,
-              }}
-            />
-            <VotosResumo
-              totais={{
-                sim: v.votosSim,
-                nao: v.votosNao,
-                abstencoes: v.abstencoes,
-                ausentes: v.ausentes,
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="partido"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Por partido
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3">
-            <VotacaoPorPartidoChart data={resumoPorPartido} />
-            <details className="text-sm">
-              <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
-                Ver tabela numérica
-              </summary>
-              <div className="mt-3">
-                <VotosPorPartido porPartido={resumoPorPartido} />
-              </div>
-            </details>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Disciplina partidária + Rebeldes — D5: condicionais, só
-            renderizam se há orientações de bancada registradas
-            (disciplinas.length > 0). */}
-        {disciplinas.length > 0 ? (
-          <>
-            <AccordionItem
-              className="rounded-lg border-line-default bg-surface-base px-4"
-              value="disciplina"
-            >
-              <AccordionTrigger className="font-semibold text-base">
-                Disciplina partidária
-              </AccordionTrigger>
-              <AccordionContent>
-                <DisciplinaPartidariaChart data={disciplinas} />
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem
-              className="rounded-lg border-line-default bg-surface-base px-4"
-              value="rebeldes"
-            >
-              <AccordionTrigger className="font-semibold text-base">
-                Quem rebelou-se
-              </AccordionTrigger>
-              <AccordionContent>
-                <RebeldesList
-                  partidosComOrientacao={disciplinas.length}
-                  rebeldes={rebeldes}
+        items={[
+          {
+            id: 'resumo',
+            title: 'Resumo',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                <MargemDecisaoBar
+                  aprovada={v.aprovada}
+                  votosNao={v.votosNao}
+                  votosSim={v.votosSim}
                 />
-              </AccordionContent>
-            </AccordionItem>
-          </>
-        ) : null}
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="individuais"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Individuais
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3">
-            {canExportData && (
-              <div className="flex justify-end">
-                <ExportCsvLink
-                  href={`/api/export/votacoes/${v.id}/votos`}
-                  label="Exportar todos os votos (CSV)"
+                <VotacaoVotosConsolidadosChart
+                  data={{
+                    sim: v.votosSim,
+                    nao: v.votosNao,
+                    abstencao: v.abstencoes,
+                    ausentes: v.ausentes ?? 0,
+                  }}
+                />
+                <VotosResumo
+                  totais={{
+                    sim: v.votosSim,
+                    nao: v.votosNao,
+                    abstencoes: v.abstencoes,
+                    ausentes: v.ausentes,
+                  }}
                 />
               </div>
-            )}
-            <VotosIndividuais votacaoId={v.id} votos={votos} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-line-default bg-surface-base px-4"
-          value="proposicao"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Proposição vinculada
-          </AccordionTrigger>
-          <AccordionContent>
-            {proposicao ? (
+            ),
+          },
+          {
+            id: 'partido',
+            title: 'Por partido',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-3">
+                <VotacaoPorPartidoChart data={resumoPorPartido} />
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
+                    Ver tabela numérica
+                  </summary>
+                  <div className="mt-3">
+                    <VotosPorPartido porPartido={resumoPorPartido} />
+                  </div>
+                </details>
+              </div>
+            ),
+          },
+          ...(disciplinas.length > 0
+            ? [
+                {
+                  id: 'disciplina',
+                  title: 'Disciplina partidária',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: <DisciplinaPartidariaChart data={disciplinas} />,
+                },
+                {
+                  id: 'rebeldes',
+                  title: 'Quem rebelou-se',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <RebeldesList
+                      partidosComOrientacao={disciplinas.length}
+                      rebeldes={rebeldes}
+                    />
+                  ),
+                },
+              ]
+            : []),
+          {
+            id: 'individuais',
+            title: 'Individuais',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-3">
+                {canExportData && (
+                  <div className="flex justify-end">
+                    <ExportCsvLink
+                      href={`/api/export/votacoes/${v.id}/votos`}
+                      label="Exportar todos os votos (CSV)"
+                    />
+                  </div>
+                )}
+                <VotosIndividuais votacaoId={v.id} votos={votos} />
+              </div>
+            ),
+          },
+          {
+            id: 'proposicao',
+            title: 'Proposição vinculada',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: proposicao ? (
               <ProposicaoVinculada proposicao={proposicao} />
             ) : (
               <p className="text-fg-tertiary text-sm">
                 Nenhuma proposição foi vinculada a esta votação na base atual.
               </p>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            ),
+          },
+        ]}
+      />
 
       {/* Desktop: stack linear de SectionCards (Card compound do RDS via
           cópia local; scroll-mt-28 embutido). Ordem preserva grid 2-col
