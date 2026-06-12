@@ -40,7 +40,11 @@ if [ ! -f "$DEBT_MD" ]; then
 fi
 
 # Pares (original, cópia): linhas de tabela com dois paths em backtick.
-pairs=$(grep '^|' "$DEBT_MD" | sed -n 's/^| *`\([^`]*\)` *| *`\([^`]*\)` *|.*/\1 \2/p')
+# Separador TAB literal entre original e cópia (fix #389): originais-
+# sentinela com espaços ("sem original", paths com espaço) deixavam a
+# re-separação por whitespace cega — a cópia virava o 2º TOKEN do
+# original, não o path.
+pairs=$(grep '^|' "$DEBT_MD" | sed -n 's/^| *`\([^`]*\)` *| *`\([^`]*\)` *|.*/\1	\2/p')
 if [ -z "$pairs" ]; then
   echo "ERRO: nenhuma linha de par lida de $DEBT_MD — tabela reformatada?" >&2
   echo "Guard falha fechado em vez de passar verde sem ler nada." >&2
@@ -72,7 +76,7 @@ done
 # da checagem 2 — criação não é drift; quem vigia criação é a
 # checagem 3 (fix #380).
 warn=""
-while read -r orig copia; do
+while IFS=$'\t' read -r orig copia; do
   [ -z "$orig" ] && continue
   o=0; c=0; c_added=0
   printf '%s\n' "$changed" | grep -qxF "$orig" && o=1
@@ -88,7 +92,7 @@ done <<< "$pairs"
 # Checagem 3 (assert inverso): cópia-rds nova sob _components/ de rota
 # /rds/ sem registro na tabela deixaria o guard cego por construção —
 # a tabela é enforçada, não voluntária (lição ROLES.md ↔ matchers).
-copies=$(printf '%s\n' "$pairs" | awk '{print $2}')
+copies=$(printf '%s\n' "$pairs" | awk -F'\t' '{print $2}')
 while IFS= read -r f; do
   [ -z "$f" ] && continue
   case "$f" in
