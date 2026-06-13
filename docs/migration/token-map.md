@@ -334,3 +334,16 @@ border-destructive/N      →  border-error/N
 text-surface-canvas       →  text-fg-inverse       (pill invertido; corrige piloto-4)
 stroke-line-default (SVG) →  style stroke var(--color-line-default)
 ```
+
+## Charts / data-viz (Fase C / ADR-034 §5) — NÃO traduzem
+
+Os charts (recharts + SVG hemiciclo) usam a paleta categórica `--chart-1..5`
+(Okabe-Ito colorblind-safe) e `--accent` — **sem equivalente no RDS** (o pacote
+não expõe paleta de chart). Por isso os charts **permanecem em tokens BaV por
+inteiro** (fills de dado + chrome de tooltip/legenda): resíduo documentado, mesma
+categoria do `accent`. O chrome BaV é sub-perceptual vs RDS.
+
+Regra dura herdada do #303/#304 e agora vigiada pelo guard: **nunca**
+`hsl(var(--token))` — todo token é OKLCH, então `hsl(oklch())` é CSS inválido
+(cor preta). Use `var(--token)` direto ou `color-mix(in oklch, var(--token) N%,
+transparent)`. O guard `rds-noop-guard` falha se `hsl(var(` aparecer em `src/**`.

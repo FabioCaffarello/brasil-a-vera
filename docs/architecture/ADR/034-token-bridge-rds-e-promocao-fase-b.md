@@ -103,10 +103,26 @@ no-ops pré-existentes nas cópias `/rds/` (2 de `text-`/`stroke-` overloaded, 3
 Tradução in-place por blast-radius (Onda 1: Button/DataBadge/EmptyState/
 TrustBadge/ExportCsvLink; Onda 2: FollowButton/CompartilharButton×3/FilterChip/
 Combobox/PartyBadge/`getTipoVotoStyle`), cada onda com `check`+`build`+`vitest`+
-guard verdes → PR → auto-merge on green. **Charts/SVG** com `var(--token)` inline,
-`cssVar` dinâmica e recharts (GastosChart, ApoioPartido, VotosConsolidados,
-disciplina, por-partido, hemiciclo) ficam para uma **Fase C** dedicada — é o
-#303/#304 propriamente (`hsl(var(--chart-X))`), precisa de guard de cor inválida.
+guard verdes → PR → auto-merge on green.
+
+### 5. Fase C (charts/SVG) — NÃO traduzem; são resíduo BaV + bugfix #303/#304
+
+Os charts (recharts + SVG hemiciclo) usam a paleta categórica `--chart-1..5`
+(Okabe-Ito colorblind-safe) e o `--accent` roxo — tokens **sem equivalente no
+RDS** (o pacote não expõe paleta de chart). Logo os charts **permanecem em
+tokens BaV por inteiro** (data + chrome de tooltip/legenda): é um resíduo
+documentado, mesma categoria do `accent`/`success-foreground`. O chrome BaV é
+sub-perceptualmente idêntico ao RDS, então um chart BaV numa rota RDS não destoa.
+
+O que a "Fase C" entregou de fato: a investigação encontrou um bug #303/#304
+LATENTE — `votos-consolidados-chart.tsx` (proposição) ainda usava
+`hsl(var(${cssVar}))` (fills e swatches), que com tokens OKLCH vira
+`hsl(oklch(...))` = CSS inválido → fatias pretas em produção (`/proposicoes/[…]`;
+o #304 corrigiu 30 ocorrências em 7 arquivos mas perdeu esta). Corrigido para
+`var(${cssVar})` direto (padrão dos outros charts). E o **guard de cor inválida**
+foi adicionado: `scripts/rds-noop-guard.ts` agora também falha se `hsl(var(`
+aparecer em `src/**` (fora de comentário) — todo token é OKLCH, então
+`hsl(var())` é sempre inválido. Fecha a classe #303/#304 por máquina.
 
 ## Limitação `text-` / `stroke-`
 
