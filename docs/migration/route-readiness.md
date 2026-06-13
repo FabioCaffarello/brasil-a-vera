@@ -1711,6 +1711,180 @@ busca, comparar, home). Restam fora de `/rds/`: `/sign-in`/`/sign-up`
 #210 (TabsAsLinks) — a próxima e última frente. Workarounds §3.9
 inalterados (tabela vazia; varrer no próximo bump do RDS).
 
+## §3.20 — Execução da migração do PAINEL (2026-06-13): área logada completa
+
+**`/rds/painel` no ar** (PR painel, RDS 3.12.0 — sem bump) — a **MAIOR
+migração da leva e a ÚLTIMA**: a área logada inteira (entry +
+5 slots de Parallel Routes + TabsAsLinks). O owner aprovou a migração
+COMPLETA (parallel routes + 5 slots + TabsAsLinks). Era a última frente
+da fila desde a §3.7, destravada pelo `TabsAsLinks` (N8/RDS #210) na
+3.12.0. Executada pelo agent `rds-route-migrator`.
+
+### Risco estrutural inédito — RESOLVIDO no build (não exigiu stop)
+
+O scoping marcou como "estruturalmente inédito" (PARE se incompatível):
+**parallel routes sob `/rds/` com o `RdsStagingLayout`**. A execução
+falsificou o risco a favor: o `src/app/rds/painel/layout.tsx` (layout
+filho) declara e renderiza os 5 slots nomeados; o `/rds/layout.tsx`
+(pai) só envolve em `<div>` + noindex. Parallel routes são nesting
+padrão do App Router — funcionam em qualquer nível de layout. Confirmado
+pelo build: `/rds/painel` no manifesto (ƒ dynamic), 5 slots resolvidos,
+zero erro. Sem stop.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 12 arquivos em `_components/` + 12 arquivos de slot/layout/page/default
+  duplicados+traduzidos (5 slot `page.tsx` + 5 `default.tsx` + `layout.tsx`
+  + `page.tsx`). `button` reuso VERBATIM das ondas anteriores. Tabela
+  canônica + extensões cobriram **todas** as classes traduzidas; tradução
+  1:1, zero hesitação. Pares: `border-border{,-strong}→line-{default,
+  emphasis}`, `bg-surface{,-elevated}→surface-{base,raised}`,
+  `bg-background→surface-canvas`, `text-foreground{,-muted,-subtle}→
+  fg-{primary,tertiary,quaternary}`, `text-brand/bg-brand→*-fg-brand`
+  (byte-idêntico pós-#358), `hover:text-brand→hover:text-fg-brand`,
+  `ring-ring→line-focus`.
+- `TabBar` (5 pilares) → `TabsAsLinks variant="default"` do `/server`;
+  2 SubTabs → `TabsAsLinks variant="sub"`. **API confirmada 1:1**
+  (`TabAsLink { label, href, active?, icon?, count? }` + `variant`):
+  counters→count, ícones lucide→icon. NÃO disparou o stop de adoção
+  (decisão #1 do scoping: "se a API divergir num detalhe, PARE" — não
+  divergiu). `TabsAsLinks` é server-safe (`/server` sem banner
+  `"use client"`, banner-count 0) — delta de chunk client RDS = 0.
+- `KpiStrip` (composição local) → `StatGroup layout="grid" cols={4}` +
+  `Stat` do `/server` — **precedente piloto-2/§3.6 aplicado sem parar**
+  (tone map `default/muted→neutral`, `warning→warning`, `destructive→
+  error`).
+- `auth()` (Clerk) preservado server-side no layout + 5 slots
+  (ClerkProvider único do root, fix #315); queries (follows,
+  alert-delivery, user-profile, alert-policy, data-request, recomendacoes)
+  e `painel-tabs` (parsers puros) importadas das libs ORIGINAIS.
+- `ActiveSlotPicker` duplicado como client island (decisão #4);
+  `painel-tabs` importado do original (lógica pura, decisão #4); 11
+  client islands de domínio (forms, modais, `ParlamentarCard`,
+  `ItemRecebido`, etc.) importados dos ORIGINAIS sem cópia — precedente
+  universal. Hrefs internos reescritos pra `/rds/` (incl. `/rds/privacidade`,
+  rota migrada na piloto-5).
+- Validação: check limpo + build **6.0s** (canário — saudável, sem leak
+  de `ingestion/`) + 788 testes verdes.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **Adoção de `TabsAsLinks`/`Stat`/`StatGroup` do `/server`.** API 1:1
+   com as composições/navs locais (mesma régua de adoção `/server`
+   server-safe já consolidada). Diferenças visuais da ADOÇÃO (não token
+   fora do mapa, régua §3.14 decisão 1): active do TabsAsLinks usa
+   `border-line-brand text-fg-brand-emphasis` (vs `border-brand
+   text-foreground`); count vira pill arredondado (vs `· N`/`(N)` em
+   texto). É a apresentação dos slots/props do componente adotado, não
+   tradução.
+2. **`bg-gradient-primary` (avatar do PainelHeader) MANTIDO** sem
+   tradução — utility custom do BaV (`linear-gradient(--primary,
+   --accent)`) que compõe o `--accent` roxo data-viz (ADR-024) sem par
+   no RDS. Regra 2 (data-viz custom) avaliada e **NÃO disparada**: é
+   gradiente ESTÁTICO de marca num avatar, não SVG/chart/`hsl(var())`/
+   `color-mix` em prop de chart. **Mesma régua do `bg-accent/N` da §3.14**
+   (resíduo ADR-024, destino final, não pendência do agent). Classe
+   conhecida.
+3. **`text-white`/`ring-white/10` (on-color do avatar) e `text-red-500`
+   (status "failed" LGPD em @meusDados) MANTIDOS** sem tradução —
+   utilities Tailwind PADRÃO, byte-idênticas dos dois lados (não apelidos
+   semânticos do BaV). Regra 1 avaliada e **NÃO disparada**: não há
+   tradução porque o valor já é idêntico. **Mesma régua do `bg-success/N`/
+   `border-success/40` homônimo** (§3.17 decisão 2). O `text-red-500` é
+   inconsistência do ORIGINAL (usa raw red em vez de `text-destructive`
+   aqui); preservada 1:1 para não introduzir divergência — calibra na
+   promoção junto com o original.
+4. **2 SubTabs convertidos de client→SERVER.** O original era `'use
+   client'` SÓ para emitir `<Link>` com aria-current por prop (NÃO usava
+   `useSearchParams` — o slot page deriva o active); com `TabsAsLinks` o
+   active continua por prop e o componente já emite aria-current → as
+   cópias são SERVER, ESTRITAMENTE menos JS. O `TabBar` permanece client
+   (ele SIM lê `useSearchParams()` p/ derivar active, pois o layout server
+   não recebe searchParams — razão de ser do ActiveSlotPicker). Classe
+   conhecida (decisão de boundary, não token).
+
+**Falsificação nova tipo §3.8: NENHUMA.** O único risco "inédito"
+(parallel routes sob `/rds/`) foi resolvido no build a favor; nenhum gap
+upstream novo; nenhuma issue nova no RDS; workaround §3.9 (tabela vazia)
+não tocado. Grep de tokens BaV residuais em `className` de código vivo
+limpo (0) — só os resíduos documentados (`bg-gradient-primary`/
+`text-white`/`ring-white/10` no avatar, `text-red-500` no status LGPD,
+`brand-foreground`/`destructive` no button por paridade de API).
+
+### Validação limitada por auth (registro honesto)
+
+A área logada exige login real (Clerk). O que deu pra validar SEM
+sessão logada:
+
+- **Build limpo** (6.0s) + check + 788 testes — TypeScript + parallel
+  routes estruturalmente OK.
+- **Estrutura `@slot` correta** — 5 slots no manifesto, build resolve o
+  layout de parallel routes sob o `RdsStagingLayout`.
+- **noindex em todos os 5 tabs** — `X-Robots-Tag: noindex, nofollow`
+  confirmado via curl em `?tab={resumo,parlamentares,alertas,
+  configuracoes,meus-dados}` (200 em todos).
+- **`generateMetadata` por tab** — `<title>` com sufixo `(rds-pilot)`
+  renderizado (`Painel — Brasil à Vera (rds-pilot)` etc.).
+- **Sem leak de dado autenticado unauth** — `auth()` retorna
+  `userId: null` (a rota `/rds/painel` NÃO está no matcher do middleware,
+  que protege só `/painel(.*)`) → o `layout.tsx` retorna `null` no body;
+  0 marcadores autenticados ("Sua área", "Acompanhados", KPIs) no HTML
+  unauth; só o chrome do root layout (Navbar) renderiza.
+- **Markup dos componentes via inspeção de código + build do RDS** — o
+  `TabsAsLinks` compilado renderiza `<nav aria-label>` + `<a aria-current
+  data-active>` + icon span + label span + count pill (variantes
+  `default`/`sub`); confirmado no `dist/`. `Stat`/`StatGroup`/`TabsAsLinks`
+  do `/server` sem banner `"use client"`.
+
+**O que NÃO deu pra validar (limite honesto, não inventado):** o lado a
+lado com entidade real logada (h1 dos 4 estados do Resumo, StatGroup com
+KPIs reais, as TabsAsLinks renderizadas com active/count, as sub-tabs, os
+forms). Tudo isso vive atrás do `auth()` — sem sessão Clerk real não há
+render. O delta de JS **autenticado** (authenticated tree vs original)
+também não é mensurável em runtime pelo mesmo motivo (ambas as
+superfícies gated: `/painel` 404 unauth via middleware, `/rds/painel`
+layout=null unauth). Argumento de delta por construção: os client islands
+são os MESMOS módulos do original (importados, não duplicados); a única
+diferença de client-JS é (a) o `TabBar` wrapper renderizando `TabsAsLinks`
+(server-safe, 0 bytes client) e (b) 2 SubTabs client→server (−JS). Logo
+o delta autenticado é ~neutro-a-negativo. **Zero chunk RDS (`fabio`) no
+client path** do shell `/rds/painel` (confirmado: 0 chunks fabio).
+
+### Leitura para o contrato do agent
+
+A maior migração da leva saiu **100% mecânica + 4 decisões de classe
+conhecida, zero stop ao owner**. O risco "estruturalmente inédito"
+(parallel routes sob `/rds/`) que o contrato manda PARAR-e-reportar
+**não disparou** porque o build provou a compatibilidade antes de
+qualquer ambiguidade. A adoção do `TabsAsLinks` confirmou a decisão #1
+do scoping (API 1:1) — não houve divergência de detalhe que justificasse
+stop; as diferenças (active style, count pill) são apresentação do
+componente adotado, a mesma classe da typography do HeroSection. Os 3
+resíduos de token (gradient ADR-024, raw Tailwind white/red) são todos
+réguas já consolidadas. O único julgamento de boundary (SubTabs
+client→server) reduziu JS. Custo de coordenação: 0 rodadas.
+
+### Cobertura
+
+**Área painel completa** (entry + 5 slots: resumo, parlamentares,
+alertas, configuracoes, meus-dados). Cobertura: **20 de 21 rotas** sob
+`/rds/` (partidos, 3 perfis, privacidade, feed, gastos, 3 listagens,
+busca, comparar, home, painel — contando o painel como 1 rota / 6
+superfícies, conforme a §1 conta as 6 superfícies do painel; pela
+contagem de rotas da §1, o painel fecha as 6 entradas `/painel*`).
+Resta **`/sign-in`/`/sign-up`** — chrome puro, conteúdo principal é o
+widget Clerk fora do escopo do RDS (sem componente RDS a migrar, só
+chrome). **NÃO chega a 21/21**: as duas rotas de auth são as únicas fora
+de `/rds/`, e a recomendação histórica (§3.5) as trata como
+"rotas-cosmético" migráveis a qualquer momento para fechar o painel de
+cobertura — não bloqueiam nada e não têm aprendizado (são o widget
+`<SignIn/>`/`<SignUp/>` + chrome). Se migradas, fecham 21/21 (ou 23/23
+contando as 6 superfícies do painel + sign-in/sign-up). Workarounds §3.9
+inalterados (tabela vazia; varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
