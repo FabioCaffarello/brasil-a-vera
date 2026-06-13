@@ -57,6 +57,14 @@ jobs:
           # da Cloudflare em runtime.
           DATABASE_URL: postgresql://placeholder:placeholder@placeholder.neon.tech/placeholder?sslmode=require
 
+      # Guard de no-op de classe RDS (Fase B / ADR-034). Roda DEPOIS do build
+      # porque inspeciona o CSS gerado (.next/static): falha se alguma classe
+      # que referencia um token semântico do RDS for usada em src/** sem regra
+      # correspondente — o no-op silencioso da classe #303/#304 (build verde,
+      # visual quebrado). É o que torna o "auto-merge on green" confiável na
+      # tradução dos compartilhados. Required check (job Lint & Build).
+      - run: npm run guard:rds-noop
+
   test:
     name: Tests
     runs-on: ubuntu-latest

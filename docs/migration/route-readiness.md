@@ -1942,6 +1942,47 @@ mesmo molde page-level, sem buraco) — as duas rotas page-level (a
 seção piloto-5 inteira) estão consolidadas. As próximas promoções são
 as rotas RICAS, que dependem das fases B/C/D abaixo.
 
+## §3.22 — FASE B: token bridge, a fundação que faltava (2026-06-13)
+
+A fase B (traduzir os compartilhados) começou pela investigação prometida no
+ADR-034 e **falsificou** a premissa "tradução cosmética e segura". Achado
+central: o RDS só ship o CSS **pré-compilado** das utilities que SEUS componentes
+usam — classes RDS escritas no JSX do BaV (variantes de opacidade, bases não
+pré-compiladas) **no-opam silenciosamente** (build verde, sem cor). As 3 rotas já
+promovidas tinham defeitos latentes (`ring-line-focus`, `hover:bg-fg-brand/5`,
+`text-fg-brand/80` → 0 regras no CSS shipado).
+
+**Fundação entregue (1 PR, antes de tocar qualquer componente):**
+
+1. **Token bridge** em `src/app/globals.css` — import global do CSS do RDS +
+   `@theme inline` registrando os tokens semânticos (`fg-*`/`surface-*`/`line-*`/
+   `error*`). Faz o Tailwind do BaV gerar a superfície completa de utilities RDS,
+   incl. opacidade via `@supports (color-mix)`. Decisão do owner: import global +
+   referência (fonte única). Detalhes e trade-offs no
+   [ADR-034](../architecture/ADR/034-token-bridge-rds-e-promocao-fase-b.md).
+2. **Neutralização** das utilities bare `success`/`warning` (re-apontadas para os
+   tokens BaV via `:root` unlayered) → bridge puramente aditivo, zero shift nas
+   rotas não migradas. `error` converge p/ rose-* do RDS (sem colisão).
+3. **Guard** `scripts/rds-noop-guard.ts` no job required *Lint & Build*: falha se
+   classe RDS usada não tiver regra no CSS gerado. Torna "auto-merge on green"
+   confiável (contrafactual-provável). Pegou 5 no-ops pré-existentes nas cópias
+   `/rds/` (2 de `text-`/`stroke-` overloaded, 3 de `bg-error/N`) — todos corrigidos.
+
+**Limitação registrada:** `text-`/`stroke-` são overloaded (font-size/stroke-width);
+o bridge gera color-only — `text-`/`stroke-` de cor só onde o RDS pré-compilou
+(`text-fg-*`). Texto invertido → `text-fg-inverse`; stroke SVG → `style` inline
+com `var(--color-line-*)`.
+
+**Medição empírica (output no PR):** 5 classes antes-MISS → presentes; canário de
+build 3,9s → 4,3s (+0,4s CSS, não vazamento de `ingestion/`); +~14,75KB gzip de
+CSS RDS por rota; 788/788 testes verdes.
+
+Atualiza a lista de pré-requisitos de §3.21: **(B) destravado** pela fundação;
+as ondas de tradução (Onda 1: Button/DataBadge/EmptyState/TrustBadge/ExportCsvLink;
+Onda 2: FollowButton/CompartilharButton×3/FilterChip/Combobox/PartyBadge/
+`getTipoVotoStyle`) seguem com auto-merge on green + guard. **Charts/SVG** (recharts
++ `var()` inline) ficam para a **Fase C** (#303/#304 propriamente).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na

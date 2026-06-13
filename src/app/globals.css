@@ -1,4 +1,15 @@
 @import "tailwindcss";
+/* Token bridge do RDS (Fase B / ADR-034). Importa o CSS do pacote
+   @fabio.caffarello/react-design-system globalmente: traz o :root/.dark
+   com os tokens `--color-*` do RDS (fonte única de verdade dos valores) +
+   o cascade dark/light do pacote. Necessário porque o RDS só pré-compila as
+   utilities que SEUS componentes usam — classes RDS escritas no JSX do BaV
+   (incl. variantes de opacidade, ring, hover) só passam a resolver via este
+   import + o registro de tokens no @theme inline abaixo. Ver bloco "Bridge
+   RDS" no @theme. Sem isto, classes como `ring-line-focus`, `bg-surface-canvas`
+   e `bg-fg-brand/10` no-op silenciosamente (build verde, visual quebrado —
+   classe de falha do incidente #303/#304). */
+@import "@fabio.caffarello/react-design-system/styles";
 
 /* Custom dark variant — Sprint 4.1 PR 3.
    Por que: Sprint 4.1 introduz <html className="dark"> hardcoded (D1
@@ -86,12 +97,114 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
 
+  /* ---------- Bridge RDS (Fase B / ADR-034) ----------
+     Registra os tokens semânticos do RDS (famílias fg-*, surface-*, line-*)
+     para o Tailwind do BaV gerar a SUPERFÍCIE COMPLETA de utilities sob
+     demanda — incl. variantes de opacidade (`bg-fg-brand/10`), ring
+     (`ring-line-focus`) e hover. `inline` faz o Tailwind inlinar `var(...)`
+     nas utilities sem emitir um :root próprio; o var() resolve no :root/.dark
+     do CSS do RDS importado no topo (fonte única de verdade dos valores,
+     theme-switch dark/light preservado).
+
+     Curadoria: só tokens RDS-únicos usados pela migração; nomes que colidem
+     com o @theme do BaV (success, warning, surface-overlay) ficam de fora —
+     o BaV mantém os seus. A lista é gerada de
+     node_modules/@fabio.caffarello/react-design-system/dist/react-design-system.css
+     (`grep -oE -- '--color-(fg|surface|line)-'`, menos surface-overlay). */
+  --color-fg-brand: var(--color-fg-brand);
+  --color-fg-brand-emphasis: var(--color-fg-brand-emphasis);
+  --color-fg-brand-secondary: var(--color-fg-brand-secondary);
+  --color-fg-brand-secondary-emphasis: var(--color-fg-brand-secondary-emphasis);
+  --color-fg-disabled: var(--color-fg-disabled);
+  --color-fg-error: var(--color-fg-error);
+  --color-fg-info: var(--color-fg-info);
+  --color-fg-inverse: var(--color-fg-inverse);
+  --color-fg-inverse-secondary: var(--color-fg-inverse-secondary);
+  --color-fg-link: var(--color-fg-link);
+  --color-fg-link-active: var(--color-fg-link-active);
+  --color-fg-link-hover: var(--color-fg-link-hover);
+  --color-fg-link-visited: var(--color-fg-link-visited);
+  --color-fg-placeholder: var(--color-fg-placeholder);
+  --color-fg-primary: var(--color-fg-primary);
+  --color-fg-quaternary: var(--color-fg-quaternary);
+  --color-fg-secondary: var(--color-fg-secondary);
+  --color-fg-success: var(--color-fg-success);
+  --color-fg-tertiary: var(--color-fg-tertiary);
+  --color-fg-warning: var(--color-fg-warning);
+  --color-line-accent: var(--color-line-accent);
+  --color-line-brand: var(--color-line-brand);
+  --color-line-default: var(--color-line-default);
+  --color-line-emphasis: var(--color-line-emphasis);
+  --color-line-focus: var(--color-line-focus);
+  --color-line-focus-ring: var(--color-line-focus-ring);
+  --color-line-inverse: var(--color-line-inverse);
+  --color-line-muted: var(--color-line-muted);
+  --color-line-secondary: var(--color-line-secondary);
+  --color-line-strong: var(--color-line-strong);
+  --color-line-subtle: var(--color-line-subtle);
+  /* Família error: RDS-única (o BaV usa `destructive`, sem colisão). Necessária
+     porque o token-map traduz `bg-destructive/N` → `bg-error/N`; o RDS
+     pré-compila o base `.bg-error` mas NÃO as variantes de opacidade — sem o
+     bridge, `bg-error/20` no-opa. Resolve em rose-* do RDS (convergência
+     intencional do estado destructive, token-map piloto-3). NÃO neutralizada:
+     nenhum componente BaV usa bare `error` hoje. */
+  --color-error: var(--color-error);
+  --color-error-bg: var(--color-error-bg);
+  --color-error-bg-emphasis: var(--color-error-bg-emphasis);
+  --color-error-border: var(--color-error-border);
+  --color-error-border-emphasis: var(--color-error-border-emphasis);
+  --color-error-dark: var(--color-error-dark);
+  --color-error-light: var(--color-error-light);
+  --color-surface-accent: var(--color-surface-accent);
+  --color-surface-accent-subtle: var(--color-surface-accent-subtle);
+  --color-surface-active: var(--color-surface-active);
+  --color-surface-base: var(--color-surface-base);
+  --color-surface-brand: var(--color-surface-brand);
+  --color-surface-brand-emphasis: var(--color-surface-brand-emphasis);
+  --color-surface-brand-muted: var(--color-surface-brand-muted);
+  --color-surface-brand-strong: var(--color-surface-brand-strong);
+  --color-surface-brand-subtle: var(--color-surface-brand-subtle);
+  --color-surface-canvas: var(--color-surface-canvas);
+  --color-surface-disabled: var(--color-surface-disabled);
+  --color-surface-disabled-subtle: var(--color-surface-disabled-subtle);
+  --color-surface-emphasis: var(--color-surface-emphasis);
+  --color-surface-focus: var(--color-surface-focus);
+  --color-surface-hover: var(--color-surface-hover);
+  --color-surface-hover-subtle: var(--color-surface-hover-subtle);
+  --color-surface-inverse: var(--color-surface-inverse);
+  --color-surface-inverse-subtle: var(--color-surface-inverse-subtle);
+  --color-surface-muted: var(--color-surface-muted);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-secondary-subtle: var(--color-surface-secondary-subtle);
+  --color-surface-selected: var(--color-surface-selected);
+  --color-surface-selected-subtle: var(--color-surface-selected-subtle);
+  --color-surface-strong: var(--color-surface-strong);
+  --color-surface-subtle: var(--color-surface-subtle);
+  --color-surface-sunken: var(--color-surface-sunken);
+
   /* Radius scale — formaliza a já praticada no DESIGN-TOKENS. */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
+}
+
+/* ---------- 1b. Neutralização de colisão RDS (Fase B / ADR-034) ----------
+   O import global do CSS do RDS traz as utilities bare `.bg-success`,
+   `.text-success`, `.bg-warning`, `.text-warning` etc., que referenciam
+   `--color-success` / `--color-warning` (valores emerald-400 / amber-400 do
+   RDS). Sem isto, rotas NÃO migradas — que usam `text-success`/`bg-warning`
+   com os valores WCAG-tunados do BaV — sofreriam shift visual silencioso.
+   Reaponta essas variáveis para os tokens do BaV mantendo o bridge PURAMENTE
+   ADITIVO: cada componente troca success/warning para o RDS (`text-fg-success`,
+   já intactos aqui) na SUA onda, sob QA. Bloco unlayered → vence o `@layer
+   theme` do RDS independentemente da ordem. `--color-fg-success`/`-warning`
+   (família RDS, usada pela migração) NÃO são tocados. */
+:root {
+  --color-success: var(--success);
+  --color-warning: var(--warning);
 }
 
 /* ---------- 2. Tema light (institucional, dormente em 4.0) ---------- */

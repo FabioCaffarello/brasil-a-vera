@@ -13,6 +13,7 @@
     "format": "biome format --write .",
     "check": "biome check .",
     "ci": "biome ci .",
+    "guard:rds-noop": "tsx scripts/rds-noop-guard.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",

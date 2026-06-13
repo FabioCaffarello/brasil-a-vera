@@ -295,3 +295,42 @@ ring-ring               →  ring-line-focus        (visual mais sombrio — ace
 
 Estas observações **não bloqueiam** a piloto — registradas para alinhamento
 posterior, sem agir agora.
+
+## Token bridge (Fase B / ADR-034) — pré-requisito para usar estas classes
+
+As classes RDS desta tabela **só resolvem** porque o
+[ADR-034](../architecture/ADR/034-token-bridge-rds-e-promocao-fase-b.md)
+estabeleceu um *token bridge* em `src/app/globals.css`: import global do CSS do
+RDS + `@theme inline` registrando os tokens semânticos (`fg-*`, `surface-*`,
+`line-*`, `error*`). Sem o bridge, o RDS só ship as utilities que **seus
+componentes** usam — variantes de opacidade (`bg-fg-brand/10`) e bases não
+pré-compiladas (`bg-surface-canvas`, `ring-line-focus`) **no-opam**
+silenciosamente (build verde, visual quebrado — classe #303/#304).
+
+Regras que a tabela acima passa a pressupor:
+
+- **`text-` e `stroke-` são overloaded** (também `text-<size>`/`stroke-<width>`).
+  O bridge gera color-only (`bg`/`border`/`ring`/`fill`/`divide`); `text-`/`stroke-`
+  de cor só existem onde o RDS pré-compilou (`text-fg-*`). Portanto:
+  - texto sobre superfície clara/invertida → **`text-fg-inverse`** (não
+    `text-surface-canvas`). Corrige a entrada piloto-4 abaixo.
+  - stroke de SVG → `style={{ stroke: 'var(--color-line-*)' }}` inline (não
+    `stroke-line-*`).
+- **`bg-success/N` e `bg-warning/N` permanecem nos valores do BaV**
+  (neutralizados no `globals.css` para o bridge ser puramente aditivo). Só o
+  **texto** migra (`text-success`→`text-fg-success`).
+- **`bg-destructive/N`→`bg-error/N`** converge para rose-* do RDS (família `error`
+  bridada; sem colisão com o BaV, que usa `destructive`).
+- Guard `npm run guard:rds-noop` (CI required, job *Lint & Build*) falha se alguma
+  classe RDS usada não tiver regra no CSS gerado — qualquer `text-surface-*`/
+  `stroke-<rds>` novo vira CI vermelho.
+
+Mapeamento consolidado na Fase B:
+
+```
+text-destructive          →  text-fg-error
+bg-destructive/N          →  bg-error/N            (converge p/ rose-* do RDS)
+border-destructive/N      →  border-error/N
+text-surface-canvas       →  text-fg-inverse       (pill invertido; corrige piloto-4)
+stroke-line-default (SVG) →  style stroke var(--color-line-default)
+```
