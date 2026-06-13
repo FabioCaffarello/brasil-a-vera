@@ -1122,6 +1122,111 @@ fechado). Restam fora da onda: `/sign-in`/`/sign-up` (chrome puro);
 painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks). Workarounds §3.9
 inalterados (varrer no próximo bump do RDS).
 
+## §3.15 — Execução da onda HeroSection #2 (2026-06-13): listagem `/proposicoes`
+
+**`/rds/proposicoes` no ar** (PR onda HeroSection #2, no bump 3.12.0). É
+a **segunda das 3 listagens** — o padrão estabelecido em
+`/rds/parlamentares` (§3.14) foi a previsão explícita ("replica nas
+outras duas listagens com fricção marginal"); este PR é o teste dessa
+previsão. Executada pelo agent `rds-route-migrator`.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 6 arquivos sob `_components/`. **3 reuso VERBATIM da listagem #1**
+  (`button`, `empty-state`, `filter-chip` — apresentacionais puros sem
+  href/rota embutida; só o header de comentário muda) + **1 reuso
+  verbatim da piloto-3** (`barra-progresso-tramitacao` — mesmo original,
+  já traduzido lá). Só `filtros` e `proposicao-card` são cópias de
+  domínio novas, traduzidas 1:1 pela tabela canônica + extensões; zero
+  hesitação. Pares de token: os mesmos da #1 + `text-warning→fg-warning`,
+  `bg-success/N` homônimo (ext. piloto-2), `bg-destructive/N→bg-error/N`,
+  `bg-brand/20→bg-fg-brand/20` (generalização).
+- `FilterChips` (wrapper) + `Label` do RDS `/server` + `FilterChip`
+  (item) local + `Combobox` client island do original — **padrão
+  piloto-6/§3.14 aplicado verbatim** (zero reanálise; mesma decisão §3.9
+  e §3.13). Busca `q` via `<input>` cru traduzido (precedente filtros #1,
+  evita importar o `Input` do original com tokens BaV não traduzidos).
+- `StatsGrid` (composição local) → `StatGroup layout="grid" cols={4}` +
+  `Stat` do `/server` **com prop `hint`** — a API do `Stat` cobre
+  value/label/hint 1:1 (a #1 não exercitou `hint`; a confirmação foi
+  uma leitura do `Stat.d.ts`, server-safe, hint na API). Precedente
+  §3.6/§3.14 aplicado sem parar.
+- **Cursor pagination (ADR-026) preservada** — `decodeCursor` +
+  `permanentRedirect` 308 em token inválido + "Mostrar mais (N
+  restantes)" + `buildPageHref` reescrito pra `/rds/`. Não existia na
+  listagem #1 (parlamentares não pagina), mas é o mesmo padrão de
+  cursor já migrado nas pilotos 2/3/4/6 — classe conhecida, lógica
+  server-only, nenhum componente RDS envolvido.
+- `dynamic` preservado por `canExport()`/cursor (sem export explícito,
+  idêntico ao original); hrefs de filtro/cursor/card e form `action`
+  reescritos pra `/rds/`; export href → `/api/export` produção;
+  metadata `(rds-pilot)`.
+- Validação: protocolo integral (check limpo + build **4.0s** + 788
+  testes + curl lado a lado com dados reais — 20 cards `/rds/proposicoes/
+  TIPO/...` idênticos dos dois lados, StatGroup Total/Tramitando/
+  Aprovadas/Encerradas, "Mostrar mais (9,3 mil restantes)" idêntico,
+  filtro `?situacao=TRANSFORMADA_EM_NORMA` → 4 resultados + 14 badges
+  "Virou norma" dos dois lados + badge sólido `bg-success
+  text-success-foreground` + "Filtros ativos" + 2 chips `data-selected`,
+  `X-Robots-Tag: noindex, nofollow`, 12 hrefs de filtro CONTIDOS em
+  `/rds/proposicoes` + 0 leaks pra produção — só o nav-link do chrome
+  aponta pra produção, como em toda piloto). **Delta de JS: −946 bytes**
+  (979.500 → 978.554; 19 chunks dos dois lados) — ~neutro, **zero chunk
+  RDS no client path** (HeroSection/StatGroup/Stat/FilterChips/Label
+  todos server-rendered pelo `/server`). Delta byte-idêntico ao da #1
+  (§3.14) — mesmo conjunto de client islands. ADR-022 preservado.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **`Stat` com `hint` adotado do `/server`.** A #1 só usou value/label;
+   a #2 precisava de hint (4 stats narrativos). A API do `Stat` traz
+   `hint` (server-safe, confirmado no `Stat.d.ts`) — mapeou 1:1 com o
+   contrato do `StatItem` local (value/label/hint). Mesma régua de
+   adoção `/server` da #1; não disparou stop (API não divergiu).
+2. **`BarraProgressoTramitacao` mantida como cópia local traduzida.**
+   Regra 2 (data-viz custom) avaliada e **não disparada**: é barra
+   CSS-only (width/flex-1 %), não SVG/chart/`hsl(var())`/`color-mix` —
+   exatamente a mesma classe do AlinhamentoStrip CSS-only aceito na #1
+   (§3.14, decisão 3). Cores são `bg-fg-brand/60`/`bg-error/60`/
+   `bg-surface-raised`, todas no mapa/extensões; nenhum resíduo
+   data-viz `accent` aqui. Reuso verbatim da tradução piloto-3.
+3. **`bg-success text-success-foreground` (badge sólido
+   TRANSFORMADA_EM_NORMA) MANTIDO** sem tradução — resíduo on-color
+   (ext. piloto-3), destino final registrado, **mesma régua já aplicada
+   no perfil de proposição (piloto-3)**. Token `text-success-foreground`
+   sem par RDS; `bg-success` é o utility homônimo (ext. piloto-2).
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (tabela vazia) não tocado. Grep de
+tokens BaV residuais limpo (só os resíduos documentados: `bg-success`/
+`text-success-foreground` no card, `brand-foreground`/`destructive` no
+button e `shadow-glow` no chip preservados por paridade de API).
+
+### Leitura para o contrato do agent
+
+A previsão da §3.14 ("replica nas outras duas com fricção marginal")
+**confirmou-se literalmente**: 100% mecânico + 3 decisões de classe
+conhecida, **zero stop ao owner**, e o delta de JS saiu byte-idêntico
+ao da #1 (−946 bytes). 4 dos 6 arquivos de `_components/` foram reuso
+verbatim (3 da #1, 1 da piloto-3) — só `filtros` e `proposicao-card`
+exigiram tradução nova. As duas diferenças estruturais vs a #1 (`Stat`
+com `hint`; cursor pagination) eram classes conhecidas — a `hint` é a
+API 1:1 do `Stat` (mesma régua de adoção `/server`); o cursor é o
+padrão ADR-026 já migrado em 4 pilotos. Nenhuma delas exigiu escalar.
+
+### Efeito na fila
+
+Cobertura: **10 de 21 rotas** sob `/rds/`. Resta **`/votacoes`** para
+fechar o trio de listagens (mesmo padrão HeroSection + StatGroup +
+filtros + grid, reusando este verbatim). `/comparar`, `/busca` e a home
+também dependiam só do #163 (fechado). Restam fora da onda:
+`/sign-in`/`/sign-up` (chrome puro); painel + 5 slots aguardam N8/RDS
+#210 (TabsAsLinks). Workarounds §3.9 inalterados (varrer no próximo
+bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
