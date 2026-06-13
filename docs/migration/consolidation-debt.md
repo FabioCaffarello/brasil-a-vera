@@ -265,6 +265,46 @@ bg-success/10`, base homônima ext. piloto-2 em papel border/bg — sem
 tradução) com cross-link → `/rds/proposicoes/...` (navegação contida na
 staging). Sem `_components/` para o callout (helper inline no `page.tsx`).
 
+### Onda HeroSection #5 — `/rds/comparar` (comparativo lado a lado)
+
+Quinta rota da onda HeroSection (bump 3.12.0) — a penúltima das que
+dependiam SÓ do #163 (HeroSection), restando só a home. A `/comparar` é
+um comparativo **server-rendered** de 2-3 parlamentares (`HeroSection` +
+2 `SectionCard`): grid de métricas (`ParlamentaresGrid`) + matriz de
+concordância par-a-par (`ConcordanciaMatrix`). `section-card` é reuso
+VERBATIM da cópia da piloto-2 / busca (#4); `concordancia-matrix` e
+`parlamentares-grid` são cópias de domínio próprias, traduzidas 1:1.
+`DataBadge` (kicker `tone="accent"` do hero) importado do ORIGINAL (sem
+par RDS — precedente listagens/perfis/busca), logo sem par de drift.
+**Sem data-viz** (regra 2 não disparada — confirmado no scoping e na
+nota do scoping recebido: a `ConcordanciaMatrix` é um `<ul>` com os 3
+limiares de cor semânticos, MESMO padrão de `AlinhamentoBancada`/
+`FidelidadeMediaBlock` já traduzido nas pilotos; sem SVG/chart/
+`hsl(var())`/`color-mix`/barra).
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/components/comparar/parlamentares-grid.tsx` | `src/app/rds/comparar/_components/parlamentares-grid.tsx` | médio | grid 2-3 col (foto + nome/partido + 3 métricas: presença/proposições/gasto CEAP top-3 categorias); `<img>` cru preservado para zero-JS (CLS via width/height, precedente bancada-list/parlamentar-card); `formatBRL` da lib (lógica de domínio única, NÃO duplicada); tokens 1:1 pela tabela canônica (`border-border→line-default`, `bg-surface→surface-base`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `text-foreground-muted→fg-tertiary`); `tracking-wide`/`tabular-nums`/`uppercase`/`truncate` homônimos; sem extensão de token nova |
+| `src/components/comparar/concordancia-matrix.tsx` | `src/app/rds/comparar/_components/concordancia-matrix.tsx` | médio | `<ul>` de pares com **3 limiares de cor semânticos** (≥80 success / ≥50 foreground / <50 warning) — mesmo padrão `AlinhamentoBancada`/`FidelidadeMediaBlock`/`fidelidade-media` (piloto-1); lógica de limiares preservada exata; tokens 1:1 (`text-success→text-fg-success`, `text-foreground→fg-primary`, `text-warning→fg-warning`, `text-foreground-muted→fg-tertiary`, `text-foreground-subtle→fg-quaternary`, `border-border→line-default`); regra 2 NÃO disparada (não é data-viz); sem extensão de token nova |
+| `src/design-system/compositions/section-card.tsx` | `src/app/rds/comparar/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 / busca (#4) — Card compound do RDS (asSection + Card.Title `as="h2"`); `/comparar` usa sem `id` → sem `aria-labelledby` (mesmo contrato do original sem id; confirmado no curl: 0 `aria-labelledby` dos dois lados, 2 `<h2>` nos níveis corretos) |
+
+Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
+`HeroSection` (composição local) → `HeroSection` do `/server`
+(API 1:1: kicker/title/description/variant="plain"/align="center";
+diferença de typography do h1 — RDS `text-3xl sm:text-4xl font-bold` vs
+local `text-4xl..6xl` — aceita, é a typography do componente adotado,
+precedente §3.14 decisão 1). `DataBadge` importado do ORIGINAL (sem par
+RDS, kicker `tone="accent"`). Lógica de query
+(`getCompararParlamentares`), parse/validação de ids e contrato dos 4
+estados de erro preservados do original. `ErrorState` é helper local
+reconstruído inline traduzido (`text-warning→text-fg-warning`;
+`border-warning/40`/`bg-warning/10` homônimos, base `--warning`/
+`--color-warning` idêntica dos dois lados — ext. piloto-2 generalizada
+por papel utility, princípio piloto-5); o exemplo de URL no `<code>`
+reescrito pra `/rds/comparar` (navegação contida na staging). Sem
+`_components/` para o `ErrorState` (helper inline no `page.tsx`,
+precedente piloto-1/5/6).
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
