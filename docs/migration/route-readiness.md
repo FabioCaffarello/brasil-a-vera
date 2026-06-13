@@ -1346,6 +1346,119 @@ migráveis); painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks).
 Workarounds §3.9 inalterados (tabela vazia; varrer no próximo bump do
 RDS).
 
+## §3.17 — Execução da onda HeroSection #4 (2026-06-13): rota `/busca`
+
+**`/rds/busca` no ar** (PR onda HeroSection #4, no bump 3.12.0). Primeira
+das 3 rotas que dependiam SÓ do #163 (HeroSection) fora do trio de
+listagens — `/busca`, `/comparar` e a home (§3.16). A `/busca` é uma rota
+de **busca cruzada server-rendered**: `<form>` GET (zero-JS) + 3 estados
+de hero (entry / <2 chars / resultados) + 3 seções de resultado que
+consomem os MESMOS 3 cards de listagem já migrados nas ondas #1/#2/#3.
+Executada pelo agent `rds-route-migrator`.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 9 arquivos sob `_components/`. **4 reuso das traduções das listagens**
+  (`parlamentar-card` da #1, `proposicao-card` + `barra-progresso-tramitacao`
+  da #2, `votacao-card` da #3 — espelho verbatim, só o header de
+  comentário muda; os 3 cards já apontavam para `/rds/`, exatamente a
+  navegação contida que `/busca` precisa) + **2 reuso verbatim das
+  listagens** (`button`, `section-card` — apresentacionais puros). Só
+  `search-form` e `input` foram traduções novas, 1:1 pela tabela
+  canônica; zero hesitação.
+- `HeroSection` (composição local) → `HeroSection` do `/server` — API
+  1:1 (kicker/title/description/variant/align; precedente §3.14), os 3
+  estados de hero preservados. Adoção `/server` server-safe, mesma régua
+  já consolidada nas listagens — não disparou stop.
+- `SectionCard` (composição local) → cópia local sobre Card compound
+  (reuso piloto-2); `/busca` usa sem `id` → sem `aria-labelledby` (mesmo
+  contrato do original sem id — confirmado no curl: 0 `aria-labelledby`
+  dos dois lados).
+- `DataBadge` (kicker do hero, `tone="accent"`) → import do ORIGINAL
+  (sem par RDS, precedente listagens/perfis); server-rendered, sem JS.
+- `search-form` é SERVER COMPONENT (apesar do nome): `<form>` GET nativo,
+  sem `'use client'` — duplicado como server-safe (melhor que o "client
+  island" previsto no scoping; mantém zero-JS). Button/Input das cópias
+  locais traduzidas. form `action` → `/rds/busca`.
+- Lógica de query (`busca`) e contrato dos 3 estados preservados; metadata
+  `(rds-pilot)`; cross-link do match exato de proposição → `/rds/proposicoes/...`.
+- Validação: protocolo integral (check limpo + build **3.6s** + 788
+  testes + curl lado a lado com query real `q=silva` — h1 idêntico
+  ["Resultados para silva"], 3 seções Parlamentares(10)/Proposições(6)/
+  Votações(10) idênticas dos dois lados, 5 `<section>` cada / 0
+  `aria-labelledby` cada, 26 hrefs de card CONTIDOS em `/rds/`
+  [10 parl + 6 prop + 10 vot, = contagem do original] + 0 leaks pra
+  rotas de card de produção, 3 estados de hero verificados [entry/<2/
+  empty], `X-Robots-Tag: noindex, nofollow`, form `action="/rds/busca"`
+  — só o nav-link e o search do chrome [navbar] apontam pra produção,
+  como em toda piloto). **Token BaV no `<main>` da rota = 0** (30
+  `text-foreground`, 29 `border-border`, 28 `ring-ring` etc. no original;
+  ZERO no RDS — só o chrome fora do `<main>` carrega tokens BaV, por
+  design). **Delta de JS: 0 bytes exatos** (894.815 bytes / 17 chunks
+  dos dois lados) — rota server-only, **zero chunk RDS no client path**
+  (HeroSection/SectionCard/SearchForm/Input/Button/DataBadge todos
+  server-rendered). ADR-022 preservado.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **`search-form` duplicado como SERVER-safe, não client island.** O
+   scoping previa "se for client, duplicar como client island"; a
+   leitura do original falsificou a premissa — é Server Component puro
+   (`<form method="get">`, sem `'use client'`). Duplicado server-safe
+   (Button/Input locais), preservando zero-JS — melhor que o caminho
+   previsto, mesma régua de manter apresentacional client→local mas
+   aqui nem é client. Não exigiu escalar (sem token fora do mapa).
+2. **`border-success/40 bg-success/10` (callout do match exato) sem
+   tradução.** Base `--success`/`--color-success` é homônima dos dois
+   lados (ext. piloto-2 fixou `bg-success/N`; piloto-5 generalizou que o
+   prefixo utility só escolhe a propriedade CSS sobre a MESMA base). O
+   par `border-success/N` é a mesma base em papel border — homônimo,
+   stays. Regra 1 (token fora do mapa) avaliada e **NÃO disparada**: é
+   utility idêntico nos dois lados, não tradução ad-hoc. Mesma régua já
+   aplicada ao `bg-success/N` dos cards. Classe conhecida.
+3. **Cards reusados das listagens com hrefs já em `/rds/`.** Os 3 cards
+   migrados nas ondas #1/#2/#3 já apontavam pra `/rds/` — copiá-los pra
+   `/busca` deu navegação contida de graça (self-contained com cópias
+   próprias, precedente do contrato). `AlinhamentoStrip`/`BarraProgresso`
+   (barras CSS-only, resíduo `accent`/tokens no mapa) vêm junto mas não
+   renderizam em `/busca` (a query de busca não traz os agregados de
+   alinhamento/tramitação) — regra 2 avaliada e não disparada (CSS-only,
+   precedente §3.14/§3.15).
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (tabela vazia) não tocado. Grep de
+tokens BaV residuais no `<main>` da rota limpo (0); resíduos documentados
+preservados (`accent` inalcançável no parlamentar-card, `bg-success`/
+`text-success-foreground` no proposicao-card, `brand-foreground`/
+`destructive` no button — paridade de API/homônimo).
+
+### Leitura para o contrato do agent
+
+A rota mais "composta de partes já migradas" do plano saiu **100%
+mecânica + 3 decisões de classe conhecida, zero stop ao owner**. 6 dos 9
+arquivos de `_components/` foram reuso (4 traduções de cards das
+listagens + 2 verbatim); só `search-form` e `input` exigiram tradução
+nova, ambas triviais (1 token semântico no search-form, 6 no input,
+todos canônicos). A única surpresa (search-form ser server, não client)
+foi a favor do agent — caiu em zero-JS sem precisar de client boundary.
+O delta de JS (0 bytes exatos) é o melhor da onda: a `/busca` não tem
+client islands próprios (a #1 tinha FollowButton/Combobox; a #2/#3
+Combobox/ExportCsvLink no path), só o `<form>` GET server-safe.
+
+### Cobertura
+
+Cobertura: **12 de 21 rotas** sob `/rds/` (partidos, 3 perfis,
+privacidade, feed, gastos, 3 listagens, busca). A onda HeroSection abriu
+e fechou o trio de listagens (#1/#2/#3) e agora `/busca` (#4). Restam
+dependentes só do #163 (já fechado): **`/comparar`** e a **home** — as
+próximas naturais (mesmo padrão HeroSection `/server`). Fora da onda:
+`/sign-in`/`/sign-up` (chrome puro, custo ~zero, sem data); painel + 5
+slots aguardam N8/RDS #210 (TabsAsLinks). Workarounds §3.9 inalterados
+(tabela vazia; varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
