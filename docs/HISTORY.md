@@ -114,6 +114,17 @@ introdução. Meta-lição: **quando o modo de falha é "a regra não existe", o
 contrafactual é automatizável; transforme o QA visual no que sobra de fato visual,
 não no que um grep pega.**
 
+Coda (Fase C, mesma sessão): ao investigar os charts, o guard ganhou um segundo
+braço — `hsl(var(`. A investigação achou um #303/#304 **vivo** que o #304 perdeu:
+`votos-consolidados-chart.tsx` (proposição) ainda servia `hsl(var(--success))` em
+fills/swatches → `hsl(oklch())` inválido → donut preto em produção. Corrigido para
+`var(--success)` direto (como os outros charts) + o guard agora falha se `hsl(var(`
+aparecer em `src/**` (fora de comentário). Os charts NÃO migram para o RDS: usam a
+paleta `--chart-1..5` (Okabe-Ito) e `--accent`, sem equivalente upstream — resíduo
+BaV documentado (ADR-034 §5). Reforço da meta-lição: o #304 "corrigiu 30 de 7
+arquivos" e mesmo assim sobrou um; varredura manual não é contrafactual — o grep
+no CI é.
+
 ### Drift ROLES.md × matchers — a suíte vermelha que ninguém viu (Wave 10 → #365/#368)
 
 Na Wave 10 (2026-05-19) o owner revisou `path-matchers.sh` liberando

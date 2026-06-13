@@ -142,6 +142,30 @@ function hasRule(css: string, cls: string): boolean {
   return false
 }
 
+// 4. Cor inválida `hsl(var(--token))` em src/** (incidente #303/#304).
+//    Todos os tokens de cor do projeto são OKLCH; `hsl(var(--x))` expande p/
+//    `hsl(oklch(...))` — CSS inválido, fill/cor cai pro default (preto). O #304
+//    corrigiu 30 ocorrências mas pode reincidir (charts colados de exemplos
+//    HSL). A correção é sempre `var(--x)` direto (ou color-mix(in oklch, ...)).
+function invalidHslVar(): string[] {
+  const hits: string[] = []
+  for (const file of walk(SRC_DIR, ['.tsx', '.ts', '.css'])) {
+    const lines = readFileSync(file, 'utf8').split('\n')
+    lines.forEach((line, idx) => {
+      const m = /hsl\(\s*var\(/.exec(line)
+      if (!m) return
+      // Ignora menções em comentário (mesma convenção do design-token-check):
+      // linha de comentário (// ... | * ... | /* ...) ou `//` antes do match.
+      const trimmed = line.trimStart()
+      if (/^(\/\/|\*|\/\*)/.test(trimmed)) return
+      const slashes = line.indexOf('//')
+      if (slashes !== -1 && slashes < m.index) return
+      hits.push(`${file.replace(`${ROOT}/`, '')}:${idx + 1}`)
+    })
+  }
+  return hits
+}
+
 function main() {
   const tokens = rdsSemanticTokens()
   const used = usedRdsClasses(tokens)
@@ -158,28 +182,50 @@ function main() {
   for (const [cls, file] of used) {
     if (!hasRule(css, cls)) noops.push([cls, file])
   }
+  const hsl = invalidHslVar()
 
   console.log(
-    `rds-noop-guard: ${used.size} classes RDS verificadas contra o CSS gerado (${tokens.size} tokens semânticos do pacote).`,
+    `rds-noop-guard: ${used.size} classes RDS verificadas contra o CSS gerado (${tokens.size} tokens semânticos do pacote); ${hsl.length} ocorrência(s) de hsl(var()).`,
   )
-  if (noops.length === 0) {
-    console.log('rds-noop-guard: OK — toda classe RDS usada tem regra no CSS.')
-    return
+
+  let failed = false
+
+  if (noops.length > 0) {
+    failed = true
+    console.error(
+      `\nrds-noop-guard: ${noops.length} classe(s) RDS usada(s) SEM regra no CSS (no-op silencioso):`,
+    )
+    for (const [cls, file] of noops.sort()) {
+      console.error(`  ✗ ${cls}   (${file})`)
+    }
+    console.error(
+      'Correção: bride o token em src/app/globals.css (@theme inline) ou troque a',
+    )
+    console.error(
+      'classe pela equivalente da tabela docs/migration/token-map.md.',
+    )
   }
-  console.error(
-    `\nrds-noop-guard: ${noops.length} classe(s) RDS usada(s) SEM regra no CSS (no-op silencioso):`,
-  )
-  for (const [cls, file] of noops.sort()) {
-    console.error(`  ✗ ${cls}   (${file})`)
+
+  if (hsl.length > 0) {
+    failed = true
+    console.error(
+      `\nrds-noop-guard: ${hsl.length} cor(es) inválida(s) hsl(var(--token)) — tokens são OKLCH, hsl(oklch()) é CSS inválido (preto). Incidente #303/#304:`,
+    )
+    for (const loc of hsl) console.error(`  ✗ ${loc}`)
+    console.error(
+      'Correção: use var(--token) direto, ou color-mix(in oklch, ...).',
+    )
   }
-  console.error(
-    '\nCada uma renderiza sem efeito (build verde, visual quebrado — classe #303/#304).',
+
+  if (failed) {
+    console.error(
+      '\nAmbas as falhas são "build verde, visual quebrado" — a classe que o guard fecha.',
+    )
+    process.exit(1)
+  }
+  console.log(
+    'rds-noop-guard: OK — classes RDS resolvem e nenhuma cor inválida.',
   )
-  console.error(
-    'Correção: bride o token em src/app/globals.css (@theme inline) ou troque a classe',
-  )
-  console.error('pela equivalente da tabela docs/migration/token-map.md.')
-  process.exit(1)
 }
 
 main()
