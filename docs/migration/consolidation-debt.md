@@ -122,6 +122,18 @@ mesma vigilância de drift das checagens 1/2:
 | `src/app/privacidade/page.tsx` | `src/app/rds/privacidade/page.tsx` | médio | texto legal versionado (`PRIVACY_POLICY_VERSION` em `src/lib/privacy.ts`) — bump de texto no original PRECISA espelhar na cópia; links brand `hover:text-brand/80 → hover:text-fg-brand/80` (extensão piloto-5); cross-link `/painel?tab=meus-dados` e link "texto-fonte" apontam pra produção/original |
 | `src/app/feed/page.tsx` | `src/app/rds/feed/page.tsx` | baixo | índice de feeds; hrefs apontam pros endpoints RSS de produção (`/feed/votacoes/...` — são o produto, não navegação com contraparte /rds/); hover de card `hover:border-brand/60 → hover:border-fg-brand/60` (extensão piloto-5) |
 
+### Piloto-6 — `/rds/parlamentares/[id]/gastos` (par em nível de página)
+
+Rota AUTOCONTIDA: a lógica vive inline no `page.tsx` (filtros + tabela
+paginada por cursor), sem componentes de domínio em `src/components/`.
+Nenhum `_components/` — espelhamento em nível de página (precedente
+piloto-5). Sem data-viz/charts. O par abaixo dá ao guard a mesma
+vigilância de drift das checagens 1/2:
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/app/parlamentares/[id]/gastos/page.tsx` | `src/app/rds/parlamentares/[id]/gastos/page.tsx` | médio | filtros (trimestre via FilterChips + categoria via SELECT cru) + tabela CEAP paginada por cursor (`CursorGastosV1`, ADR-026); `FilterChips` wrapper do RDS `/server` (#162 fechada, varredura 3.10.0); `FilterChip` item local (zero-JS, §3.9); `Label` do RDS `/server` (server-safe, renderiza `<label>` nativo); tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `border-border→line-default`); base href, back-link e form `action` em `/rds/`; sem extensão de token nova |
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
