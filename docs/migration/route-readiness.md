@@ -937,6 +937,88 @@ privacidade, feed). Restam: `/sign-in`/`/sign-up` (chrome puro, custo
 home + 5 listagens aguardam RDS #163; painel aguarda N8 (sem issue
 upstream). Workarounds §3.9 inalterados.
 
+## §3.13 — Execução da piloto-6 (2026-06-13) + medição de fricção
+
+**`/rds/parlamentares/[id]/gastos` no ar** (PR piloto-6, empilhado na
+varredura 3.10.0). Era **a próxima rota da fila desde a §3.7** — o
+bloqueador único `FilterChips` (#162) só fechou upstream na varredura
+3.10.0 (§3.9), destravando-a. Executada pelo agent
+`rds-route-migrator`. Padrão exercitado: "filtros + lista paginada por
+cursor server-rendered" — o que a §3 prometia desde a primeira onda.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- Página AUTOCONTIDA reconstruída inline (271 linhas; ZERO componentes
+  em `_components/` — lógica de filtros/cursor vive no `page.tsx`,
+  precedente piloto-1/piloto-5). Tabela canônica cobriu **todas** as
+  classes (8 pares distintos: `border-border-strong→line-emphasis`,
+  `bg-background→surface-canvas`, `ring-ring→line-focus`,
+  `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`,
+  `border-border→line-default`, `text-foreground→fg-primary`,
+  `text-foreground-muted→fg-tertiary`). Tradução 1:1, zero hesitação.
+- `FilterChips` (wrapper) do RDS `/server` + `FilterChip` (item) local —
+  padrão estabelecido na varredura 3.10.0 (§3.9), aplicado verbatim
+  (mesmos imports das 4 cópias já convertidas).
+- Queries/cursors/`generateMetadata`/params preservados; base href,
+  back-link (`/rds/parlamentares/[id]`) e form `action` reescritos pra
+  `/rds/`; metadata `(rds-pilot)` — substituições idênticas às pilotos
+  2–5.
+- Validação: protocolo integral (check limpo + build **3.6s** + 788
+  testes + curl lado a lado com entidade real "Acácio Favacho"
+  populada: 21 `<tr>` idênticos dos dois lados, SELECT/Label/"Mostrar
+  mais"/FilterChip `data-selected` presentes, `X-Robots-Tag: noindex,
+  nofollow`, hrefs de filtro/cursor contidos em `/rds/`). **Delta de
+  JS: −1.060 bytes** (893.917 → 892.857; 17 → 16 chunks) — ~neutro,
+  **zero chunk RDS no client path** dos dois lados (FilterChips, Label
+  e FilterChip todos server-rendered; ADR-022 preservado).
+
+**Julgamento** — onde o agent decidiu (1 decisão, **classe conhecida**,
+sem stop):
+
+1. **`Label` — adotar do RDS `/server`** (vs manter local). O `Label`
+   está no `/server` (server-safe; renderiza `<label>` nativo, sem
+   hooks client — confirmado no `Label.d.ts`/`Label.js`). Adoção mantém
+   zero-JS (delta 0, confirmado). Tokens via className traduzido
+   (`text-foreground-muted text-xs → text-fg-tertiary text-xs`); a base
+   do RDS (`block font-medium text-sm`) é sobrescrita por tailwind-merge
+   (className vence: rendered `block font-medium text-fg-tertiary
+   text-xs`). Diferença vs tradução local: ganha `block`, perde os
+   `peer-disabled:*` do Radix (inertes — o SELECT nunca fica disabled
+   nesta rota). Sub-perceptual numa label de 1 linha em `flex
+   flex-col`. **Nenhum token fora do mapa** → não é stop de regra 1;
+   é a mesma régua já aplicada à adoção de apresentacionais `/server`
+   (FilterChips wrapper, `<Text>`): server-safe, delta 0, delta visual
+   sub-perceptual aceito. Custo: ~minutos (uma medição de export +
+   leitura da classe renderizada).
+
+Decisão paralela **sem stop** (já fechada na §3.9, não reaberta): o
+`FilterChip` item permanece local — o `Chip` do RDS é client
+(+5.759 bytes/rota), os chips são `<Link>`, ADR-022.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, nenhuma data-viz (regra 2 não disparada — confirmado
+no scoping: só tabela + filtros). Tabela de workarounds §3.9 não tocada.
+
+### Leitura para o contrato do agent
+
+A rota mais "domain-light" do plano (página inline, sem `_components/`,
+sem charts) saiu **100% mecânica + 1 decisão de classe conhecida** —
+exatamente o perfil que a §3.10 (decisão B) previu como ideal pro agent.
+O único julgamento (adotar `Label` do `/server`) é a aplicação da
+mesma régua de adoção de apresentacional server-safe já consolidada;
+não exigiu escalar ao owner porque não houve token fora do mapa nem
+data-viz. Grep de tokens BaV residuais limpo.
+
+### Efeito na fila
+
+Cobertura: **8 de 21 rotas** sob `/rds/` (partidos, 3 perfis,
+privacidade, feed, gastos). Restam: `/sign-in`/`/sign-up` (chrome puro,
+custo ~zero, sem data); home + 5 listagens aguardam RDS #163
+(HeroSection); painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks).
+Workarounds §3.9 inalterados (varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
