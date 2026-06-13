@@ -119,12 +119,12 @@ mesma vigilância de drift das checagens 1/2:
 
 | Original | Cópia-rds | Risco | Notas |
 |---|---|:---:|---|
-| `src/app/feed/page.tsx` | `src/app/rds/feed/page.tsx` | baixo | índice de feeds; hrefs apontam pros endpoints RSS de produção (`/feed/votacoes/...` — são o produto, não navegação com contraparte /rds/); hover de card `hover:border-brand/60 → hover:border-fg-brand/60` (extensão piloto-5) |
 
-> **`/privacidade` PROMOVIDA** (1ª promoção, 2026-06-13 — ver
-> route-readiness §3.21): a cópia `/rds/privacidade` foi consolidada em
-> `src/app/privacidade/page.tsx` (tokens RDS em produção) e o staging
-> removido. Par retirado da tabela — a dívida dessa rota está quitada.
+> **`/privacidade` e `/feed` PROMOVIDAS** (1ª e 2ª promoções,
+> 2026-06-13 — ver route-readiness §3.21): as cópias `/rds/privacidade`
+> e `/rds/feed` foram consolidadas em produção (tokens RDS) e os
+> stagings removidos. Pares retirados da tabela — a seção piloto-5 está
+> totalmente quitada.
 
 ### Piloto-6 — `/rds/parlamentares/[id]/gastos` (par em nível de página)
 

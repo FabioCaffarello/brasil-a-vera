@@ -1,3 +1,16 @@
+// Índice de Feeds RSS — promovido ao RDS (2ª promoção da migração
+// strangler-fig, ADR-033). Consome o design system
+// @fabio.caffarello/react-design-system — tokens traduzidos pela tabela
+// canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// Hrefs dos feeds apontam pros endpoints RSS de produção
+// (/feed/votacoes/...) — são o produto da página (XML), não navegação
+// interna.
+
+import { Text } from '@fabio.caffarello/react-design-system/server'
 import type { Metadata } from 'next'
 
 import { nomeUfCompleto, UFS, type Uf } from '@/lib/municipios'
@@ -13,9 +26,7 @@ export const metadata: Metadata = {
 // Dynamic — lista partidos e temas vivos do banco. Build com placeholder
 // DATABASE_URL não consegue pré-renderizar. Conteúdo muda devagar (cron
 // diário de parlamentares), mas SSG aqui exigiria fallback dinâmico
-// idêntico, sem ganho. Render edge a cada hit, cache implícito do CF
-// Workers via Cache-Control da rota /votacoes não cobre essa rota — fica
-// como follow-up se observarmos custo.
+// idêntico, sem ganho.
 export const dynamic = 'force-dynamic'
 
 const FEED_BASE = '/feed/votacoes'
@@ -51,22 +62,22 @@ export default async function FeedIndexPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
       <header className="mb-10">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
           Feeds RSS
         </h1>
-        <p className="mt-2 text-foreground-muted text-lg">
+        <Text variant="bodyLarge" className="mt-2 text-fg-tertiary">
           Inscreva-se para receber atualizações de votações nominais por
           recorte.
-        </p>
+        </Text>
       </header>
 
       <section className="mb-12">
-        <p className="text-base text-foreground">
+        <Text variant="body" className="text-fg-primary">
           Os feeds seguem o padrão RSS 2.0. Cole a URL no seu leitor (Feedly,
           NetNewsWire, Inoreader, etc) para receber as últimas 20 votações mais
           recentes de cada recorte. Cache de 1 hora — atualização alinhada com o
           cron de ingestão de votações (4× ao dia).
-        </p>
+        </Text>
       </section>
 
       <FeedGroup
@@ -105,6 +116,9 @@ export default async function FeedIndexPage() {
   )
 }
 
+// h2 permanece HTML cru: 4 propriedades de typography (font-medium +
+// text-sm + uppercase + tracking-wide) — mesmo caso do Section da
+// piloto-1. Label e hint dos cards cabem em <Text> (≤1 override).
 function FeedGroup({
   title,
   feeds,
@@ -116,7 +130,7 @@ function FeedGroup({
 }) {
   return (
     <section className="mb-10">
-      <h2 className="mb-4 font-medium text-foreground-muted text-sm uppercase tracking-wide">
+      <h2 className="mb-4 font-medium text-fg-tertiary text-sm uppercase tracking-wide">
         {title}
       </h2>
       <ul
@@ -129,24 +143,26 @@ function FeedGroup({
         {feeds.map((feed) => (
           <li key={feed.href}>
             <a
-              className="block rounded-lg border border-border bg-surface p-3 transition-colors duration-150 hover:border-brand/60 hover:bg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="block rounded-lg border border-line-default bg-surface-base p-3 transition-colors duration-150 hover:border-fg-brand/60 hover:bg-fg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
               href={feed.href}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-foreground text-sm">
+                <Text as="span" variant="label" className="text-fg-primary">
                   {feed.label}
-                </span>
-                <span
+                </Text>
+                <Text
                   aria-hidden
-                  className="font-mono text-foreground-subtle text-xs"
+                  as="span"
+                  variant="caption"
+                  className="font-mono text-fg-quaternary"
                 >
                   RSS
-                </span>
+                </Text>
               </div>
               {feed.hint ? (
-                <p className="mt-1 text-foreground-muted text-xs">
+                <Text variant="caption" className="mt-1 text-fg-tertiary">
                   {feed.hint}
-                </p>
+                </Text>
               ) : null}
             </a>
           </li>
