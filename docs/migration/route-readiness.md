@@ -1019,6 +1019,109 @@ custo ~zero, sem data); home + 5 listagens aguardam RDS #163
 (HeroSection); painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks).
 Workarounds §3.9 inalterados (varrer no próximo bump do RDS).
 
+## §3.14 — Execução da onda HeroSection #1 (2026-06-13): listagem `/parlamentares`
+
+**`/rds/parlamentares` no ar** (PR onda HeroSection, empilhado no bump
+3.10.0 → 3.12.0). É a **primeira listagem** do plano — o bloqueador
+único `HeroSection` (#163) fechou upstream e foi entregue no `/server`
+da RDS 3.12.0, destravando-a junto com `/proposicoes` e `/votacoes`. O
+padrão estabelecido aqui (HeroSection + StatGroup + filtros + grid de
+cards) **replica nas outras duas listagens com fricção marginal** —
+mesma estrutura, mesmos componentes do `/server`, mesmos imports de
+client islands. Executada pelo agent `rds-route-migrator`.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 5 cópias em `_components/` (button, empty-state, filter-chip, filtros,
+  parlamentar-card) duplicadas+traduzidas. Tabela canônica + extensões
+  cobriram **todas** as classes; tradução 1:1, zero hesitação. Pares
+  novos distintos: `bg-surface→surface-base`, `bg-surface-elevated→
+  surface-raised`, `bg-background→surface-canvas`, `border-border→
+  line-default`, `border-border-strong→line-emphasis`, `ring-ring→
+  line-focus`, `ring-offset-{surface,background}→offset-{surface-base,
+  surface-canvas}`, `text-foreground{,-muted,-subtle}→fg-{primary,
+  tertiary,quaternary}`, `bg-brand/N`/`text-brand`/`border-brand→
+  *-fg-brand` (byte-idêntico pós-#358, generalização pilotos 2/4/5).
+- `FilterChips` (wrapper) do RDS `/server` + `FilterChip` (item) local +
+  `Label` do RDS `/server` + `Combobox`/`FollowButton` client islands
+  importados dos originais — **padrão piloto-6 aplicado verbatim** (zero
+  reanálise; mesma decisão §3.9 e §3.13).
+- `StatsGrid` (composição local) → `StatGroup layout="grid" cols={3}` +
+  `Stat` do `/server` — **precedente §3.6 (KpiStrip→StatGroup)** aplicado
+  sem parar. Borda/dividers vêm do próprio StatGroup (sem className extra,
+  diferente dos perfis grid que pediam borda externa — o StatGroup já a
+  traz por default).
+- `dynamic` preservado por `auth()` (sem export explícito, idêntico ao
+  original); hrefs de filtro/cursor/card e form `action` reescritos pra
+  `/rds/`; export href → `/api/export` produção; metadata `(rds-pilot)`.
+- Validação: protocolo integral (check limpo + build **3.6s** + 788
+  testes + curl lado a lado com dados reais — 722 `<article>` idênticos
+  dos dois lados, StatGroup 722/23/27, filtro `casa=SENADO` 81 cards +
+  1 chip `data-selected`, empty state, `X-Robots-Tag: noindex, nofollow`,
+  hrefs de navegação CONTIDOS em `/rds/` — só o nav-link do chrome
+  aponta pra produção, como em toda piloto). **Delta de JS: −946 bytes**
+  (981.344 → 980.398; 19 chunks dos dois lados) — ~neutro, **zero chunk
+  RDS no client path** (HeroSection/StatGroup/Stat todos server-rendered
+  pelo `/server`; o chunk que difere é o bundle de client islands da
+  própria página, e sai MENOR que o original). ADR-022 preservado.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **Adoção do `HeroSection` do RDS `/server`.** A API local→RDS mapeia
+   **1:1** (`kicker`/`title`/`description`/`variant`/`align` — todos
+   presentes, nenhum slot/prop faltando), então não disparou o stop de
+   adoção previsto no contrato. Server-safe confirmado: o build do
+   `/server` não tem banner `"use client"` (só o entry raiz tem) e o
+   delta de JS provou zero client chunk. Diferença visual aceita: o h1
+   do RDS renderiza `text-3xl sm:text-4xl` (vs `text-4xl..6xl` local) e
+   o kicker vira eyebrow uppercase brand — é a typography do componente
+   adotado, não token fora do mapa. Mesma régua de adoção de
+   apresentacional `/server` já consolidada (StatGroup, FilterChips,
+   Label, `<Text>`).
+2. **`EmptyState` e `Button` mantidos LOCAIS (cópias traduzidas).** Os
+   dois existem no RDS mas só no entry raiz (**client** — confirmado:
+   ausentes em `/server`, presentes no root). Adotá-los puxaria JS
+   contra ADR-022 numa rota cujo CTA é navegação (`<a>`/submit). Cópia
+   local traduzida mantém zero-JS + token-clean. Mesma régua das pilotos
+   1–6 (apresentacional client → manter local e medir). Custo: minutos.
+3. **`bg-accent/15`/`bg-accent/60` (barra CSS-only do AlinhamentoStrip
+   no card) MANTIDOS** sem tradução — resíduo data-viz `accent`
+   (ADR-024), destino final registrado, **mesma régua do `accent` da
+   piloto-2** (alinhamento.tsx). Regra 2 (data-viz custom) avaliada e
+   **não disparada**: a barra é CSS-only trivial (width %), não SVG/
+   chart/`hsl(var())`/`color-mix` — e a cor é o resíduo já governado,
+   não pendência do agent. Confirmado no scoping: a listagem não tem
+   nenhum chart/sparkline/hemiciclo.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (tabela vazia) não tocado. Grep de
+tokens BaV residuais limpo (só os resíduos documentados: `accent` no
+card, `brand-foreground`/`destructive` no button preservados por
+paridade de API).
+
+### Leitura para o contrato do agent
+
+A primeira listagem saiu **100% mecânica + 3 decisões de classe
+conhecida, zero stop ao owner**. As três decisões são aplicações de
+réguas já consolidadas (adoção `/server` server-safe; client→manter
+local; resíduo `accent`). O stop de adoção que o contrato previa
+("se a API do RDS divergir materialmente da local, PARE") **não
+disparou porque a API mapeou 1:1** — o contrato calibrou certo: a
+divergência relevante é de slots/props, não de typography do componente.
+
+### Efeito na fila
+
+Cobertura: **9 de 21 rotas** sob `/rds/`. A onda HeroSection abriu:
+**`/proposicoes` e `/votacoes`** são as próximas naturais — mesmo trio
+HeroSection + StatGroup + filtros + grid, reusando este padrão verbatim;
+`/comparar`, `/busca` e a home também dependiam só do #163 (agora
+fechado). Restam fora da onda: `/sign-in`/`/sign-up` (chrome puro);
+painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks). Workarounds §3.9
+inalterados (varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
