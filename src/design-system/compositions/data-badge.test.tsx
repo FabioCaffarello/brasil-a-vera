@@ -33,22 +33,20 @@ describe('DataBadge composition', () => {
   it('aplica tone default por default', () => {
     const { container } = render(<DataBadge label="L2" />)
     const badge = container.firstChild as HTMLElement
-    expect(badge.className).toContain('border-border')
-    expect(badge.className).toContain('bg-surface')
-    expect(badge.className).toContain('text-foreground-muted')
+    expect(badge.className).toContain('border-line-default')
+    expect(badge.className).toContain('bg-surface-base')
+    expect(badge.className).toContain('text-fg-tertiary')
   })
 
+  // Fase B (ADR-034): tokens RDS. success/warning mantêm bg/border do BaV
+  // (neutralizados no globals), só o texto migra p/ fg-*; destructive converge
+  // p/ a família error; accent (roxo) fica no token BaV.
   it.each([
-    ['success', 'border-success/40', 'bg-success/10', 'text-success'],
-    ['warning', 'border-warning/40', 'bg-warning/10', 'text-warning'],
-    [
-      'destructive',
-      'border-destructive/40',
-      'bg-destructive/10',
-      'text-destructive',
-    ],
+    ['success', 'border-success/40', 'bg-success/10', 'text-fg-success'],
+    ['warning', 'border-warning/40', 'bg-warning/10', 'text-fg-warning'],
+    ['destructive', 'border-error/40', 'bg-error/10', 'text-fg-error'],
     ['accent', 'border-accent/40', 'bg-accent/10', 'text-accent'],
-    ['brand', 'border-brand/40', 'bg-brand/10', 'text-brand'],
+    ['brand', 'border-fg-brand/40', 'bg-fg-brand/10', 'text-fg-brand'],
   ] as const)('aplica tone %s', (tone, ...expectedClasses) => {
     const { container } = render(<DataBadge label="x" tone={tone} />)
     const className = (container.firstChild as HTMLElement).className

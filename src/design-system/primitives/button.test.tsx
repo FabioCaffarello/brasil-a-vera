@@ -12,13 +12,15 @@ describe('Button primitive', () => {
     expect(btn.className).toContain('text-brand-foreground')
   })
 
+  // Fase B (ADR-034): neutros migrados p/ tokens RDS; default (brand-solid) e
+  // destructive mantidos como resíduos BaV (sem par on-color no RDS).
   it.each([
     ['default', ['bg-brand', 'text-brand-foreground']],
     ['destructive', ['bg-destructive', 'text-destructive-foreground']],
-    ['outline', ['border', 'border-border-strong', 'bg-background']],
-    ['secondary', ['bg-surface-elevated', 'text-foreground']],
-    ['ghost', ['hover:bg-surface-elevated']],
-    ['link', ['text-brand', 'underline-offset-4']],
+    ['outline', ['border', 'border-line-emphasis', 'bg-surface-canvas']],
+    ['secondary', ['bg-surface-raised', 'text-fg-primary']],
+    ['ghost', ['hover:bg-surface-raised']],
+    ['link', ['text-fg-brand', 'underline-offset-4']],
   ] as const)('aplica classes da variante %s', (variant, expectedClasses) => {
     render(<Button variant={variant}>label</Button>)
     const btn = screen.getByRole('button', { name: 'label' })
@@ -43,11 +45,11 @@ describe('Button primitive', () => {
     expect(screen.getByRole('button').className).toContain('custom-class')
   })
 
-  it('inclui focus ring usando token --ring', () => {
+  it('inclui focus ring via token RDS line-focus', () => {
     render(<Button>x</Button>)
     const btn = screen.getByRole('button')
-    // WCAG 2.4.7 — focus visível via token --ring (não --color-primary HEX)
-    expect(btn.className).toContain('focus-visible:ring-ring')
+    // WCAG 2.4.7 — focus visível via token RDS line-focus (Fase B / ADR-034)
+    expect(btn.className).toContain('focus-visible:ring-line-focus')
     expect(btn.className).toContain('focus-visible:ring-2')
     expect(btn.className).toContain('focus-visible:ring-offset-2')
   })
@@ -90,7 +92,7 @@ describe('Button primitive', () => {
 
   it('buttonVariants export pode ser usado externamente (asChild com link cru, etc.)', () => {
     const classes = buttonVariants({ variant: 'outline', size: 'sm' })
-    expect(classes).toContain('border-border-strong')
+    expect(classes).toContain('border-line-emphasis')
     expect(classes).toContain('h-9')
   })
 })

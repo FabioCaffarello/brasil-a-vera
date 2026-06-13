@@ -20,12 +20,18 @@ import { cn } from '@/lib/cn'
  *   text-secondary-foreground → text-foreground
  *   border-input         → border-border-strong
  *
- * Tokens preservados: bg-destructive, text-destructive-foreground,
- * bg-background, ring-ring, ring-offset-background — todos definidos
- * em src/app/globals.css na Sprint 4.0 PR 2.
+ * Fase B (ADR-034) — neutros traduzidos para tokens RDS (token-map.md):
+ *   border-border-strong → border-line-emphasis · bg-background → bg-surface-canvas
+ *   bg-surface-elevated → bg-surface-raised · text-foreground → text-fg-primary
+ *   text-brand (link) → text-fg-brand (byte-idêntico pós-#358)
+ *   ring-ring → ring-line-focus · ring-offset-background → ring-offset-surface-canvas
+ * Mantidos como resíduos BaV (sem par on-color no RDS): a variante `default`
+ * (bg-brand = navy-400, byte-idêntica à brand-primary-400 do RDS) e
+ * `destructive` (bg-destructive + text-destructive-foreground — RDS não tem
+ * token on-error sólido; mesmo caso do success-foreground, token-map piloto-3).
  */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-surface-canvas transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -33,11 +39,11 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive text-destructive-foreground hover:bg-destructive/90',
         outline:
-          'border border-border-strong bg-background hover:bg-surface-elevated hover:text-foreground',
+          'border border-line-emphasis bg-surface-canvas hover:bg-surface-raised hover:text-fg-primary',
         secondary:
-          'bg-surface-elevated text-foreground hover:bg-surface-elevated/80',
-        ghost: 'hover:bg-surface-elevated hover:text-foreground',
-        link: 'text-brand underline-offset-4 hover:underline',
+          'bg-surface-raised text-fg-primary hover:bg-surface-raised/80',
+        ghost: 'hover:bg-surface-raised hover:text-fg-primary',
+        link: 'text-fg-brand underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-10 px-4 py-2',
