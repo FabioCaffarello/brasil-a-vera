@@ -12,11 +12,14 @@ import { TRUST_LEVEL_LABELS, type TrustLevel } from '@/shared/trust'
  *   sinaliza "atenção redobrada" sem invocar destructive, que é alarme)
  */
 export function getTrustLevelColor(level: TrustLevel): string {
+  // Fase B (ADR-034) — tokens RDS via token-map.md. success/warning mantêm
+  // bg/border do BaV (neutralizados no globals); só o texto migra p/ fg-*.
+  // brand → fg-brand (byte-idêntico pós-#358).
   const colors: Record<TrustLevel, string> = {
-    L1: 'bg-success/10 text-success border-success/40',
-    L2: 'bg-brand/10 text-brand border-brand/40',
-    L3: 'bg-warning/10 text-warning border-warning/40',
-    L4: 'bg-warning/20 text-warning border-warning',
+    L1: 'bg-success/10 text-fg-success border-success/40',
+    L2: 'bg-fg-brand/10 text-fg-brand border-fg-brand/40',
+    L3: 'bg-warning/10 text-fg-warning border-warning/40',
+    L4: 'bg-warning/20 text-fg-warning border-warning',
   }
   return colors[level]
 }

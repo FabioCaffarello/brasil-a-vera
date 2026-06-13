@@ -28,13 +28,17 @@ type DataBadgeProps = {
   className?: string
 }
 
+// Fase B (ADR-034) — tokens RDS via token-map.md. success/warning mantêm os
+// bg/border do BaV (neutralizados no globals; só o texto migra p/ fg-*).
+// destructive converge p/ a família error (rose-* do RDS). accent (roxo
+// data-viz) fica no token BaV — sem par no RDS.
 const TONE_VARIANTS: Record<DataBadgeTone, string> = {
-  default: 'border-border bg-surface text-foreground-muted',
-  success: 'border-success/40 bg-success/10 text-success',
-  warning: 'border-warning/40 bg-warning/10 text-warning',
-  destructive: 'border-destructive/40 bg-destructive/10 text-destructive',
+  default: 'border-line-default bg-surface-base text-fg-tertiary',
+  success: 'border-success/40 bg-success/10 text-fg-success',
+  warning: 'border-warning/40 bg-warning/10 text-fg-warning',
+  destructive: 'border-error/40 bg-error/10 text-fg-error',
   accent: 'border-accent/40 bg-accent/10 text-accent',
-  brand: 'border-brand/40 bg-brand/10 text-brand',
+  brand: 'border-fg-brand/40 bg-fg-brand/10 text-fg-brand',
 }
 
 /**

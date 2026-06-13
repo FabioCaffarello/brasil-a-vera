@@ -16,17 +16,18 @@ interface Props {
 //
 // Sprint 3.1 Tarefa 4.B — refinement aplicado.
 // Sprint 4.2 PR 3 — migrado para tokens semânticos OKLCH.
+// Fase B (ADR-034) — tokens RDS via token-map.md.
 export function EmptyState({ icon: Icon, title, description, action }: Props) {
   return (
-    <div className="rounded-lg border border-border border-dashed bg-surface/50 p-8 text-center">
+    <div className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-8 text-center">
       {Icon && (
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-surface-elevated text-foreground-muted">
+        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-surface-raised text-fg-tertiary">
           <Icon aria-hidden className="size-6" />
         </div>
       )}
-      <p className="font-medium text-foreground text-sm">{title}</p>
+      <p className="font-medium text-fg-primary text-sm">{title}</p>
       {description && (
-        <p className="mx-auto mt-1 max-w-md text-foreground-muted text-sm">
+        <p className="mx-auto mt-1 max-w-md text-fg-tertiary text-sm">
           {description}
         </p>
       )}

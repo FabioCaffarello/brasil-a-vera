@@ -51,20 +51,20 @@ export function TrustBadge({ trustLevel }: { trustLevel: TrustLevel }) {
         onKeyDown={(e) => {
           if (e.key === 'Escape') setOpen(false)
         }}
-        className={`inline-flex cursor-help items-center rounded border px-2 py-0.5 font-medium text-xs transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${getTrustLevelColor(trustLevel)}`}
+        className={`inline-flex cursor-help items-center rounded border px-2 py-0.5 font-medium text-xs transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 ${getTrustLevelColor(trustLevel)}`}
       >
         {trustLevel} — {label}
       </button>
       <span
-        className="absolute top-full left-0 z-20 mt-1 w-64 rounded-md border border-border bg-surface p-3 text-foreground text-xs leading-snug shadow-lg"
+        className="absolute top-full left-0 z-20 mt-1 w-64 rounded-md border border-line-default bg-surface-base p-3 text-fg-primary text-xs leading-snug shadow-lg"
         hidden={!open}
         id={tooltipId}
         role="tooltip"
       >
-        <p className="font-medium text-foreground">{label}</p>
-        <p className="mt-1 text-foreground-muted">{description}</p>
+        <p className="font-medium text-fg-primary">{label}</p>
+        <p className="mt-1 text-fg-tertiary">{description}</p>
         <Link
-          className="mt-2 inline-block text-brand underline decoration-dotted underline-offset-2 transition-colors duration-150 hover:text-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-2 inline-block text-fg-brand underline decoration-dotted underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
           href="/#piramide-confianca"
         >
           Saiba mais sobre a Pirâmide de Confiança
