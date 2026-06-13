@@ -1,12 +1,17 @@
+// src/components/partido/fidelidade-media.tsx — consome o RDS (tokens
+// traduzidos via docs/migration/token-map.md; promovido do staging /rds/).
+// Server Component puro. Lógica de limiares EXATA preservada
+// (success ≥80% / foreground ≥50% / warning <50% — mesmo padrão do
+// AlinhamentoBancada). Só os tokens são traduzidos.
+
+import { Text } from '@fabio.caffarello/react-design-system/server'
+
 import type { FidelidadeInternaMedia } from '@/lib/queries/partidos'
 
 interface Props {
   fidelidade: FidelidadeInternaMedia
 }
 
-// Sprint 4.4 PR 1 commit 3/6 — refatorado para tokens semânticos.
-// Mesmo padrão de 3 limiares de cor do `AlinhamentoBancada` (Sprint
-// 4.3 PR 2 commit 2/4): success / foreground / warning.
 export function FidelidadeMediaBlock({ fidelidade }: Props) {
   const { percentualMedio, parlamentaresElegiveis, parlamentaresTotal } =
     fidelidade
@@ -14,21 +19,21 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
   if (percentualMedio === null) {
     return (
       <div className="space-y-2">
-        <p className="text-foreground-muted text-sm">
+        <Text variant="bodySmall" className="text-fg-tertiary">
           {parlamentaresTotal === 0
             ? 'Sem orientações partidárias registradas para as votações desta bancada até o momento. A cobertura cresce a cada execução do cron de ingestão (4×/dia). Senado não publica orientações em endpoint público (#83) — fidelidade só é calculável para parlamentares da Câmara.'
             : `Nenhum membro tem 50+ votos comparáveis (orientação não-LIBERADO + voto não-AUSENTE). ${parlamentaresTotal} ${parlamentaresTotal === 1 ? 'membro tem' : 'membros têm'} algum dado, mas amostra é insuficiente.`}
-        </p>
+        </Text>
       </div>
     )
   }
 
   const colorClass =
     percentualMedio >= 80
-      ? 'text-success'
+      ? 'text-fg-success'
       : percentualMedio >= 50
-        ? 'text-foreground'
-        : 'text-warning'
+        ? 'text-fg-primary'
+        : 'text-fg-warning'
 
   return (
     <div className="space-y-2">
@@ -36,11 +41,11 @@ export function FidelidadeMediaBlock({ fidelidade }: Props) {
         <span className={`font-semibold text-3xl tabular-nums ${colorClass}`}>
           {percentualMedio}%
         </span>
-        <span className="text-foreground-muted text-sm">
+        <Text variant="bodySmall" className="text-fg-tertiary">
           fidelidade interna média
-        </span>
+        </Text>
       </div>
-      <p className="text-foreground-muted text-xs">
+      <p className="text-fg-tertiary text-xs">
         Média simples do alinhamento dos {parlamentaresElegiveis}{' '}
         {parlamentaresElegiveis === 1
           ? 'parlamentar elegível'

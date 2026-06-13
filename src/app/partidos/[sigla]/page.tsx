@@ -1,3 +1,20 @@
+// Perfil de partido — promovido ao RDS (3ª promoção da migração
+// strangler-fig, ADR-033; 1ª rota rica, com _components/ consolidados
+// em src/components/partido/). Consome o design system
+// @fabio.caffarello/react-design-system — tokens traduzidos pela tabela
+// canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// Dynamic render — `auth()` no layout via <AuthSlot /> (Sprint 4.2 PR 1)
+// torna toda página dinâmica em runtime. O combo anterior (`revalidate`
+// constante + `generateStaticParams` retornando `[]` em build CI) crashou
+// no workerd em 100% das requests pós-merge do PR #152. Caching
+// server-side é feito por query via `cached(...)` em
+// src/lib/queries/partidos.ts (Workers caches.default API).
+
+import { Card, Text } from '@fabio.caffarello/react-design-system/server'
 import { notFound } from 'next/navigation'
 
 import { BancadaList } from '@/components/partido/bancada-list'
@@ -12,17 +29,6 @@ import {
   getTop5TemasPartido,
 } from '@/lib/queries/partidos'
 
-// Dynamic render — `auth()` no layout via <AuthSlot /> (Sprint 4.2 PR 1)
-// torna toda página dinâmica em runtime. O combo anterior (`revalidate`
-// constante + `generateStaticParams` retornando `[]` em build CI) crashou
-// no workerd com "An error occurred in the Server Components render" em
-// 100% das requests pós-merge do PR #152. Empíricamente confirmado em
-// `cf:preview` reproduzindo o build CI (placeholder DATABASE_URL).
-//
-// Caching server-side é feito por query via `cached(...)` em
-// src/lib/queries/partidos.ts (Workers caches.default API, TTL
-// `partidoOverview`). Edge HTML caching não é usado nesta rota — o ganho
-// vem de hits no cache de query, não de prerender.
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
@@ -53,6 +59,11 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
+// Section: <Card> (do /server) + Text/HTML cru para título e hint,
+// seguindo a tabela canônica. <h2> permanece HTML cru porque a
+// tipografia tem 4 propriedades (font-medium + text-sm + uppercase +
+// tracking-wide) — `variant="label"` cobre 2, as outras viram override,
+// mantendo a regra dura de "duas ou mais → HTML cru".
 function Section({
   title,
   hint,
@@ -63,15 +74,19 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-border bg-surface p-5">
+    <Card>
       <header className="mb-3">
-        <h2 className="font-medium text-foreground-muted text-sm uppercase tracking-wide">
+        <h2 className="font-medium text-fg-tertiary text-sm uppercase tracking-wide">
           {title}
         </h2>
-        {hint && <p className="mt-0.5 text-foreground-muted text-xs">{hint}</p>}
+        {hint && (
+          <Text variant="caption" className="mt-0.5 text-fg-tertiary">
+            {hint}
+          </Text>
+        )}
       </header>
       {children}
-    </section>
+    </Card>
   )
 }
 
@@ -92,35 +107,35 @@ export default async function PartidoPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
       <PartidoHeader
-        sigla={overview.sigla}
         nomeOficial={overview.nomeOficial}
+        sigla={overview.sigla}
         totalParlamentares={overview.totalParlamentares}
       />
 
       <Section
-        title="Bancada"
         hint="Parlamentares atualmente filiados a esta sigla. Trocas de partido durante a legislatura aparecem assim que a próxima ingestão capturar a nova filiação."
+        title="Bancada"
       >
         <BancadaList membros={overview.parlamentares} />
       </Section>
 
       <Section
-        title="Fidelidade interna média"
         hint="Quão coesa é a bancada na hora do voto — média do alinhamento individual dos membros à orientação do partido."
+        title="Fidelidade interna média"
       >
         <FidelidadeMediaBlock fidelidade={fidelidade} />
       </Section>
 
       <Section
-        title="Top 5 temas de proposições autoradas"
         hint="Temas mais frequentes nas proposições onde membros desta bancada figuram como autor ou coautor."
+        title="Top 5 temas de proposições autoradas"
       >
         <TopTemasPartido temas={temas} />
       </Section>
 
       <Section
-        title={`Gasto CEAP — ${anoCorrente}`}
         hint="Cota para Exercício da Atividade Parlamentar (Câmara). Senado tem regime próprio ainda não ingerido."
+        title={`Gasto CEAP — ${anoCorrente}`}
       >
         <GastoBancadaBlock ano={anoCorrente} gasto={gasto} />
       </Section>
