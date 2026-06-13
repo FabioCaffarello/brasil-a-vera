@@ -1,13 +1,12 @@
 // Cópia-rds de src/components/proposicao/votacoes-vinculadas.tsx
-// (piloto-3). Server Component. Filtros mini EXATOS. FilterChips local
-// mantido (upstream RDS #162 aberta).
+// (piloto-3). Server Component. Filtros mini EXATOS. FilterChips
+// (wrapper) do RDS /server desde a varredura 3.10.0 (#162 fechada);
+// FilterChip (item) mantido local — zero-JS (ADR-022).
 
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
 import type {
   VotacoesCasaFiltro,

@@ -6,12 +6,10 @@
 // --color-success/--color-warning com Δ próximo). `getTipoVotoStyle`
 // permanece da lib compartilhada (classes BaV; pendência registrada).
 
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR, getTipoVotoStyle } from '@/lib/format'
 import type {
   VotosAlinhamentoFilter,

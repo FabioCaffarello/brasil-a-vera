@@ -657,9 +657,20 @@ o relógio: **todo piloto começa com bump de versão do RDS** (3.3.1 →
 contra o changelog upstream. Issue fechada = executar a "ação quando
 fechar" e remover a linha.
 
-| Workaround | Issue upstream | Ação quando fechar |
-|---|---|---|
-| `FilterChips` local consumido pelas cópias de votos/proposições | [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) — wrapper não existe upstream | Trocar import nas cópias-rds; desbloqueia também `/parlamentares/[id]/gastos`; **atenção ao modo de import** (lição da #208: componente client via barrel = +264KB) |
+**Tabela vazia desde a varredura 3.10.0** — todos os workarounds de
+bundle/composição (Accordion, useScrollSpy, FilterChips) foram
+resolvidos upstream e adotados. O que resta na fila não são workarounds
+(peças faltando para rotas migradas), e sim **bloqueadores de rotas
+ainda não migradas**: HeroSection ([RDS #163](https://github.com/FabioCaffarello/react-design-system/issues/163)) para home + listagens,
+TabsAsLinks ([RDS #210](https://github.com/FabioCaffarello/react-design-system/issues/210)) para o painel.
+
+Fora da tabela **por decisão, não por gap**: o `FilterChip` **item**
+permanece local (server-safe) nas cópias-rds. O `Chip` do RDS existe,
+mas é client-only (+5.759 bytes/rota medidos na varredura 3.10.0) e os
+chips de filtro são `<Link>` (navegação por URL) — JS que não compra
+nada funcional, contra ADR-022. Eliminar a duplicação do item exigiria
+um *chip server-safe* upstream (candidato a issue futura); o wrapper
+`FilterChips`, esse sim server-safe, já foi adotado.
 
 ### Varredura 2026-06-11 (bump 3.7.0 → 3.8.0) — primeira execução do ritual
 
@@ -697,6 +708,30 @@ fechar" e remover a linha.
   que substitui). Radix local aposentado nas rotas `/rds/`;
   reportado upstream para caveat no README.
 - Restante da tabela: só FilterChips (#162).
+
+### Varredura 2026-06-13 (bump 3.9.0 → 3.10.0) — terceira execução
+
+- **RDS #162 (FilterChips) — RESOLVIDA, linha removida.** A 3.10.0
+  entregou o `FilterChips` (wrapper) no `/server` — o componente foi
+  implementado por nós upstream ([RDS #211](https://github.com/FabioCaffarello/react-design-system/pull/211)). O swap revelou que a
+  "linha" eram na verdade **duas peças**: o wrapper (server-safe) e o
+  item `FilterChip` (que a issue #162 nunca cobriu — o `Chip` já existia).
+- **Decisão (owner): adotar só o wrapper.** `FilterChips` agora vem do
+  `/server` nas 4 cópias (votos-recentes, proposicoes-autor,
+  tramitacao-timeline, votacoes-vinculadas); o `FilterChip` item
+  permanece local. **Delta de JS: 0 bytes exatos** nas duas rotas
+  (server-safe dos dois lados). O swap completo (item via `Chip`
+  `/granular`) foi medido em **+5.759 bytes/rota** e rejeitado: os chips
+  são `<Link>`, o JS não compra função, e contraria ADR-022 (zero-JS
+  anônimo).
+- **Mudança de layout aceita:** o `FilterChips` do RDS renderiza o
+  label inline à esquerda (`flex items-center`, span `shrink-0`); o
+  wrapper local punha o label em bloco acima. Sem prop de orientação
+  upstream; o `shrink-0` no label mitiga o wrap em mobile. Visual dos
+  chips inalterado (FilterChip item local).
+- **Tabela de workarounds esvaziada.** Marco: Accordion, useScrollSpy
+  e FilterChips, os três workarounds de bundle das pilotos 2–4, todos
+  resolvidos e adotados em três varreduras consecutivas.
 
 
 Fora da tabela **por não ser workaround**: o resíduo `accent` (roxo
