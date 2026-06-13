@@ -1227,6 +1227,125 @@ também dependiam só do #163 (fechado). Restam fora da onda:
 #210 (TabsAsLinks). Workarounds §3.9 inalterados (varrer no próximo
 bump do RDS).
 
+## §3.16 — Execução da onda HeroSection #3 (2026-06-13): listagem `/votacoes`
+
+**`/rds/votacoes` no ar** (PR onda HeroSection #3, no bump 3.12.0). É a
+**terceira e ÚLTIMA das 3 listagens** — **fecha o trio**. O padrão
+estabelecido em `/rds/parlamentares` (§3.14) e confirmado em
+`/rds/proposicoes` (§3.15) era a previsão explícita ("replica nas outras
+duas listagens com fricção marginal"); este PR é o fechamento dessa
+previsão. Executada pelo agent `rds-route-migrator`.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 5 arquivos sob `_components/`. **3 reuso VERBATIM das listagens #1/#2**
+  (`button`, `empty-state`, `filter-chip` — apresentacionais puros sem
+  href/rota embutida; só o header de comentário muda). Só `filtros` e
+  `votacao-card` são cópias de domínio novas, traduzidas 1:1 pela tabela
+  canônica + extensões; zero hesitação. Pares de token: os mesmos das
+  #1/#2 + `bg-success/N` homônimo (ext. piloto-2, badge aprovada) +
+  `bg-destructive/20 text-destructive→bg-error/20 text-fg-error`
+  (ext. piloto-2/3, badge rejeitada — `destructive→error`, primeiro uso
+  do par em card de listagem).
+- `FilterChips` (wrapper) + `Label` do RDS `/server` + `FilterChip`
+  (item) local — **padrão piloto-6/§3.14/§3.15 aplicado verbatim** (zero
+  reanálise; mesma decisão §3.9 e §3.13). Sem Combobox (Ano é `<select>`,
+  cardinalidade média — não há filtro de alta cardinalidade como o Tema
+  das proposições) e sem busca livre `q` (a listagem de votações não
+  indexa texto): a `FiltrosVotacao` é estruturalmente MENOR que a
+  `FiltrosProposicao`, não maior.
+- `StatsGrid` (composição local) → `StatGroup layout="grid" cols={4}` +
+  `Stat` do `/server` **com prop `hint`** — API 1:1 (value/label/hint),
+  precedente §3.6/§3.14/§3.15 aplicado sem parar. O 4º stat ("Última
+  votação") é computado por `formatUltimaVotacaoStat` (helper puro
+  preservado do original; value/hint invertem quando > 30 dias).
+- **Cursor pagination (ADR-026) + compat `?offset=` (ADR-028 §4)
+  preservadas** — `decodeCursor` + `permanentRedirect` 308 em token
+  inválido + strip do `offset` via 308 + "Mostrar mais (N restantes)" +
+  `buildPageHref` reescrito pra `/rds/`. Mesmo padrão já migrado nas
+  pilotos 2/3/4/6 e na listagem #2 — classe conhecida, lógica
+  server-only, nenhum componente RDS envolvido.
+- `dynamic` preservado por `canExport()`/`auth()` (sem export explícito,
+  idêntico ao original); hrefs de filtro/cursor/card e form `action`
+  reescritos pra `/rds/votacoes`; export href → `/api/export` produção;
+  `alternates` RSS → `/feed/votacoes` produção (é o produto, não
+  navegação com contraparte `/rds/`); metadata `(rds-pilot)`.
+- Validação: protocolo integral (check limpo + build **3.8s** + 788
+  testes + curl lado a lado com dados reais — 24 cards `/rds/votacoes/
+  ID` idênticos dos dois lados, StatGroup Total/Aprovadas/Rejeitadas/
+  Última votação, filtro `?casa=SENADO` → 24 cards + 2 chips
+  `data-selected` + "Filtros ativos", empty state com `?ano=1901` →
+  "Nenhuma votação corresponde aos filtros" + "Limpar filtros",
+  `X-Robots-Tag: noindex, nofollow`, hrefs de filtro/cursor/card e form
+  `action` CONTIDOS em `/rds/votacoes` + 0 leaks pra produção — só o
+  nav-link do chrome (Navbar "Votações") aponta pra produção, como em
+  toda piloto; o `alternates` RSS no `<head>` aponta pro feed de produção
+  por design). **Delta de JS: −1.060 bytes** (893.917 → 892.857; 17 → 16
+  chunks) — ~neutro, **zero chunk RDS no client path** (HeroSection/
+  StatGroup/Stat/FilterChips/Label todos server-rendered pelo `/server`).
+  ADR-022 preservado.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **Adoção de `HeroSection`/`StatGroup`/`Stat`/`FilterChips`/`Label` do
+   RDS `/server`.** Todas mapearam **1:1** com as composições locais
+   (mesma régua de adoção `/server` server-safe já consolidada nas
+   #1/#2/piloto-6) — nenhum slot/prop faltando, não disparou o stop de
+   adoção previsto no contrato. Diferença visual do h1 (RDS
+   `text-3xl sm:text-4xl font-bold` vs local `text-4xl..6xl`): é a
+   typography do componente adotado, não token fora do mapa (idêntico à
+   decisão 1 da §3.14).
+2. **`EmptyState` e `Button` mantidos LOCAIS (cópias traduzidas).** Os
+   dois existem no RDS mas só no entry raiz (**client**, +JS contra
+   ADR-022). Cópia local traduzida mantém zero-JS + token-clean. Reuso
+   verbatim das cópias #1/#2 — mesma régua das pilotos 1–6 e listagens
+   #1/#2. Custo: minutos.
+3. **`bg-success`/`bg-error` nos badges do card MANTIDOS/traduzidos sem
+   stop.** `text-success→text-fg-success`, `text-destructive→text-fg-error`
+   (ext. piloto-2/3) e `bg-success/20`/`bg-error/20` (utilities homônimos,
+   ext. piloto-2). Regra 2 (data-viz custom) avaliada e **NÃO disparada**:
+   o card não tem barra/SVG/chart/`hsl(var())`/`color-mix` — são badges
+   CSS retangulares com tons de status, tokens todos no mapa/extensões.
+   Confirmado no scoping: a listagem não tem nenhum chart/sparkline/
+   hemiciclo (diferente do perfil `/votacoes/[id]`, piloto-4, que tinha
+   hemiciclo SVG + barra de margem — aqueles ficaram como import do
+   original; aqui não há equivalente). **Nenhum resíduo `accent`** neste
+   card (diferente do `parlamentar-card` da #1, que tinha AlinhamentoStrip).
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (tabela vazia) não tocado. Grep de
+tokens BaV residuais em código limpo (só os resíduos documentados:
+`bg-success`/`bg-error` no card, `brand-foreground`/`destructive` no
+button e `shadow-glow` no chip, todos por paridade de API/utility
+homônimo).
+
+### Leitura para o contrato do agent
+
+O trio de listagens fechou **exatamente como a §3.14 previu**: 100%
+mecânico + decisões de classe conhecida, **zero stop ao owner** nas três.
+A #3 foi a mais barata das três — 3 dos 5 arquivos de `_components/`
+reuso verbatim (vs 4 de 6 na #2), e a `FiltrosVotacao` é MENOR que as
+duas anteriores (sem Combobox, sem busca `q`). As diferenças vs #1/#2
+(stat "Última votação" computado por helper; compat `?offset=` além do
+cursor) eram todas classes conhecidas — helper puro preservado e o
+mesmo `permanentRedirect` 308 do padrão ADR-026/ADR-028 já migrado.
+Nenhuma exigiu escalar. O delta de JS (−1.060 bytes) é da mesma ordem
+das #1/#2 (−946 bytes) e da piloto-6 (−1.060 bytes idêntico).
+
+### Cobertura
+
+**Trio de listagens completo** (`/parlamentares`, `/proposicoes`,
+`/votacoes`). Cobertura: **11 de 21 rotas** sob `/rds/` (partidos, 3
+perfis, privacidade, feed, gastos, 3 listagens). Restam fora da onda:
+`/sign-in`/`/sign-up` (chrome puro, custo ~zero, sem data); `/comparar`,
+`/busca` e a home dependiam só do #163 (fechado na 3.12.0 — agora
+migráveis); painel + 5 slots aguardam N8/RDS #210 (TabsAsLinks).
+Workarounds §3.9 inalterados (tabela vazia; varrer no próximo bump do
+RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
