@@ -44,10 +44,10 @@ export function FilterChip({
   const Comp = asChild ? Slot : 'button'
   const chipClasses = cn(
     'inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-medium text-sm transition-colors',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas',
     selected
-      ? 'border-brand bg-brand/10 text-brand shadow-glow'
-      : 'border-border bg-surface text-foreground-muted hover:bg-surface-elevated hover:text-foreground',
+      ? 'border-fg-brand bg-fg-brand/10 text-fg-brand shadow-glow'
+      : 'border-line-default bg-surface-base text-fg-tertiary hover:bg-surface-raised hover:text-fg-primary',
     className,
   )
 
@@ -76,8 +76,8 @@ export function FilterChip({
           className={cn(
             'rounded-full px-1.5 py-0.5 font-medium text-xs',
             selected
-              ? 'bg-brand/20 text-brand'
-              : 'bg-surface-elevated text-foreground-subtle',
+              ? 'bg-fg-brand/20 text-fg-brand'
+              : 'bg-surface-raised text-fg-quaternary',
           )}
         >
           {count}
@@ -107,9 +107,7 @@ export function FilterChips({ label, children, className }: FilterChipsProps) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: <fieldset>/<legend> traz reset CSS indesejado para nosso layout; div+role=group+aria-label cobre a11y (padrão shadcn, Radix Form).
     <div className={cn('space-y-2', className)} role="group" aria-label={label}>
-      {label ? (
-        <div className="text-foreground-muted text-sm">{label}</div>
-      ) : null}
+      {label ? <div className="text-fg-tertiary text-sm">{label}</div> : null}
       <div className="flex flex-wrap items-center gap-2">{children}</div>
     </div>
   )

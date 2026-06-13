@@ -42,8 +42,7 @@ const PARTY_VARIANTS: Record<string, string> = {
   PRTB: 'bg-green-700/15 text-green-300 border-green-700/30',
 }
 
-const DEFAULT_VARIANT =
-  'bg-surface-elevated text-foreground-muted border-border'
+const DEFAULT_VARIANT = 'bg-surface-raised text-fg-tertiary border-line-default'
 
 type PartyBadgeProps = {
   /** Sigla curta do partido (PT, PL, UNIÃO, etc). Normalizada em

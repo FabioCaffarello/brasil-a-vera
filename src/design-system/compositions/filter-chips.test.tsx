@@ -12,9 +12,9 @@ describe('FilterChip', () => {
   it('aplica estilo selected quando prop=true', () => {
     render(<FilterChip selected>Senado</FilterChip>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('border-brand')
-    expect(btn.className).toContain('bg-brand/10')
-    expect(btn.className).toContain('text-brand')
+    expect(btn.className).toContain('border-fg-brand')
+    expect(btn.className).toContain('bg-fg-brand/10')
+    expect(btn.className).toContain('text-fg-brand')
     expect(btn.getAttribute('data-selected')).toBe('true')
     expect(btn.getAttribute('aria-pressed')).toBe('true')
   })
@@ -22,9 +22,9 @@ describe('FilterChip', () => {
   it('aplica estilo neutro quando não selected', () => {
     render(<FilterChip>Senado</FilterChip>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('border-border')
-    expect(btn.className).toContain('bg-surface')
-    expect(btn.className).toContain('text-foreground-muted')
+    expect(btn.className).toContain('border-line-default')
+    expect(btn.className).toContain('bg-surface-base')
+    expect(btn.className).toContain('text-fg-tertiary')
     expect(btn.getAttribute('aria-pressed')).toBe('false')
   })
 
@@ -39,7 +39,7 @@ describe('FilterChip', () => {
         Senado
       </FilterChip>,
     )
-    const countSpan = container.querySelector('.bg-brand\\/20')
+    const countSpan = container.querySelector('.bg-fg-brand\\/20')
     expect(countSpan?.textContent).toBe('81')
   })
 
@@ -53,7 +53,7 @@ describe('FilterChip', () => {
     expect(link.tagName).toBe('A')
     expect(link.getAttribute('href')).toBe('?casa=camara')
     // Estilos do chip ficam aplicados no <a>
-    expect(link.className).toContain('border-border')
+    expect(link.className).toContain('border-line-default')
   })
 
   it('asChild + selected aplica style no filho', () => {
@@ -62,13 +62,13 @@ describe('FilterChip', () => {
         <a href="?casa=camara">Câmara</a>
       </FilterChip>,
     )
-    expect(screen.getByRole('link').className).toContain('border-brand')
+    expect(screen.getByRole('link').className).toContain('border-fg-brand')
   })
 
-  it('inclui focus ring via token --ring', () => {
+  it('inclui focus ring via token RDS line-focus', () => {
     render(<FilterChip>x</FilterChip>)
     const btn = screen.getByRole('button')
-    expect(btn.className).toContain('focus-visible:ring-ring')
+    expect(btn.className).toContain('focus-visible:ring-line-focus')
     expect(btn.className).toContain('focus-visible:ring-2')
   })
 
