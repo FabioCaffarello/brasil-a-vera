@@ -23,7 +23,7 @@ A branch `main` está protegida conforme abaixo (configurado em
 | Regra | Valor | Por quê |
 |---|---|---|
 | Require PR before merging | ✓ | Direct push em `main` proibido |
-| Required approving reviews | 1 | Garante ao menos 1 revisor humano (owner via `--admin` pode override em emergência) |
+| Required approving reviews | ❌ (removido 2026-06-13) | Era 1; **removido** ao reabilitar o auto-merge do Claude Code (projeto solo: Claude não se auto-aprova e não há outro revisor, então a review era incumprível sem `--admin`). O gate de servidor passou a ser puramente os required checks. Ver "Auto-merge" abaixo. |
 | Require review from Code Owners | ❌ (off) | **CODEOWNERS está versionado mas enforcement ainda OFF**. Será ligado quando o time tiver 2+ handles ativos por área (ver "Plano de evolução"). |
 | Dismiss stale approvals on new commits | ❌ | Aprovações persistem para reduzir fricção em PRs longos |
 | Required status checks | Strict | Lint & Build / Tests / Integration Tests / zinc-HEX-primary-N legacy (promovido 2026-06-10, decisão F8 — 50+ runs sem falso positivo) precisam passar; branch precisa estar up-to-date com base antes do merge |
@@ -49,10 +49,28 @@ ligar quebraria o fluxo de merge vigente. Compensações:
 
 - A protection vincula integralmente qualquer caminho não-admin
   (contribuidores futuros, tokens de app/automação).
-- O harness fecha a porta do seu lado: `.claude/settings.json` nega
-  `gh pr merge` e `gh api -X PUT` na sessão Claude (merge é ato do
-  owner desde o encerramento do auto-merge Wave 6).
 - Registro narrativo no [HISTORY.md](../HISTORY.md) §incidentes.
+
+## Auto-merge do Claude Code (desde 2026-06-13)
+
+Decisão do owner durante a leva de adoção do RDS 3.12.0: Claude Code
+auto-mergeia PRs próprios **conforme o CI fica verde**. Duas camadas
+foram ajustadas, **uma de cada vez e por escrito**:
+
+1. **Harness** (`.claude/settings.json`): removido o deny de
+   `Bash(gh pr merge:*)`. **Mantidos** os denies de `Bash(gh api -X
+   PUT:*)` e `--method PUT` — a porta de mutação arbitrária via API
+   REST (vetor real do #373) **segue fechada**.
+2. **Branch protection** (este doc): removida a `required_pull_request_reviews`,
+   **mantidos os 4 required status checks**. Sem a review incumprível, o
+   `gh pr merge --auto` deixa o GitHub mergear sozinho quando os checks
+   passam — **sem `--admin`** (nenhum override que ignore os checks).
+
+O gate de servidor é agora puramente o CI. `enforce_admins` segue
+`false` (limitação acima inalterada), mas o fluxo de auto-merge **não
+depende de `--admin`** — usa `--auto`, que respeita os required checks.
+Reversível: re-adicionar a required review (`gh api -X PUT` é do owner;
+o Claude não o tem) e restaurar o deny no settings.
 
 ## Configuração via API
 

@@ -146,6 +146,33 @@ chamada. O contraste no mesmo dia: a validação do consolidation-guard
 tinha como pior caso um merge — e ele aconteceu. O artefato foi removido
 no #374 e o incidente registrado com transparência no próprio #373.
 
+**Atualização 2026-06-13 — auto-merge reabilitado por decisão do owner.**
+Durante a leva de adoção do RDS 3.12.0 (home + listagens + painel), o
+owner reverteu conscientemente a metade-`gh pr merge` do deny do #373:
+Claude Code passa a auto-mergear PRs próprios conforme o CI fica verde.
+A reversão é **parcial e deliberada** — só `Bash(gh pr merge:*)` saiu do
+deny; `Bash(gh api -X PUT:*)` e `--method PUT` **permanecem negados**
+(a porta de mutação arbitrária via API REST, que foi o vetor real do
+incidente #373, segue fechada). Auto-merge usa o caminho client-side do
+`gh pr merge`, não o `PUT` cru. A salvaguarda contra o modo de falha
+original do #373 continua de pé; o que mudou é quem aperta o botão de
+merge num PR já verde. Reversível: restaurar a linha no
+`.claude/settings.json` se a política mudar de novo.
+
+**Segunda camada — branch protection.** O deny do harness era só metade:
+a main exigia `required_pull_request_reviews=1`, que o Claude não pode
+satisfazer (não se auto-aprova; projeto solo, sem outro revisor) — daí
+`gh pr merge` sem flag dar *"base branch policy prohibits the merge"*.
+Decisão do owner: **remover a required review**, **mantendo os 4
+required status checks** (`Lint & Build`, `Tests`, `Integration Tests`,
+`zinc / HEX / primary-N legacy`). O gate de servidor passa a ser
+puramente o CI — "mergeie conforme passar no CI" ao pé da letra — e o
+auto-merge usa `gh pr merge --auto` (o GitHub mergeia sozinho quando os
+checks ficam verdes), **sem `--admin`** (nenhum override que ignore os
+checks). Remoção via `DELETE .../protection/required_pull_request_reviews`
+(endpoint específico; não toca os checks). Detalhe em
+`docs/contributing/BRANCH-PROTECTION.md`.
+
 ### A trilogia do contrafactual — verde só vale com vermelho demonstrado (#368, #372, #379)
 
 Três validações da mesma família, em escalada de custo decrescente, que
