@@ -66,8 +66,8 @@ do `/server` direto no `page.tsx` (borda externa via className; tone map
 | `src/components/proposicao/barra-progresso-tramitacao.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/barra-progresso-tramitacao.tsx` | médio | `brand→fg-brand` (byte-idêntico pós-#358); usada também pelo ProposicaoCard da listagem — original intocado |
 | `src/components/proposicao/footer-cross-links.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/footer-cross-links.tsx` | baixo | contratos de fallback exatos |
 | `src/components/proposicao/temas-list.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/temas-list.tsx` | baixo | zero deps |
-| `src/components/proposicao/tramitacao-timeline.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/tramitacao-timeline.tsx` | médio | filtros + cursor pagination; FilterChips local (#162) |
-| `src/components/proposicao/votacoes-vinculadas.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/votacoes-vinculadas.tsx` | médio | filtros mini exatos; FilterChips local (#162) |
+| `src/components/proposicao/tramitacao-timeline.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/tramitacao-timeline.tsx` | médio | filtros + cursor pagination; FilterChips wrapper do RDS /server (#162 fechada, varredura 3.10.0); FilterChip item local |
+| `src/components/proposicao/votacoes-vinculadas.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/votacoes-vinculadas.tsx` | médio | filtros mini exatos; FilterChips wrapper do RDS /server (#162 fechada); FilterChip item local |
 | `src/design-system/compositions/section-card.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 (Card compound) |
 | `src/design-system/compositions/section-nav.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia da piloto-2 (`useScrollSpy` via `./hooks` desde a varredura 2026-06-11) |
 
@@ -122,6 +122,18 @@ mesma vigilância de drift das checagens 1/2:
 | `src/app/privacidade/page.tsx` | `src/app/rds/privacidade/page.tsx` | médio | texto legal versionado (`PRIVACY_POLICY_VERSION` em `src/lib/privacy.ts`) — bump de texto no original PRECISA espelhar na cópia; links brand `hover:text-brand/80 → hover:text-fg-brand/80` (extensão piloto-5); cross-link `/painel?tab=meus-dados` e link "texto-fonte" apontam pra produção/original |
 | `src/app/feed/page.tsx` | `src/app/rds/feed/page.tsx` | baixo | índice de feeds; hrefs apontam pros endpoints RSS de produção (`/feed/votacoes/...` — são o produto, não navegação com contraparte /rds/); hover de card `hover:border-brand/60 → hover:border-fg-brand/60` (extensão piloto-5) |
 
+### Piloto-6 — `/rds/parlamentares/[id]/gastos` (par em nível de página)
+
+Rota AUTOCONTIDA: a lógica vive inline no `page.tsx` (filtros + tabela
+paginada por cursor), sem componentes de domínio em `src/components/`.
+Nenhum `_components/` — espelhamento em nível de página (precedente
+piloto-5). Sem data-viz/charts. O par abaixo dá ao guard a mesma
+vigilância de drift das checagens 1/2:
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/app/parlamentares/[id]/gastos/page.tsx` | `src/app/rds/parlamentares/[id]/gastos/page.tsx` | médio | filtros (trimestre via FilterChips + categoria via SELECT cru) + tabela CEAP paginada por cursor (`CursorGastosV1`, ADR-026); `FilterChips` wrapper do RDS `/server` (#162 fechada, varredura 3.10.0); `FilterChip` item local (zero-JS, §3.9); `Label` do RDS `/server` (server-safe, renderiza `<label>` nativo); tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `border-border→line-default`); base href, back-link e form `action` em `/rds/`; sem extensão de token nova |
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
@@ -144,8 +156,12 @@ mais (Accordion do RDS via wrapper desde a varredura 3.9.0).
 - **useScrollSpy**: pedido entry granular em
   [RDS #203](https://github.com/FabioCaffarello/react-design-system/issues/203)
   com medição literal (+277.593 bytes no chunk da rota, +29% de JS).
-- **FilterChips**: composição local consumida pelas cópias (votos +
-  proposições). Upstream [RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) aberta.
+- **FilterChips**: wrapper adotado do RDS `/server` na varredura 3.10.0
+  ([RDS #162](https://github.com/FabioCaffarello/react-design-system/issues/162) fechada / [RDS #211](https://github.com/FabioCaffarello/react-design-system/pull/211)). O `FilterChip` **item** segue
+  local (server-safe/zero-JS) por decisão do owner — o `Chip` do RDS é
+  client (+5.759 bytes/rota medidos) e os chips são `<Link>`. Eliminar a
+  duplicação do item depende de um chip server-safe upstream (issue
+  futura), não de gap aberto.
 - **Client islands compartilhados, importados dos originais (sem tradução
   neste PR)**: `TrustBadge`, `CompartilharButton`, `GastosChart`
   (recharts). Tokens BaV internos; traduzir na promoção ou quando o RDS

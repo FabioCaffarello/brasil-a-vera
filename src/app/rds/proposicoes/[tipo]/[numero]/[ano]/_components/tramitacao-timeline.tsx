@@ -1,14 +1,13 @@
 // Cópia-rds de src/components/proposicao/tramitacao-timeline.tsx
 // (piloto-3). Server Component. Filtros/cursor pagination EXATOS.
-// FilterChips local mantido (upstream RDS #162 aberta).
+// FilterChips (wrapper) do RDS /server desde a varredura 3.10.0 (#162
+// fechada); FilterChip (item) mantido local — zero-JS (ADR-022).
 
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import { ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
 import type { TramitacaoFiltro } from '@/lib/queries/proposicoes'
 

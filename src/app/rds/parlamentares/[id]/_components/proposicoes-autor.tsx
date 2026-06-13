@@ -1,14 +1,14 @@
 // Cópia-rds de src/components/parlamentar/proposicoes-autor.tsx (piloto-2).
 // Server Component. Filtros/paginação EXATOS. Tokens traduzidos pela
-// tabela canônica. FilterChips local mantido (gap upstream — issue #162
-// do RDS aberta).
+// tabela canônica. FilterChips (wrapper) do RDS /server desde a varredura
+// 3.10.0 (#162 fechada, RDS #211); FilterChip (item) mantido local —
+// server-safe/zero-JS (ADR-022; o Chip do RDS é client, +5.759 bytes
+// medidos). Wrapper RDS renderiza label inline (era em cima).
 
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatProposicaoRef } from '@/lib/format'
 import type {
   ProposicaoSituacaoFilter,
