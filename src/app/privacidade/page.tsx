@@ -1,4 +1,7 @@
-// Política de Privacidade — Wave 10 Etapa 9.1.
+// Política de Privacidade — Wave 10 Etapa 9.1; promovida ao RDS
+// (primeira promoção da migração strangler-fig, ADR-033). Consome o
+// design system @fabio.caffarello/react-design-system — tokens
+// traduzidos pela tabela canônica (docs/migration/token-map.md).
 //
 // Página pública. Versão do texto vive em `src/lib/privacy.ts`
 // (`PRIVACY_POLICY_VERSION`). Bump da constante = bump do texto.
@@ -10,9 +13,10 @@
 // página é puro (sem DB, sem auth), então a "dinamicidade" é
 // nominal e bem servida pelo cache de edge.
 //
-// Não usa componentes de `/docs/_components/` por estar em escopo
-// distinto (legal, não pedagógico).
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 
+import { Text } from '@fabio.caffarello/react-design-system/server'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -41,6 +45,8 @@ function formatEffectiveDate(d: Date): string {
   })
 }
 
+// h2 permanece HTML cru: 3 propriedades de typography (font-semibold +
+// text-xl + tracking-tight) — nenhum variant cobre sem 2+ overrides.
 function Section({
   id,
   title,
@@ -52,10 +58,10 @@ function Section({
 }) {
   return (
     <section className="mb-10" id={id}>
-      <h2 className="mb-3 font-semibold text-foreground text-xl tracking-tight">
+      <h2 className="mb-3 font-semibold text-fg-primary text-xl tracking-tight">
         {title}
       </h2>
-      <div className="space-y-3 text-base text-foreground leading-relaxed">
+      <div className="space-y-3 text-base text-fg-primary leading-relaxed">
         {children}
       </div>
     </section>
@@ -65,7 +71,7 @@ function Section({
 function ContactLink() {
   return (
     <a
-      className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+      className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
       href={`mailto:${PRIVACY_CONTACT_EMAIL}`}
     >
       {PRIVACY_CONTACT_EMAIL}
@@ -78,18 +84,18 @@ export default function PrivacidadePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-      <header className="mb-10 border-border border-b pb-6">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
+      <header className="mb-10 border-line-default border-b pb-6">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
           Política de Privacidade
         </h1>
-        <p className="mt-2 text-foreground-muted">
+        <Text variant="body" className="mt-2 text-fg-tertiary">
           Versão <code className="font-mono">{PRIVACY_POLICY_VERSION}</code> ·
           vigente desde {effective}
-        </p>
-        <p className="mt-3 text-foreground-muted text-sm">
+        </Text>
+        <Text variant="bodySmall" className="mt-3 text-fg-tertiary">
           Este documento descreve como o Brasil à Vera trata dados pessoais nos
           termos da Lei Geral de Proteção de Dados (Lei 13.709/2018, LGPD).
-        </p>
+        </Text>
       </header>
 
       <Section id="controlador" title="1. Controlador dos dados">
@@ -245,7 +251,7 @@ export default function PrivacidadePage() {
         <p>
           A maioria desses direitos pode ser exercida diretamente em{' '}
           <Link
-            className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+            className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
             href="/painel?tab=meus-dados"
           >
             /painel?tab=meus-dados
@@ -280,7 +286,7 @@ export default function PrivacidadePage() {
           tratamento é interrompido e a conta eliminada por procedimento
           administrativo. Detalhes técnicos do procedimento em{' '}
           <a
-            className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+            className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
             href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/contributing/LGPD-ERASE-MENORES.md"
             rel="noopener noreferrer"
             target="_blank"
@@ -312,7 +318,7 @@ export default function PrivacidadePage() {
           A ANPD é a autoridade competente para receber reclamações sobre
           tratamento indevido de dados:{' '}
           <a
-            className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+            className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
             href="https://www.gov.br/anpd/"
             rel="noopener noreferrer"
             target="_blank"
@@ -323,11 +329,11 @@ export default function PrivacidadePage() {
         </p>
       </Section>
 
-      <footer className="mt-12 border-border border-t pt-6 text-foreground-muted text-sm">
+      <footer className="mt-12 border-line-default border-t pt-6 text-fg-tertiary text-sm">
         Versão <code className="font-mono">{PRIVACY_POLICY_VERSION}</code> ·
         vigente desde {effective} · texto-fonte em{' '}
         <a
-          className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+          className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
           href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/src/app/privacidade/page.tsx"
           rel="noopener noreferrer"
           target="_blank"
