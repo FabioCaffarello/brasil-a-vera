@@ -1885,6 +1885,54 @@ cobertura — não bloqueiam nada e não têm aprendizado (são o widget
 contando as 6 superfícies do painel + sign-in/sign-up). Workarounds §3.9
 inalterados (tabela vazia; varrer no próximo bump do RDS).
 
+## §3.21 — PROMOÇÃO (2026-06-13): primeira rota consolidada — o playbook
+
+Com a migração de rotas completa, abre a fase de **promoção**: consolidar
+as cópias `/rds/` em produção (substituir o original, deletar o staging,
+zerar a dívida). Investigação prévia (2 Explore agents) mostrou que a
+promoção **em massa é prematura** — as rotas ricas importam ~10
+componentes compartilhados ainda BaV (TrustBadge, DataBadge, PartyBadge,
+`getTipoVotoStyle`, charts), há duplicações a canonicalizar
+(`section-card` ×7, `button` ×6+) e **nenhum QA visual automatizado**
+(lição #303/#304). Decisão do owner: começar por uma **promoção-piloto
+de mecanismo** numa rota self-contained.
+
+**Rota promovida: `/privacidade`** — texto puro, importa só `Text`
+(`/server`) + `Link` + constantes de `lib/privacy`; zero componente
+compartilhado BaV, zero `_components/`, zero data-viz. Promoção 100%
+limpa (sem o buraco).
+
+### Playbook de promoção (validado aqui; reusar nas próximas)
+
+1. **Substituir o original** (`src/app/<rota>/page.tsx`) pelo corpo da
+   cópia `/rds/` (tokens RDS), com des-staging: title sem `(rds-pilot)`;
+   cabeçalho de comentário reescrito para produção (preservar notas
+   técnicas reais — ex.: `force-dynamic`); hrefs de volta à base de
+   produção (sem `/rds/`).
+2. **Deletar o staging** (`src/app/rds/<rota>/`). A rota volta a ser
+   servida pelo **root layout → indexável** automaticamente (sai do
+   `RdsStagingLayout` noindex) — sem ação extra.
+3. **Docs:** remover o par do `consolidation-debt.md` (dívida quitada);
+   registrar a promoção aqui.
+4. **Validação:** build + check + vitest; curl confirma tokens RDS no
+   markup, title sem `(rds-pilot)`, `X-Robots-Tag` AUSENTE (indexável),
+   e `/rds/<rota>` → 404. **QA visual (owner)** — gate que o playbook de
+   migração já exigia, agora normalizado para a promoção.
+5. **Reversível:** `git revert` restaura original BaV + cópia `/rds/`.
+
+### Pré-requisitos para promover as rotas RICAS (fases seguintes)
+
+- **(B) Fechar o buraco dos compartilhados:** traduzir TrustBadge,
+  CompartilharButton, DataBadge, PartyBadge, FollowButton, Combobox,
+  GastosChart e `getTipoVotoStyle` (toca produção — exige QA visual).
+- **(C) Canonicalizar duplicações:** uma versão de `section-card`,
+  `button`, cards, etc. em `src/components`/`src/design-system`.
+- **(D) Painel:** decisão arquitetural (`(authenticated)` vs raiz).
+- Candidato a **ADR-034** (estratégia de promoção) antes da fase B.
+
+`/feed` (a outra page-level da piloto-5) é a próxima promoção trivial
+natural — mesmo molde, sem buraco.
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
