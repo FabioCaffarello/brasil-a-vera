@@ -25,19 +25,19 @@
 
 ## Pares ativos
 
-### Rota piloto — `/rds/partidos/[sigla]`
+### Rota piloto — `/rds/partidos/[sigla]` — ✅ PROMOVIDA
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/partido/header.tsx` | `src/app/rds/partidos/[sigla]/_components/partido-header.tsx` | baixo | header simples (eyebrow + h1 + 2 subtítulos); typography custom no h1, demais via `<Text>` |
-| `src/components/partido/bancada-list.tsx` | `src/app/rds/partidos/[sigla]/_components/bancada-list.tsx` | médio | layout de card-link com hover/focus; `<img>` cru preservado para zero-JS |
-| `src/components/partido/fidelidade-media.tsx` | `src/app/rds/partidos/[sigla]/_components/fidelidade-media.tsx` | médio | **lógica de limiares de cor preservada exata** (≥80 success / ≥50 foreground / <50 warning); padrão "3 limiares" replicado em outras 3 rotas (registro na matriz) |
-| `src/components/partido/top-temas.tsx` | `src/app/rds/partidos/[sigla]/_components/top-temas.tsx` | baixo | `<ol>` simples com tema + contagem |
-| `src/components/partido/gasto-bancada.tsx` | `src/app/rds/partidos/[sigla]/_components/gasto-bancada.tsx` | médio | formatBRL importado; lógica de estado-vazio preservada |
-
-Helper local `<Section>` do `page.tsx` original NÃO virou arquivo separado
-nem no original nem na cópia. Na cópia-rds, foi reconstruído usando `<Card>`
-do `/server` + `<Text>` para hint + `<h2>` cru para título.
+> **3ª promoção (2026-06-13 — route-readiness §3.21): a 1ª rota RICA
+> consolidada.** Os 5 `_components/` traduzidos viraram os
+> `src/components/partido/*` de produção (`partido-header` → `header`;
+> esses componentes são usados só por esta rota — sobrescrever foi
+> seguro), `src/app/partidos/[sigla]/page.tsx` recebeu o corpo RDS
+> (Card/Text/Section), e o staging `src/app/rds/partidos/` foi
+> removido. Helper `<Section>` segue inline na page (Card do `/server`).
+> Dívida desta rota quitada — pares retirados da tabela. Sub-mecanismo
+> validado: promoção de rota **com `_components/`** (mover para
+> `src/components/`, ajustar imports `./_components/` → `@/components/`,
+> deletar staging).
 
 ### Piloto-2 — `/rds/parlamentares/[id]`
 

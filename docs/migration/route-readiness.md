@@ -1930,6 +1930,13 @@ limpa (sem o buraco).
 - **(D) Painel:** decisão arquitetural (`(authenticated)` vs raiz).
 - Candidato a **ADR-034** (estratégia de promoção) antes da fase B.
 
+**3ª promoção — `/partidos/[sigla]` (rota RICA, zero buraco):** primeira
+promoção COM `_components/` — os 5 componentes de domínio traduzidos
+viraram `src/components/partido/*` (usados só por essa rota; `partido-header`
+→ `header`), imports `./_components/` → `@/components/partido/`, staging
+removido. 0 token BaV cru no conteúdo, /rds/partidos → 404, indexável.
+Sub-mecanismo de promoção com `_components/` validado.
+
 **Atualização:** `/feed` PROMOVIDA logo em seguida (2ª promoção,
 mesmo molde page-level, sem buraco) — as duas rotas page-level (a
 seção piloto-5 inteira) estão consolidadas. As próximas promoções são
