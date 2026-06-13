@@ -70,23 +70,23 @@ export function formatProposicaoRef(
 const TIPO_VOTO_LABELS: Record<string, { label: string; classes: string }> = {
   SIM: {
     label: 'SIM',
-    classes: 'bg-success/20 text-success',
+    classes: 'bg-success/20 text-fg-success',
   },
   NAO: {
     label: 'NÃO',
-    classes: 'bg-destructive/20 text-destructive',
+    classes: 'bg-error/20 text-fg-error',
   },
   ABSTENCAO: {
     label: 'Abstenção',
-    classes: 'bg-warning/20 text-warning',
+    classes: 'bg-warning/20 text-fg-warning',
   },
   AUSENTE: {
     label: 'Ausente',
-    classes: 'bg-surface-elevated text-foreground-muted',
+    classes: 'bg-surface-raised text-fg-tertiary',
   },
   OBSTRUCAO: {
     label: 'Obstrução',
-    classes: 'bg-brand/20 text-brand',
+    classes: 'bg-fg-brand/20 text-fg-brand',
   },
 }
 
@@ -97,7 +97,7 @@ export function getTipoVotoStyle(tipo: string): {
   return (
     TIPO_VOTO_LABELS[tipo] ?? {
       label: tipo,
-      classes: 'bg-surface-elevated text-foreground-muted',
+      classes: 'bg-surface-raised text-fg-tertiary',
     }
   )
 }

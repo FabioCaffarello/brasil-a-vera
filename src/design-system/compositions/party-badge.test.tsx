@@ -31,9 +31,9 @@ describe('PartyBadge composition', () => {
   it('aplica variante default para sigla desconhecida', () => {
     render(<PartyBadge sigla="ZZZ" />)
     const badge = screen.getByText('ZZZ')
-    expect(badge.className).toContain('bg-surface-elevated')
-    expect(badge.className).toContain('text-foreground-muted')
-    expect(badge.className).toContain('border-border')
+    expect(badge.className).toContain('bg-surface-raised')
+    expect(badge.className).toContain('text-fg-tertiary')
+    expect(badge.className).toContain('border-line-default')
   })
 
   it('renderiza como <abbr> com title expandido quando name fornecido', () => {

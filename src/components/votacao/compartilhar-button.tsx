@@ -24,10 +24,10 @@ interface Props {
 }
 
 const TEXTAREA_CLASS =
-  'block min-h-[6rem] w-full resize-none rounded-md border border-border-strong bg-background px-3 py-2 font-mono text-foreground text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'block min-h-[6rem] w-full resize-none rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-mono text-fg-primary text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 const COPY_BUTTON_CLASS =
-  'inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-background px-2.5 py-1.5 font-medium text-foreground text-xs hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-2.5 py-1.5 font-medium text-fg-primary text-xs hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 const DESCRICAO_MAX_WHATSAPP = 120
 const DESCRICAO_MAX_TWITTER = 100
@@ -95,7 +95,7 @@ export function CompartilharVotacaoButton({ votacao }: Props) {
     <Dialog>
       <DialogTrigger asChild>
         <button
-          className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
           type="button"
         >
           <Share2 aria-hidden className="h-4 w-4" />
@@ -159,7 +159,7 @@ function Field({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <label className="font-medium text-foreground text-sm" htmlFor={id}>
+        <label className="font-medium text-fg-primary text-sm" htmlFor={id}>
           {label}
         </label>
         <button
@@ -180,9 +180,7 @@ function Field({
         rows={rows}
         value={text}
       />
-      {hint ? (
-        <p className="mt-1 text-foreground-subtle text-xs">{hint}</p>
-      ) : null}
+      {hint ? <p className="mt-1 text-fg-quaternary text-xs">{hint}</p> : null}
     </div>
   )
 }

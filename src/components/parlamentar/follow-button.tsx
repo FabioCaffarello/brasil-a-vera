@@ -76,8 +76,8 @@ export function FollowButton({
       className={cn(
         'h-11 w-11',
         isFollowing
-          ? 'text-brand hover:text-brand'
-          : 'text-foreground-subtle hover:text-foreground',
+          ? 'text-fg-brand hover:text-fg-brand'
+          : 'text-fg-quaternary hover:text-fg-primary',
       )}
       disabled={pending}
       onClick={handleClick}

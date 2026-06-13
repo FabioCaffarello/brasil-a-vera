@@ -106,20 +106,18 @@ export function Combobox({
             aria-expanded={open}
             aria-label={ariaLabel}
             className={cn(
-              'flex min-h-[44px] w-full items-center justify-between rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'flex min-h-[44px] w-full items-center justify-between rounded-md border border-line-emphasis bg-surface-canvas px-2 py-1.5 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2',
               className,
             )}
             role="combobox"
             type="button"
           >
-            <span
-              className={cn('truncate', !selected && 'text-foreground-muted')}
-            >
+            <span className={cn('truncate', !selected && 'text-fg-tertiary')}>
               {selected ? selected.label : placeholder}
             </span>
             <ChevronsUpDown
               aria-hidden
-              className="ml-2 h-4 w-4 shrink-0 text-foreground-muted"
+              className="ml-2 h-4 w-4 shrink-0 text-fg-tertiary"
             />
           </button>
         </PopoverTrigger>
