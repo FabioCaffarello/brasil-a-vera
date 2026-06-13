@@ -305,6 +305,49 @@ reescrito pra `/rds/comparar` (navegação contida na staging). Sem
 `_components/` para o `ErrorState` (helper inline no `page.tsx`,
 precedente piloto-1/5/6).
 
+### Onda HeroSection #6 — `/rds/home` (home `/`)
+
+Sexta e ÚLTIMA rota da onda HeroSection (bump 3.12.0) — a rota mais
+visível do app e a única da onda com gap adicional além do #163
+(`KpiCard`, draft N5). Posicionada em `src/app/rds/home/page.tsx` (a raiz
+`/rds/` é o índice de smoke, sem `page.tsx`). `section-card` é reuso
+VERBATIM da cópia da piloto-2 / busca #4 / comparar #5; `button` é reuso
+VERBATIM das listagens. `kpi-card` é cópia LOCAL (decisão de scoping
+aprovada pelo owner — opção A: o `Stat`/`StatGroup` do RDS não tem slot
+para o `floatingBadge` e renderiza strip dividido em vez de card elevado;
+ver §3.19 CP1). `card` (primitivo shadcn-style), `card-parlamentares`,
+`card-votacoes-semana` e `features-grid` são cópias de domínio próprias.
+`DataBadge`, `TrustBadge` importados dos ORIGINAIS (kicker/meta + selo de
+procedência — client island / sem par RDS), logo sem par de drift.
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/design-system/compositions/kpi-card.tsx` | `src/app/rds/home/_components/kpi-card.tsx` | médio | **MANTIDA LOCAL (não adotada do RDS)** — decisão de scoping aprovada (opção A, §3.19 CP1): o `Stat`/`StatGroup` do `/server` cobre `icon`/`value`/`label`/`hint`/`align="center"` 1:1 mas NÃO tem slot equivalente ao `floatingBadge` (TrustBadge L1 sobreposto à borda — sinal de procedência global dos KPIs) e renderiza "strip dividido" (`bg-surface-base` + dividers 1px) em vez de "card elevado com gutters" (`bg-surface-raised`, sem dividers). Adotá-lo perderia o selo L1 + mudaria o visual da rota mais visível (regressão de produto). Mesma régua de apresentacional local quando o RDS não cobre a API (EmptyState/Button/DataBadge). Server Component puro sem hooks → zero-JS (ADR-022). **Candidato a issue upstream futura** (Stat com badge slot de procedência) — NÃO aberta agora (não bloqueia). Tradução 1:1: `border-border→line-default`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `text-foreground-muted→fg-tertiary`; `floatingBadge`/gutters/type scale preservados idênticos; sem extensão de token nova |
+| `src/design-system/primitives/card.tsx` | `src/app/rds/home/_components/card.tsx` | médio | primitivo Card shadcn-style (`CardHeader`/`CardContent`/`CardFooter`/`CardTitle`/`CardDescription`) — o Card compound do RDS (`Card.Header`/`Card.Title`/`Card.Body`) NÃO cobre essa API (sem `CardContent`/`CardFooter`/`CardDescription`; os cards de entrada usam layout flex-col + footer ancorado via `CardContent flex-1` + `CardFooter`); adotar exigiria reescrever a estrutura — mudança estrutural, não tradução. Cópia local server-safe (forwardRef divs, sem hooks → zero-JS). Tokens 1:1: `bg-surface→surface-base`, `text-foreground→fg-primary`, `border-border→line-default`, `text-foreground-muted→fg-tertiary`; sem extensão de token nova |
+| `src/components/home/card-parlamentares.tsx` | `src/app/rds/home/_components/card-parlamentares.tsx` | baixo | card de entrada (ícone + título + descrição + link "Explorar"); Card primitive → cópia local `./card`; href → `/rds/parlamentares` (listagem migrada #1); tokens 1:1: `border-border-strong→line-emphasis`, `bg-surface-elevated→surface-raised`, `text-brand→text-fg-brand` (byte-idêntico pós-#358), `ring-ring→line-focus`; sem extensão de token nova |
+| `src/components/home/card-votacoes-semana.tsx` | `src/app/rds/home/_components/card-votacoes-semana.tsx` | médio | card de entrada (votações recentes, fallback 7d→30d via prop diasJanela); Card primitive → cópia local `./card`; `formatDataBR` da lib preservado; hrefs → `/rds/votacoes/[id]` (perfil migrado piloto-4) + `/rds/votacoes` (listagem #3); badges `bg-success/20 text-success→bg-success/20 text-fg-success` (homônimo ext. piloto-2 + `text-success→fg-success`) e `bg-destructive/20 text-destructive→bg-error/20 text-fg-error` (ext. piloto-2/3); demais tokens 1:1: `bg-surface-elevated→surface-raised`, `text-brand→fg-brand`, `border-border→line-default`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `ring-ring→line-focus`; sem extensão de token nova |
+| `src/components/home/features-grid.tsx` | `src/app/rds/home/_components/features-grid.tsx` | baixo | grid de 6 value props (apresentacional puro, Server Component, sem href); tokens 1:1: `border-border{,-strong}→line-{default,emphasis}`, `bg-surface→surface-base`, `bg-surface-elevated→surface-raised`, `bg-brand/10 text-brand→bg-fg-brand/10 text-fg-brand` (base brand byte-idêntica pós-#358, opacidade aritmética — generalização piloto-5), `text-foreground{,-muted}→fg-{primary,tertiary}`; sem extensão de token nova |
+| `src/design-system/compositions/section-card.tsx` | `src/app/rds/home/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 / busca #4 / comparar #5 (Card compound do RDS — asSection + `aria-labelledby` + Card.Title/Subtitle/Body); a home usa com `id="piramide-confianca"` → renderiza `aria-labelledby="piramide-confianca-title"` (confirmado no curl, idêntico ao original; âncora `#piramide-confianca` do link do TrustBadge preservada) |
+| `src/design-system/primitives/button.tsx` | `src/app/rds/home/_components/button.tsx` | médio | reuso VERBATIM das cópias das listagens #1/#2/#3 e /busca/comparar (Button do RDS é client, +JS; local diverge em token de marca → cópia local zero-JS + token-clean); usos na home: CTA default (asChild → Link) + `variant="ghost"`; tokens 1:1: `bg-brand/text-brand→*-fg-brand`, `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API (variantes não usadas na home): `brand-foreground`, `destructive`/`destructive-foreground` |
+
+Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
+`HeroSection` (composição local) → `HeroSection` do `/server` (API 1:1:
+kicker/title/description/actions/kpis/meta/variant="plain"/align="center";
+o slot `kpis` é opaco e recebe o `KpiCard` local; diferença de typography
+do h1 — RDS `text-3xl sm:text-4xl font-bold` vs local `text-4xl..6xl` —
+aceita, typography do componente adotado, precedente §3.14 decisão 1).
+`DataBadge` (kicker `tone="accent"` + 3 meta pills) e `TrustBadge` (selo
+L1 floating no KpiCard + 4 da pirâmide de confiança) importados dos
+ORIGINAIS (client island de domínio / sem par RDS — precedente
+listagens/perfis/busca/comparar); seus tokens BaV internos calibram na
+promoção. Lógica preservada do original: `dynamic = 'force-dynamic'`,
+queries `getPublicStats`/`getVotacoesRecentes` + fallback honesto 7d→30d,
+`trustExamples`. Cross-links a rotas NÃO migradas apontam pra produção
+(classe conhecida): `/docs/piramide-de-confianca` (docs, sem contraparte
+`/rds/`) e `/#piramide-confianca` (link interno do TrustBadge island,
+âncora da home de produção). `formatNumeroAbreviado` da lib (lógica de
+domínio única, NÃO duplicada).
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
