@@ -82,11 +82,15 @@ function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
         viewBox={`0 0 ${W} ${H}`}
         width={W}
       >
-        {/* Linha 50% como referência visual (sutil). */}
+        {/* Linha 50% como referência visual (sutil). stroke via style inline:
+            stroke- é overloaded (stroke-width) e o RDS não pré-compila
+            stroke-<cor>; o bridge do @theme só gera utilities color-only
+            (bg/border/ring). var() resolve no :root do RDS importado
+            globalmente. Ver ADR-034 §limitação text-/stroke-. */}
         <line
           aria-hidden
-          className="stroke-line-default"
           strokeDasharray="2 2"
+          style={{ stroke: 'var(--color-line-default)' }}
           x1={PAD_X}
           x2={W - PAD_X}
           y1={yAt(50)}

@@ -1,0 +1,172 @@
+# ADR-034: Token bridge do RDS e estratégia da Fase B (tradução dos compartilhados)
+
+> Brasil a Vera · Arquitetura · v0.1
+> Última atualização: 2026-06-13
+> Status: accepted (estende o [ADR-033](033-adocao-react-design-system-externo.md))
+
+---
+
+## Sumário
+
+- [Contexto](#contexto)
+- [Decisão](#decisão)
+- [Limitação `text-` / `stroke-`](#limitação-text--stroke)
+- [Alternativas consideradas](#alternativas-consideradas)
+- [Consequências](#consequências)
+- [Referências](#referências)
+
+---
+
+## Contexto
+
+O [ADR-033](033-adocao-react-design-system-externo.md) adotou o
+`@fabio.caffarello/react-design-system` (RDS) como pacote externo e definiu a
+migração strangler-fig: cópias sob `src/app/rds/**` traduzidas para tokens RDS,
+servidas em paralelo à produção. Concluída a migração de rotas (19/21) e
+validado o mecanismo de **promoção** (3 rotas simples promovidas: `/privacidade`,
+`/feed`, `/partidos/[sigla]`), a **Fase B** precisa traduzir os ~12 **componentes
+compartilhados** (TrustBadge, DataBadge, Button primitive, `getTipoVotoStyle` etc.)
+para que as rotas ricas possam ser promovidas sem deixar produção com visual misto.
+
+A investigação empírica **falsificou** a premissa de que isso seria uma tradução
+cosmética e segura de nomes de classe:
+
+1. **O RDS só ship o CSS pré-compilado e tree-shaken** das utilities que os
+   *próprios componentes* dele usam. Não há `@theme`/preset para o app gerar
+   utilities. O README do pacote é explícito: *"No Tailwind setup required — use
+   our components."* O `src/app/globals.css` tinha **zero** consciência do RDS.
+2. Logo, classes RDS escritas no **JSX do BaV** (`text-fg-primary`,
+   `bg-surface-canvas`, `ring-line-focus`, `bg-fg-brand/10`…) só resolvem para o
+   subconjunto que o RDS pré-compilou. As demais — em especial **variantes de
+   opacidade** (`/10`, `/40`) e **bases não pré-compiladas** (`surface-canvas`,
+   `line-focus`) — **no-opam silenciosamente**: o build fica verde, o elemento
+   renderiza sem cor. É a classe de falha do incidente #303/#304.
+3. **Prova (CSS shipado do build, antes do bridge):** `ring-line-focus`,
+   `bg-fg-brand/5`, `border-fg-brand/60`, `text-fg-brand/80`, `bg-surface-canvas`
+   apareciam em **0** arquivos CSS. As **3 rotas já promovidas tinham defeitos
+   latentes** (focus ring sem cor, hover sem tint, opacidade ignorada).
+4. O token-map traduz `bg-brand/10 border-brand/40 text-brand` → `bg-fg-brand/10
+   border-fg-brand/40 text-fg-brand`. O original BaV **funciona** (brand/success
+   são tokens do `@theme` do BaV); a versão traduzida **no-opa** em fundo/borda.
+   Traduzir ingênuo deixava o componente **pior**, com CI verde.
+
+Conclusão: a Fase B exige uma **fundação** antes de tocar qualquer componente —
+um *token bridge* que faça o Tailwind do BaV gerar a superfície completa de
+utilities RDS.
+
+## Decisão
+
+### 1. Token bridge em `src/app/globals.css` (import global + `@theme` por referência)
+
+- `@import "@fabio.caffarello/react-design-system/styles"` **global** (no
+  `globals.css`, carregado pelo root layout) — traz o `:root`/`.dark` com os
+  tokens `--color-*` do RDS (fonte única de verdade dos valores) e o cascade
+  dark/light do pacote.
+- Bloco `@theme inline` registrando os tokens semânticos RDS-únicos das famílias
+  **`fg-*`, `surface-*`, `line-*` e `error*`** (lista gerada do CSS do pacote;
+  `surface-overlay`, `success`, `warning` ficam de fora — colidem com o `@theme`
+  do BaV). `inline` faz o Tailwind inlinar `var(--color-X)` nas utilities sem
+  emitir um `:root` próprio; o `var()` resolve no `:root`/`.dark` do RDS,
+  preservando o theme-switch.
+
+Validação empírica (princípio 13, output literal no PR): após o bridge, as 5
+classes antes-MISS passaram de **0 → presentes** no CSS gerado, com as variantes
+de opacidade emitidas via `@supports (color-mix)`. O bridge **corrige de quebra**
+os no-ops latentes das 3 rotas já promovidas.
+
+### 2. Neutralização de colisão (bridge puramente aditivo)
+
+O import global traz as utilities **bare** do RDS (`.bg-success`, `.text-warning`
+etc.), que referenciam `--color-success`/`--color-warning` (emerald-400/amber-400).
+Sem ação, rotas **não migradas** sofreriam shift visual silencioso dos valores
+WCAG-tunados do BaV. Um bloco **unlayered** `:root { --color-success: var(--success);
+--color-warning: var(--warning) }` reaponta essas variáveis para os tokens do BaV
+(unlayered vence o `@layer theme` do RDS — confirmado no CSS gerado). `error` **não**
+é neutralizado: nenhum componente BaV usa bare `error` (o BaV usa `destructive`),
+então `bg-error` converge para rose-* do RDS — exatamente o destino do estado
+destructive no token-map (piloto-3). `fg-success`/`fg-warning`/`fg-error` (família
+RDS usada pela migração) ficam intactos. Resultado: a tradução de cada componente
+muda só quando a **sua** onda roda, sob QA.
+
+### 3. Guard automatizado de no-op (`scripts/rds-noop-guard.ts`)
+
+Roda **depois do build** no job required **Lint & Build**: falha (exit 1) se
+alguma classe que referencia um token semântico do RDS for usada em `src/**` mas
+não tiver regra no CSS gerado (`.next/static/**`). É o contrafactual-provável que
+torna o **"auto-merge on green" confiável** na Fase B — o vermelho aparece
+exatamente quando uma tradução produziria no-op. Na introdução, o guard pegou 5
+no-ops pré-existentes nas cópias `/rds/` (2 de `text-`/`stroke-` overloaded, 3 de
+`bg-error/N`), todos corrigidos.
+
+### 4. Ordem por ondas + deferral dos charts
+
+Tradução in-place por blast-radius (Onda 1: Button/DataBadge/EmptyState/
+TrustBadge/ExportCsvLink; Onda 2: FollowButton/CompartilharButton×3/FilterChip/
+Combobox/PartyBadge/`getTipoVotoStyle`), cada onda com `check`+`build`+`vitest`+
+guard verdes → PR → auto-merge on green. **Charts/SVG** com `var(--token)` inline,
+`cssVar` dinâmica e recharts (GastosChart, ApoioPartido, VotosConsolidados,
+disciplina, por-partido, hemiciclo) ficam para uma **Fase C** dedicada — é o
+#303/#304 propriamente (`hsl(var(--chart-X))`), precisa de guard de cor inválida.
+
+## Limitação `text-` / `stroke-`
+
+`text-` e `stroke-` são utilities **overloaded** no Tailwind v4 (também
+`text-<size>` e `stroke-<width>`). O bridge por `@theme inline` auto-referente
+gera de forma confiável as utilities **color-only** (`bg-`, `border-`, `ring-`,
+`fill-`, `divide-`, `outline-`), incl. variantes de opacidade — mas **não** emite
+a variante de cor de `text-`/`stroke-` para tokens RDS bridados. `text-fg-*`
+funciona porque o **RDS pré-compila** essas classes (seus componentes as usam);
+`text-surface-*`, `text-line-*`, `stroke-<rds>` não são pré-compilados **nem**
+gerados → no-op. Regras práticas:
+
+- **Texto:** usar `text-fg-*` (pré-compiladas). Para texto sobre superfície
+  invertida/clara, usar `text-fg-inverse` (não `text-surface-canvas`).
+- **Stroke SVG:** `style={{ stroke: 'var(--color-line-*)' }}` inline (o var()
+  resolve no `:root` do RDS global). É também o padrão dos charts na Fase C.
+
+O guard reforça isso: qualquer `text-surface-*`/`stroke-<rds>` novo vira CI
+vermelho.
+
+## Alternativas consideradas
+
+- **Copiar os valores OKLCH do RDS para o `@theme` do BaV** (sem import global):
+  mais leve nas rotas anônimas, mas duplica valores (drift a cada release do RDS)
+  e exige fiar light/dark à mão. **Rejeitada** pelo owner — fonte única de verdade
+  vale o peso.
+- **Manter os compartilhados em tokens BaV** (não traduzir; confiar que BaV ≈ RDS):
+  nunca consolida; deixa um sistema de tokens duplo permanente. **Rejeitada** —
+  contraria o destino do ADR-033.
+- **Import do CSS do RDS por componente** (em vez de global): frágil — um
+  compartilhado puramente apresentacional não tem motivo para importar JS do RDS,
+  e a utility no-oparia em rotas que não puxam outro componente RDS.
+
+## Consequências
+
+**Positivas:** toda a superfície de utilities RDS fica disponível no JSX do BaV;
+os no-ops latentes das 3 rotas promovidas são corrigidos; o guard previne
+regressões da mesma classe; a tradução dos compartilhados passa a ser confiável.
+
+**Negativas / custos:**
+
+- **+~14,75KB gzip** de CSS do RDS em **toda** rota que carrega o `globals.css`
+  (inclui anônimas — tensão com o [ADR-022](022-clerk-para-autenticacao.md); é CSS,
+  não JS, e o owner aceitou em troca da fonte única). Canário de build: 3,9s
+  (main) → 4,3s (com bridge), +0,4s de processamento CSS — **não** o salto de 5s+
+  que sinalizaria vazamento de `ingestion/` no bundle.
+- **Preflight aplicado 2×** (Tailwind do BaV + bundle do RDS) — idempotente; já
+  coexistia nas 3 rotas promovidas.
+- A neutralização de `success`/`warning` é um **shim permanente** até uma eventual
+  convergência explícita desses tokens para o RDS.
+- A limitação `text-`/`stroke-` precisa ser lembrada nas ondas (mitigada pelo guard).
+
+**Reversibilidade:** o bridge é uma mudança isolada em `globals.css` +
+`scripts/rds-noop-guard.ts` + 1 step de CI; `git revert`-able.
+
+## Referências
+
+- [ADR-033](033-adocao-react-design-system-externo.md) — adoção do RDS externo
+- [ADR-022](022-clerk-para-autenticacao.md) — peso de rotas anônimas
+- [ADR-024](024-acentos-secundarios-accent-roxo.md) — resíduo accent roxo
+- `docs/migration/token-map.md` — tabela canônica + nota do bridge
+- `docs/migration/route-readiness.md` §3.22 — registro da Fase B
+- Princípio 13 (CLAUDE.md) — validação empírica; incidente #303/#304

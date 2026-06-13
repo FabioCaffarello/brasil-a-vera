@@ -62,8 +62,12 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
               className={
                 isAtivo
                   ? // Pill invertido — extensão piloto-4 do token-map
-                    // (aprovada pelo owner, CP3).
-                    'rounded bg-fg-primary px-2.5 py-1 font-medium text-surface-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
+                    // (aprovada pelo owner, CP3). text-fg-inverse (não
+                    // text-surface-canvas): o RDS pré-compila text-fg-* mas
+                    // NÃO text-surface-* (text- é overloaded com font-size;
+                    // o bridge do @theme só gera utilities color-only —
+                    // bg/border/ring. Ver ADR-034 §limitação text-/stroke-).
+                    'rounded bg-fg-primary px-2.5 py-1 font-medium text-fg-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
                   : 'rounded border border-line-emphasis px-2.5 py-1 text-fg-primary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
               }
               href={href}

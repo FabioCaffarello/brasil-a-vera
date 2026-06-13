@@ -92,6 +92,28 @@ visual exige screenshot/auditoria WCAG empírica antes do merge — Biome +
 TypeScript + build passando não detectam cor inválida.** Padrões de uso
 documentados em `docs/design/DESIGN-TOKENS.md` §charts.
 
+### Token bridge da Fase B — o no-op silencioso, agora com guard (→ ADR-034)
+
+A Fase B da migração RDS (traduzir os compartilhados) começou pela mesma
+classe de falha do #303/#304, num disfarce novo. O pacote RDS só ship o CSS
+**pré-compilado** das utilities que SEUS componentes usam (README: "no Tailwind
+setup required — use our components"). Escrever classes RDS no JSX do BaV
+(`bg-fg-brand/10`, `bg-surface-canvas`, `ring-line-focus`) funcionava só para o
+subconjunto pré-compilado; o resto — variantes de opacidade, bases não
+pré-compiladas — **no-opava silenciosamente** (build verde, sem cor). As 3 rotas
+já promovidas (`/privacidade`, `/feed`, `/partidos`) tinham defeitos latentes que
+ninguém viu — exatamente como a suíte vermelha do drift ROLES. A fundação (ADR-034)
+foi um *token bridge* no `globals.css` (import global do CSS do RDS + `@theme
+inline` registrando os tokens semânticos) que faz o Tailwind do BaV gerar a
+superfície completa, incl. opacidade. Mas a lição que **fecha** o ciclo do #303/#304
+é o `scripts/rds-noop-guard.ts`: roda depois do build no job required e falha se
+qualquer classe RDS usada não tiver regra no CSS gerado. Onde o #303/#304 dependia
+de QA visual humano (que não existe automatizado), o no-op de *classe* (≠ cor
+inválida) é **detectável por máquina** — e o guard pegou 5 no-ops pré-existentes na
+introdução. Meta-lição: **quando o modo de falha é "a regra não existe", o
+contrafactual é automatizável; transforme o QA visual no que sobra de fato visual,
+não no que um grep pega.**
+
 ### Drift ROLES.md × matchers — a suíte vermelha que ninguém viu (Wave 10 → #365/#368)
 
 Na Wave 10 (2026-05-19) o owner revisou `path-matchers.sh` liberando
