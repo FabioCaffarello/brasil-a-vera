@@ -1567,6 +1567,150 @@ puro, custo ~zero, sem data); painel + 5 slots aguardam N8/RDS #210
 (TabsAsLinks). Workarounds §3.9 inalterados (tabela vazia; varrer no
 próximo bump do RDS).
 
+## §3.19 — Execução da onda HeroSection #6 (2026-06-13): home `/`
+
+**`/rds/home` no ar** (PR onda HeroSection #6, no bump 3.12.0) —
+**ÚLTIMA da onda HeroSection** e a rota mais visível do app. Era a única
+restante que dependia só do #163 (HeroSection), com um gap adicional
+(`KpiCard`, draft N5, único entre as rotas da onda). A home abre com
+`HeroSection` (slot `kpis` = `KpiCard` com selo de procedência L1
+flutuante) + grid de features + 2 cards de entrada + SectionCard da
+pirâmide de confiança. Executada pelo agent `rds-route-migrator`.
+
+### Posicionamento
+
+`src/app/rds/home/page.tsx` — a raiz `/rds/` é o índice de smoke (sem
+`page.tsx` próprio); `/rds/home` não colide com o `RdsStagingLayout`
+nem com o índice. Confirmado no scoping.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 7 arquivos sob `_components/`. **1 reuso VERBATIM** (`section-card` da
+  piloto-2 / busca #4 / comparar #5 — Card compound do RDS) + **1 reuso
+  verbatim das listagens** (`button` — apresentacional puro, só o header
+  de comentário muda). 5 cópias traduzidas 1:1 pela tabela canônica +
+  extensões (`kpi-card`, `card` primitivo, `card-parlamentares`,
+  `card-votacoes-semana`, `features-grid`); zero hesitação. Pares de
+  token: os já consolidados nas ondas anteriores
+  (`bg-surface-elevated→surface-raised`, `border-border{,-strong}→
+  line-{default,emphasis}`, `bg-surface→surface-base`,
+  `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`,
+  `ring-ring→line-focus`, `text-brand/bg-brand/10→*-fg-brand`
+  byte-idêntico pós-#358, `bg-success/20 text-success→bg-success/20
+  text-fg-success` homônimo ext. piloto-2, `bg-destructive/20
+  text-destructive→bg-error/20 text-fg-error` ext. piloto-2/3).
+- `HeroSection` (composição local) → `HeroSection` do RDS `/server` —
+  API 1:1 (`kicker`/`title`/`description`/`actions`/`kpis`/`meta`/
+  `variant="plain"`/`align="center"`; o slot `kpis` é opaco e recebe o
+  `KpiCard` local). Adoção `/server` server-safe, precedente §3.14–§3.18,
+  não disparou stop.
+- `dynamic = 'force-dynamic'` preservado do original (cards consomem
+  queries + build do Cloudflare usa placeholder DATABASE_URL); queries
+  `getPublicStats`/`getVotacoesRecentes` + fallback honesto 7d→30d
+  preservados; hrefs de navegação (hero CTAs, cards, "Ver todas",
+  perfis de votação) reescritos pra `/rds/`; metadata `(rds-pilot)`.
+- `DataBadge` (kicker `tone="accent"` + meta pills) e `TrustBadge`
+  (selo L1 floating + 4 da pirâmide) importados dos ORIGINAIS — client
+  island de domínio / sem par RDS (precedente listagens/perfis/busca/
+  comparar); seus tokens BaV internos calibram na promoção.
+- Validação: protocolo integral (check limpo + build **3.5s** + 788
+  testes + curl lado a lado com dados reais — h1 idêntico ["Transparência
+  política sem ruído."], 3 `<h2>` + 3 `aria-labelledby` idênticos
+  [features-titulo / entry-points-titulo / piramide-confianca-title],
+  anchor `#piramide-confianca` + `-title` presente, **selo L1 flutuante
+  do KpiCard renderizado** ["Nível de confiança L1"], KPIs reais
+  [722 / 9,4 mil / 2,5 mil / Diária], 15 hrefs do `<main>` com estrutura
+  idêntica ao original e navegação CONTIDA em `/rds/` [hero CTAs →
+  `/rds/parlamentares`+`/rds/proposicoes`, cards → `/rds/votacoes/[id]`,
+  "Ver todas" → `/rds/votacoes`], `X-Robots-Tag: noindex, nofollow`,
+  title com `(rds-pilot)`). **Delta de JS: 0 bytes exatos** (895.297
+  bytes / 17 chunks dos dois lados) — rota server-only, **zero chunk RDS
+  no client path** (HeroSection/Card/KpiCard/FeaturesGrid todos
+  server-rendered; os únicos client islands [TrustBadge + chrome] são os
+  mesmos da home de produção). ADR-022 preservado. Delta byte-idêntico
+  ao melhor da onda (`/busca` §3.17, `/comparar` §3.18 — mesma ausência
+  de client islands próprios).
+
+**Julgamento** — onde o agent PAROU e perguntou (1 checkpoint, escalado
+ao owner no scoping; recomendação aprovada):
+
+1. **CP1 — `KpiCard` → `Stat`/`StatGroup`: slot faltando** (regra de
+   adoção: API que não mapeia → PARAR). O `Stat`/`StatGroup` do `/server`
+   cobre `icon`/`value`/`label`/`hint`/`align="center"` 1:1, MAS **não
+   tem slot equivalente ao `floatingBadge`** do `KpiCard` (o
+   `TrustBadge` L1 sobreposto à borda superior do card, sinal de
+   procedência global dos KPIs) e renderiza um "strip dividido"
+   (`bg-surface-base` + dividers 1px + borda) em vez do "card elevado
+   com gutters de whitespace" (`bg-surface-raised`, sem dividers).
+   Isso ultrapassa "diferença de typography do componente adotado"
+   (classe aceita sem parar nas §3.14–§3.18) — é **slot ausente +
+   container de aparência diferente**, decisão de produto na rota mais
+   visível. O agent parou e apresentou o mapeamento campo-a-campo + 3
+   opções. **Owner aprovou opção A**: manter `KpiCard` como cópia LOCAL
+   traduzida em `_components/`, preservando `floatingBadge` + surface
+   elevada + gutters idênticos. **Classe de decisão: CONHECIDA** — é a
+   mesma régua já consolidada de apresentacional cujo equivalente RDS
+   não cobre a API (`EmptyState`/`Button` locais nas §3.14–§3.16,
+   `DataBadge` sem par RDS): manter local, traduzir classes 1:1,
+   preservar zero-JS. As opções B (abrir mão do selo L1) e C
+   (re-hospedar o badge fora do grid) foram descartadas por serem
+   regressão de produto, não tradução. O `KpiCard` é Server Component
+   puro sem hooks → cópia local mantém zero-JS (delta 0 confirmado).
+
+Confirmação técnica relevante (sem stop, removeu um falso-positivo de
+delta-JS): os builds `dist/ui/components/Stat/{Stat,StatGroup}.js`
+carregam banner `"use client"`, mas o build do entry `/server`
+(`dist/server/index.js`) **não** tem o banner — `Stat`/`StatGroup` do
+`/server` são genuinamente server-safe (por isso as listagens mediram
+zero chunk client). O risco de chunk RDS no client path foi avaliado e
+descartado na inspeção do build correto.
+
+**Nota de gap upstream (NÃO abrir issue agora):** o `Stat` do RDS não
+tem slot para badge sobreposto (estilo `floatingBadge` do `KpiCard`) —
+candidato a **issue upstream futura** (`Stat`/`KpiCard` com badge slot
+de procedência). NÃO bloqueia (opção A resolve com cópia local); o repo
+do RDS está ocupado com outra frente. Registrar quando o padrão se
+repetir ou quando houver banda upstream. Mesmo regime do `accent`
+data-viz e do `text-success-foreground`: pendência conhecida, não
+trabalho do agent.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream novo
+acionável, nenhuma issue nova no RDS, workaround §3.9 (tabela vazia) não
+tocado. Grep de tokens BaV residuais no código das cópias limpo — só os
+resíduos documentados por paridade de API (`brand-foreground`,
+`destructive`/`destructive-foreground` no `button`, variantes não usadas
+na home). Os tokens BaV no `<main>` renderizado (vs original:
+`text-foreground` 69→18, `border-border` 34→8, `text-brand` 28→12) vêm
+**inteiramente dos client islands importados dos originais** (TrustBadge
+×5, DataBadge), não das cópias — calibram na promoção (precedente
+universal).
+
+### Leitura para o contrato do agent
+
+A rota mais visível do app — e a única da onda com gap adicional além do
+#163 (`KpiCard` N5) — saiu **majoritariamente mecânica + 1 stop ao owner
+de classe conhecida**. O stop foi **exatamente o previsto pelo contrato**
+("se a API do RDS não mapear pra composição local, PARE e mostre o
+mapeamento"): o `floatingBadge` é o slot que `Stat`/`StatGroup` não tem,
+e o agent parou ANTES de qualquer tradução, apresentou mapeamento + prova
++ 3 opções, e aplicou a decisão aprovada. O contrato calibrou certo: a
+divergência que merece stop é **slot/composição ausente**, não typography
+do componente adotado (esta seguiu receita, como nas #1–#5). Custo de
+coordenação: 1 rodada. 2 dos 7 arquivos de `_components/` foram reuso
+verbatim; os 5 traduzidos foram 1:1 sem hesitação.
+
+### Cobertura
+
+**Onda HeroSection completa** (`/parlamentares`, `/proposicoes`,
+`/votacoes`, `/busca`, `/comparar`, home). Cobertura: **14 de 21 rotas**
+sob `/rds/` (partidos, 3 perfis, privacidade, feed, gastos, 3 listagens,
+busca, comparar, home). Restam fora de `/rds/`: `/sign-in`/`/sign-up`
+(chrome puro, custo ~zero, sem data); painel + 5 slots aguardam N8/RDS
+#210 (TabsAsLinks) — a próxima e última frente. Workarounds §3.9
+inalterados (tabela vazia; varrer no próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
