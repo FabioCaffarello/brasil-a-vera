@@ -1459,6 +1459,114 @@ próximas naturais (mesmo padrão HeroSection `/server`). Fora da onda:
 slots aguardam N8/RDS #210 (TabsAsLinks). Workarounds §3.9 inalterados
 (tabela vazia; varrer no próximo bump do RDS).
 
+## §3.18 — Execução da onda HeroSection #5 (2026-06-13): rota `/comparar`
+
+**`/rds/comparar` no ar** (PR onda HeroSection #5, no bump 3.12.0).
+Penúltima das rotas que dependiam SÓ do #163 (HeroSection) — restava a
+home. A `/comparar` é um comparativo **server-rendered** de 2-3
+parlamentares: `HeroSection` + 2 `SectionCard` envolvendo um grid de
+métricas (`ParlamentaresGrid`) e uma matriz de concordância par-a-par
+(`ConcordanciaMatrix`). Executada pelo agent `rds-route-migrator`.
+
+### Medição de fricção (por unidade de trabalho)
+
+**Mecânico** — receita do playbook/token-map aplicada sem decisão:
+
+- 3 arquivos sob `_components/`. **1 reuso VERBATIM** (`section-card` da
+  piloto-2 / busca #4 — Card compound, só o header de comentário muda).
+  Só `concordancia-matrix` e `parlamentares-grid` são cópias de domínio
+  novas, traduzidas 1:1 pela tabela canônica; zero hesitação. Pares de
+  token: `border-border→line-default`, `bg-surface→surface-base`,
+  `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`,
+  `text-foreground-muted→fg-tertiary`, `text-foreground-subtle→
+  fg-quaternary`, `text-success→fg-success`, `text-warning→fg-warning`.
+- **`ConcordanciaMatrix` = padrão "3 limiares de cor semânticos"** (≥80
+  success / ≥50 foreground / <50 warning) — MESMO de `AlinhamentoBancada`/
+  `FidelidadeMediaBlock`/`fidelidade-media` (piloto-1). Pré-analisado no
+  scoping recebido como classe conhecida: é um `<ul>`, **não data-viz**
+  (sem SVG/chart/`hsl(var())`/`color-mix`/barra). Regra 2 avaliada e
+  **NÃO disparada**; traduzido pela tabela sem parar. Lógica de limiares
+  preservada exata.
+- `HeroSection` (composição local) → `HeroSection` do `/server` — API
+  1:1 (kicker/title/description/variant="plain"/align="center"; precedente
+  §3.14/§3.17). Adoção `/server` server-safe, não disparou stop.
+- `SectionCard` (composição local) → cópia local sobre Card compound
+  (reuso verbatim piloto-2 / busca); `/comparar` usa sem `id` → sem
+  `aria-labelledby` (mesmo contrato do original sem id).
+- `DataBadge` (kicker do hero, `tone="accent"`) → import do ORIGINAL
+  (sem par RDS — precedente listagens/perfis/busca); server-rendered.
+- `<img>` cru preservado no grid (zero-JS, CLS via width/height —
+  precedente bancada-list/parlamentar-card). `formatBRL` da lib (lógica
+  de domínio única, NÃO duplicada).
+- Lógica de query (`getCompararParlamentares`), parse/validação de ids
+  e contrato dos 4 estados de erro preservados; exemplo de URL no
+  `ErrorState` reescrito pra `/rds/comparar`; metadata `(rds-pilot)`.
+- Validação: protocolo integral (check limpo + build **3.6s** + 788
+  testes + curl lado a lado com 3 ids reais — h1 idêntico ["3
+  parlamentares lado a lado"], 2 `<h2>` nos níveis corretos
+  [Comparação / Concordância entre pares], 4 `<section>` / 0
+  `aria-labelledby` cada, matriz com 6 pares + `32%`×2 + `Amostra`×4
+  idênticos dos dois lados [limiar <50 → warning exercitado], grid com 8×
+  "Presença em votações nominais", `X-Robots-Tag: noindex, nofollow`,
+  exemplo de URL no `ErrorState` → `/rds/comparar`). **Token BaV no
+  `<main>` da rota = 0** (orig: 42 `text-foreground`, 23
+  `-muted`, 3 `-subtle`, 11 `border-border`, 5 `bg-surface`, 1
+  `text-success`; ZERO no RDS — só o chrome fora do `<main>` carrega
+  tokens BaV, por design). **Delta de JS: 0 bytes exatos** (892.857
+  bytes / 17 chunks dos dois lados) — rota server-only, **zero chunk RDS
+  no client path** (HeroSection/Card/DataBadge/ConcordanciaMatrix/
+  ParlamentaresGrid todos server-rendered). ADR-022 preservado. Delta
+  byte-idêntico ao da `/busca` (§3.17, 0 bytes) — mesma ausência de
+  client islands próprios.
+
+**Julgamento** — decisões caso-a-caso (todas de **classe conhecida**,
+nenhum stop ao owner):
+
+1. **Adoção de `HeroSection`/`Card` (SectionCard) do RDS `/server`.**
+   Ambos mapearam **1:1** com as composições locais (mesma régua de
+   adoção `/server` server-safe já consolidada nas #1–#4/pilotos) —
+   nenhum slot/prop faltando, não disparou o stop de adoção. Diferença
+   visual do h1 (RDS `text-3xl sm:text-4xl font-bold` vs local
+   `text-4xl..6xl`): typography do componente adotado, não token fora do
+   mapa (idêntico à decisão 1 da §3.14).
+2. **`ConcordanciaMatrix` traduzida pela tabela, sem stop.** Os 3
+   limiares (success/foreground/warning) são o padrão já traduzido na
+   piloto-1 (`fidelidade-media`); regra 2 avaliada e NÃO disparada (não
+   é data-viz). Todas as classes no mapa canônico — tradução 1:1.
+3. **`ErrorState` — `text-warning→text-fg-warning`; `border-warning/N`/
+   `bg-warning/N` homônimos sem tradução.** Regra 1 avaliada e NÃO
+   disparada: a base `--warning`/`--color-warning` é homônima dos dois
+   lados (ext. piloto-2 fixou `bg-warning/N`/`border-warning/N`; piloto-5
+   generalizou que o prefixo utility só escolhe a propriedade CSS sobre a
+   MESMA base). Mesma régua do `bg-success/N`/`border-success/N` da
+   `/busca` (§3.17 decisão 2). Classe conhecida.
+
+**Falsificação nova tipo §3.8: NENHUMA.** Nenhum gap upstream, nenhuma
+issue nova no RDS, workaround §3.9 (tabela vazia) não tocado. Grep de
+tokens BaV residuais no `<main>` da rota limpo (0).
+
+### Leitura para o contrato do agent
+
+A rota saiu **100% mecânica + 3 decisões de classe conhecida, zero stop
+ao owner**. O scoping recebido pré-classificou corretamente o único
+ponto que poderia parecer data-viz (a `ConcordanciaMatrix`) como padrão
+de 3 limiares já conhecido — e a execução confirmou: regra 2 não
+disparou, nenhum SVG/chart/`hsl(var())`/`color-mix`. 1 dos 3 arquivos de
+`_components/` foi reuso verbatim; os outros 2 traduziram 1:1 pela tabela
+sem hesitação. O delta de JS (0 bytes exatos) iguala o melhor da onda
+(`/busca`). Nenhuma tradução ad-hoc escapou.
+
+### Cobertura
+
+Cobertura: **13 de 21 rotas** sob `/rds/` (partidos, 3 perfis,
+privacidade, feed, gastos, 3 listagens, busca, comparar). Resta
+dependente só do #163 (já fechado): **a home** — a próxima e última da
+onda HeroSection (mesmo padrão HeroSection `/server`; tem `KpiCard` como
+gap restante além do #163). Fora da onda: `/sign-in`/`/sign-up` (chrome
+puro, custo ~zero, sem data); painel + 5 slots aguardam N8/RDS #210
+(TabsAsLinks). Workarounds §3.9 inalterados (tabela vazia; varrer no
+próximo bump do RDS).
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
