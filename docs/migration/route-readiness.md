@@ -1930,8 +1930,10 @@ limpa (sem o buraco).
 - **(D) Painel:** decisão arquitetural (`(authenticated)` vs raiz).
 - Candidato a **ADR-034** (estratégia de promoção) antes da fase B.
 
-`/feed` (a outra page-level da piloto-5) é a próxima promoção trivial
-natural — mesmo molde, sem buraco.
+**Atualização:** `/feed` PROMOVIDA logo em seguida (2ª promoção,
+mesmo molde page-level, sem buraco) — as duas rotas page-level (a
+seção piloto-5 inteira) estão consolidadas. As próximas promoções são
+as rotas RICAS, que dependem das fases B/C/D abaixo.
 
 ## §4 — Notas e premissas
 
