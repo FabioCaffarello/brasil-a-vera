@@ -134,6 +134,32 @@ vigilância de drift das checagens 1/2:
 |---|---|:---:|---|
 | `src/app/parlamentares/[id]/gastos/page.tsx` | `src/app/rds/parlamentares/[id]/gastos/page.tsx` | médio | filtros (trimestre via FilterChips + categoria via SELECT cru) + tabela CEAP paginada por cursor (`CursorGastosV1`, ADR-026); `FilterChips` wrapper do RDS `/server` (#162 fechada, varredura 3.10.0); `FilterChip` item local (zero-JS, §3.9); `Label` do RDS `/server` (server-safe, renderiza `<label>` nativo); tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `border-border→line-default`); base href, back-link e form `action` em `/rds/`; sem extensão de token nova |
 
+### Onda HeroSection #1 — `/rds/parlamentares` (listagem)
+
+Primeira das 3 listagens. A `HeroSection` (#163) fechou upstream e foi
+entregue no `/server` da RDS 3.12.0 (bump 3.10.0 → 3.12.0 neste PR),
+destravando a leva. Cinco cópias em `_components/`; `PartyBadge`,
+`DataBadge`, `ExportCsvLink`, `FollowButton` e `Combobox` são importados
+dos ORIGINAIS (sem cópia — precedente client islands / composições
+mantidas), logo sem par de drift.
+
+| Original | Cópia-rds | Risco | Notas |
+|---|---|:---:|---|
+| `src/components/parlamentar/filtros.tsx` | `src/app/rds/parlamentares/_components/filtros.tsx` | médio | filtros Casa (FilterChips Links, URL=state) + busca por nome (input SSR) + partido/UF (Combobox client island do original) + ordem (select nativo) + chips de filtros ativos; `FilterChips` wrapper do RDS `/server` (#162, §3.9); `FilterChip` item local; `Label` do RDS `/server` (server-safe, precedente piloto-6); `Button` da cópia local; hrefs/form `action`/link "Limpar" em `/rds/parlamentares`; tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `border-border→line-default`, `bg-surface→surface-base`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `hover:bg-surface→hover:bg-surface-base`); sem extensão de token nova |
+| `src/components/parlamentar/parlamentar-card.tsx` | `src/app/rds/parlamentares/_components/parlamentar-card.tsx` | médio | card de listagem (gating server-side do FollowButton preservado — anônimo sem HTML/JS do botão); `FollowButton` e `PartyBadge` importados dos ORIGINAIS; href do card → `/rds/parlamentares/[id]`; contrato de fallback do alinhamento exato (com_amostra/insuficiente/sem_dado); `AlinhamentoStrip` barra CSS-only mantém `bg-accent/15`/`bg-accent/60` (resíduo data-viz ADR-024, mesma régua piloto-2 alinhamento.tsx — NÃO traduzido); demais tokens 1:1 (`border-border{,-strong}→line-{default,emphasis}`, `bg-surface{,-elevated}→surface-{base,raised}`, `ring-ring→line-focus`, `ring-offset-surface→offset-surface-base`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`) |
+| `src/components/ui/empty-state.tsx` | `src/app/rds/parlamentares/_components/empty-state.tsx` | baixo | apresentacional puro; o `EmptyState` do RDS existe mas só no entry raiz (client, +JS contra ADR-022) → cópia local traduzida mantém zero-JS; tokens 1:1 (`border-border→line-default`, `bg-surface/50→surface-base/50`, `bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`) |
+| `src/design-system/primitives/button.tsx` | `src/app/rds/parlamentares/_components/button.tsx` | médio | primitivo Button; o Button do RDS é client (não está no `/server`, +JS) e o local diverge em token de marca → cópia local traduzida (zero-JS + token-clean); `bg-brand→bg-fg-brand`/`text-brand→text-fg-brand` (byte-idêntico pós-#358), `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API (variantes não usadas na listagem): `brand-foreground` (on-color do CTA), `destructive`/`destructive-foreground` |
+| `src/design-system/compositions/filter-chips.tsx` (item `FilterChip`) | `src/app/rds/parlamentares/_components/filter-chip.tsx` | baixo | só o item `FilterChip` (o wrapper `FilterChips` vem do RDS `/server`); decisão §3.9: item local (Chip do RDS é client +5.759 bytes/rota, chips são `<Link>`, ADR-022); tokens 1:1 (`ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`, `border-brand bg-brand/10 text-brand→*-fg-brand`, `border-border→line-default`, `bg-surface{,-elevated}→surface-{base,raised}`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`); MANTIDO: `shadow-glow` (resíduo sem par RDS) |
+
+Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
+`HeroSection` (composição local) → `HeroSection` do `/server`
+(API 1:1: kicker/title/description/variant="plain"/align="center");
+`StatsGrid` (composição local) → `StatGroup layout="grid" cols={3}` +
+`Stat` do `/server` (precedente §3.6; borda/dividers do próprio
+StatGroup). Client islands importados dos originais (sem cópia):
+`ExportCsvLink`, `FollowButton`, `Combobox`, `DataBadge`, `PartyBadge`,
+e o auth/`canExport`/`getFollowsByUserId`/`getOrCreateUserProfileId`.
+
 ### Wrappers de entry granular (varredura 3.9.0 — sem original)
 
 | Original | Cópia-rds | Risco | Notas |
