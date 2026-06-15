@@ -52,25 +52,18 @@ pares-contraditorios) sobrescritos pelas versões RDS verificadas em
 do `/server`. `GastosChart` (recharts) sobe como resíduo BaV (ADR-034 §5). QA
 Playwright (0 erros; header/KPIs/section-nav/seções). Staging removido.
 
-### Piloto-3 — `/rds/proposicoes/[tipo]/[numero]/[ano]`
+### Piloto-3 — `/rds/proposicoes/[tipo]/[numero]/[ano]` — ✅ PROMOVIDA (2026-06-15)
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/proposicao/perfil-header.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/perfil-header.tsx` | médio | badge sólido TRANSFORMADA_EM_NORMA mantém `bg-success text-success-foreground` (resíduo on-color, extensão piloto-3 do token-map) |
-| `src/components/proposicao/autores-list.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/autores-list.tsx` | baixo | PartyBadge local mantido |
-| `src/components/proposicao/barra-progresso-tramitacao.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/barra-progresso-tramitacao.tsx` | médio | `brand→fg-brand` (byte-idêntico pós-#358); usada também pelo ProposicaoCard da listagem — original intocado |
-| `src/components/proposicao/footer-cross-links.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/footer-cross-links.tsx` | baixo | contratos de fallback exatos |
-| `src/components/proposicao/temas-list.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/temas-list.tsx` | baixo | zero deps |
-| `src/components/proposicao/tramitacao-timeline.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/tramitacao-timeline.tsx` | médio | filtros + cursor pagination; FilterChips wrapper do RDS /server (#162 fechada, varredura 3.10.0); FilterChip item local |
-| `src/components/proposicao/votacoes-vinculadas.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/votacoes-vinculadas.tsx` | médio | filtros mini exatos; FilterChips wrapper do RDS /server (#162 fechada); FilterChip item local |
-| `src/design-system/compositions/section-card.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 (Card compound) |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia da piloto-2 (`useScrollSpy` via `./hooks` desde a varredura 2026-06-11) |
-
-Client islands importados dos originais (sem cópia, precedente
-piloto-2): `ApoioPartidoChart`/`VotosConsolidadosChart` (recharts,
-dynamic ssr:false), `CompartilharProposicaoButton`, `TrustBadge`.
-`KpiStrip` → `StatGroup`+`Stat` do `/server` direto no `page.tsx`
-(tone map `STAT_TONE` no próprio arquivo).
+12ª promoção (2º perfil). Os 6 `_components/` de domínio (perfil-header,
+autores-list, footer-cross-links, temas-list, tramitacao-timeline,
+votacoes-vinculadas) sobrescritos pelas versões RDS verificadas em
+`@/components/proposicao/*`. `barra-progresso`/`section-card`/`section-nav`/
+`rds-accordion` já-RDS/canônicos (listagem/perfil parlamentar) → cópias
+deletadas. Página: `KpiStrip`→`Stat`/`StatGroup` do `/server`. Charts
+(`ApoioPartidoChart`, `VotosConsolidadosChart` donut) sobem como resíduo BaV
+(ADR-034 §5; donut com o fix #303/#304 da Fase C #408). QA Playwright (perfil
+renderiza, 0 erros; dado de votos consolidados esparso → donut não exercitado,
+fix guard-verificado). Staging removido.
 
 ### Piloto-4 — `/rds/votacoes/[id]`
 
