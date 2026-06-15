@@ -1,21 +1,34 @@
 'use client'
 
-// TabBar — Fase 3 do refator do painel pós-Wave 10 (RFC §5).
+// Promovido ao RDS (ADR-033).
+// (área logada /painel).
 //
-// 5 pilares com ícones lucide + counters (Parlamentares: follows,
-// Alertas: unread inapp deliveries). Counters renderizam apenas
-// quando > 0 (zero state limpo). Counter `· N` em
-// `text-foreground-subtle` discreto, separado por middot.
+// Decisão-chave #1 do scoping (TabBar → TabsAsLinks do RDS /server, API 1:1):
+// os 5 pilares viram itens de `TabsAsLinks variant="default"`. O mapeamento
+// de props é byte-a-byte:
+//   TabAsLink { label, href, active?, icon?, count? } ↔ original
+//   counters[tab] → count   ·   ícone lucide → icon   ·   href idem (→ /)
 //
-// Ícones semanticamente alinhados:
-//   - Resumo → LayoutDashboard
-//   - Parlamentares → Users
-//   - Alertas → BellRing (mesmo do FollowButton Hotfix 10.1)
-//   - Configurações → Settings
-//   - Meus dados → Shield (privacidade como pilar)
+// Por que ainda é 'use client': a API do TabsAsLinks delega a DERIVAÇÃO do
+// estado ativo ao chamador (lê do URL e passa `active`). O painel layout é
+// server e NÃO recebe searchParams (razão de ser do ActiveSlotPicker), então
+// este wrapper fino lê `useSearchParams()`, computa `active`, e renderiza o
+// TabsAsLinks (server-safe, importado do /server) com `linkComponent={Link}`
+// para manter a navegação client-side / prefetch — exatamente o que o original
+// fazia com `<Link>`.
 //
-// AP4 (RFC §12): bound ao painel; sem generificar agora.
+// Diferenças visuais da ADOÇÃO do componente RDS (não tradução de token —
+// mesma régua da typography do HeroSection, §3.14 decisão 1):
+//   - active: o RDS usa `border-line-brand text-fg-brand-emphasis font-medium`
+//     (vs `border-brand text-foreground` local) — typography/cor do componente
+//     adotado, não token fora do mapa.
+//   - count: o RDS renderiza um pill arredondado (`bg-surface-muted
+//     text-fg-secondary text-xs`) em vez do `· N` em middot local — é a
+//     apresentação do slot `count` do componente, prop que mapeia 1:1.
+//   - container: `<nav>` com `aria-label` (o RDS exige nome acessível) +
+//     `border-b` próprio do componente.
 
+import { TabsAsLinks } from '@fabio.caffarello/react-design-system/server'
 import {
   BellRing,
   LayoutDashboard,
@@ -27,7 +40,6 @@ import {
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
-import { cn } from '@/lib/cn'
 import { parseTab, type TabKey } from '@/lib/painel-tabs'
 
 interface Props {
@@ -47,40 +59,24 @@ export function TabBar({ counters }: Props) {
   const activeTab = parseTab(useSearchParams().get('tab'))
 
   return (
-    <nav
-      aria-label="Tabs do painel"
-      className="border-border border-b bg-surface"
-    >
-      <ul className="mx-auto flex max-w-6xl items-center gap-1 overflow-x-auto px-4">
-        {TABS.map((tab) => {
-          const isActive = tab.key === activeTab
-          const count = counters[tab.key]
+    <div className="mx-auto max-w-6xl overflow-x-auto px-4">
+      <TabsAsLinks
+        aria-label="Tabs do painel"
+        items={TABS.map((tab) => {
           const Icon = tab.icon
-          return (
-            <li key={tab.key}>
-              <Link
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'inline-flex items-center gap-2 whitespace-nowrap rounded-t-md border-b-2 px-3 py-2.5 font-medium text-sm transition-colors',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
-                  isActive
-                    ? 'border-brand text-foreground'
-                    : 'border-transparent text-foreground-muted hover:border-border-strong hover:text-foreground',
-                )}
-                href={`/painel?tab=${tab.key}`}
-              >
-                <Icon aria-hidden="true" className="size-4" />
-                <span>{tab.label}</span>
-                {count !== undefined && count > 0 ? (
-                  <span className="text-foreground-subtle text-xs">
-                    · {count}
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          )
+          const count = counters[tab.key]
+          return {
+            label: tab.label,
+            href: `/painel?tab=${tab.key}`,
+            active: tab.key === activeTab,
+            icon: <Icon aria-hidden="true" className="size-4" />,
+            // Counter só quando > 0 (zero state limpo, igual ao original).
+            count: count !== undefined && count > 0 ? count : undefined,
+          }
         })}
-      </ul>
-    </nav>
+        linkComponent={Link}
+        variant="default"
+      />
+    </div>
   )
 }

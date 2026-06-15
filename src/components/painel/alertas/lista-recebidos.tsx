@@ -1,9 +1,15 @@
-// Sub-tab Recebidos (real) — Wave 10 Etapa 7.4.
+// Componente do painel (área logada) — promovido ao RDS (ADR-033). Server Component (renderiza markdown
+// server-side, sem custo no bundle do client).
 //
-// Substitui o stub da Etapa 6. RSC: recebe deliveries pré-buscadas
-// pela page, renderiza markdown server-side (via marked, sem custo
-// no bundle do client) e passa HTML pronto para `<ItemRecebido />`
-// (client, accordion + marcação de leitura).
+// Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
+// docs/migration/token-map.md:
+//   border-border         → border-line-default
+//   bg-surface            → bg-surface-base
+//   text-foreground       → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
+//
+// `ItemRecebido` importado do ORIGINAL (client island — accordion + marcação
+// de leitura). `renderMarkdown` da lib (lógica pura, preservada).
 
 import { ItemRecebido } from '@/components/painel/alertas/item-recebido'
 import { renderMarkdown } from '@/lib/markdown'
@@ -23,9 +29,9 @@ interface Props {
 export function ListaRecebidos({ deliveries }: Props) {
   if (deliveries.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8 text-center">
-        <h3 className="font-medium text-foreground text-lg">Caixa vazia</h3>
-        <p className="mt-2 text-foreground-muted text-sm">
+      <div className="rounded-lg border border-line-default bg-surface-base p-8 text-center">
+        <h3 className="font-medium text-fg-primary text-lg">Caixa vazia</h3>
+        <p className="mt-2 text-fg-tertiary text-sm">
           Os reports semanais aparecem aqui assim que o cron processar os
           parlamentares que você acompanha (domingo 18:00 BRT).
         </p>

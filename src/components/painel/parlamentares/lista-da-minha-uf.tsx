@@ -1,13 +1,11 @@
-// Sub-tab "Da minha UF" — Wave 10 Etapa 4.
-//
-// Se usuário não tem UF preenchida: empty state com FormUfInline.
-// Senão: lista parlamentares da UF, marcando os que o usuário já
-// acompanha (toggle visual).
+// Lista de parlamentares da UF do usuário (painel/área logada). Server Component.
+// Promovido ao RDS (ADR-033) — classnames em tokens RDS (token-map.md):
+// border-line-default, bg-surface-base, text-fg-primary, text-fg-tertiary.
+// `FormUfInline` e `ParlamentarCard` importados (client islands).
 
+import { FormUfInline } from '@/components/painel/parlamentares/form-uf-inline'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { listRecomendacoesByUf } from '@/lib/queries/recomendacoes'
-
-import { FormUfInline } from './form-uf-inline'
 
 interface Props {
   uf: string | null
@@ -17,11 +15,11 @@ interface Props {
 export async function ListaDaMinhaUf({ uf, followingIds }: Props) {
   if (!uf) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8">
-        <h3 className="font-medium text-foreground text-lg">
+      <div className="rounded-lg border border-line-default bg-surface-base p-8">
+        <h3 className="font-medium text-fg-primary text-lg">
           Selecione sua UF
         </h3>
-        <p className="mt-2 text-foreground-muted text-sm">
+        <p className="mt-2 text-fg-tertiary text-sm">
           A sua UF personaliza recomendações e o que aparece aqui. Você pulou
           esse passo no onboarding — pode escolher agora.
         </p>
@@ -42,11 +40,11 @@ export async function ListaDaMinhaUf({ uf, followingIds }: Props) {
 
   if (parlamentaresDaUf.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8 text-center">
-        <h3 className="font-medium text-foreground text-lg">
+      <div className="rounded-lg border border-line-default bg-surface-base p-8 text-center">
+        <h3 className="font-medium text-fg-primary text-lg">
           Nenhum parlamentar ativo em {uf} encontrado
         </h3>
-        <p className="mt-2 text-foreground-muted text-sm">
+        <p className="mt-2 text-fg-tertiary text-sm">
           Pode ser uma falha temporária de ingestão. Tente atualizar a página em
           alguns segundos.
         </p>

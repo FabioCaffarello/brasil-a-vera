@@ -1,10 +1,17 @@
-// Estado "novo" do /painel — Wave 10 Etapa 3.
+// Promovido ao RDS (ADR-033).
+// (área logada /painel). Server Component.
 //
-// Threshold: `onboarded_at IS NOT NULL` E `count(follows) = 0`.
-// Layout: Hero "Comece acompanhando alguém" + sugestões da UF (se UF
-// preenchida; senão pede UF inline antes — não implementado nesta etapa,
-// já que o wizard cobre a captura de UF e usuários sem UF + sem follows
-// chegam aqui só por skip total do wizard).
+// Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
+// docs/migration/token-map.md:
+//   text-foreground       → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
+//   text-foreground-subtle→ text-fg-quaternary
+//   hover:text-foreground → hover:text-fg-primary
+//
+// `Button` → cópia local ./button (Button do RDS é client; cópia local
+// token-clean — precedente ondas anteriores). `ParlamentarCard` importado do
+// ORIGINAL (client island de domínio — precedente listagens/perfis; tokens BaV
+// internos calibram na promoção). Hrefs reescritos pra /.
 
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -26,10 +33,10 @@ export async function EstadoNovo({ uf }: Props) {
   return (
     <section className="mx-auto max-w-3xl px-4 py-12">
       <div className="text-center">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Comece acompanhando alguém
         </h1>
-        <p className="mt-3 text-base text-foreground-muted">
+        <p className="mt-3 text-base text-fg-tertiary">
           A área logada do Brasil à Vera responde "o que aconteceu com quem me
           importa". Adicione um parlamentar para começar a receber atualizações.
         </p>
@@ -43,7 +50,7 @@ export async function EstadoNovo({ uf }: Props) {
 
       {recomendacoes.length > 0 && (
         <div className="mt-12">
-          <h2 className="font-medium text-foreground text-lg">
+          <h2 className="font-medium text-fg-primary text-lg">
             Da sua UF ({uf}) — sugestões
           </h2>
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -60,11 +67,11 @@ export async function EstadoNovo({ uf }: Props) {
       )}
 
       {!uf && (
-        <p className="mt-12 text-center text-foreground-subtle text-sm">
+        <p className="mt-12 text-center text-fg-quaternary text-sm">
           Você pulou o passo de UF no onboarding. Para receber recomendações
           locais, preencha sua UF em{' '}
           <Link
-            className="underline underline-offset-4 hover:text-foreground"
+            className="underline underline-offset-4 hover:text-fg-primary"
             href="/painel?tab=configuracoes"
           >
             Configurações

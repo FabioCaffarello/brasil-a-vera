@@ -167,69 +167,27 @@ in-place; `section-card`/`button` já-RDS. Página com `HeroSection` do `/server
 (slot `kpis`); `DataBadge`/`TrustBadge` mantidos (resíduo accent / client island).
 `dynamic='force-dynamic'` preservado. Staging removido — pares retirados.
 
-### Migração painel — `/rds/painel` (área logada, parallel routes + 5 slots)
+### Migração painel — `/rds/painel` — ✅ PROMOVIDA (2026-06-15)
 
-A MAIOR migração da leva e a ÚLTIMA: a área logada inteira (entry +
-5 slots de Parallel Routes + TabsAsLinks). A estrutura `@slot` foi
-recriada 1:1 sob `src/app/rds/painel/` (`layout.tsx` recebe os 5 slots
-nomeados; `page.tsx` neutral; cada slot com `page.tsx` + `default.tsx`).
-**Parallel routes funcionam aninhados sob o `RdsStagingLayout`** (este
-layout filho declara/renderiza os slots; o `/rds/layout.tsx` pai só
-envolve em `<div>` + noindex) — confirmado pelo build (sem
-incompatibilidade estrutural; era o risco de "estruturalmente inédito"
-do scoping, falsificado a favor).
+14ª e ÚLTIMA promoção (a maior: área logada inteira — entry + 5 slots de Parallel
+Routes + TabsAsLinks, sob `src/app/(authenticated)/painel/`, topologia inalterada).
+O **shell** foi promovido: 11 componentes (`painel-header`, `tab-bar`,
+`active-slot-picker`, `estado-{maduro,novo,onboarding}`, `lista-acompanhando`,
+`lista-da-minha-uf`, `parlamentares/sub-tabs`, `alertas/{lista-recebidos,sub-tabs}`)
++ os 5 slots sobrescritos pelas versões RDS verificadas; `TabBar`/SubTabs →
+`TabsAsLinks` do `/server`; `KpiStrip`→`Stat`/`StatGroup`; `Button`/`rds-accordion`
+canônicos. `auth()` (Clerk) + queries preservados server-side. Token-parity vs
+staging confirmada (0 diff de className fora de comentário). Staging `/rds/painel`
+removido.
 
-`auth()` (Clerk) preservado server-side no `layout.tsx` e nos 5 slots
-(ClerkProvider único vem do root layout, fix #315). Queries (follows,
-alert-delivery, user-profile, alert-policy, data-request, recomendacoes)
-e `painel-tabs` (parsers puros) **importadas das libs ORIGINAIS** —
-lógica de domínio única, NÃO duplicada (decisão #4 do scoping).
-
-`TabBar` (5 pilares) → `TabsAsLinks variant="default"` do RDS `/server`;
-os 2 SubTabs (parlamentares, alertas) → `TabsAsLinks variant="sub"`. API
-1:1 confirmada (`TabAsLink { label, href, active?, icon?, count? }` +
-`variant 'default'|'sub'`): counters→count, ícones lucide→icon. `KpiStrip`
-(composição local) → `StatGroup layout="grid" cols={4}` + `Stat` do
-`/server` (precedente §3.6/piloto-2; tone `default/muted→neutral`,
-`warning→warning`, `destructive→error`).
-
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/painel/painel-header.tsx` | `src/app/rds/painel/_components/painel-header.tsx` | médio | header de identidade (RSC, zero-JS); tokens 1:1 (`border-border→line-default`, `bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`); MANTIDOS (resíduo, classe conhecida): `bg-gradient-primary` (utility custom do BaV `linear-gradient(--primary,--accent)`, compõe o `--accent` roxo ADR-024 sem par RDS — mesmo regime do `bg-accent/N` §3.14; regra 2 NÃO disparada: gradiente ESTÁTICO de marca, não SVG/chart/`hsl(var())`/`color-mix`) e `text-white`/`ring-white/10` (utilities Tailwind PADRÃO, byte-idênticas dos dois lados — não apelido semântico BaV, regra 1 não disparada, mesma régua de homônimo §3.17) |
-| `src/components/painel/tab-bar.tsx` | `src/app/rds/painel/_components/tab-bar.tsx` | médio | client wrapper fino (lê `useSearchParams()` p/ derivar `active` — o layout server não recebe searchParams) que renderiza `TabsAsLinks variant="default"` do `/server` com `linkComponent={Link}`; counters→count, ícones lucide→icon; diferença visual da ADOÇÃO (não tradução de token, régua §3.14): active `border-line-brand text-fg-brand-emphasis` (vs `border-brand text-foreground` local), count em pill (vs `· N` middot) — apresentação do componente adotado |
-| `src/components/painel/parlamentares/sub-tabs.tsx` | `src/app/rds/painel/_components/sub-tabs-parlamentares.tsx` | baixo | `TabsAsLinks variant="sub"` do `/server`; cópia **SERVER** (o original era client só p/ `<Link>`+aria-current; o active vem por prop, TabsAsLinks já emite aria-current → drop `'use client'`, ESTRITAMENTE menos JS); count entre parênteses → pill |
-| `src/components/painel/alertas/sub-tabs.tsx` | `src/app/rds/painel/_components/sub-tabs-alertas.tsx` | baixo | idem (cópia SERVER `TabsAsLinks variant="sub"`); count só na sub-tab "recebidos" (preservado) |
-| `src/components/painel/active-slot-picker.tsx` | `src/app/rds/painel/_components/active-slot-picker.tsx` | baixo | client island duplicado (decisão #4); lê `useSearchParams()` e retorna o slot ativo (slots inativos → null); sem classnames → sem tradução; `parseTab` puro do util ORIGINAL |
-| `src/components/painel/estado-maduro.tsx` | `src/app/rds/painel/_components/estado-maduro.tsx` | médio | RSC; `KpiStrip`→`StatGroup grid cols={4}`+`Stat` (tone map); `ParlamentarCard` do ORIGINAL (client island); tokens 1:1 (`text-foreground{,-muted}→fg-{primary,tertiary}`); regra 2 NÃO disparada (grep só casou a string "KpiStrip" composição, não SVG/chart) |
-| `src/components/painel/estado-onboarding.tsx` | `src/app/rds/painel/_components/estado-onboarding.tsx` | médio | idem (RSC; KpiStrip→StatGroup; `ParlamentarCard` do ORIGINAL; tone `warning`/`muted`/`default`) |
-| `src/components/painel/estado-novo.tsx` | `src/app/rds/painel/_components/estado-novo.tsx` | baixo | RSC; `Button`→cópia local `./button`; `ParlamentarCard` do ORIGINAL; href "Explorar" → `/rds/parlamentares`; tokens 1:1 (`text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`, `hover:text-foreground→hover:text-fg-primary`) |
-| `src/components/painel/parlamentares/lista-acompanhando.tsx` | `src/app/rds/painel/_components/lista-acompanhando.tsx` | baixo | RSC; `Button`→cópia local; `ParlamentarCard` do ORIGINAL; href → `/rds/parlamentares`; tokens 1:1 (`border-border→line-default`, `bg-surface→surface-base`, `text-foreground{,-muted}→fg-{primary,tertiary}`) |
-| `src/components/painel/parlamentares/lista-da-minha-uf.tsx` | `src/app/rds/painel/_components/lista-da-minha-uf.tsx` | baixo | RSC; `FormUfInline`/`ParlamentarCard` dos ORIGINAIS (client islands); tokens 1:1 (idem lista-acompanhando) |
-| `src/components/painel/alertas/lista-recebidos.tsx` | `src/app/rds/painel/_components/lista-recebidos.tsx` | baixo | RSC (renderiza markdown server-side); `ItemRecebido` do ORIGINAL (client island); `renderMarkdown` da lib; tokens 1:1 (idem) |
-| `src/design-system/primitives/button.tsx` | `src/app/rds/painel/_components/button.tsx` | médio | reuso VERBATIM das ondas anteriores (Button do RDS é client; cópia local zero-JS + token-clean); `bg-brand/text-brand→*-fg-brand` (byte-idêntico pós-#358), `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API: `brand-foreground`, `destructive`/`destructive-foreground` |
-
-Pares em nível de página (slots/layout/page — `src/components/` não tem
-contraparte; a lógica vive no `page.tsx`/`layout.tsx`):
-
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/app/(authenticated)/painel/layout.tsx` | `src/app/rds/painel/layout.tsx` | médio | layout de Parallel Routes (5 slots nomeados); `auth()` + queries (follows/alert-delivery/user-profile) preservadas; compõe `PainelHeader`+`TabBar`+`ActiveSlotPicker` |
-| `src/app/(authenticated)/painel/page.tsx` | `src/app/rds/painel/page.tsx` | baixo | neutral entry (retorna null); `generateMetadata` por `?tab=` com sufixo `(rds-pilot)` |
-| `src/app/(authenticated)/painel/@resumo/page.tsx` | `src/app/rds/painel/@resumo/page.tsx` | médio | slot Resumo (4 estados); `OnboardingWizard` do ORIGINAL (client island); `Estado*`→cópias locais; queries preservadas |
-| `src/app/(authenticated)/painel/@parlamentares/page.tsx` | `src/app/rds/painel/@parlamentares/page.tsx` | médio | slot Parlamentares (2 sub-tabs); `BannerMudancaUf` do ORIGINAL; `SubTabs`/`Lista*`→cópias locais; tokens 1:1 |
-| `src/app/(authenticated)/painel/@alertas/page.tsx` | `src/app/rds/painel/@alertas/page.tsx` | médio | slot Alertas (2 sub-tabs); `FormPoliticas` do ORIGINAL; `SubTabs`/`ListaRecebidos`→cópias locais; tokens 1:1 |
-| `src/app/(authenticated)/painel/@configuracoes/page.tsx` | `src/app/rds/painel/@configuracoes/page.tsx` | médio | slot Configurações (4 seções inline); `FormPerfil`/`TemasChips`/`ComunicacaoToggles` dos ORIGINAIS; tokens 1:1 + `hover:text-brand→hover:text-fg-brand`; hrefs → `/rds/painel?tab=meus-dados` e `/rds/privacidade` (rota migrada piloto-5) |
-| `src/app/(authenticated)/painel/@meusDados/page.tsx` | `src/app/rds/painel/@meusDados/page.tsx` | médio | slot Meus dados (dashboard LGPD inline); `AcoesLgpd` do ORIGINAL; tokens 1:1 + `text-brand→text-fg-brand`; href "voltar" → `/rds/painel?tab=configuracoes`; MANTIDO `text-red-500` (status "failed" — utility Tailwind PADRÃO byte-idêntica, inconsistência do ORIGINAL preservada 1:1, regra 1 não disparada) |
-| `src/app/(authenticated)/painel/@{resumo,parlamentares,alertas,configuracoes,meusDados}/default.tsx` (×5) | `src/app/rds/painel/@.../default.tsx` (×5) | baixo | fallbacks de Parallel Route (`return null`); sem classnames |
-
-Client islands importados dos ORIGINAIS (sem cópia, precedente universal):
-`OnboardingWizard`, `BannerMudancaUf`, `FormUfInline`, `FormPoliticas`,
-`ItemRecebido`, `ComunicacaoToggles`, `FormPerfil`, `TemasChips`,
-`AcoesLgpd`, `ParlamentarCard`, `FollowButton`. `ConsentGate`/
-`MigracaoLocalStorageModal` vivem no `(authenticated)/layout.tsx` (auth
-layout, FORA do escopo desta migração — `/rds/painel` herda do root
-layout via nesting, não do authenticated layout). Tokens BaV internos dos
-client islands calibram na promoção.
+**Resíduo BaV documentado (follow-up):** os ~12 *client islands* do painel (forms e
+modais: `OnboardingWizard`, `FormPerfil`, `FormPoliticas`, `ComunicacaoToggles`,
+`TemasChips`, `AcoesLgpd`, `FormUfInline`, `BannerMudancaUf`, `ItemRecebido`,
+`ConsentModal`, `MigracaoLocalStorageModal`, `ModalRevisarUfAntiga`) seguem em
+tokens BaV — o staging os importava dos ORIGINAIS (nunca traduzidos; sem
+ground-truth RDS). Mesma categoria dos charts (ADR-034 §5): os tokens BaV resolvem
+via bridge e são sub-perceptuais. Traduzi-los in-place (+ atualizar seus
+`.test.tsx`) fica como follow-up — o QA visual logado pelo owner decide a prioridade.
 
 ### Wrappers de entry granular (varredura 3.9.0) — ✅ CONSOLIDADO (2026-06-15)
 

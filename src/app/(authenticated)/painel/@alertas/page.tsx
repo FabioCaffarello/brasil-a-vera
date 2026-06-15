@@ -1,17 +1,20 @@
-// `/painel?tab=alertas` slot — Wave 10 Etapa 6 + 7.4, movido para slot
-// na Fase 2 do refator pós-Wave 10 (RFC §3, §6).
+// Componente do painel (área logada) — promovido ao RDS (ADR-033).
 //
-// 2 sub-tabs com URL state em `?subtab=` (renomeado de `?tab=` da Wave 10):
-//   - recebidos: inbox de alert_delivery (channel=inapp)
-//   - politicas: form completo de gerenciamento da alert_policy
+// 2 sub-tabs com URL state em `?subtab=` (default `politicas`). `auth()`
+// (Clerk) + queries (alert-delivery, alert-policy, user-profile) preservadas.
+// `FormPoliticas` importado do ORIGINAL (client island — form completo).
+// `SubTabs`/`ListaRecebidos` → cópias locais. `painel-tabs` (parser puro) do
+// ORIGINAL (decisão #4).
 //
-// Default: `politicas` (preserva default da Wave 10 — form útil pra setup).
+// Tradução de classnames pela tabela canônica:
+//   text-foreground       → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
 
 import { auth } from '@clerk/nextjs/server'
 
 import { FormPoliticas } from '@/components/painel/alertas/form-politicas'
 import { ListaRecebidos } from '@/components/painel/alertas/lista-recebidos'
-import { SubTabs } from '@/components/painel/alertas/sub-tabs'
+import { SubTabsAlertas } from '@/components/painel/alertas/sub-tabs'
 import { parseAlertasSubtab } from '@/lib/painel-tabs'
 import { listInappDeliveriesByUserId } from '@/lib/queries/alert-delivery'
 import { getAlertPolicyOrDefaults } from '@/lib/queries/alert-policy'
@@ -30,7 +33,7 @@ export default async function AlertasSlot({ searchParams }: PageProps) {
   const internalUserId = await getOrCreateUserProfileId(userId)
   if (!internalUserId) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-foreground-muted">
+      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
         Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
         segundos.
       </div>
@@ -48,15 +51,18 @@ export default async function AlertasSlot({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Alertas
         </h1>
-        <p className="mt-1 text-foreground-muted">
+        <p className="mt-1 text-fg-tertiary">
           Caixa de reports recebidos e regras de quando você recebe novos.
         </p>
       </header>
 
-      <SubTabs active={activeSubtab} recebidosCount={deliveries.length} />
+      <SubTabsAlertas
+        active={activeSubtab}
+        recebidosCount={deliveries.length}
+      />
 
       <div className="mt-6">
         {activeSubtab === 'recebidos' ? (

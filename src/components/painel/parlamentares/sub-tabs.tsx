@@ -1,20 +1,26 @@
-// SubTabs (Acompanhando | Da minha UF) — Wave 10 Etapa 4, atualizado
-// na Fase 2 do refator pós-Wave 10 (RFC §6).
+// Componente do painel (área logada) — promovido ao RDS (ADR-033).
 //
-// Mudança Fase 2: URL state vira `?subtab=` (não mais `?tab=`); main
-// tab fixa em `parlamentares` no href (preserva contexto ao trocar
-// sub-tab). Type renomeado para `ParlamentaresSubtab` e importado do
-// util central `@/lib/painel-tabs`.
+// Decisão-chave #1 do scoping (SubTabs → TabsAsLinks variant="sub", API 1:1):
+// 2 sub-tabs (Acompanhando | Da minha UF) viram itens de `TabsAsLinks
+// variant="sub"`. Mapeamento de props byte-a-byte:
+//   TabAsLink { label, href, active?, count? } ↔ original
+//   count (contagem entre parênteses no original) → count (pill do RDS)
 //
-// Navegação via Next `<Link>` preserva URL state. Component continua
-// client porque emite Link com `aria-current` baseado em prop active
-// (sem `usePathname` — pathname agora é sempre `/painel`).
+// Nota: o original era 'use client' SÓ para emitir <Link> com aria-current
+// baseado na prop `active` (NÃO usava useSearchParams — o slot page deriva o
+// active server-side). Com TabsAsLinks o `active` continua vindo por prop e o
+// componente já emite `aria-current="page"`; então esta cópia é SERVER (sem
+// 'use client') — estritamente menos JS que o original. `linkComponent={Link}`
+// preserva a navegação client-side (cruza o boundary RSC como client ref).
+//
+// Diferença visual da ADOÇÃO (não tradução de token, mesma régua §3.14):
+// active usa `border-line-brand text-fg-brand-emphasis` (vs `border-brand
+// text-foreground` local); count vira pill (vs `(N)` em texto). Apresentação
+// do componente adotado.
 
-'use client'
-
+import { TabsAsLinks } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import { cn } from '@/lib/cn'
 import type { ParlamentaresSubtab } from '@/lib/painel-tabs'
 
 interface Props {
@@ -28,35 +34,26 @@ const SUBTABS: { key: ParlamentaresSubtab; label: string }[] = [
   { key: 'da-minha-uf', label: 'Da minha UF' },
 ]
 
-export function SubTabs({ active, acompanhandoCount, daMinhaUfCount }: Props) {
+export function SubTabsParlamentares({
+  active,
+  acompanhandoCount,
+  daMinhaUfCount,
+}: Props) {
   return (
-    <nav
+    <TabsAsLinks
       aria-label="Sub-tabs"
-      className="flex gap-1 border-border-strong border-b"
-    >
-      {SUBTABS.map((subtab) => {
-        const isActive = subtab.key === active
+      items={SUBTABS.map((subtab) => {
         const count =
           subtab.key === 'acompanhando' ? acompanhandoCount : daMinhaUfCount
-        return (
-          <Link
-            aria-current={isActive ? 'page' : undefined}
-            className={cn(
-              '-mb-px border-b-2 px-4 py-2 text-sm transition-colors',
-              isActive
-                ? 'border-brand text-foreground'
-                : 'border-transparent text-foreground-muted hover:border-border-strong hover:text-foreground',
-            )}
-            href={`/painel?tab=parlamentares&subtab=${subtab.key}`}
-            key={subtab.key}
-          >
-            {subtab.label}
-            {count !== null && (
-              <span className="ml-1.5 text-foreground-subtle">({count})</span>
-            )}
-          </Link>
-        )
+        return {
+          label: subtab.label,
+          href: `/painel?tab=parlamentares&subtab=${subtab.key}`,
+          active: subtab.key === active,
+          count: count !== null ? count : undefined,
+        }
       })}
-    </nav>
+      linkComponent={Link}
+      variant="sub"
+    />
   )
 }

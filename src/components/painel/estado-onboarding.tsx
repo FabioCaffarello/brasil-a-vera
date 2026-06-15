@@ -1,14 +1,34 @@
-// Estado "onboarding" do /painel — Wave 10 Etapa 3, refinado na Fase 3.
+// Promovido ao RDS (ADR-033).
+// (área logada /painel). Server Component.
 //
-// Threshold: `onboarded_at IS NOT NULL` E `1 ≤ count(follows) ≤ 4` E
-// nenhum `alert_delivery` recebida.
-// Layout pós-Fase 3: H1 + KpiStrip com hint de "Quase lá" + sugestões UF.
+// Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
+// docs/migration/token-map.md:
+//   text-foreground       → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
+//
+// `KpiStrip` → `StatGroup layout="grid" cols={4}` + `Stat` do RDS /server
+// (precedente piloto-2/§3.6); tone map default/muted→neutral, warning→warning.
+// `ParlamentarCard` importado do ORIGINAL (client island de domínio).
 
+import {
+  Stat,
+  StatGroup,
+  type StatTone,
+} from '@fabio.caffarello/react-design-system/server'
 import { BarChart3, Mail, MapPin, Users } from 'lucide-react'
 
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { listRecomendacoesByUf } from '@/lib/queries/recomendacoes'
+
+type KpiTone = 'default' | 'success' | 'warning' | 'destructive' | 'muted'
+
+const STAT_TONE: Record<KpiTone, StatTone> = {
+  default: 'neutral',
+  muted: 'neutral',
+  success: 'success',
+  warning: 'warning',
+  destructive: 'error',
+}
 
 interface Props {
   uf: string | null
@@ -51,12 +71,12 @@ export async function EstadoOnboarding({
   return (
     <section className="mx-auto max-w-3xl px-4 py-8">
       <div>
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Quase lá
         </h1>
-        <p className="mt-3 text-base text-foreground-muted">
+        <p className="mt-3 text-base text-fg-tertiary">
           Você acompanha{' '}
-          <span className="font-medium text-foreground">{followsCount}</span>{' '}
+          <span className="font-medium text-fg-primary">{followsCount}</span>{' '}
           {followsCount === 1 ? 'parlamentar' : 'parlamentares'}. Recomendamos
           chegar a {FOLLOWS_RECOMENDADOS}+ para o primeiro report semanal ter
           conteúdo médio.
@@ -64,47 +84,45 @@ export async function EstadoOnboarding({
       </div>
 
       <div className="mt-8">
-        <KpiStrip
-          items={[
-            {
-              icon: <Users className="size-5" />,
-              label: 'Acompanhados',
-              value: followsCount,
-              hint: `meta ${FOLLOWS_RECOMENDADOS}+`,
-              tone: 'warning',
-            },
-            {
-              icon: <Mail className="size-5" />,
-              label: 'Reports',
-              value: totalDeliveries,
-              hint: totalDeliveries === 0 ? 'primeiro em breve' : 'todos lidos',
-              tone: 'muted',
-            },
-            {
-              icon: <BarChart3 className="size-5" />,
-              label: 'Alinhamento médio',
-              value: avgAlinhamento
-                ? `${Math.round(avgAlinhamento.pct)}%`
-                : '—',
-              hint: avgAlinhamento
+        <StatGroup cols={4} layout="grid">
+          <Stat
+            hint={`meta ${FOLLOWS_RECOMENDADOS}+`}
+            icon={<Users className="size-5" />}
+            label="Acompanhados"
+            tone={STAT_TONE.warning}
+            value={followsCount}
+          />
+          <Stat
+            hint={totalDeliveries === 0 ? 'primeiro em breve' : 'todos lidos'}
+            icon={<Mail className="size-5" />}
+            label="Reports"
+            tone={STAT_TONE.muted}
+            value={totalDeliveries}
+          />
+          <Stat
+            hint={
+              avgAlinhamento
                 ? `${avgAlinhamento.sampleSize} com amostra`
-                : 'amostra insuficiente',
-              tone: 'muted',
-            },
-            {
-              icon: <MapPin className="size-5" />,
-              label: 'UF',
-              value: uf ?? '—',
-              hint: `desde ${formatJoinDate(profileCreatedAt)}`,
-              tone: uf ? 'default' : 'muted',
-            },
-          ]}
-        />
+                : 'amostra insuficiente'
+            }
+            icon={<BarChart3 className="size-5" />}
+            label="Alinhamento médio"
+            tone={STAT_TONE.muted}
+            value={avgAlinhamento ? `${Math.round(avgAlinhamento.pct)}%` : '—'}
+          />
+          <Stat
+            hint={`desde ${formatJoinDate(profileCreatedAt)}`}
+            icon={<MapPin className="size-5" />}
+            label="UF"
+            tone={STAT_TONE[uf ? 'default' : 'muted']}
+            value={uf ?? '—'}
+          />
+        </StatGroup>
       </div>
 
       {recomendacoes.length > 0 && (
         <div className="mt-12">
-          <h2 className="font-medium text-foreground text-lg">
+          <h2 className="font-medium text-fg-primary text-lg">
             {uf ? `Da sua UF (${uf}) — sugestões` : 'Sugestões'}
           </h2>
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
