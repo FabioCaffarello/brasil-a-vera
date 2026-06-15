@@ -124,6 +124,44 @@ foi adicionado: `scripts/rds-noop-guard.ts` agora também falha se `hsl(var(`
 aparecer em `src/**` (fora de comentário) — todo token é OKLCH, então
 `hsl(var())` é sempre inválido. Fecha a classe #303/#304 por máquina.
 
+### 6. Fix de cascade-layer do bridge (RDS em `@layer rds`, abaixo de `utilities`)
+
+O import do CSS do RDS (§1) traz a `@layer utilities` **pré-compilada do pacote**
+— inclusive utilities genéricas de layout (`.hidden`, `.flex`, `.block`, `.grid`).
+Sem controle de layer, esse conteúdo entrava **depois** do `utilities` do BaV sob
+o **mesmo nome de layer**; por ser fonte posterior de igual especificidade,
+**sobrescrevia as variantes responsivas do BaV**: `.hidden{display:none}` do RDS
+vencia `@media (min-width:40rem){.sm\:block{display:block}}` do BaV mesmo em
+≥640px. Efeito: **`hidden sm:block` colapsava para `display:none` no desktop**. Os
+perfis usam exatamente esse split (Accordion mobile `sm:hidden` + stack de
+SectionCards desktop `hidden sm:block`), então em ≥640px o **miolo inteiro do
+perfil ficava invisível** (só header + KPIs + footer). Latente desde o bridge
+(#405) — atingia em produção os perfis **parlamentar e proposição já promovidos**;
+descoberto no QA visual do perfil de votação.
+
+Diagnóstico empírico (princípio 13) no CSS buildado: `.sm\:block` @ byte 64210 <
+`.hidden` (RDS) @ 72322, mesma especificidade (0,1,0), mesmo nome de layer →
+fonte posterior vence. `sm:hidden` (Accordion) funcionava por simetria inversa
+(não depende de sobrescrever um `.hidden` explícito).
+
+Fix (3 linhas em `globals.css`): declarar **`@layer rds;` como primeira layer**
+(menor prioridade) e importar o RDS nela —
+`@import "@fabio.caffarello/react-design-system/styles" layer(rds)`. As utilities
+do BaV (layer `utilities`, padrão do Tailwind) passam a vencer sempre; o RDS
+continua provedor único dos tokens `--color-*` (resolvem por `var()`, independem
+de layer) e as utilities RDS-únicas (`bg-surface-canvas` etc.) seguem aplicando
+(sem competidor no BaV). A neutralização unlayered de `success`/`warning` (§2)
+fica **mais** robusta: unlayered vence qualquer layer, incl. `rds`.
+
+Validação empírica: rebuild → `.hidden` do RDS aninhada em
+`@layer rds{@layer utilities{…}}` (baixa prioridade), `.sm\:block` do BaV no
+`utilities` top-level. Playwright em 5 rotas (1280px): todo `hidden md:block`
+computa `block`/`flex`/`grid`; docH do perfil de votação **1091 → 8928px** (miolo
++ hemiciclo colorido renderizam); perfis parlamentar/proposição corrigidos
+retroativamente; listagens/home sem regressão; 0 erro de console, 0 fill preto.
+O `rds-noop-guard.ts` ganhou uma checagem de **invariante de fonte**: falha se o
+`globals.css` perder o `@layer rds;` ou o `layer(rds)` do import.
+
 ## Limitação `text-` / `stroke-`
 
 `text-` e `stroke-` são utilities **overloaded** no Tailwind v4 (também

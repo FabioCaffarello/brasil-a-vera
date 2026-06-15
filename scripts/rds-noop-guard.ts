@@ -166,9 +166,38 @@ function invalidHslVar(): string[] {
   return hits
 }
 
+// 5. Invariante de cascade-layer do bridge RDS (ADR-034 §6).
+//    O CSS do RDS é importado em `@layer rds`, declarada como PRIMEIRA layer
+//    (menor prioridade), para que as utilities do BaV (layer `utilities` padrão
+//    do Tailwind) vençam as utilities genéricas pré-compiladas do RDS (`.hidden`,
+//    `.flex`…). Sem isso, `.hidden{display:none}` do RDS sobrescreve
+//    `@media{.sm:block}` do BaV e `hidden sm:block` colapsa para display:none no
+//    desktop — perfis com o miolo inteiro invisível (bug latente desde #405).
+//    Esta checagem trava a invariante na FONTE: se alguém remover a declaração
+//    `@layer rds;` ou o `layer(rds)` do import, falha aqui (não depende do build).
+function cascadeLayerInvariant(): string[] {
+  const errs: string[] = []
+  const code = readFileSync(join(ROOT, 'src/app/globals.css'), 'utf8').replace(
+    /\/\*[\s\S]*?\*\//g, // remove comentários CSS (não casar menções em prosa)
+    '',
+  )
+  if (!/@layer\s+rds\s*;/.test(code)) {
+    errs.push('falta a declaração `@layer rds;` (a layer de menor prioridade)')
+  }
+  if (
+    !/@import\s+["'][^"']*react-design-system\/styles["']\s+layer\(\s*rds\s*\)/.test(
+      code,
+    )
+  ) {
+    errs.push('o @import do CSS do RDS precisa usar `layer(rds)`')
+  }
+  return errs
+}
+
 function main() {
   const tokens = rdsSemanticTokens()
   const used = usedRdsClasses(tokens)
+  const layer = cascadeLayerInvariant()
   const css = builtCss()
 
   if (!css) {
@@ -185,10 +214,21 @@ function main() {
   const hsl = invalidHslVar()
 
   console.log(
-    `rds-noop-guard: ${used.size} classes RDS verificadas contra o CSS gerado (${tokens.size} tokens semânticos do pacote); ${hsl.length} ocorrência(s) de hsl(var()).`,
+    `rds-noop-guard: ${used.size} classes RDS verificadas contra o CSS gerado (${tokens.size} tokens semânticos do pacote); ${hsl.length} ocorrência(s) de hsl(var()); invariante de cascade-layer ${layer.length === 0 ? 'OK' : 'QUEBRADA'}.`,
   )
 
   let failed = false
+
+  if (layer.length > 0) {
+    failed = true
+    console.error(
+      '\nrds-noop-guard: invariante de cascade-layer do bridge quebrada (ADR-034 §6):',
+    )
+    for (const e of layer) console.error(`  ✗ ${e}`)
+    console.error(
+      'Sem ela, `hidden sm:block` colapsa para display:none no desktop (perfis com o miolo invisível).',
+    )
+  }
 
   if (noops.length > 0) {
     failed = true
