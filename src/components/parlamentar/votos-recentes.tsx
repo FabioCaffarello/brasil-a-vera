@@ -1,9 +1,9 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR, getTipoVotoStyle } from '@/lib/format'
 import type {
   VotosAlinhamentoFilter,
@@ -55,10 +55,6 @@ const ALINHAMENTO_LABEL: Record<VotosAlinhamentoFilter, string> = {
   divergente: 'Divergente',
 }
 
-// Sprint 4.3 PR 2 commit 1/4 — refatorado para tokens semânticos.
-// Wave 7 Sprint 7.3 PR1 — ganha filtros mini (período + alinhamento) e
-// link "Mostrar mais" para cursor pagination (ADR-026). Filtros via
-// chips Link SSR (sem JS); cursor expand via anchor puro `<a href>`.
 export function VotosRecentes({
   votos,
   filtros,
@@ -102,7 +98,7 @@ export function VotosRecentes({
       </div>
 
       {votos.length === 0 ? (
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           Sem votos nominais para os filtros selecionados.
         </p>
       ) : (
@@ -111,10 +107,10 @@ export function VotosRecentes({
             const style = getTipoVotoStyle(v.voto)
             return (
               <li
-                className="rounded-lg border border-border p-3"
+                className="rounded-lg border border-line-default p-3"
                 key={v.votacaoId}
               >
-                <div className="flex flex-wrap items-center gap-2 text-foreground-muted text-xs">
+                <div className="flex flex-wrap items-center gap-2 text-fg-tertiary text-xs">
                   <span>{formatDataBR(v.dataHora)}</span>
                   <span aria-hidden>·</span>
                   <span>{v.orgao}</span>
@@ -133,12 +129,8 @@ export function VotosRecentes({
                     {style.label}
                   </span>
                   <p className="text-sm">
-                    {/* Wave 7 polish: descrição vira link para o detalhe
-                        da votação. /votacoes/[id] mostra o resultado
-                        completo + link para a proposição se houver — UX
-                        cívica natural sem precisar adivinhar a rota. */}
                     <Link
-                      className="text-foreground decoration-dotted underline-offset-2 hover:text-foreground-muted hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="text-fg-primary decoration-dotted underline-offset-2 hover:text-fg-tertiary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                       href={`/votacoes/${v.votacaoId}`}
                     >
                       {v.descricao}
@@ -158,7 +150,7 @@ export function VotosRecentes({
         // visual). Usuário continua perto de onde estava em vez de
         // saltar para o topo da seção.
         <a
-          className="block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="block w-full rounded-md border border-line-emphasis bg-surface-canvas py-2 text-center font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
           href={proximaPaginaHref}
           id="mostrar-mais-votos"
         >
@@ -169,11 +161,9 @@ export function VotosRecentes({
   )
 }
 
-// Barra de distribuição de voto (Wave 7 Sprint 7.3 PR2 — CSS-only,
-// sem JS). Renderiza 3 categorias do handoff (SIM/NÃO/Abstenção) com
-// tokens semânticos: success/destructive/warning a 30% de opacidade.
-// AUSENTE e OBSTRUCAO entram no `total` para cálculo de % mas não
-// renderizam segmento — handoff cravou 3 categorias.
+// Barra de distribuição de voto — CSS-only, sem JS. 3 categorias
+// (SIM/NÃO/Abstenção) a 30% de opacidade. AUSENTE e OBSTRUCAO entram
+// no `total` para cálculo de % mas não renderizam segmento.
 //
 // Honestidade do dado: se total == 0 (sem votos no filtro), não
 // renderiza nada — barra vazia seria visualmente confusa.
@@ -193,7 +183,7 @@ function DistribuicaoBar({
     <div>
       <div
         aria-hidden
-        className="flex h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated"
+        className="flex h-1.5 w-full overflow-hidden rounded-full bg-surface-raised"
       >
         {pctSim > 0 ? (
           <div
@@ -202,10 +192,7 @@ function DistribuicaoBar({
           />
         ) : null}
         {pctNao > 0 ? (
-          <div
-            className="h-full bg-destructive/30"
-            style={{ width: `${pctNao}%` }}
-          />
+          <div className="h-full bg-error/30" style={{ width: `${pctNao}%` }} />
         ) : null}
         {pctAbs > 0 ? (
           <div
@@ -214,16 +201,16 @@ function DistribuicaoBar({
           />
         ) : null}
       </div>
-      <p className="mt-1.5 text-foreground-muted text-xs">
-        <span className="font-medium text-success">{pctSim}% SIM</span>
+      <p className="mt-1.5 text-fg-tertiary text-xs">
+        <span className="font-medium text-fg-success">{pctSim}% SIM</span>
         {' · '}
-        <span className="font-medium text-destructive">{pctNao}% NÃO</span>
+        <span className="font-medium text-fg-error">{pctNao}% NÃO</span>
         {' · '}
-        <span className="font-medium text-warning">{pctAbs}% Abstenção</span>
+        <span className="font-medium text-fg-warning">{pctAbs}% Abstenção</span>
         {distribuicao.ausente + distribuicao.obstrucao > 0 ? (
           <>
             {' · '}
-            <span className="text-foreground-subtle">
+            <span className="text-fg-quaternary">
               {pct(distribuicao.ausente + distribuicao.obstrucao)}% Ausência/
               Obstrução
             </span>

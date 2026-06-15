@@ -1,3 +1,17 @@
+// Perfil de parlamentar — promovido ao RDS (migração ADR-033). Consome o
+// design system @fabio.caffarello/react-design-system — tokens traduzidos
+// pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - Stat/StatGroup (KPIs) do /server; SectionCard (Card compound) do /server;
+//   SectionNav (useScrollSpy via entry /hooks) de @/design-system/compositions.
+// - Accordion mobile: Accordion do RDS via entry /granular (wrapper client
+//   @/design-system/primitives/rds-accordion — tree-shaking poda o barrel).
+// - Charts (GastosChart, recharts) sobem como resíduo BaV (ADR-034 §5).
+
+import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
   FileText,
@@ -15,15 +29,9 @@ import { ParesContraditorios } from '@/components/parlamentar/pares-contraditori
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
+import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL } from '@/lib/format'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
@@ -113,6 +121,8 @@ function normalizeProposicaoSituacao(
   return undefined
 }
 
+// Base /rds/ — paginação por cursor e filtros permanecem DENTRO da rota
+// staging (não vazam pro usuário da rota original).
 function buildPerfilHref(
   parlamentarId: string,
   searchParams: Record<string, string | undefined>,
@@ -279,15 +289,17 @@ export default async function ParlamentarPerfilPage({
       )
     : null
 
-  // KpiStrip values com fallback honesto (D1 do plano Sprint 6.3 — "—"
-  // quando dados ausentes em vez de esconder o strip; mantém estrutura).
+  // Tone do Stat (RDS): afeta APENAS o hint (mesmo contrato do KpiStrip
+  // original). Map KpiTone→StatTone: default/muted→neutral (nuance:
+  // hint muted original era fg-quaternary; Stat neutral é fg-tertiary),
+  // destructive→error.
   const alinhamentoTone =
     alinhamento.percentual === null
-      ? 'muted'
+      ? 'neutral'
       : alinhamento.percentual >= 80
         ? 'success'
         : alinhamento.percentual >= 50
-          ? 'default'
+          ? 'neutral'
           : 'warning'
 
   return (
@@ -309,94 +321,95 @@ export default async function ParlamentarPerfilPage({
           }}
         />
 
-        <KpiStrip
-          items={[
-            {
-              icon: <Vote className="h-4 w-4" />,
-              label: 'Alinhamento à bancada',
-              value:
-                alinhamento.percentual === null
-                  ? '—'
-                  : `${alinhamento.percentual}%`,
-              hint: (
-                <>
-                  {alinhamento.total > 0
-                    ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
-                    : 'sem orientação no período'}
-                  {comparacoes.medianaAlinhamentoCasa !== null ? (
-                    <>
-                      {' · '}
-                      <span className="text-foreground-subtle">
-                        mediana da {casaLabel(parlamentar.casa)} em{' '}
-                        {Math.round(comparacoes.medianaAlinhamentoCasa)}%
-                      </span>
-                    </>
-                  ) : null}
-                </>
-              ),
-              tone: alinhamentoTone,
-            },
-            {
-              icon: <Users className="h-4 w-4" />,
-              label: 'Votações analisadas',
-              value: alinhamento.total > 0 ? alinhamento.total : votos.length,
-              hint:
-                alinhamento.total > 0
-                  ? 'com orientação'
-                  : 'recentes (nominais)',
-            },
-            {
-              icon: <Inbox className="h-4 w-4" />,
-              label: 'Proposições como autor',
-              value: proposicoes.length,
-              hint: (
-                <>
-                  {proposicoesPage.nextCursor ? 'primeira página' : ''}
-                  {comparacoes.percentilProposicoesCasa !== null ? (
-                    <>
-                      {proposicoesPage.nextCursor ? ' · ' : ''}
-                      <span className="text-foreground-subtle">
-                        {formatPercentil(comparacoes.percentilProposicoesCasa)}{' '}
-                        da {casaLabel(parlamentar.casa)}
-                      </span>
-                    </>
-                  ) : null}
-                </>
-              ),
-              tone: 'muted',
-            },
-            {
-              icon: <TrendingDown className="h-4 w-4" />,
-              label: `Gastos CEAP ${anoCorrente}`,
-              value:
-                gastos.totalRegistros === 0
-                  ? '—'
-                  : formatBRL(gastos.totalGeral),
-              hint: (
-                <>
-                  {gastos.totalRegistros === 0
-                    ? 'sem gastos registrados'
-                    : `${gastos.totalRegistros} registros`}
-                  {comparacoes.percentilGastoCasa !== null &&
-                  gastos.totalRegistros > 0 ? (
-                    <>
-                      {' · '}
-                      <span className="text-foreground-subtle">
-                        {formatPercentil(comparacoes.percentilGastoCasa)} da{' '}
-                        {casaLabel(parlamentar.casa)}
-                      </span>
-                    </>
-                  ) : null}
-                </>
-              ),
-              tone: gastos.totalRegistros === 0 ? 'muted' : 'default',
-            },
-          ]}
-        />
+        {/* StatGroup do RDS substitui o KpiStrip local. Borda externa +
+            rounded adicionados via className para paridade com o strip
+            original (StatGroup só traz os dividers internos). */}
+        <StatGroup
+          className="overflow-hidden rounded-lg border border-line-default"
+          cols={4}
+          layout="grid"
+        >
+          <Stat
+            icon={<Vote className="h-4 w-4" />}
+            label="Alinhamento à bancada"
+            tone={alinhamentoTone}
+            value={
+              alinhamento.percentual === null
+                ? '—'
+                : `${alinhamento.percentual}%`
+            }
+            hint={
+              <>
+                {alinhamento.total > 0
+                  ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
+                  : 'sem orientação no período'}
+                {comparacoes.medianaAlinhamentoCasa !== null ? (
+                  <>
+                    {' · '}
+                    <span className="text-fg-quaternary">
+                      mediana da {casaLabel(parlamentar.casa)} em{' '}
+                      {Math.round(comparacoes.medianaAlinhamentoCasa)}%
+                    </span>
+                  </>
+                ) : null}
+              </>
+            }
+          />
+          <Stat
+            icon={<Users className="h-4 w-4" />}
+            label="Votações analisadas"
+            value={alinhamento.total > 0 ? alinhamento.total : votos.length}
+            hint={
+              alinhamento.total > 0 ? 'com orientação' : 'recentes (nominais)'
+            }
+          />
+          <Stat
+            icon={<Inbox className="h-4 w-4" />}
+            label="Proposições como autor"
+            value={proposicoes.length}
+            hint={
+              <>
+                {proposicoesPage.nextCursor ? 'primeira página' : ''}
+                {comparacoes.percentilProposicoesCasa !== null ? (
+                  <>
+                    {proposicoesPage.nextCursor ? ' · ' : ''}
+                    <span className="text-fg-quaternary">
+                      {formatPercentil(comparacoes.percentilProposicoesCasa)} da{' '}
+                      {casaLabel(parlamentar.casa)}
+                    </span>
+                  </>
+                ) : null}
+              </>
+            }
+          />
+          <Stat
+            icon={<TrendingDown className="h-4 w-4" />}
+            label={`Gastos CEAP ${anoCorrente}`}
+            value={
+              gastos.totalRegistros === 0 ? '—' : formatBRL(gastos.totalGeral)
+            }
+            hint={
+              <>
+                {gastos.totalRegistros === 0
+                  ? 'sem gastos registrados'
+                  : `${gastos.totalRegistros} registros`}
+                {comparacoes.percentilGastoCasa !== null &&
+                gastos.totalRegistros > 0 ? (
+                  <>
+                    {' · '}
+                    <span className="text-fg-quaternary">
+                      {formatPercentil(comparacoes.percentilGastoCasa)} da{' '}
+                      {casaLabel(parlamentar.casa)}
+                    </span>
+                  </>
+                ) : null}
+              </>
+            }
+          />
+        </StatGroup>
       </div>
 
-      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
-          (Wave 7 Sprint 7.2 PR4) */}
+      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav. */}
       <SectionNav
         className="mt-6 hidden sm:block"
         items={[
@@ -430,116 +443,99 @@ export default async function ParlamentarPerfilPage({
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável (Wave 7 Sprint 7.2 PR4).
-          Header + Votos + Alinhamento default-expanded conforme handoff
-          §Sprint 7.2 PR4 + spec PARLAMENTAR-360.md §Mobile. */}
+      {/* Mobile: Accordion do RDS via entry /granular (3.9.0, #209 fecha
+          RDS #208 — preserveModules; só o módulo do Accordion atravessa o
+          client boundary). Componente do #204: painel sem clamp
+          (grid-template-rows 0fr→1fr) + className/triggerClassName por
+          item. Radix local aposentado nesta rota. Header + Votos +
+          Alinhamento default-expanded como no original. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['votos', 'alinhamento']}
+        defaultOpen={['votos', 'alinhamento']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="votos"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Votos recentes
-          </AccordionTrigger>
-          <AccordionContent>
-            <VotosRecentes
-              votos={votos}
-              filtros={votosFiltros}
-              distribuicao={votosDistribuicao}
-              buildFiltroHref={buildVotosFiltroHref}
-              proximaPaginaHref={votosProximaPaginaHref}
-            />
-          </AccordionContent>
-        </AccordionItem>
+        items={[
+          {
+            id: 'votos',
+            title: 'Votos recentes',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <VotosRecentes
+                votos={votos}
+                filtros={votosFiltros}
+                distribuicao={votosDistribuicao}
+                buildFiltroHref={buildVotosFiltroHref}
+                proximaPaginaHref={votosProximaPaginaHref}
+              />
+            ),
+          },
+          {
+            id: 'alinhamento',
+            title: 'Alinhamento à bancada',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <AlinhamentoBancada
+                alinhamento={alinhamento}
+                casa={parlamentar.casa}
+                mensal={alinhamentoMensal}
+              />
+            ),
+          },
+          {
+            id: 'proposicoes',
+            title: 'Proposições onde é autor ou coautor',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <ProposicoesAutor
+                proposicoes={proposicoes}
+                filtros={proposicoesFiltros}
+                buildFiltroHref={buildProposicoesFiltroHref}
+                proximaPaginaHref={proposicoesProximaPaginaHref}
+              />
+            ),
+          },
+          {
+            id: 'gastos',
+            title: `Gastos parlamentares — ${anoCorrente}`,
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <GastosResumoBlock
+                ano={anoCorrente}
+                mensal={gastosMensal}
+                resumo={gastos}
+              />
+            ),
+          },
+          {
+            id: 'afinidade',
+            title: 'Top 5 maior afinidade de voto',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <Top5Afinidade afinidades={afinidades} />,
+          },
+          {
+            id: 'pares',
+            title: 'Pares de votos em direções opostas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <ParesContraditorios
+                pares={paresContraditorios}
+                stats={coerenciaStats}
+              />
+            ),
+          },
+        ]}
+      />
 
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="alinhamento"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Alinhamento à bancada
-          </AccordionTrigger>
-          <AccordionContent>
-            <AlinhamentoBancada
-              alinhamento={alinhamento}
-              casa={parlamentar.casa}
-              mensal={alinhamentoMensal}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="proposicoes"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Proposições onde é autor ou coautor
-          </AccordionTrigger>
-          <AccordionContent>
-            <ProposicoesAutor
-              proposicoes={proposicoes}
-              filtros={proposicoesFiltros}
-              buildFiltroHref={buildProposicoesFiltroHref}
-              proximaPaginaHref={proposicoesProximaPaginaHref}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="gastos"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Gastos parlamentares — {anoCorrente}
-          </AccordionTrigger>
-          <AccordionContent>
-            <GastosResumoBlock
-              ano={anoCorrente}
-              mensal={gastosMensal}
-              resumo={gastos}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="afinidade"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Top 5 maior afinidade de voto
-          </AccordionTrigger>
-          <AccordionContent>
-            <Top5Afinidade afinidades={afinidades} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="pares"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Pares de votos em direções opostas
-          </AccordionTrigger>
-          <AccordionContent>
-            <ParesContraditorios
-              pares={paresContraditorios}
-              stats={coerenciaStats}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors). */}
+      {/* Desktop: stack linear de SectionCards (Card compound do RDS —
+          ver @/design-system/compositions/section-card.tsx). Anchors do scroll-spy
+          preservados. */}
       <div className="mt-6 hidden space-y-5 sm:block">
-        {/* Tier 1 — ação legislativa (cobertura ≥ 22%). Ordem: o que votou →
-            se seguiu a bancada → o que propôs → como gastou. Sprint 3.1
-            Tarefa 3 — hierarquia reflete cobertura empírica. */}
         <SectionCard
-          className="scroll-mt-28"
           id="votos"
           subtitle="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
           title="Votos recentes"
@@ -554,7 +550,6 @@ export default async function ParlamentarPerfilPage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="alinhamento"
           subtitle="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
           title="Alinhamento à bancada"
@@ -567,7 +562,6 @@ export default async function ParlamentarPerfilPage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="proposicoes"
           subtitle="Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
           title="Proposições onde é autor ou coautor"
@@ -581,7 +575,6 @@ export default async function ParlamentarPerfilPage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="gastos"
           subtitle="Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido."
           title={`Gastos parlamentares — ${anoCorrente}`}
@@ -595,14 +588,7 @@ export default async function ParlamentarPerfilPage({
           />
         </SectionCard>
 
-        {/* Top 5 + Pares promovidos para Tier 1 (Wave 7 Sprint 7.1 PR5).
-            Decisão do handoff: fecham a jornada cívica do Cidadão Consciente
-            — quem é parecido e onde diverge — antes de Compartilhar. Sem
-            separador visual nem header agrupador; SectionNav (acima) já
-            sinaliza as 6 seções em ordem (Votos → Alinh → Propos → Gastos
-            → Top 5 → Pares). */}
         <SectionCard
-          className="scroll-mt-28"
           id="afinidade"
           subtitle="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
           title="Top 5 maior afinidade de voto"
@@ -611,7 +597,6 @@ export default async function ParlamentarPerfilPage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="pares"
           subtitle="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
           title="Pares de votos em direções opostas"
@@ -623,24 +608,20 @@ export default async function ParlamentarPerfilPage({
         </SectionCard>
       </div>
 
-      {/* Footer cross-links (Wave 7 Sprint 7.2 PR5) — fecha o
-          cul-de-sac do perfil: depois de ler tudo, o Cidadão Consciente
-          tem 2 caminhos óbvios para continuar explorando: outros
-          parlamentares do mesmo partido ou da mesma UF. */}
-      <footer className="mt-8 border-border border-t pt-6">
-        <p className="text-foreground-muted text-sm">
-          Explorar mais parlamentares:
-        </p>
+      {/* Footer cross-links — fecha o cul-de-sac do perfil. Apontam para
+          as listagens de PRODUÇÃO (fora do escopo da staging). */}
+      <footer className="mt-8 border-line-default border-t pt-6">
+        <p className="text-fg-tertiary text-sm">Explorar mais parlamentares:</p>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
-            className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
             href={`/parlamentares?partido=${encodeURIComponent(parlamentar.partidoSigla)}`}
           >
             Ver outros do {parlamentar.partidoSigla}
             <ArrowRight aria-hidden className="h-3.5 w-3.5" />
           </Link>
           <Link
-            className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
             href={`/parlamentares?uf=${parlamentar.uf}`}
           >
             Ver outros de {parlamentar.uf}

@@ -32,15 +32,15 @@ describe('SectionNav composition', () => {
     render(<SectionNav items={items} />)
     const first = screen.getByRole('link', { name: 'Votos' })
     expect(first.getAttribute('aria-current')).toBe('true')
-    expect(first.className).toContain('bg-brand/10')
-    expect(first.className).toContain('text-brand')
+    expect(first.className).toContain('bg-fg-brand/10')
+    expect(first.className).toContain('text-fg-brand')
   })
 
   it('outros itens começam neutros', () => {
     render(<SectionNav items={items} />)
     const second = screen.getByRole('link', { name: 'Alinhamento' })
     expect(second.getAttribute('aria-current')).toBeNull()
-    expect(second.className).toContain('text-foreground-muted')
+    expect(second.className).toContain('text-fg-tertiary')
   })
 
   it('retorna null quando items=[]', () => {

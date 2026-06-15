@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import { ArrowLeft, Building2 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -22,32 +24,6 @@ interface Props {
   }
 }
 
-/**
- * Perfil header parlamentar — Sprint 6.3 PR 1 (Wave 6, reskin perfis) +
- * Wave 7 Sprint 7.2 PR2 (breadcrumb + Compartilhar).
- *
- * Refactor incremental vs Sprint 4.3 PR 1:
- * - DataBadges no topo (cargo + casa + legislatura + situação se ≠ exercício)
- * - h1 maior (text-3xl sm:text-4xl) — protagonismo da identidade
- * - PartyBadge inline (consome composição Sprint 6.0 PR 6 — cor por partido)
- * - Foto mantida em 112px (size-28) — mudar pra maior inflaria header sem
- *   ganho real; perfil parlamentar é cartão de identidade, não hero genérico
- *
- * Wave 7 Sprint 7.2 PR2 adiciona:
- * - Breadcrumb sutil "← Parlamentares" acima do header (contexto para
- *   visitantes vindos de link compartilhado)
- * - Botão "Compartilhar resumo" no fim do header (Client Component;
- *   conteúdo do Dialog completo chega na PR3). SEM "Comparar" (F12 fora
- *   da Wave 7).
- *
- * NÃO virou HeroSection (D4 do plano Sprint 6.3): HeroSection consome
- * .bg-hero + .grid-bg full-bleed que combina com contexto genérico (home,
- * listings), não com perfil específico. Aqui o card é "documento de
- * identidade", não cartaz.
- *
- * Estrutura semântica preservada: <header>, dl/dt/dd para metadados
- * estruturados, TrustBadge + source link inalterados.
- */
 export function PerfilHeader({ parlamentar }: Props) {
   const cargoLabel =
     parlamentar.casa === 'CAMARA' ? 'Deputado Federal' : 'Senador'
@@ -60,14 +36,14 @@ export function PerfilHeader({ parlamentar }: Props) {
   return (
     <div>
       <Link
-        className="mb-3 inline-flex items-center gap-1 rounded text-foreground-muted text-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="mb-3 inline-flex items-center gap-1 rounded text-fg-tertiary text-sm hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
         href="/parlamentares"
       >
         <ArrowLeft aria-hidden className="h-3.5 w-3.5" />
         Parlamentares
       </Link>
 
-      <header className="rounded-lg border border-border bg-surface p-6 sm:p-8">
+      <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
           {parlamentar.urlFoto ? (
             // biome-ignore lint/performance/noImgElement: foto vem de domínio externo (camara.leg.br / senado.leg.br); Next/Image exige config de remote patterns. Largura/altura explícitas reservam espaço e evitam CLS.
@@ -81,7 +57,7 @@ export function PerfilHeader({ parlamentar }: Props) {
           ) : (
             <div
               aria-hidden="true"
-              className="size-24 shrink-0 rounded-full bg-surface-elevated sm:size-28"
+              className="size-24 shrink-0 rounded-full bg-surface-raised sm:size-28"
             />
           )}
 
@@ -103,20 +79,20 @@ export function PerfilHeader({ parlamentar }: Props) {
             </div>
 
             <div>
-              <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
+              <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
                 {parlamentar.nome}
               </h1>
               {parlamentar.nomeCivil &&
                 parlamentar.nomeCivil !== parlamentar.nome && (
-                  <p className="mt-1 text-foreground-muted text-sm">
+                  <p className="mt-1 text-fg-tertiary text-sm">
                     {parlamentar.nomeCivil}
                   </p>
                 )}
             </div>
 
-            <dl className="flex flex-wrap items-center gap-x-4 gap-y-2 text-foreground text-sm">
+            <dl className="flex flex-wrap items-center gap-x-4 gap-y-2 text-fg-primary text-sm">
               <div className="flex items-center gap-2">
-                <dt className="font-medium text-foreground-muted">Partido:</dt>
+                <dt className="font-medium text-fg-tertiary">Partido:</dt>
                 <dd>
                   <PartyBadge
                     name={parlamentar.partidoNome}
@@ -125,8 +101,8 @@ export function PerfilHeader({ parlamentar }: Props) {
                 </dd>
               </div>
               <div className="flex items-center gap-2">
-                <dt className="font-medium text-foreground-muted">UF:</dt>
-                <dd className="font-medium text-foreground">
+                <dt className="font-medium text-fg-tertiary">UF:</dt>
+                <dd className="font-medium text-fg-primary">
                   {parlamentar.uf}
                 </dd>
               </div>
@@ -135,7 +111,7 @@ export function PerfilHeader({ parlamentar }: Props) {
             <div className="flex flex-wrap items-center gap-3 pt-2 text-sm">
               <TrustBadge trustLevel={parlamentar.trustLevel} />
               <a
-                className="rounded text-foreground-muted underline decoration-dotted underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="rounded text-fg-tertiary underline decoration-dotted underline-offset-2 hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                 href={parlamentar.sourceUrl}
                 rel="noopener noreferrer"
                 target="_blank"
