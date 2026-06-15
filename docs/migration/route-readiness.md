@@ -2027,6 +2027,10 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   `@/design-system/primitives`; `KpiStrip`→`Stat`/`StatGroup`. `GastosChart`
   resíduo BaV. QA Playwright (0 erros; header/KPIs/section-nav/votos/seções).
   Proposição e votação replicam o padrão (reusam section-nav/rds-accordion).
+- **12ª — `/proposicoes/[…]`** (2º perfil): 6 `_components/` de domínio
+  sobrescritos; barra/section-nav/rds-accordion já canônicos. Charts (ApoioPartido,
+  donut #408) resíduo BaV. QA Playwright (perfil renderiza, 0 erros; dado de votos
+  esparso → donut não exercitado visualmente, fix guard-verificado).
 
 ## §4 — Notas e premissas
 

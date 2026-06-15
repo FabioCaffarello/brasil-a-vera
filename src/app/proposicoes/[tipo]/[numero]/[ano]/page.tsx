@@ -1,3 +1,17 @@
+// Perfil de proposição — promovido ao RDS (migração ADR-033). Consome o
+// design system @fabio.caffarello/react-design-system — tokens traduzidos
+// pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// por composição nested — NÃO importar aqui.
+//
+// - Stat/StatGroup (KPIs) + SectionCard (Card compound) do /server;
+//   SectionNav (useScrollSpy) de @/design-system/compositions; Accordion
+//   mobile via @/design-system/primitives/rds-accordion (/granular).
+// - Charts (ApoioPartidoChart, VotosConsolidadosChart — recharts) sobem como
+//   resíduo BaV (ADR-034 §5; o donut teve o fix #303/#304 na Fase C, #408).
+
+import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
 import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 
@@ -10,15 +24,9 @@ import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
 import { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart-client'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
+import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatProposicaoRef } from '@/lib/format'
 import { CursorTramitacaoV1 } from '@/lib/queries/cursor-schemas'
@@ -44,11 +52,26 @@ import {
   getProposicoesMesmoTema,
 } from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
-import { buildKpiSlotsDetalhe } from '@/modules/proposicoes/domain/kpi-detalhe'
+import {
+  buildKpiSlotsDetalhe,
+  type KpiTone,
+} from '@/modules/proposicoes/domain/kpi-detalhe'
 import {
   inferirMarcoAtual,
   isSituacaoTerminalNegativa,
 } from '@/modules/proposicoes/domain/tramitacao-card'
+
+// Tone do Stat (RDS) afeta APENAS o hint — mesmo contrato do KpiStrip
+// local. Map estabelecido na piloto-2: default/muted→neutral,
+// destructive→error.
+const STAT_TONE: Record<KpiTone, 'neutral' | 'success' | 'warning' | 'error'> =
+  {
+    default: 'neutral',
+    success: 'success',
+    warning: 'warning',
+    destructive: 'error',
+    muted: 'neutral',
+  }
 
 interface PageProps {
   params: Promise<{ tipo: string; numero: string; ano: string }>
@@ -100,10 +123,8 @@ function parseParams(
   return { tipo, numero, ano }
 }
 
-// Constrói href preservando outros params (futuro: filtros mini do
-// Sprint 8.3 PR2/PR3). Override com null strip o param do URL —
-// usado no permanentRedirect 308 quando o cursor decodifica como
-// inválido (ADR-026 §5).
+// Base /rds/ — cursor pagination e filtros permanecem DENTRO da rota
+// staging (não vazam pro usuário da rota original).
 function buildDetalheHref(
   tipo: string,
   numero: number,
@@ -168,7 +189,7 @@ export default async function ProposicaoDetalhePage({
   )
   if (!proposicao) notFound()
 
-  // Wave 8 Sprint 8.3 PR1 — cursor pagination da tramitação (ADR-026 §5).
+  // Cursor pagination da tramitação (ADR-026 §5).
   // null = token inválido → redirect 308 strip do param. undefined = 1ª pág.
   const cursorTramitacao = decodeCursor(sp.tram_after, CursorTramitacaoV1)
   if (cursorTramitacao === null) {
@@ -184,9 +205,7 @@ export default async function ProposicaoDetalhePage({
     )
   }
 
-  // Wave 8 Sprint 8.3 PR2 — filtro "marcos importantes" vs "todos".
   const tramitacaoFiltro = normalizeTramitacaoFiltro(sp.tram_filtro)
-  // Wave 8 Sprint 8.3 PR3 — filtros mini de votações (resultado + casa).
   const votacoesResultado = normalizeVotacoesResultado(sp.vot_resultado)
   const votacoesCasa = normalizeVotacoesCasa(sp.vot_casa)
 
@@ -214,28 +233,23 @@ export default async function ProposicaoDetalhePage({
     getVotosConsolidados(proposicao.id),
   ])
 
-  // Wave 8 Sprint 8.2 PR1 — 4 slots narrativos do KpiStrip do detalhe.
-  // Pura: rodada 2 §Decisões resolvidas #1 + §Contratos de fallback.
+  // 4 slots narrativos do KpiStrip do detalhe (módulo de domínio puro).
   const kpiSlots = buildKpiSlotsDetalhe({
     tipo: proposicao.tipo,
     situacao: proposicao.situacao,
     stats,
   })
 
-  // Wave 8 Sprint 8.3 PR4 — Barra de progresso da tramitação (full).
-  // Só renderiza quando há orgao corrente — sem ele, a inferência de
-  // marco vira chute. Usa o mesmo helper inferirMarcoAtual do card
-  // (single source of truth via domain/tramitacao-card.ts).
+  // Barra de progresso da tramitação — só renderiza quando há orgao
+  // corrente (sem ele, a inferência de marco vira chute).
   const ultimoOrgao = stats?.ultimoOrgao ?? null
   const barraMarcoAtual = ultimoOrgao
     ? inferirMarcoAtual(ultimoOrgao, proposicao.situacao)
     : null
   const barraTerminalNegativo = isSituacaoTerminalNegativa(proposicao.situacao)
 
-  // Wave 8 Sprint 8.3 PR1 — link "Mostrar mais" da tramitação.
-  // Restantes só calculável na 1ª página COM filtro='todos' — agregado
-  // n_eventos_tramitacao não tem versão filtrada por marcos. Páginas
-  // subsequentes ou filtro='marcos' caem para "Mostrar mais" simples.
+  // Link "Mostrar mais" da tramitação. Restantes só calculável na 1ª
+  // página COM filtro='todos'.
   const tramitacaoMostrarMaisHref = tramitacaoPage.nextCursor
     ? buildDetalheHref(
         parsed.tipo,
@@ -253,8 +267,7 @@ export default async function ProposicaoDetalhePage({
       ? Math.max(0, stats.nEventosTramitacao - tramitacaoPage.rows.length)
       : null
 
-  // Wave 8 Sprint 8.3 PR2 — buildFiltroHref que reseta cursor ao trocar
-  // filtro (não faz sentido manter `tram_after` quando o universo muda).
+  // buildFiltroHref que reseta cursor ao trocar filtro.
   const buildTramitacaoFiltroHref = (next: TramitacaoFiltro): string =>
     buildDetalheHref(
       parsed.tipo,
@@ -268,10 +281,7 @@ export default async function ProposicaoDetalhePage({
       '#tramitacao',
     )
 
-  // Wave 8 Sprint 8.3 PR3 — buildFiltroHref votações. Aceita override
-  // parcial (só resultado, só casa, ou ambos) — caller pode preservar o
-  // outro filtro ao trocar um. Strip o param quando volta ao default
-  // ('todos'/'todas') para URLs limpas.
+  // buildFiltroHref votações — override parcial; strip no default.
   const buildVotacoesFiltroHref = (override: {
     resultado?: VotacoesResultadoFiltro
     casa?: VotacoesCasaFiltro
@@ -298,14 +308,7 @@ export default async function ProposicaoDetalhePage({
       '#votacoes',
     )
 
-  // Wave 8 Sprint 8.2 PR5 — fase 2 do fetch para footer cross-links.
-  // Depende dos resultados da fase 1 (autor principal vem da lista
-  // de autores; tema canônico vem do stats). 1 round-trip extra ao
-  // DB mas cacheado 1h via TTL.proposicoesRelacionadas.
-  //
-  // "Autor principal" = primeiro AUTOR (tipoAutoria=AUTOR) com
-  // parlamentar_id NOT NULL. Lista `autores` já ordena AUTOR antes
-  // de COAUTOR (asc(tipoAutoria) = D antes de O), depois asc(nome).
+  // Fase 2 do fetch para footer cross-links (depende da fase 1).
   const autorPrincipal =
     autores.find(
       (a) => a.tipoAutoria === 'AUTOR' && a.parlamentarId !== null,
@@ -345,18 +348,25 @@ export default async function ProposicaoDetalhePage({
         }
       />
 
-      <KpiStrip
-        className="mt-6"
-        items={kpiSlots.map((slot) => ({
-          label: slot.label,
-          value: slot.value,
-          hint: slot.hint,
-          tone: slot.tone,
-        }))}
-      />
+      {/* StatGroup do RDS substitui o KpiStrip local (padrão piloto-2:
+          borda externa via className; StatGroup só traz dividers). */}
+      <StatGroup
+        className="mt-6 overflow-hidden rounded-lg border border-line-default"
+        cols={4}
+        layout="grid"
+      >
+        {kpiSlots.map((slot) => (
+          <Stat
+            hint={slot.hint}
+            key={slot.label}
+            label={slot.label}
+            tone={STAT_TONE[slot.tone ?? 'default']}
+            value={slot.value}
+          />
+        ))}
+      </StatGroup>
 
-      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
-          Wave 8 Sprint 8.2 PR4 (espelha padrão Wave 7 Sprint 7.2 PR4). */}
+      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav. */}
       <SectionNav
         className="mt-6 hidden sm:block"
         items={[
@@ -380,101 +390,91 @@ export default async function ProposicaoDetalhePage({
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável (Wave 8 Sprint 8.2 PR4).
-          defaultValue=['tramitacao', 'autores'] cravado na rodada 2
-          (§Decisões resolvidas #3 — hierarquia das perguntas cívicas em
-          mobile share: "está vivo?" → tramitação; "quem propôs?" → autores). */}
+      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
+          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
+          varredura). defaultOpen narrativo preservado do original. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['tramitacao', 'autores']}
+        defaultOpen={['tramitacao', 'autores']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="tramitacao"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Tramitação
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {barraMarcoAtual !== null && ultimoOrgao !== null ? (
-              <BarraProgressoTramitacao
-                ariaLabel={`Tramitação em ${ultimoOrgao}`}
-                currentStep={barraMarcoAtual}
-                terminalNegativo={barraTerminalNegativo}
-                variant="full"
-              />
-            ) : null}
-            <TramitacaoTimeline
-              buildFiltroHref={buildTramitacaoFiltroHref}
-              eventos={tramitacaoPage.rows}
-              filtro={tramitacaoFiltro}
-              mostrarMaisHref={tramitacaoMostrarMaisHref}
-              restantes={tramitacaoRestantes}
-            />
-          </AccordionContent>
-        </AccordionItem>
+        items={[
+          {
+            id: 'tramitacao',
+            title: 'Tramitação',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {barraMarcoAtual !== null && ultimoOrgao !== null ? (
+                  <BarraProgressoTramitacao
+                    ariaLabel={`Tramitação em ${ultimoOrgao}`}
+                    currentStep={barraMarcoAtual}
+                    terminalNegativo={barraTerminalNegativo}
+                    variant="full"
+                  />
+                ) : null}
+                <TramitacaoTimeline
+                  buildFiltroHref={buildTramitacaoFiltroHref}
+                  eventos={tramitacaoPage.rows}
+                  filtro={tramitacaoFiltro}
+                  mostrarMaisHref={tramitacaoMostrarMaisHref}
+                  restantes={tramitacaoRestantes}
+                />
+              </div>
+            ),
+          },
+          {
+            id: 'autores',
+            title: 'Autores',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {apoioPartido.length > 0 ? (
+                  <ApoioPartidoChart data={apoioPartido} />
+                ) : null}
+                <AutoresList autores={autores} />
+              </div>
+            ),
+          },
+          {
+            id: 'votacoes',
+            title: 'Votações vinculadas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                {votosConsolidados ? (
+                  <VotosConsolidadosChart data={votosConsolidados} />
+                ) : null}
+                <VotacoesVinculadas
+                  buildFiltroHref={buildVotacoesFiltroHref}
+                  casa={votacoesCasa}
+                  resultado={votacoesResultado}
+                  votacoes={votacoes}
+                />
+              </div>
+            ),
+          },
+          {
+            id: 'temas',
+            title: 'Temas',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <TemasList temas={temas} />,
+          },
+        ]}
+      />
 
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="autores"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Autores
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {apoioPartido.length > 0 ? (
-              <ApoioPartidoChart data={apoioPartido} />
-            ) : null}
-            <AutoresList autores={autores} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="votacoes"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Votações vinculadas
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            {votosConsolidados ? (
-              <VotosConsolidadosChart data={votosConsolidados} />
-            ) : null}
-            <VotacoesVinculadas
-              buildFiltroHref={buildVotacoesFiltroHref}
-              casa={votacoesCasa}
-              resultado={votacoesResultado}
-              votacoes={votacoes}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="temas"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Temas
-          </AccordionTrigger>
-          <AccordionContent>
-            <TemasList temas={temas} />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors).
-          Ordem mantida do Wave 6 (temas → autores → votações → tramitação)
-          — aqui as âncoras do SectionNav precisam casar. No Accordion mobile
-          a ordem é narrativa (tramitação → autores → votações → temas)
-          conforme decisão #3 da rodada 2. */}
+      {/* Desktop: stack linear de SectionCards (Card compound do RDS via
+          cópia local; scroll-mt-28 embutido). Ordem das âncoras casa com
+          o SectionNav; no Accordion mobile a ordem é narrativa. */}
       <div className="mt-6 hidden space-y-5 sm:block">
-        <SectionCard className="scroll-mt-28" id="temas" title="Temas">
+        <SectionCard id="temas" title="Temas">
           <TemasList temas={temas} />
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="autores"
           subtitle="Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome."
           title="Autores"
@@ -488,7 +488,6 @@ export default async function ProposicaoDetalhePage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="votacoes"
           subtitle="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente."
           title="Votações vinculadas"
@@ -507,7 +506,6 @@ export default async function ProposicaoDetalhePage({
         </SectionCard>
 
         <SectionCard
-          className="scroll-mt-28"
           id="tramitacao"
           subtitle="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
           title="Tramitação"

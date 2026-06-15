@@ -1,9 +1,9 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
+import { FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
 import type {
   VotacoesCasaFiltro,
@@ -23,9 +23,8 @@ interface Votacao {
 
 interface Props {
   votacoes: Votacao[]
-  /** Wave 8 Sprint 8.3 PR3 — filtros mini (resultado + casa). Quando
-   * filtros e buildFiltroHref estão presentes, a UI renderiza
-   * FilterChips no topo. Caller controla URL state. */
+  /** Filtros mini (resultado + casa). Quando filtros e buildFiltroHref
+   * estão presentes, a UI renderiza FilterChips no topo. */
   resultado?: VotacoesResultadoFiltro
   casa?: VotacoesCasaFiltro
   buildFiltroHref?: (override: {
@@ -45,10 +44,7 @@ export function VotacoesVinculadas({
     casa !== undefined &&
     buildFiltroHref !== undefined
 
-  // Empty state distingue cenários (P2 — honestidade):
-  // - filtro=todos vazio: nenhuma votação vinculada na base
-  // - filtro restritivo vazio: nenhuma votação CASA com esse filtro;
-  //   sugere ampliar
+  // Empty state distingue cenários (P2 — honestidade).
   if (votacoes.length === 0) {
     const filtroAtivo =
       mostrarFiltros && (resultado !== 'todos' || casa !== 'todas')
@@ -61,7 +57,7 @@ export function VotacoesVinculadas({
             resultado={resultado}
           />
         ) : null}
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           {filtroAtivo
             ? 'Nenhuma votação corresponde aos filtros selecionados. Volte para "Todas" para ver todas as votações vinculadas.'
             : 'Nenhuma votação foi vinculada a esta proposição na base atual. Isso pode acontecer se a votação correspondente não foi ingerida, ou se ainda não houve votação registrada.'}
@@ -81,8 +77,8 @@ export function VotacoesVinculadas({
       ) : null}
       <ul className="space-y-3">
         {votacoes.map((v) => (
-          <li className="rounded-lg border border-border p-3" key={v.id}>
-            <div className="flex flex-wrap items-center gap-2 text-foreground-muted text-xs">
+          <li className="rounded-lg border border-line-default p-3" key={v.id}>
+            <div className="flex flex-wrap items-center gap-2 text-fg-tertiary text-xs">
               <span>{formatDataBR(v.dataHora)}</span>
               <span aria-hidden>·</span>
               <span>{v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}</span>
@@ -92,16 +88,16 @@ export function VotacoesVinculadas({
               <span
                 className={
                   v.aprovada
-                    ? 'font-medium text-success'
-                    : 'font-medium text-destructive'
+                    ? 'font-medium text-fg-success'
+                    : 'font-medium text-fg-error'
                 }
               >
                 {v.aprovada ? 'Aprovada' : 'Rejeitada'}
               </span>
             </div>
-            <p className="mt-1.5 text-foreground text-sm">{v.descricao}</p>
+            <p className="mt-1.5 text-fg-primary text-sm">{v.descricao}</p>
             {(v.votosSim > 0 || v.votosNao > 0) && (
-              <p className="mt-1 tabular-nums text-foreground-muted text-xs">
+              <p className="mt-1 tabular-nums text-fg-tertiary text-xs">
                 Sim: {v.votosSim} · Não: {v.votosNao}
               </p>
             )}
