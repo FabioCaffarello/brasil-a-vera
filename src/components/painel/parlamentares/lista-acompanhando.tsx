@@ -1,13 +1,12 @@
-// Sub-tab "Acompanhando" — Wave 10 Etapa 4.
-//
-// Lista todos os parlamentares acompanhados (ordenados por followed_at
-// DESC). Sem botão de Acompanhar visível porque já estão sendo
-// acompanhados — botão alterna para "Acompanhando ✓" via FollowButton
-// (toggle remove).
+// Lista de parlamentares acompanhados (painel/área logada). Server Component.
+// Promovido ao RDS (ADR-033) — classnames em tokens RDS (token-map.md):
+// border-line-default, bg-surface-base, text-fg-primary, text-fg-tertiary.
+// `Button` (canônico) e `ParlamentarCard` (client island) importados.
 
 import Link from 'next/link'
 
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
+
 import { Button } from '@/design-system/primitives/button'
 
 interface Parlamentar {
@@ -29,11 +28,11 @@ interface Props {
 export function ListaAcompanhando({ acompanhados }: Props) {
   if (acompanhados.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-surface p-8 text-center">
-        <h3 className="font-medium text-foreground text-lg">
+      <div className="rounded-lg border border-line-default bg-surface-base p-8 text-center">
+        <h3 className="font-medium text-fg-primary text-lg">
           Você ainda não acompanha ninguém
         </h3>
-        <p className="mt-2 text-foreground-muted text-sm">
+        <p className="mt-2 text-fg-tertiary text-sm">
           Explore parlamentares e clique em "Acompanhar" para começar a receber
           atualizações deles aqui.
         </p>

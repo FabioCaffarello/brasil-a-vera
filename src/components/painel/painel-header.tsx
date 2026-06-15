@@ -1,12 +1,28 @@
-// PainelHeader — Fase 3 do refator do painel pós-Wave 10 (RFC §5).
+// Promovido ao RDS (ADR-033).
+// (área logada /painel). Server Component puro (zero JS).
 //
-// Header de identificação contextual do usuário logado. Vive em
-// `painel/layout.tsx` (acima do TabBar). Server Component puro
-// (zero JS); recebe identidade já resolvida pelo layout.
+// Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
+// docs/migration/token-map.md:
+//   border-border       → border-line-default
+//   bg-surface-elevated → bg-surface-raised
+//   text-foreground     → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
 //
-// Proposta B do wireframing: avatar gradient (mesma identidade visual
-// do logo da Navbar, Hotfix 10.3) + kicker "SUA ÁREA" + nome + email · UF.
-// Background `bg-surface-elevated` + border-bottom para separar do TabBar.
+// Tokens MANTIDOS (não traduzidos — decisão de classe CONHECIDA):
+//   - `bg-gradient-primary`: utility custom do BaV (globals.css §313,
+//     `linear-gradient(135deg, var(--primary), var(--accent))`). Compõe o
+//     `--accent` roxo de data-viz (ADR-024), que NÃO tem par no RDS — mesmo
+//     regime do resíduo `bg-accent/N` mantido na §3.14 (parlamentar-card):
+//     token do projeto, destino final, não pendência da migração. Regra 2
+//     (data-viz custom) avaliada e NÃO disparada: é uma utility de gradiente
+//     ESTÁTICO de marca (avatar), não SVG/chart/`hsl(var())`/`color-mix` em
+//     prop de chart. Calibra na promoção junto com o `--accent`.
+//   - `text-white`, `ring-white/10`: utilities Tailwind PADRÃO (literais
+//     `#fff` / `#fff`@10%), byte-idênticas dos dois lados — não são apelidos
+//     semânticos do BaV. Regra 1 NÃO disparada (mesma régua de utility
+//     homônimo do `bg-success/N` / `border-success/40`, §3.17 decisão 2): não
+//     há tradução porque o valor já é idêntico nos dois lados. On-color do
+//     avatar sobre o gradiente.
 
 import { cn } from '@/lib/cn'
 
@@ -34,7 +50,7 @@ export function PainelHeader({ displayName, email, uf }: Props) {
   return (
     <header
       className={cn(
-        'border-border border-b bg-surface-elevated',
+        'border-line-default border-b bg-surface-raised',
         'mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4',
       )}
     >
@@ -45,13 +61,13 @@ export function PainelHeader({ displayName, email, uf }: Props) {
         {initials}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-foreground-muted text-xs uppercase tracking-wider">
+        <p className="text-fg-tertiary text-xs uppercase tracking-wider">
           Sua área
         </p>
-        <p className="truncate font-medium text-foreground">
+        <p className="truncate font-medium text-fg-primary">
           {displayName ?? email.split('@')[0]}
         </p>
-        <p className="truncate text-foreground-muted text-xs">
+        <p className="truncate text-fg-tertiary text-xs">
           <span>{email}</span>
           {uf ? <span className="ml-2">· {uf}</span> : null}
         </p>

@@ -1,14 +1,9 @@
-// `/painel?tab=configuracoes` slot — Wave 10 Etapa 5, movido para slot
-// na Fase 2 do refator pós-Wave 10 (RFC §3, §6).
+// Slot Configurações do painel (área logada, RSC) — promovido ao RDS (ADR-033).
 //
-// 4 seções verticais (LOGGED-AREA-VISION §5.4):
-//   - Perfil (Nome, E-mail read-only, UF)
-//   - Temas de interesse (8 chips)
-//   - Comunicação (2 opt-ins separados de alertas de serviço)
-//   - Privacidade (link interno para a tab Meus dados + link público)
-//
-// Link "Ver, exportar ou apagar meus dados" atualizado para
-// `/painel?tab=meus-dados` (Meus Dados promovida a tab principal — RFC §6).
+// 4 seções verticais (Perfil / Temas / Comunicação / Privacidade). `auth()`
+// (Clerk) + queries (user-profile) preservadas. `FormPerfil`/`TemasChips`/
+// `ComunicacaoToggles` importados dos canônicos (client islands — forms).
+// Classnames em tokens RDS (text-fg-primary, text-fg-tertiary, hover:text-fg-brand).
 
 import { auth } from '@clerk/nextjs/server'
 import { ArrowRight } from 'lucide-react'
@@ -31,7 +26,7 @@ export default async function ConfiguracoesSlot() {
   const internalUserId = await getOrCreateUserProfileId(userId)
   if (!internalUserId) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-foreground-muted">
+      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
         Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
         segundos.
       </div>
@@ -43,17 +38,17 @@ export default async function ConfiguracoesSlot() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
       <header className="mb-8">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Configurações
         </h1>
-        <p className="mt-1 text-foreground-muted">
+        <p className="mt-1 text-fg-tertiary">
           Perfil, temas, comunicação e dados.
         </p>
       </header>
 
       <div className="space-y-10">
         <section>
-          <h2 className="mb-4 font-medium text-foreground text-lg">Perfil</h2>
+          <h2 className="mb-4 font-medium text-fg-primary text-lg">Perfil</h2>
           <FormPerfil
             email={profile.email}
             initialDisplayName={profile.displayName}
@@ -62,20 +57,20 @@ export default async function ConfiguracoesSlot() {
         </section>
 
         <section>
-          <h2 className="mb-1 font-medium text-foreground text-lg">
+          <h2 className="mb-1 font-medium text-fg-primary text-lg">
             Temas de interesse
           </h2>
-          <p className="mb-3 text-foreground-muted text-sm">
+          <p className="mb-3 text-fg-tertiary text-sm">
             Influenciam recomendações e o conteúdo do report semanal.
           </p>
           <TemasChips initialThemes={profile.themes} />
         </section>
 
         <section>
-          <h2 className="mb-1 font-medium text-foreground text-lg">
+          <h2 className="mb-1 font-medium text-fg-primary text-lg">
             Comunicação
           </h2>
-          <p className="mb-3 text-foreground-muted text-sm">
+          <p className="mb-3 text-fg-tertiary text-sm">
             Mensagens fora do serviço regular de alertas. Sempre opt-in.
           </p>
           <ComunicacaoToggles
@@ -85,13 +80,13 @@ export default async function ConfiguracoesSlot() {
         </section>
 
         <section>
-          <h2 className="mb-3 font-medium text-foreground text-lg">
+          <h2 className="mb-3 font-medium text-fg-primary text-lg">
             Privacidade
           </h2>
           <ul className="space-y-2">
             <li>
               <Link
-                className="inline-flex items-center gap-2 text-foreground underline underline-offset-4 hover:text-brand"
+                className="inline-flex items-center gap-2 text-fg-primary underline underline-offset-4 hover:text-fg-brand"
                 href="/painel?tab=meus-dados"
               >
                 Ver, exportar ou apagar meus dados
@@ -100,7 +95,7 @@ export default async function ConfiguracoesSlot() {
             </li>
             <li>
               <Link
-                className="inline-flex items-center gap-2 text-foreground underline underline-offset-4 hover:text-brand"
+                className="inline-flex items-center gap-2 text-fg-primary underline underline-offset-4 hover:text-fg-brand"
                 href="/privacidade"
               >
                 Política de privacidade

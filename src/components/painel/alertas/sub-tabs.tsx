@@ -1,17 +1,18 @@
-'use client'
-
-// SubTabs (Recebidos | Políticas) — Wave 10 Etapa 6, atualizado na
-// Fase 2 do refator pós-Wave 10 (RFC §6).
+// Promovido ao RDS (ADR-033).
+// (área logada /painel).
 //
-// Mudança Fase 2: URL state vira `?subtab=` (não mais `?tab=`); main
-// tab fixa em `alertas` no href. Type renomeado para `AlertasSubtab`
-// e importado do util central `@/lib/painel-tabs`.
+// Decisão-chave #1 do scoping (SubTabs → TabsAsLinks variant="sub", API 1:1):
+// 2 sub-tabs (Recebidos | Políticas) viram itens de `TabsAsLinks variant="sub"`.
+// O count só aparece na sub-tab "recebidos" (e só quando != null), igual ao
+// original. Mapeamento byte-a-byte: TabAsLink { label, href, active?, count? }.
 //
-// Pattern espelhando /painel/@parlamentares/sub-tabs.
+// Cópia SERVER (sem 'use client'): o active vem por prop do slot page; o
+// TabsAsLinks já emite aria-current. linkComponent={Link} preserva navegação
+// client-side. Mesma régua da sub-tabs-parlamentares.
 
+import { TabsAsLinks } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
-import { cn } from '@/lib/cn'
 import type { AlertasSubtab } from '@/lib/painel-tabs'
 
 interface Props {
@@ -24,36 +25,21 @@ const SUBTABS: { key: AlertasSubtab; label: string }[] = [
   { key: 'politicas', label: 'Políticas' },
 ]
 
-export function SubTabs({ active, recebidosCount }: Props) {
+export function SubTabsAlertas({ active, recebidosCount }: Props) {
   return (
-    <nav
+    <TabsAsLinks
       aria-label="Sub-tabs de alertas"
-      className="flex gap-1 border-border-strong border-b"
-    >
-      {SUBTABS.map((subtab) => {
-        const isActive = subtab.key === active
+      items={SUBTABS.map((subtab) => {
         const showCount = subtab.key === 'recebidos' && recebidosCount !== null
-        return (
-          <Link
-            aria-current={isActive ? 'page' : undefined}
-            className={cn(
-              '-mb-px border-b-2 px-4 py-2 text-sm transition-colors',
-              isActive
-                ? 'border-brand text-foreground'
-                : 'border-transparent text-foreground-muted hover:border-border-strong hover:text-foreground',
-            )}
-            href={`/painel?tab=alertas&subtab=${subtab.key}`}
-            key={subtab.key}
-          >
-            {subtab.label}
-            {showCount && (
-              <span className="ml-1.5 text-foreground-subtle">
-                ({recebidosCount})
-              </span>
-            )}
-          </Link>
-        )
+        return {
+          label: subtab.label,
+          href: `/painel?tab=alertas&subtab=${subtab.key}`,
+          active: subtab.key === active,
+          count: showCount ? (recebidosCount as number) : undefined,
+        }
       })}
-    </nav>
+      linkComponent={Link}
+      variant="sub"
+    />
   )
 }

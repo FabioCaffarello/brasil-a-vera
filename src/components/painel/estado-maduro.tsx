@@ -1,13 +1,42 @@
-// Estado "maduro" do /painel — Wave 10 Etapa 3, refinado visualmente
-// na Fase 3 do refator (RFC §5: KPIs no padrão visual aprovado).
+// Promovido ao RDS (ADR-033).
+// (área logada /painel). Server Component.
 //
-// Threshold: `count(follows) ≥ 5` OU `count(alert_delivery delivered) ≥ 1`.
-// Layout pós-Fase 3: H1 + KpiStrip (4 cells) + "Da sua UF — sugestões".
+// Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
+// docs/migration/token-map.md:
+//   text-foreground       → text-fg-primary
+//   text-foreground-muted → text-fg-tertiary
+//
+// `KpiStrip` (composição local) → `StatGroup layout="grid" cols={4}` + `Stat`
+// do RDS /server — MESMO precedente da piloto-2/§3.6 (N4 KpiStrip→StatGroup,
+// adotado direto, layout grid cols={4}). Tone map estabelecido:
+//   default/muted → neutral · warning → warning · success → success ·
+//   destructive → error.
+// (O StatGroup grid reflowa 2-up no mobile → cols no md+, equivalente ao
+// responsivo do KpiStrip; layout="strip" não reflowaria — por isso grid.)
+//
+// `ParlamentarCard` importado do ORIGINAL (client island de domínio —
+// precedente listagens/perfis). regra 2 (data-viz) NÃO disparada: o único
+// match do grep era a string "KpiStrip" (composição), não SVG/chart.
 
+import {
+  Stat,
+  StatGroup,
+  type StatTone,
+} from '@fabio.caffarello/react-design-system/server'
 import { BarChart3, Mail, MapPin, Users } from 'lucide-react'
+
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { listRecomendacoesByUf } from '@/lib/queries/recomendacoes'
+
+type KpiTone = 'default' | 'success' | 'warning' | 'destructive' | 'muted'
+
+const STAT_TONE: Record<KpiTone, StatTone> = {
+  default: 'neutral',
+  muted: 'neutral',
+  success: 'success',
+  warning: 'warning',
+  destructive: 'error',
+}
 
 interface Props {
   uf: string | null
@@ -54,62 +83,61 @@ export async function EstadoMaduro({
   return (
     <section className="mx-auto max-w-3xl px-4 py-8">
       <div>
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           {displayName
             ? `Resumo de ${displayName.split(' ')[0]}`
             : 'Seu resumo'}
         </h1>
-        <p className="mt-2 text-base text-foreground-muted">
+        <p className="mt-2 text-base text-fg-tertiary">
           O que acontece com quem você acompanha.
         </p>
       </div>
 
       <div className="mt-8">
-        <KpiStrip
-          items={[
-            {
-              icon: <Users className="size-5" />,
-              label: 'Acompanhados',
-              value: followsCount,
-            },
-            {
-              icon: <Mail className="size-5" />,
-              label: 'Reports',
-              value: totalDeliveries,
-              hint:
-                unreadDeliveries > 0
-                  ? `${unreadDeliveries} não ${unreadDeliveries === 1 ? 'lido' : 'lidos'}`
-                  : 'todos lidos',
-              tone: unreadDeliveries > 0 ? 'default' : 'muted',
-            },
-            {
-              icon: <BarChart3 className="size-5" />,
-              label: 'Alinhamento médio',
-              value: avgAlinhamento
-                ? `${Math.round(avgAlinhamento.pct)}%`
-                : '—',
-              hint: avgAlinhamento
+        <StatGroup cols={4} layout="grid">
+          <Stat
+            icon={<Users className="size-5" />}
+            label="Acompanhados"
+            value={followsCount}
+          />
+          <Stat
+            hint={
+              unreadDeliveries > 0
+                ? `${unreadDeliveries} não ${unreadDeliveries === 1 ? 'lido' : 'lidos'}`
+                : 'todos lidos'
+            }
+            icon={<Mail className="size-5" />}
+            label="Reports"
+            tone={STAT_TONE[unreadDeliveries > 0 ? 'default' : 'muted']}
+            value={totalDeliveries}
+          />
+          <Stat
+            hint={
+              avgAlinhamento
                 ? `${avgAlinhamento.sampleSize} com amostra`
-                : 'amostra insuficiente',
-              tone: avgAlinhamento ? 'default' : 'muted',
-            },
-            {
-              icon: <MapPin className="size-5" />,
-              label: 'UF',
-              value: uf ?? '—',
-              hint: `desde ${formatJoinDate(profileCreatedAt)}`,
-              tone: uf ? 'default' : 'muted',
-            },
-          ]}
-        />
+                : 'amostra insuficiente'
+            }
+            icon={<BarChart3 className="size-5" />}
+            label="Alinhamento médio"
+            tone={STAT_TONE[avgAlinhamento ? 'default' : 'muted']}
+            value={avgAlinhamento ? `${Math.round(avgAlinhamento.pct)}%` : '—'}
+          />
+          <Stat
+            hint={`desde ${formatJoinDate(profileCreatedAt)}`}
+            icon={<MapPin className="size-5" />}
+            label="UF"
+            tone={STAT_TONE[uf ? 'default' : 'muted']}
+            value={uf ?? '—'}
+          />
+        </StatGroup>
       </div>
 
       {recomendacoes.length > 0 && (
         <div className="mt-12">
-          <h2 className="font-medium text-foreground text-lg">
+          <h2 className="font-medium text-fg-primary text-lg">
             Da sua UF ({uf}) — sugestões
           </h2>
-          <p className="mt-1 text-foreground-muted text-sm">
+          <p className="mt-1 text-fg-tertiary text-sm">
             Parlamentares ativos da sua UF que você ainda não acompanha.
           </p>
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

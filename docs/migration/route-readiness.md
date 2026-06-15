@@ -2045,6 +2045,17 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   promoção. QA Playwright pós-fix a 1280px: perfil completo (`docH` 1091→8928px),
   hemiciclo com fatias coloridas, 0 erro de console, 0 fill preto. Resta só
   `/painel` + a limpeza final do `/rds/`.
+- **14ª — `/painel`** (a maior e ÚLTIMA: área logada — entry + 5 slots de Parallel
+  Routes + TabsAsLinks, sob `(authenticated)/painel/`). Promovido o **shell**: 11
+  componentes + 5 slots sobrescritos pelas versões RDS verificadas (token-parity vs
+  staging confirmada, 0 diff de className fora de comentário); `TabBar`/SubTabs →
+  `TabsAsLinks` do `/server`; `KpiStrip`→`Stat`/`StatGroup`. `auth()` (Clerk) +
+  queries preservados. **Resíduo BaV (follow-up):** ~12 *client islands* (forms e
+  modais) seguem em tokens BaV — o staging os importava dos ORIGINAIS, sem
+  ground-truth RDS; mesma categoria dos charts (ADR-034 §5). **QA visual delegado ao
+  owner** (rota Clerk-gated, não dá pra QA headless sem sessão): PR aberto SEM
+  auto-merge. `/rds/` agora só com os 3 smoke + `RdsStagingLayout` → limpeza final
+  numa PR à parte. Encerra a fila de rotas ricas.
 
 ## §4 — Notas e premissas
 

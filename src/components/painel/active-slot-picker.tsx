@@ -1,19 +1,14 @@
 'use client'
 
-// ActiveSlotPicker — Fase 2 do refator do painel pós-Wave 10
-// (RFC `docs/product/REFACTOR-PAINEL-TABS.md` §3/§4 D1/§12 AP7, ADR-032).
+// Promovido ao RDS (ADR-033).
+// (área logada /painel). DUPLICADO como client island (decisão #4 do
+// scoping): Next.js layouts não recebem searchParams; este client component lê
+// `useSearchParams()` e retorna o slot ativo como children. Slots inativos
+// retornam null (não display:none) — as 5 RSC dos slots rodam server-side em
+// paralelo, mas só uma é montada na DOM final.
 //
-// Por que isto existe:
-//   Next.js layouts NÃO recebem `searchParams` (apenas slot props +
-//   children). Para gating server-side de "qual slot é o ativo" sob
-//   query param `?tab=`, este client component lê `useSearchParams()`
-//   e retorna o slot ativo como children. Slots inativos retornam null
-//   (NÃO `display:none` — AP7). Isto significa que as 5 RSC dos slots
-//   ainda rodam server-side em paralelo (custo aceito conscientemente
-//   em §4 D9 / §7 R1 — mitigado por cached() ADR-018), mas só uma é
-//   montada na DOM final.
-//
-// Sem dependência nova. ReactNode dos slots vem do layout server-side.
+// Sem classnames (puro switch de ReactNode) → sem tradução de token. Importa o
+// `parseTab` puro do util ORIGINAL (lógica pura, decisão #4). Original INTOCADO.
 
 import { useSearchParams } from 'next/navigation'
 
@@ -46,8 +41,6 @@ export function ActiveSlotPicker({
     case 'meus-dados':
       return meusDados
     default:
-      // exhaustive: 'resumo' is the only remaining case (parseTab
-      // garante TabKey válido)
       return resumo
   }
 }
