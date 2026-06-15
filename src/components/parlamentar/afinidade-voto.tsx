@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import Link from 'next/link'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
@@ -11,14 +13,10 @@ interface Props {
   afinidades: AfinidadeRow[]
 }
 
-// Sprint 4.3 PR 3 commit 1/2 — refatorado para tokens semânticos.
-// Top 5 parlamentares de maior afinidade de voto (L2, agregação
-// determinística). Avatar via <img> nativo (mesma justificativa do
-// PerfilHeader — domínio externo camara.leg.br/senado.leg.br).
 export function Top5Afinidade({ afinidades }: Props) {
   if (afinidades.length === 0) {
     return (
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Sem votos nominais em quantidade suficiente para calcular afinidade. São
         necessárias ao menos {TOP5_QUORUM_MINIMO} votações em comum com outros
         parlamentares nos últimos {TOP5_JANELA_MESES} meses — pode acontecer com
@@ -33,7 +31,7 @@ export function Top5Afinidade({ afinidades }: Props) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <TrustBadge trustLevel="L2" />
-        <span className="text-foreground-muted text-xs">
+        <span className="text-fg-tertiary text-xs">
           Agregação determinística — fórmula em{' '}
           <a
             className="underline decoration-dotted underline-offset-2"
@@ -49,12 +47,12 @@ export function Top5Afinidade({ afinidades }: Props) {
       <ul className="space-y-2">
         {afinidades.map((a, i) => (
           <li
-            className="flex items-center gap-3 rounded-lg border border-border p-3"
+            className="flex items-center gap-3 rounded-lg border border-line-default p-3"
             key={a.parlamentarId}
           >
             <span
               aria-hidden
-              className="shrink-0 font-medium font-mono text-foreground-muted text-sm"
+              className="shrink-0 font-medium font-mono text-fg-tertiary text-sm"
             >
               {i + 1}.
             </span>
@@ -71,25 +69,25 @@ export function Top5Afinidade({ afinidades }: Props) {
             ) : (
               <div
                 aria-hidden="true"
-                className="size-10 shrink-0 rounded-full bg-surface-elevated"
+                className="size-10 shrink-0 rounded-full bg-surface-raised"
               />
             )}
             <div className="min-w-0 flex-1">
               <Link
-                className="block truncate font-medium text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
+                className="block truncate font-medium text-fg-primary underline decoration-dotted underline-offset-2 hover:text-fg-tertiary"
                 href={`/parlamentares/${a.parlamentarId}`}
               >
                 {a.nome}
               </Link>
-              <p className="truncate text-foreground-muted text-xs">
+              <p className="truncate text-fg-tertiary text-xs">
                 {a.partidoSigla}/{a.uf}
               </p>
             </div>
             <div className="shrink-0 text-right tabular-nums">
-              <p className="font-semibold text-foreground text-lg">
+              <p className="font-semibold text-fg-primary text-lg">
                 {a.percentualAfinidade}%
               </p>
-              <p className="text-foreground-muted text-xs">
+              <p className="text-fg-tertiary text-xs">
                 {a.votosCoincidentes}/{a.totalVotosEmComum}
               </p>
             </div>
@@ -97,14 +95,14 @@ export function Top5Afinidade({ afinidades }: Props) {
         ))}
       </ul>
 
-      <p className="text-foreground-muted text-xs">
+      <p className="text-fg-tertiary text-xs">
         Cálculo considera{' '}
         <strong>mínimo de {TOP5_QUORUM_MINIMO} votações em comum</strong> nos
         últimos <strong>{TOP5_JANELA_MESES} meses</strong>. Pares ordenados por
         percentual de afinidade; empates desempatam pela base maior.
       </p>
 
-      <details className="text-foreground-muted text-xs">
+      <details className="text-fg-tertiary text-xs">
         <summary className="cursor-pointer">Como é calculado</summary>
         <p className="mt-2 max-w-prose">
           Para cada outro parlamentar que votou nas mesmas votações nominais que

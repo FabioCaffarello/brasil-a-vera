@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import Link from 'next/link'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
@@ -13,31 +15,22 @@ interface Props {
   stats: CoerenciaStats
 }
 
-// Sprint 4.3 PR 3 commit 2/2 — refatorado para tokens semânticos.
-// D4 (Sprint 4.3): acento amber das caixas dos pares migra para
-// `warning` subtle — `border-warning/40 bg-warning/5` preserva a
-// semântica de "olhe com atenção, contradição detectada" sem ser
-// gritante.
-//
-// RESTRITIVA / PERMISSIVA badges também ganham tokens semânticos:
-// restritiva (restringe direito) → destructive; permissiva (amplia) →
-// success. Mantém a leitura cívica do par contraditório.
 function VotoCard({ voto }: { voto: ParContraditorio['voto1'] }) {
   const style = getTipoVotoStyle(voto.voto)
   const direcaoLabel =
     voto.direcao === 'RESTRITIVA' ? 'Restritiva' : 'Permissiva'
   const direcaoClass =
     voto.direcao === 'RESTRITIVA'
-      ? 'bg-destructive/20 text-destructive'
-      : 'bg-success/20 text-success'
+      ? 'bg-error/20 text-fg-error'
+      : 'bg-success/20 text-fg-success'
 
   return (
-    <div className="rounded-lg border border-border p-3">
-      <div className="mb-1.5 flex flex-wrap items-center gap-2 text-foreground-muted text-xs">
+    <div className="rounded-lg border border-line-default p-3">
+      <div className="mb-1.5 flex flex-wrap items-center gap-2 text-fg-tertiary text-xs">
         <span>{formatDataBR(voto.dataHora)}</span>
         <span aria-hidden>·</span>
         <Link
-          className="font-medium font-mono text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
+          className="font-medium font-mono text-fg-primary underline decoration-dotted underline-offset-2 hover:text-fg-tertiary"
           href={`/proposicoes/${voto.proposicaoTipo}/${voto.proposicaoNumero}/${voto.proposicaoAno}`}
         >
           {formatProposicaoRef(
@@ -52,9 +45,9 @@ function VotoCard({ voto }: { voto: ParContraditorio['voto1'] }) {
           {direcaoLabel}
         </span>
       </div>
-      <p className="mb-2 line-clamp-2 text-foreground text-sm">{voto.ementa}</p>
+      <p className="mb-2 line-clamp-2 text-fg-primary text-sm">{voto.ementa}</p>
       <div className="flex items-center gap-2 text-xs">
-        <span className="text-foreground-muted">Votou:</span>
+        <span className="text-fg-tertiary">Votou:</span>
         <span
           className={`inline-flex items-center rounded px-1.5 py-0.5 font-semibold ${style.classes}`}
         >
@@ -71,15 +64,15 @@ export function ParesContraditorios({ pares, stats }: Props) {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <TrustBadge trustLevel="L2" />
-          <span className="text-foreground-muted text-xs">
+          <span className="text-fg-tertiary text-xs">
             Pipeline com verbos inequívocos — sem NLP no MVP.
           </span>
         </div>
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           Nenhum par contraditório detectado para este parlamentar com a base
           atual. Pode ser por um dos seguintes motivos:
         </p>
-        <ul className="space-y-1 pl-5 text-foreground-muted text-sm [list-style-type:disc]">
+        <ul className="space-y-1 pl-5 text-fg-tertiary text-sm [list-style-type:disc]">
           <li>
             <strong className="font-medium">
               Votação vinculada a proposição:
@@ -109,7 +102,7 @@ export function ParesContraditorios({ pares, stats }: Props) {
             oficial. Senado não classifica temas no endpoint atual.
           </li>
         </ul>
-        <p className="text-foreground-muted text-xs">
+        <p className="text-fg-tertiary text-xs">
           A classificação de direção usa apenas verbos inequívocos — falso
           negativo é preferível a falso positivo. Expansão do vocabulário
           (verbos secundários, regex, NLP) entra apenas com evidência de gargalo
@@ -133,7 +126,7 @@ export function ParesContraditorios({ pares, stats }: Props) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <TrustBadge trustLevel="L2" />
-        <span className="text-foreground-muted text-xs">
+        <span className="text-fg-tertiary text-xs">
           {stats.paresContraditoriosDetectados}{' '}
           {stats.paresContraditoriosDetectados === 1 ? 'par' : 'pares'} em{' '}
           {stats.votosClassificados} votos classificáveis.
@@ -147,10 +140,10 @@ export function ParesContraditorios({ pares, stats }: Props) {
             key={`${par.voto1.votacaoId}-${par.voto2.votacaoId}`}
           >
             <header className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-medium text-warning text-xs uppercase tracking-wide">
+              <span className="font-medium text-fg-warning text-xs uppercase tracking-wide">
                 Votos em direções opostas · Tema: {par.tema}
               </span>
-              <span className="text-foreground-muted text-xs">
+              <span className="text-fg-tertiary text-xs">
                 {par.diasEntreVotos === 0
                   ? 'Mesmo dia'
                   : `${par.diasEntreVotos} dia${par.diasEntreVotos === 1 ? '' : 's'} entre os votos`}
@@ -158,7 +151,7 @@ export function ParesContraditorios({ pares, stats }: Props) {
             </header>
             <VotoCard voto={par.voto1} />
             <VotoCard voto={par.voto2} />
-            <p className="text-foreground-muted text-xs italic">
+            <p className="text-fg-tertiary text-xs italic">
               Apresentamos os fatos sem juízo de valor. Contexto importa —
               substitutivos, mudança de partido e relator podem explicar a
               diferença. Verifique cada votação na fonte oficial antes de

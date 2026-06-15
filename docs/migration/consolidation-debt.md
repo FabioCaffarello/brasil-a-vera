@@ -39,23 +39,18 @@
 > `src/components/`, ajustar imports `./_components/` → `@/components/`,
 > deletar staging).
 
-### Piloto-2 — `/rds/parlamentares/[id]`
+### Piloto-2 — `/rds/parlamentares/[id]` — ✅ PROMOVIDA (2026-06-15)
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/parlamentar/perfil-header.tsx` | `src/app/rds/parlamentares/[id]/_components/perfil-header.tsx` | médio | estrutura semântica (header/dl) preservada; consome DataBadge/PartyBadge/TrustBadge/CompartilharButton dos ORIGINAIS (ver §"client islands") |
-| `src/components/parlamentar/votos-recentes.tsx` | `src/app/rds/parlamentares/[id]/_components/votos-recentes.tsx` | médio | filtros + cursor pagination; `DistribuicaoBar` CSS-only preservada; `getTipoVotoStyle` da lib (classes BaV não traduzidas) |
-| `src/components/parlamentar/alinhamento.tsx` | `src/app/rds/parlamentares/[id]/_components/alinhamento.tsx` | médio | limiares de cor exatos (≥80/≥50/<50); `Sparkline12m` SVG preservada — `text-accent`/`fill-accent` MANTIDOS (resíduo, sem equivalente RDS) |
-| `src/components/parlamentar/proposicoes-autor.tsx` | `src/app/rds/parlamentares/[id]/_components/proposicoes-autor.tsx` | baixo | filtros + cursor pagination, espelho do padrão votos-recentes |
-| `src/components/parlamentar/gastos-resumo.tsx` | `src/app/rds/parlamentares/[id]/_components/gastos-resumo.tsx` | médio | `GastosChart` (recharts, dynamic ssr:false) importado do original; link drill-down `text-accent` mantido (resíduo) |
-| `src/components/parlamentar/afinidade-voto.tsx` | `src/app/rds/parlamentares/[id]/_components/afinidade-voto.tsx` | baixo | lista ranqueada simples |
-| `src/components/parlamentar/pares-contraditorios.tsx` | `src/app/rds/parlamentares/[id]/_components/pares-contraditorios.tsx` | médio | acento warning subtle preservado; badges direção: `destructive→error` (tradução estendida piloto-2) |
-| `src/design-system/compositions/section-card.tsx` | `src/app/rds/parlamentares/[id]/_components/section-card.tsx` | baixo | **reconstruída sobre Card compound do RDS 3.5.0** (asSection + Card.Title icon/badge); API local preservada |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/parlamentares/[id]/_components/section-nav.tsx` | médio | `useScrollSpy` via entry `./hooks` (RDS 3.8.0, #205 fecha #203; +396 bytes medidos na varredura 2026-06-11) — IntersectionObserver local aposentado |
-
-Composições substituídas por upstream SEM cópia: `KpiStrip` → `StatGroup`+`Stat`
-do `/server` direto no `page.tsx` (borda externa via className; tone map
-`default/muted→neutral`, `destructive→error`).
+11ª promoção (1º perfil). Os 7 `_components/` de domínio (perfil-header,
+votos-recentes, alinhamento, proposicoes-autor, gastos-resumo, afinidade-voto,
+pares-contraditorios) sobrescritos pelas versões RDS verificadas em
+`@/components/parlamentar/*` (sem hrefs/imports relativos a des-stagear).
+`section-card` já-RDS; **`section-nav` canonicalizado** (overwrite com a versão
+`useScrollSpy` do `/hooks` — API idêntica, cross-3-perfis). **`rds-accordion`**
+(wrapper client p/ o Accordion do RDS via `/granular`) movido p/
+`@/design-system/primitives/rds-accordion`. Página: `KpiStrip`→`Stat`/`StatGroup`
+do `/server`. `GastosChart` (recharts) sobe como resíduo BaV (ADR-034 §5). QA
+Playwright (0 erros; header/KPIs/section-nav/seções). Staging removido.
 
 ### Piloto-3 — `/rds/proposicoes/[tipo]/[numero]/[ano]`
 

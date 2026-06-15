@@ -2021,6 +2021,12 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   floatingBadge), `card` (primitivo shadcn), `card-parlamentares`/
   `card-votacoes-semana`/`features-grid` canonicalizados. QA Playwright (hero +
   KpiCard com TrustBadge L1 flutuante + FeaturesGrid + entry cards; 0 erros).
+- **11ª — `/parlamentares/[id]`** (1º perfil): 7 `_components/` de domínio
+  sobrescritos pelas versões RDS verificadas; `section-nav` canonicalizado
+  (useScrollSpy, cross-3-perfis); `rds-accordion` movido p/
+  `@/design-system/primitives`; `KpiStrip`→`Stat`/`StatGroup`. `GastosChart`
+  resíduo BaV. QA Playwright (0 erros; header/KPIs/section-nav/votos/seções).
+  Proposição e votação replicam o padrão (reusam section-nav/rds-accordion).
 
 ## §4 — Notas e premissas
 

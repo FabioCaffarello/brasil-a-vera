@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import Link from 'next/link'
 
 import { formatDataBR } from '@/lib/format'
@@ -8,8 +10,7 @@ import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinh
 interface Props {
   alinhamento: AlinhamentoResult
   casa: 'CAMARA' | 'SENADO'
-  /** Série mensal dos últimos 12 meses (Wave 7 Sprint 7.3 PR4).
-   *  Vazio quando não há dado — sparkline não renderiza. */
+  /** Série mensal dos últimos 12 meses. Vazio = sparkline não renderiza. */
   mensal?: AlinhamentoMensalPoint[]
 }
 
@@ -22,7 +23,7 @@ function VotacaoLink({
 }) {
   return (
     <Link
-      className="text-foreground hover:text-foreground-muted hover:underline"
+      className="text-fg-primary hover:text-fg-tertiary hover:underline"
       href={`/votacoes/${votacaoId}`}
     >
       {descricao}
@@ -30,16 +31,9 @@ function VotacaoLink({
   )
 }
 
-// Sparkline SVG inline 12m (Wave 7 Sprint 7.3 PR4). Sem JS, sem libs —
-// 1 path + N círculos com <title> para tooltip nativo do browser.
-// Pontos com percentual=null são pulados; meses sem voto não aparecem
-// na série retornada por getAlinhamentoMensal (filter em pageRow.total>0).
-//
-// Layout fixo 240x44 px — viewport mobile 375 cabe folgado. SVG scale
-// nativo via viewBox; pais podem aplicar `w-full` se quiserem responsivo.
+// Sparkline SVG inline 12m. Sem JS, sem libs — 1 path + N círculos com
+// <title> para tooltip nativo do browser. Layout fixo 240x44 px.
 function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
-  // Filtra meses com percentual nulo (sem dado calculável). Linha pula
-  // o ponto; total de tooltips bate com dado real.
   const points = data.filter(
     (d): d is AlinhamentoMensalPoint & { percentual: number } =>
       d.percentual !== null,
@@ -67,9 +61,8 @@ function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
     )
     .join(' ')
 
-  // Range vertical do dado (max-min) — quando muito plano, sparkline fica
-  // chato mas ainda honesto. Sem auto-zoom no eixo Y (mantém escala
-  // canônica 0-100 para comparações entre perfis).
+  // Range vertical do dado (max-min) — sem auto-zoom no eixo Y (mantém
+  // escala canônica 0-100 para comparações entre perfis).
   const min = Math.min(...points.map((d) => d.percentual))
   const max = Math.max(...points.map((d) => d.percentual))
 
@@ -77,17 +70,21 @@ function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
     <div className="text-accent">
       <svg
         aria-label={`Sparkline ${points.length} meses — variando entre ${min}% e ${max}%`}
-        className="block h-11 w-full max-w-[240px]"
+        className="block h-11 w-full max-w-60"
         height={H}
         role="img"
         viewBox={`0 0 ${W} ${H}`}
         width={W}
       >
-        {/* Linha 50% como referência visual (sutil). */}
+        {/* Linha 50% como referência visual (sutil). stroke via style inline:
+            stroke- é overloaded (stroke-width) e o RDS não pré-compila
+            stroke-<cor>; o bridge do @theme só gera utilities color-only
+            (bg/border/ring). var() resolve no :root do RDS importado
+            globalmente. Ver ADR-034 §limitação text-/stroke-. */}
         <line
           aria-hidden
-          className="stroke-border"
           strokeDasharray="2 2"
+          style={{ stroke: 'var(--color-line-default)' }}
           x1={PAD_X}
           x2={W - PAD_X}
           y1={yAt(50)}
@@ -120,16 +117,11 @@ function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
   )
 }
 
-// Sprint 4.3 PR 2 commit 2/4 — refatorado para tokens semânticos.
-// Wave 7 Sprint 7.3 PR4 — sparkline 12m via SVG inline (zero JS, zero libs).
-// Limiares de cor do percentual de alinhamento (≥80 success; ≥50 neutro;
-// <50 warning) preservam intenção semântica original (emerald/amber)
-// agora em tokens.
 export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
   if (alinhamento.total === 0) {
     if (casa === 'SENADO') {
       return (
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           O Senado não publica orientações de bancada em endpoint público (
           <a
             className="underline decoration-dotted underline-offset-2"
@@ -145,7 +137,7 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
       )
     }
     return (
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Orientação partidária só é registrada em{' '}
         <strong>votações nominais</strong> (com voto individual de cada
         deputado) — e somente quando a liderança da bancada formaliza posição na
@@ -160,12 +152,12 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
 
   const percentColor =
     alinhamento.percentual === null
-      ? 'text-foreground-muted'
+      ? 'text-fg-tertiary'
       : alinhamento.percentual >= 80
-        ? 'text-success'
+        ? 'text-fg-success'
         : alinhamento.percentual >= 50
-          ? 'text-foreground'
-          : 'text-warning'
+          ? 'text-fg-primary'
+          : 'text-fg-warning'
 
   return (
     <div className="space-y-4">
@@ -173,11 +165,11 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
         <span className={`font-semibold text-3xl tabular-nums ${percentColor}`}>
           {alinhamento.percentual}%
         </span>
-        <span className="text-foreground-muted text-sm">
+        <span className="text-fg-tertiary text-sm">
           alinhado ao {alinhamento.partidoSigla}
         </span>
       </div>
-      <p className="text-foreground-muted text-xs">
+      <p className="text-fg-tertiary text-xs">
         {alinhamento.alinhados} alinhadas e {alinhamento.divergentes}{' '}
         divergentes, em {alinhamento.total} votações com orientação da bancada.
         Votos AUSENTE e orientações LIBERADO não entram no cálculo.
@@ -185,14 +177,14 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
 
       {mensal.length >= 2 ? (
         <div>
-          <p className="mb-1.5 text-foreground-muted text-xs uppercase tracking-wider">
+          <p className="mb-1.5 text-fg-tertiary text-xs uppercase tracking-wider">
             Variação mensal (últimos {mensal.length} meses)
           </p>
           <Sparkline12m data={mensal} />
         </div>
       ) : null}
       {alinhamento.amostraInsuficiente && (
-        <p className="rounded-md border border-warning/40 bg-warning/10 p-2 text-warning text-xs">
+        <p className="rounded-md border border-warning/40 bg-warning/10 p-2 text-fg-warning text-xs">
           Amostra pequena (menos de {ALINHAMENTO_AMOSTRA_MINIMA} votações). O
           percentual é informativo mas estatisticamente frágil.
         </p>
@@ -200,18 +192,18 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
 
       {alinhamento.topDivergencias.length > 0 && (
         <div>
-          <h3 className="mb-1.5 font-medium text-foreground-muted text-xs uppercase tracking-wide">
+          <h3 className="mb-1.5 font-medium text-fg-tertiary text-xs uppercase tracking-wide">
             Top {alinhamento.topDivergencias.length} divergiu da bancada
           </h3>
           <ul className="space-y-1.5">
             {alinhamento.topDivergencias.map((v) => (
-              <li className="text-foreground text-sm" key={v.votacaoId}>
-                <span className="tabular-nums text-foreground-muted text-xs">
+              <li className="text-fg-primary text-sm" key={v.votacaoId}>
+                <span className="tabular-nums text-fg-tertiary text-xs">
                   {formatDataBR(v.dataHora)}
                 </span>{' '}
                 —{' '}
                 <VotacaoLink votacaoId={v.votacaoId} descricao={v.descricao} />{' '}
-                <span className="text-foreground-muted text-xs">
+                <span className="text-fg-tertiary text-xs">
                   (votou {v.voto}, bancada {v.orientacao})
                 </span>
               </li>
@@ -222,20 +214,18 @@ export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
 
       {alinhamento.topConvergencias.length > 0 && (
         <div>
-          <h3 className="mb-1.5 font-medium text-foreground-muted text-xs uppercase tracking-wide">
+          <h3 className="mb-1.5 font-medium text-fg-tertiary text-xs uppercase tracking-wide">
             Top {alinhamento.topConvergencias.length} convergiu com a bancada
           </h3>
           <ul className="space-y-1.5">
             {alinhamento.topConvergencias.map((v) => (
-              <li className="text-foreground text-sm" key={v.votacaoId}>
-                <span className="tabular-nums text-foreground-muted text-xs">
+              <li className="text-fg-primary text-sm" key={v.votacaoId}>
+                <span className="tabular-nums text-fg-tertiary text-xs">
                   {formatDataBR(v.dataHora)}
                 </span>{' '}
                 —{' '}
                 <VotacaoLink votacaoId={v.votacaoId} descricao={v.descricao} />{' '}
-                <span className="text-foreground-muted text-xs">
-                  ({v.voto})
-                </span>
+                <span className="text-fg-tertiary text-xs">({v.voto})</span>
               </li>
             ))}
           </ul>
