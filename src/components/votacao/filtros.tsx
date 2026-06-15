@@ -1,12 +1,19 @@
-import { X } from 'lucide-react'
-import Link from 'next/link'
+// Filtros de votações — promovido ao RDS (migração ADR-033). Tokens pela
+// tabela canônica (docs/migration/token-map.md).
+//
+// - FilterChips (wrapper) + Label do RDS /server (server-safe; §3.9).
+// - FilterChip (item) de @/design-system/compositions (zero-JS; chips <Link>,
+//   ADR-022). Button de @/design-system/primitives. Sem Combobox (Ano é
+//   `<select>`); sem busca livre (a listagem de votações não indexa texto).
 
 import {
-  FilterChip,
   FilterChips,
-} from '@/design-system/compositions/filter-chips'
+  Label,
+} from '@fabio.caffarello/react-design-system/server'
+import { X } from 'lucide-react'
+import Link from 'next/link'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
-import { Label } from '@/design-system/primitives/label'
 
 interface Props {
   anos: number[]
@@ -19,11 +26,11 @@ interface Props {
 }
 
 const SELECT_CLASS =
-  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'min-h-[44px] rounded-md border border-line-emphasis bg-surface-canvas px-2 py-1.5 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 /**
  * Helper interno: constrói href preservando outros filtros. Override
- * com `null` remove o filtro do URL.
+ * com `null` remove o filtro do URL. Base /rds/.
  *
  * `somenteNominais` é boolean — passar `'1'` ativa, `null` desativa.
  */
@@ -70,10 +77,9 @@ const RESULTADO_LABEL: Record<string, string> = {
 }
 
 /**
- * Chips de filtros aplicados (Wave 9 Sprint 9.1 PR4, paridade com
- * Wave 8 Sprint 8.1 PR3 / proposicao/filtros.tsx). Cada chip mostra
- * "Filtro: valor" e um link × que remove apenas aquele filtro,
- * preservando os demais via buildHref.
+ * Chips de filtros aplicados (paridade com proposicao/filtros.tsx). Cada
+ * chip mostra "Filtro: valor" e um link × que remove apenas aquele
+ * filtro, preservando os demais via buildHref.
  */
 function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
   const ativos: Array<{
@@ -106,22 +112,22 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
   if (ativos.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
-      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+    <div className="flex flex-wrap items-center gap-2 border-line-default border-t pt-3">
+      <span className="text-fg-tertiary text-xs uppercase tracking-wider">
         Filtros ativos:
       </span>
       {ativos.map((a) => (
         <Link
           aria-label={`Remover filtro ${a.label}: ${a.value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line-emphasis bg-surface-canvas px-3 py-1 text-fg-primary text-xs hover:bg-surface-base"
           href={buildHref(selecionado, { [a.key]: null })}
           key={a.key}
         >
           <span>
-            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="text-fg-tertiary">{a.label}:</span>{' '}
             <span className="font-medium">{a.value}</span>
           </span>
-          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+          <X aria-hidden className="h-3 w-3 text-fg-tertiary" />
         </Link>
       ))}
     </div>
@@ -129,15 +135,13 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
 }
 
 /**
- * Filtros de votações — Sprint 6.2 PR 3 (Wave 6) +
- * Wave 9 Sprint 9.1 PR4 (FiltrosAtivos para paridade com Wave 8).
- *
- * Hybrid pragmático (D1):
- * - **Casa** (3 opções): FilterChips com Link asChild
- * - **Resultado** (3 opções): FilterChips com Link asChild
+ * Filtros de votações (cópia-rds). Mesmo contrato do original (hybrid
+ * pragmático):
+ * - **Casa** (3 opções): FilterChips com Links.
+ * - **Resultado** (3 opções): FilterChips com Links.
  * - **Só nominais** (toggle bool): FilterChip único acting as toggle —
- *   click adiciona/remove `somenteNominais=1` do URL
- * - **Ano** (~10+ valores): mantém `<select>` em form GET
+ *   click adiciona/remove `somenteNominais=1` do URL.
+ * - **Ano** (~10+ valores): mantém `<select>` em form GET.
  * - **Chips de filtros ativos**: abaixo dos filtros, um chip por
  *   filtro aplicado com × para remover individual.
  *
@@ -145,7 +149,7 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
  */
 export function FiltrosVotacao({ anos, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
+    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Casa">
         <FilterChip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>
@@ -190,7 +194,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
 
       <form
         action="/votacoes"
-        className="flex flex-wrap items-end gap-3 border-border border-t pt-4"
+        className="flex flex-wrap items-end gap-3 border-line-default border-t pt-4"
         method="get"
       >
         {selecionado.casa ? (
@@ -204,7 +208,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
         ) : null}
 
         <div className="flex flex-col gap-1">
-          <Label className="text-foreground-muted text-xs" htmlFor="filtro-ano">
+          <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ano">
             Ano
           </Label>
           <select

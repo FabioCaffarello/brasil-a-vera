@@ -1,3 +1,22 @@
+// Listagem de votações — promovida ao RDS (migração ADR-033). Consome o
+// design system @fabio.caffarello/react-design-system — tokens traduzidos
+// pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection + Stat/StatGroup (cols=4, com hint) vêm do RDS /server.
+// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - FiltrosVotacao/VotacaoCard de @/components/votacao; EmptyState/Button de
+//   @/design-system; ExportCsvLink + auth/canExport preservados.
+// - Compat `?offset=` (ADR-028 §4, redirect 308) + cursor (ADR-026); alternates
+//   RSS → /feed/votacoes (produção); "Mostrar mais (N restantes)".
+
+import {
+  HeroSection,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Vote } from 'lucide-react'
 import { permanentRedirect } from 'next/navigation'
 
@@ -6,8 +25,6 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
-import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
@@ -68,7 +85,7 @@ interface PageProps {
 // Constrói href preservando filtros e mudando apenas `after` (cursor).
 // Strip de `after` quando override é null — usado no permanentRedirect 308
 // para tokens inválidos (ADR-026 §5) e no strip do `offset` (compat
-// ADR-028 §4).
+// ADR-028 §4). Base /rds/.
 function buildPageHref(
   params: Awaited<PageProps['searchParams']>,
   override: { after?: string | null; offset?: null },
@@ -159,9 +176,9 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     ? Math.max(0, totalFiltrado - VOTACOES_LISTAGEM_PAGE_SIZE)
     : null
 
-  // Volume narrativo no hero (Wave 9 Sprint 9.1 PR1) — N votações desde
-  // AAAA quando há cobertura histórica conhecida; cai em fallback honesto
-  // quando o banco está vazio (caso de bootstrap, jamais em produção).
+  // Volume narrativo no hero — N votações desde AAAA quando há cobertura
+  // histórica conhecida; cai em fallback honesto quando o banco está vazio
+  // (caso de bootstrap, jamais em produção).
   const descricaoNarrativa =
     stats.total > 0 && stats.anoMaisAntigo
       ? `${formatNumeroAbreviado(stats.total)} votações desde ${stats.anoMaisAntigo} em plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais.`
@@ -185,37 +202,37 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        {/* Wave 9 Sprint 9.1 PR2 — 4 stats narrativos sob o hero. Total e
-            "Última votação" sempre presentes; Aprovadas/Rejeitadas usam
-            janela 12m (mesmo critério Wave 8) para refletir atividade
-            recente, não acervo cumulativo. */}
-        <StatsGrid
-          items={[
-            {
-              value: formatNumeroAbreviado(stats.total),
-              label: 'Total',
-              hint: 'no banco',
-            },
-            {
-              value: formatNumeroAbreviado(stats.aprovadas12m),
-              label: 'Aprovadas',
-              hint: 'últimos 12 m',
-            },
-            {
-              value: formatNumeroAbreviado(stats.rejeitadas12m),
-              label: 'Rejeitadas',
-              hint: 'últimos 12 m',
-            },
-            (() => {
-              const ultima = formatUltimaVotacaoStat(stats.ultimaVotacaoData)
-              return {
-                value: ultima.value,
-                label: 'Última votação',
-                hint: ultima.hint,
-              }
-            })(),
-          ]}
-        />
+        {/* StatGroup (precedente §3.6/§3.14: StatsGrid→StatGroup) alimenta
+            o hero com 4 stats narrativos. Total e "Última votação" sempre
+            presentes; Aprovadas/Rejeitadas usam janela 12m para refletir
+            atividade recente, não acervo cumulativo. */}
+        <StatGroup cols={4} layout="grid">
+          <Stat
+            hint="no banco"
+            label="Total"
+            value={formatNumeroAbreviado(stats.total)}
+          />
+          <Stat
+            hint="últimos 12 m"
+            label="Aprovadas"
+            value={formatNumeroAbreviado(stats.aprovadas12m)}
+          />
+          <Stat
+            hint="últimos 12 m"
+            label="Rejeitadas"
+            value={formatNumeroAbreviado(stats.rejeitadas12m)}
+          />
+          {(() => {
+            const ultima = formatUltimaVotacaoStat(stats.ultimaVotacaoData)
+            return (
+              <Stat
+                hint={ultima.hint}
+                label="Última votação"
+                value={ultima.value}
+              />
+            )
+          })()}
+        </StatGroup>
 
         <FiltrosVotacao
           anos={anos}
@@ -227,7 +244,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
           }}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-sm">
           <span>
             {totalFiltrado === 0
               ? 'Nenhum resultado'

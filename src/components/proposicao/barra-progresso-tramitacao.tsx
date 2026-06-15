@@ -6,7 +6,7 @@ interface Props {
   /** Posição corrente na barra de 5 marcos (1..5). Inferida por
    * `inferirMarcoAtual(ultimoOrgao, situacao)` no caller. */
   currentStep: 1 | 2 | 3 | 4 | 5
-  /** Quando true, o último segmento ativo recebe `bg-destructive/60`
+  /** Quando true, o último segmento ativo recebe `bg-error/60`
    * (sinal de fim negativo do ciclo — REJEITADA/ARQUIVADA). */
   terminalNegativo?: boolean
   /**
@@ -29,10 +29,10 @@ interface Props {
  * `src/modules/proposicoes/domain/tramitacao-card.ts:MARCOS_TRAMITACAO`.
  *
  * Cor das células ativas:
- * - Em curso ou terminal positivo: `bg-brand/60`
- * - Terminal negativo no segmento corrente: `bg-destructive/60`
+ * - Em curso ou terminal positivo: `bg-fg-brand/60`
+ * - Terminal negativo no segmento corrente: `bg-error/60`
  *
- * Inativas: `bg-surface-elevated`.
+ * Inativas: `bg-surface-raised`.
  *
  * Tokens-only: `--brand` (não `--accent` — P4 da Wave 8 reserva accent
  * para inflexão narrativa, não para status sequencial).
@@ -60,10 +60,10 @@ export function BarraProgressoTramitacao({
           const stepIndex = idx + 1
           const ativo = stepIndex <= currentStep
           const fillClass = !ativo
-            ? 'bg-surface-elevated'
+            ? 'bg-surface-raised'
             : terminalNegativo && stepIndex === currentStep
-              ? 'bg-destructive/60'
-              : 'bg-brand/60'
+              ? 'bg-error/60'
+              : 'bg-fg-brand/60'
           return (
             <div
               className={`${barHeight} flex-1 rounded-sm ${fillClass}`}
@@ -79,7 +79,7 @@ export function BarraProgressoTramitacao({
         // alinha pixel-perfeito com os segmentos acima.
         <ul
           aria-hidden="true"
-          className="flex gap-0.5 text-foreground-muted text-[10px] uppercase tracking-wide sm:text-xs"
+          className="flex gap-0.5 text-fg-tertiary text-[10px] uppercase tracking-wide sm:text-xs"
         >
           {MARCOS_TRAMITACAO.map((marco, idx) => {
             const stepIndex = idx + 1
@@ -90,11 +90,11 @@ export function BarraProgressoTramitacao({
                 className={`flex-1 truncate text-center ${
                   isCurrent
                     ? terminalNegativo
-                      ? 'font-medium text-destructive'
-                      : 'font-medium text-brand'
+                      ? 'font-medium text-fg-error'
+                      : 'font-medium text-fg-brand'
                     : ativo
-                      ? 'text-foreground-muted'
-                      : 'text-foreground-subtle'
+                      ? 'text-fg-tertiary'
+                      : 'text-fg-quaternary'
                 }`}
                 key={marco}
                 title={marco}

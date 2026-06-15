@@ -1,3 +1,22 @@
+// Listagem de proposições — promovida ao RDS (migração ADR-033). Consome o
+// design system @fabio.caffarello/react-design-system — tokens traduzidos
+// pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection + Stat/StatGroup (cols=4, com hint) vêm do RDS /server.
+// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - FiltrosProposicao/ProposicaoCard de @/components/proposicao; EmptyState/
+//   Button de @/design-system; ExportCsvLink + auth/canExport preservados.
+// - Cursor pagination (ADR-026): decodeCursor + permanentRedirect 308 em token
+//   inválido; "Mostrar mais (N restantes)" na primeira página.
+
+import {
+  HeroSection,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import { FileText, SearchX } from 'lucide-react'
 import { permanentRedirect } from 'next/navigation'
 
@@ -6,8 +25,6 @@ import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
-import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
@@ -98,7 +115,7 @@ interface PageProps {
 
 // Constrói href preservando filtros e mudando apenas `after` (cursor).
 // Strip o param quando cursor é null (volta à primeira página) — usado
-// no permanentRedirect 308 para tokens inválidos (ADR-026 §5).
+// no permanentRedirect 308 para tokens inválidos (ADR-026 §5). Base /rds/.
 function buildPageHref(
   params: Awaited<PageProps['searchParams']>,
   override: { after?: string | null },
@@ -176,35 +193,32 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        {/* Wave 8 Sprint 8.1 PR1 — StatsGrid alimenta o hero com 4 stats
-            narrativos (P7: proposição é ciclo de vida). Hints curtos
-            (P1: densidade > floreio) explicam a janela de cada métrica.
-            Aprovadas/Encerradas filtradas pelos últimos 12m via MAX da
-            tramitação — proteção contra inflar com históricas paradas. */}
-        <StatsGrid
-          items={[
-            {
-              value: formatNumeroAbreviado(stats.total),
-              label: 'Total',
-              hint: 'no banco',
-            },
-            {
-              value: formatNumeroAbreviado(stats.tramitando),
-              label: 'Tramitando',
-              hint: 'agora',
-            },
-            {
-              value: formatNumeroAbreviado(stats.aprovadas12m),
-              label: 'Aprovadas',
-              hint: 'últimos 12 m',
-            },
-            {
-              value: formatNumeroAbreviado(stats.rejeitadasArquivadas12m),
-              label: 'Encerradas',
-              hint: 'rejeitadas ou arquivadas, 12 m',
-            },
-          ]}
-        />
+        {/* StatGroup (precedente §3.6/§3.14: StatsGrid→StatGroup) alimenta
+            o hero com 4 stats narrativos. Hints curtos explicam a janela de
+            cada métrica. Aprovadas/Encerradas filtradas pelos últimos 12m
+            via MAX da tramitação — proteção contra inflar com históricas. */}
+        <StatGroup cols={4} layout="grid">
+          <Stat
+            hint="no banco"
+            label="Total"
+            value={formatNumeroAbreviado(stats.total)}
+          />
+          <Stat
+            hint="agora"
+            label="Tramitando"
+            value={formatNumeroAbreviado(stats.tramitando)}
+          />
+          <Stat
+            hint="últimos 12 m"
+            label="Aprovadas"
+            value={formatNumeroAbreviado(stats.aprovadas12m)}
+          />
+          <Stat
+            hint="rejeitadas ou arquivadas, 12 m"
+            label="Encerradas"
+            value={formatNumeroAbreviado(stats.rejeitadasArquivadas12m)}
+          />
+        </StatGroup>
 
         <FiltrosProposicao
           anos={anos}
@@ -219,7 +233,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
           temas={temas}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-sm">
           <span>
             {totalFiltrado === 0
               ? 'Nenhum resultado'
@@ -261,10 +275,10 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
           </ul>
         )}
 
-        {/* Wave 8 Sprint 8.1 PR5 — Cursor pagination (ADR-026 §4). Link
-            <a> puro, sem JS, com anchor #mostrar-mais que mantém scroll
-            visual após paginar. Só renderiza quando nextCursor existe
-            (ordens 'recente'/'antiga' que suportam keyset). */}
+        {/* Cursor pagination (ADR-026 §4). Link <a> puro, sem JS, com anchor
+            #mostrar-mais que mantém scroll visual após paginar. Só renderiza
+            quando nextCursor existe (ordens 'recente'/'antiga' que suportam
+            keyset). */}
         {page.nextCursor ? (
           <div className="flex justify-center" id="mostrar-mais">
             <Button asChild variant="outline">
