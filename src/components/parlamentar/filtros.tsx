@@ -1,13 +1,23 @@
+// Filtros de parlamentares — promovido ao RDS (migração ADR-033). Tokens
+// pela tabela canônica (docs/migration/token-map.md).
+//
+// Componentes:
+// - FilterChips (wrapper) + Label vêm do RDS /server (server-safe; §3.9).
+// - FilterChip (item) de @/design-system/compositions (zero-JS; chips são
+//   <Link>, ADR-022 — o Chip do RDS é client).
+// - Combobox: client island de @/design-system/compositions (cmdk+popover).
+// - Button de @/design-system/primitives.
+
+import {
+  FilterChips,
+  Label,
+} from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
 
 import { Combobox } from '@/design-system/compositions/combobox'
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
-import { Label } from '@/design-system/primitives/label'
 import type { OrdemListagem } from '@/lib/queries/parlamentares'
 
 interface Props {
@@ -23,7 +33,7 @@ interface Props {
 }
 
 const INPUT_CLASS =
-  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'min-h-[44px] rounded-md border border-line-emphasis bg-surface-canvas px-2 py-1.5 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 const ORDEM_LABEL: Record<OrdemListagem, string> = {
   nome: 'Nome (A→Z)',
@@ -40,13 +50,6 @@ const CASA_LABEL: Record<string, string> = {
 /**
  * Helper interno: constrói href de filtro mantendo os outros filtros
  * ativos. Override com `null` remove o filtro do URL.
- *
- * Uso (Sprint 6.2 PR 1 — Wave 6):
- *   buildHref({ casa: 'CAMARA' }, { casa: 'SENADO' }) → '/parlamentares?casa=SENADO'
- *   buildHref({ casa: 'CAMARA', uf: 'SP' }, { casa: null }) → '/parlamentares?uf=SP'
- *
- * Wave 7 Sprint 7.1 PR2: preserva também q e ordem.
- * Wave 7 Sprint 7.1 PR3: reutilizado pelos chips de filtro ativo.
  */
 function buildHref(
   current: Props['selecionado'],
@@ -68,10 +71,8 @@ function buildHref(
 }
 
 /**
- * Chips de filtros aplicados (Sprint 7.1 PR3). Cada chip mostra
- * "Filtro: valor" e um link × que remove apenas aquele filtro,
- * preservando os demais via buildHref. Casa, partido, UF e q ganham
- * chip; ordem fica fora — é estado de visualização, não recorte.
+ * Chips de filtros aplicados. Cada chip mostra "Filtro: valor" e um link
+ * × que remove apenas aquele filtro, preservando os demais via buildHref.
  */
 function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
   const ativos: Array<{
@@ -107,22 +108,22 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
   if (ativos.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
-      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+    <div className="flex flex-wrap items-center gap-2 border-line-default border-t pt-3">
+      <span className="text-fg-tertiary text-xs uppercase tracking-wider">
         Filtros ativos:
       </span>
       {ativos.map((a) => (
         <Link
           aria-label={`Remover filtro ${a.label}: ${a.value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line-emphasis bg-surface-canvas px-3 py-1 text-fg-primary text-xs hover:bg-surface-base"
           href={buildHref(selecionado, { [a.key]: null })}
           key={a.key}
         >
           <span>
-            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="text-fg-tertiary">{a.label}:</span>{' '}
             <span className="font-medium">{a.value}</span>
           </span>
-          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+          <X aria-hidden className="h-3 w-3 text-fg-tertiary" />
         </Link>
       ))}
     </div>
@@ -130,25 +131,13 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
 }
 
 /**
- * Filtros de parlamentares — Sprint 6.2 PR 1 (Wave 6) +
- * Sprint 7.1 PR2/PR3 (Wave 7).
- *
- * - **Casa** (3 opções): FilterChips com Links preservando outros filtros.
- *   URL=state, sem JS client.
- * - **Busca por nome** (Sprint 7.1 PR2): `<input type="search" name="q">`
- *   SSR puro, Enter submete.
- * - **Partido** (~35 opções) + **UF** (27 estados) (Sprint 7.1 PR3):
- *   `<Combobox>` (cmdk + popover) com busca embutida, no lugar do
- *   `<select>` nativo. Combobox renderiza `<input type="hidden">`
- *   acompanhando o valor — form GET submete normalmente.
- * - **Ordem** (4 opções fixas): `<select>` nativo (Combobox seria
- *   overkill para 4 opções sem busca).
- * - **Chips de filtros ativos** (Sprint 7.1 PR3): abaixo dos filtros,
- *   um chip por filtro aplicado com × para remover. Reusa `buildHref`.
+ * Filtros de parlamentares. Casa via FilterChips (Links, URL=state); busca
+ * por nome (input search, SSR puro); partido + UF via Combobox (client
+ * island); ordem via select nativo; chips de filtros ativos abaixo.
  */
 export function Filtros({ partidos, ufs, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
+    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Casa">
         <FilterChip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>Todas</Link>
@@ -163,16 +152,16 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
 
       <form
         action="/parlamentares"
-        className="space-y-3 border-border border-t pt-4"
+        className="space-y-3 border-line-default border-t pt-4"
         method="get"
       >
         {selecionado.casa ? (
           <input name="casa" type="hidden" value={selecionado.casa} />
         ) : null}
 
-        {/* Busca por nome (Sprint 7.1 PR2) — SSR puro, Enter submete. */}
+        {/* Busca por nome — SSR puro, Enter submete. */}
         <div className="flex flex-col gap-1">
-          <Label className="text-foreground-muted text-xs" htmlFor="filtro-q">
+          <Label className="text-fg-tertiary text-xs" htmlFor="filtro-q">
             Buscar por nome
           </Label>
           <input
@@ -188,7 +177,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <Label
-              className="text-foreground-muted text-xs"
+              className="text-fg-tertiary text-xs"
               htmlFor="filtro-partido"
             >
               Partido
@@ -205,10 +194,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <Label
-              className="text-foreground-muted text-xs"
-              htmlFor="filtro-uf"
-            >
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-uf">
               UF
             </Label>
             <Combobox
@@ -223,10 +209,7 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <Label
-              className="text-foreground-muted text-xs"
-              htmlFor="filtro-ordem"
-            >
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ordem">
               Ordenar por
             </Label>
             <select

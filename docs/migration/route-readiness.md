@@ -1997,6 +1997,13 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
 - **4ª — `/parlamentares/[id]/gastos`** (piloto pós-Fase-B): rota autocontida,
   sem `_components/`. Página recebeu o corpo RDS des-staged (hrefs/title); staging
   removido. check+build+vitest+guard verdes.
+- **5ª — `/parlamentares`** (1ª listagem): `parlamentar-card` (token in-place,
+  `bg-accent` residue preservado) e `filtros` (RDS FilterChips/Label do `/server`,
+  hrefs produção) canonicalizados; página com `HeroSection`+`StatGroup` do
+  `/server`; 5 cópias `_components/` + staging removidos. Estabelece o padrão das
+  listagens (proposicoes/votacoes replicam).
+
+## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
   matriz (ex.: `Filtros`, `BancadaList`, `ParesContraditorios`,
