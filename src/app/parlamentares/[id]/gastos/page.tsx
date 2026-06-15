@@ -1,12 +1,32 @@
+// Detalhe de gastos CEAP — "filtros + lista paginada por cursor".
+// Promovida ao RDS (migração strangler-fig, ADR-033). Consome o design
+// system @fabio.caffarello/react-design-system — tokens traduzidos pela
+// tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// Página AUTOCONTIDA: a lógica vive inline no page.tsx (sem componentes
+// de domínio em src/components). Sem data-viz/charts.
+//
+// Componentes do RDS:
+// - FilterChips (wrapper) + Label vêm do /server (server-safe; <label>
+//   nativo, sem hooks client).
+// - FilterChip (item) é local de @/design-system/compositions —
+//   server-safe/zero-JS; os chips são <Link> (ADR-022), e o Chip do RDS
+//   é client (+5.759 bytes/rota). Decisão do owner na §3.9.
+//
+// Cursor (ADR-026): cursor inválido → redirect 308 que strip o param.
+
+import {
+  FilterChips,
+  Label,
+} from '@fabio.caffarello/react-design-system/server'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
-import { Label } from '@/design-system/primitives/label'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatDataBR } from '@/lib/format'
 import { CursorGastosV1 } from '@/lib/queries/cursor-schemas'
@@ -36,7 +56,7 @@ const TRIMESTRE_LABEL: Record<GastosTrimestreFilter, string> = {
 }
 
 const SELECT_CLASS =
-  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'min-h-[44px] rounded-md border border-line-emphasis bg-surface-canvas px-2 py-1.5 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 function normalizeTrimestre(
   v: string | undefined,
@@ -115,7 +135,7 @@ export default async function GastosDetalhePage({
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <Link
-        className="mb-3 inline-flex items-center gap-1 rounded text-foreground-muted text-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="mb-3 inline-flex items-center gap-1 rounded text-fg-tertiary text-sm hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
         href={`/parlamentares/${parlamentar.id}`}
       >
         <ArrowLeft aria-hidden className="h-3.5 w-3.5" />
@@ -123,17 +143,17 @@ export default async function GastosDetalhePage({
       </Link>
 
       <header className="mb-6">
-        <h1 className="font-semibold text-3xl text-foreground tracking-tight">
+        <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Gastos CEAP {ano}
         </h1>
-        <p className="mt-1 text-foreground-muted text-sm">
+        <p className="mt-1 text-fg-tertiary text-sm">
           {parlamentar.nome} ({parlamentar.partidoSigla}/{parlamentar.uf}) —
           Cota para Exercício da Atividade Parlamentar reportada pela Câmara.
           Senado tem regime próprio, ainda não ingerido.
         </p>
       </header>
 
-      <div className="mb-4 space-y-3 rounded-lg border border-border bg-surface p-4">
+      <div className="mb-4 space-y-3 rounded-lg border border-line-default bg-surface-base p-4">
         <FilterChips label="Período">
           {GASTOS_TRIMESTRES.map((t) => (
             <FilterChip asChild key={t} selected={(trimestre ?? 'todo') === t}>
@@ -149,7 +169,7 @@ export default async function GastosDetalhePage({
         {categoriasDisponiveis.length > 0 ? (
           <form
             action={`/parlamentares/${parlamentar.id}/gastos`}
-            className="border-border border-t pt-3"
+            className="border-line-default border-t pt-3"
             method="get"
           >
             {trimestre ? (
@@ -157,7 +177,7 @@ export default async function GastosDetalhePage({
             ) : null}
             <div className="flex flex-col gap-1">
               <Label
-                className="text-foreground-muted text-xs"
+                className="text-fg-tertiary text-xs"
                 htmlFor="filtro-categoria"
               >
                 Categoria
@@ -177,14 +197,14 @@ export default async function GastosDetalhePage({
                   ))}
                 </select>
                 <button
-                  className="inline-flex items-center rounded-md border border-border-strong bg-background px-3 py-2 font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="inline-flex items-center rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                   type="submit"
                 >
                   Filtrar
                 </button>
                 {categoria ? (
                   <Link
-                    className="text-foreground-muted text-sm hover:text-foreground"
+                    className="text-fg-tertiary text-sm hover:text-fg-primary"
                     href={buildFiltroHref({ categoria: null })}
                   >
                     Limpar
@@ -197,15 +217,15 @@ export default async function GastosDetalhePage({
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           {cursor || trimestre || categoria
             ? 'Sem gastos para os filtros selecionados.'
             : `Sem gastos CEAP registrados em ${ano} para este parlamentar.`}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-line-default">
           <table className="w-full text-sm">
-            <thead className="bg-surface text-foreground-muted text-xs uppercase tracking-wider">
+            <thead className="bg-surface-base text-fg-tertiary text-xs uppercase tracking-wider">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">Data</th>
                 <th className="px-3 py-2 text-left font-medium">Categoria</th>
@@ -216,19 +236,19 @@ export default async function GastosDetalhePage({
             <tbody>
               {rows.map((g) => (
                 <tr
-                  className="border-border border-t hover:bg-surface"
+                  className="border-line-default border-t hover:bg-surface-base"
                   key={g.gastoId}
                 >
-                  <td className="whitespace-nowrap px-3 py-2 tabular-nums text-foreground-muted text-xs">
+                  <td className="whitespace-nowrap px-3 py-2 tabular-nums text-fg-tertiary text-xs">
                     {formatDataBR(g.dataEmissao)}
                   </td>
-                  <td className="px-3 py-2 text-foreground">
+                  <td className="px-3 py-2 text-fg-primary">
                     {g.categoriaDescricao}
                   </td>
-                  <td className="px-3 py-2 text-foreground">
+                  <td className="px-3 py-2 text-fg-primary">
                     {g.urlDocumento ? (
                       <a
-                        className="underline decoration-dotted underline-offset-2 hover:text-foreground-muted"
+                        className="underline decoration-dotted underline-offset-2 hover:text-fg-tertiary"
                         href={g.urlDocumento}
                         rel="noopener noreferrer"
                         target="_blank"
@@ -239,12 +259,12 @@ export default async function GastosDetalhePage({
                       g.fornecedorNome
                     )}
                     {g.fornecedorCnpjCpf ? (
-                      <span className="ml-2 font-mono text-foreground-muted text-xs">
+                      <span className="ml-2 font-mono text-fg-tertiary text-xs">
                         {g.fornecedorCnpjCpf}
                       </span>
                     ) : null}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-foreground">
+                  <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-fg-primary">
                     {formatBRL(g.valor)}
                   </td>
                 </tr>
@@ -259,7 +279,7 @@ export default async function GastosDetalhePage({
         // posiciona scroll no novo botão (mesmo offset visual), em vez
         // de resetar para o topo da página.
         <a
-          className="mt-4 block w-full rounded-md border border-border-strong bg-background py-2 text-center font-medium text-foreground text-sm hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-4 block w-full rounded-md border border-line-emphasis bg-surface-canvas py-2 text-center font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
           href={`${buildHref(parlamentar.id, sp, { after: nextCursor })}#mostrar-mais-gastos`}
           id="mostrar-mais-gastos"
         >

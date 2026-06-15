@@ -1983,7 +1983,20 @@ Onda 2: FollowButton/CompartilharButton×3/FilterChip/Combobox/PartyBadge/
 `getTipoVotoStyle`) seguem com auto-merge on green + guard. **Charts/SVG** (recharts
 + `var()` inline) ficam para a **Fase C** (#303/#304 propriamente).
 
-## §4 — Notas e premissas
+## §3.23 — PROMOÇÃO das rotas ricas (2026-06-14+)
+
+Com Fases B/C fechadas, a fase final consolida as ~11 rotas ricas /rds/ em
+produção e deleta o staging. Achado que destrava: a migração **preservou a API
+dos componentes**, então um compartilhado é canonicalizado sobrescrevendo o
+arquivo de produção com a versão RDS (tradução in-place, hrefs de produção) — sem
+mexer em consumidores. Gate: **QA visual do owner por rota** antes do merge
+(plano aprovado). Charts sobem como resíduo BaV.
+
+Promoções (4ª em diante; as 3 primeiras em §3.21):
+
+- **4ª — `/parlamentares/[id]/gastos`** (piloto pós-Fase-B): rota autocontida,
+  sem `_components/`. Página recebeu o corpo RDS des-staged (hrefs/title); staging
+  removido. check+build+vitest+guard verdes.
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na
   matriz (ex.: `Filtros`, `BancadaList`, `ParesContraditorios`,
