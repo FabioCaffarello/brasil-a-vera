@@ -2057,6 +2057,15 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   auto-merge. `/rds/` agora só com os 3 smoke + `RdsStagingLayout` → limpeza final
   numa PR à parte. Encerra a fila de rotas ricas.
 
+**Limpeza final (2026-06-15) — migração RDS COMPLETA.** Após o merge do #418, a
+pasta `src/app/rds/` inteira foi removida (3 rotas smoke + `RdsStagingLayout`),
+junto com o header noindex `/rds/*` do `next.config.ts`, a entrada `/rds/` do
+`robots.ts` e o job `rds-leak` do `design-tokens.yml` (todos específicos do staging,
+agora obsoletos). O `dev-routes-noindex` no smoke só vigiava `/dev/design` (nunca
+`/rds/`), então segue intacto. **14/14 rotas ricas em produção com tokens RDS; zero
+staging.** Resíduos BaV documentados (ADR-034 §5): charts e os ~12 client islands do
+painel (issue de follow-up). Fim da fase de promoção do ADR-033.
+
 ## §4 — Notas e premissas
 
 - **Contagem feita por componente catalogado.** Componentes não-listados na

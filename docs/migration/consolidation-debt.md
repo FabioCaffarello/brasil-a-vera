@@ -8,6 +8,19 @@
 > versão única; original deletado). Enquanto isso não acontece, **mudança
 > num lado precisa ser espelhada no outro** — risco de drift.
 
+## ✅ Consolidação completa (2026-06-15)
+
+**A migração RDS (ADR-033) está COMPLETA: 14 rotas ricas promovidas a produção
+(pilotos 1–6 + 6 ondas HeroSection + 3 perfis + painel), 0 pares ativos, e o
+staging `src/app/rds/` foi removido por inteiro** (rotas smoke + `RdsStagingLayout`;
+header noindex `/rds/*` do `next.config.ts`, entrada `/rds/` do `robots.ts` e o job
+`rds-leak` do `design-tokens.yml` aposentados junto). Todas as seções abaixo estão
+colapsadas em notas `✅ PROMOVIDA`/`CONSOLIDADO` (mantidas como histórico). O
+`consolidation-guard` (workflow + script) foi **retirado** ao zerar os pares,
+conforme o próprio design dele (ADR-033 §4). Resíduos BaV documentados: charts
+(ADR-034 §5) e os ~12 client islands do painel (forms/modais — sem ground-truth RDS;
+follow-up rastreado em issue).
+
 ## Como ler a tabela
 
 - **Original** vive em `src/components/...`. **Intocada** pela migração.
