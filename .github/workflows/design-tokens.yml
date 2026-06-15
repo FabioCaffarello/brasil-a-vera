@@ -1,24 +1,17 @@
 name: Design tokens advisory
 
-# Guardião dos tokens — duas guerras (decisão F8 da auditoria do harness,
-# 2026-06-10; dados e teste empírico no PR de decisão):
+# Guardião dos tokens — job "zinc / HEX / primary-N legacy" (decisão F8 da
+# auditoria do harness, 2026-06-10; dados e teste empírico no PR de decisão):
+# legado pré-Wave 4. 50+ runs sem falso positivo desde a Sprint 5.0 → apto a
+# promoção a required check. SEM path filter no trigger: required check em
+# workflow path-filtered fica "expected" para sempre em PR que não toca UI e
+# bloqueia o merge (comprovado empiricamente — ver PR de decisão). O skip é
+# interno: o primeiro passo lê os arquivos do PR; sem paths de UI, o job
+# conclui verde sem rodar os greps.
 #
-# Job "zinc / HEX / primary-N legacy" — legado pré-Wave 4. 50+ runs sem
-#   falso positivo desde a Sprint 5.0 → apto a promoção a required check.
-#   SEM path filter no trigger: required check em workflow path-filtered
-#   fica "expected" para sempre em PR que não toca UI e bloqueia o merge
-#   (comprovado empiricamente — ver PR de decisão). O skip é interno: o
-#   primeiro passo lê os arquivos do PR; sem paths de UI, o job conclui
-#   verde sem rodar os greps.
-#
-# Job "RDS leak advisory" — guerra atual (ADR-033): classes BaV não
-#   traduzidas em src/app/rds/** (tabela canônica:
-#   docs/migration/token-map.md). Check NOVO, sem histórico — nasce
-#   advisory e só é promovível a required após o mesmo critério de 2
-#   sprints sem falso positivo que validou o job legacy. Misturar check
-#   sem histórico num required violaria o próprio critério. Escaneia
-#   apenas os arquivos do PR (achado pré-existente vai em issue, não em
-#   ruído a cada PR).
+# O job "RDS leak advisory" (ADR-033 — vigiava classes BaV não traduzidas em
+# src/app/rds/**) foi RETIRADO em 2026-06-15: as 14 rotas ricas foram
+# promovidas e o /rds/ removido, então não há mais staging a vigiar.
 #
 # Ver docs/contributing/WORKFLOWS.md.
 
@@ -138,57 +131,4 @@ jobs:
             body+="### bg-primary-N in src/design-system\n\n\`\`\`\n${PRIMARY}\n\`\`\`\n\n"
           fi
           body+="Run \`/design-token-check\` locally for the same scan. See the design-system-curator subagent for token translation guidance."
-          printf '%b' "$body" | gh pr comment ${{ github.event.pull_request.number }} -F -
-
-  rds-leak:
-    name: RDS leak advisory
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Detectar paths /rds/ no PR (skip interno)
-        id: paths
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR: ${{ github.event.pull_request.number }}
-        run: |
-          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only > /tmp/changed.txt
-          files=$(grep -E '^src/app/rds/.*\.(tsx|ts)$' /tmp/changed.txt || true)
-          if [ -n "$files" ]; then
-            echo "rds=true" >> "$GITHUB_OUTPUT"
-            printf '%s\n' "$files" > /tmp/rds-files.txt
-          else
-            echo "rds=false" >> "$GITHUB_OUTPUT"
-            echo "PR não toca src/app/rds/ — scan pulado, job conclui verde."
-          fi
-
-      - name: Scan classes BaV não traduzidas (token-map.md)
-        if: steps.paths.outputs.rds == 'true'
-        id: leak
-        run: |
-          set +e
-          matches=$(xargs -a /tmp/rds-files.txt grep -En \
-            'foreground|border-border|bg-background|ring-ring|surface-elevated|surface-overlay|text-(success|warning|destructive)([^-a-z]|$)|bg-zinc-[0-9]+|text-zinc-[0-9]+|#[0-9a-fA-F]{3,8}' \
-            2>/dev/null \
-            | grep -vE ':\s*(//|\*|/\*)' \
-            | grep -vE '#[0-9]+([^0-9a-fA-F]|$)')
-          if [ -n "$matches" ]; then
-            echo "Found BaV classes in /rds/:"
-            echo "$matches"
-            {
-              echo 'matches<<EOF'
-              echo "$matches"
-              echo 'EOF'
-            } >> "$GITHUB_OUTPUT"
-          else
-            echo "RDS LEAK: clean"
-          fi
-
-      - name: Comment on PR if leaks
-        if: steps.paths.outputs.rds == 'true' && steps.leak.outputs.matches != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LEAK: ${{ steps.leak.outputs.matches }}
-        run: |
-          body="## RDS leak advisory\n\nClasses do design system BaV (não traduzidas) em arquivos deste PR sob \`src/app/rds/\`:\n\n\`\`\`\n${LEAK}\n\`\`\`\n\nFonte única de tradução: \`docs/migration/token-map.md\` (regra do playbook: nenhuma tradução ad-hoc). Se o uso for deliberado, registre a exceção no token-map.\n\n_Advisory sem histórico de falsos positivos — promoção a required só após 2 sprints limpos (mesmo critério do job legacy)._"
           printf '%b' "$body" | gh pr comment ${{ github.event.pull_request.number }} -F -
