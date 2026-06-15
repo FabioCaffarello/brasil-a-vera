@@ -65,36 +65,21 @@ deletadas. Página: `KpiStrip`→`Stat`/`StatGroup` do `/server`. Charts
 renderiza, 0 erros; dado de votos consolidados esparso → donut não exercitado,
 fix guard-verificado). Staging removido.
 
-### Piloto-4 — `/rds/votacoes/[id]`
+### Piloto-4 — `/rds/votacoes/[id]` — ✅ PROMOVIDA (2026-06-15)
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/votacao/perfil-header.tsx` | `src/app/rds/votacoes/[id]/_components/perfil-header.tsx` | médio | consome DataBadge/TrustBadge/CompartilharVotacaoButton dos ORIGINAIS (precedente piloto-2); breadcrumb → `/votacoes` produção |
-| `src/components/votacao/votos-resumo.tsx` | `src/app/rds/votacoes/[id]/_components/votos-resumo.tsx` | baixo | `<dl>` simples; tradução 1:1 pela tabela |
-| `src/components/votacao/votos-por-partido.tsx` | `src/app/rds/votacoes/[id]/_components/votos-por-partido.tsx` | baixo | tabela; `text-brand→text-fg-brand` (extensão piloto-2, byte-idêntico) |
-| `src/components/votacao/votos-individuais.tsx` | `src/app/rds/votacoes/[id]/_components/votos-individuais.tsx` | médio | client island duplicado (hrefs de filtro contidos em `/rds/`); pill ativo `bg-foreground/text-background → bg-fg-primary/text-surface-canvas` (extensão piloto-4, CP3 aprovado); `getTipoVotoStyle` da lib (classes BaV não traduzidas) |
-| `src/components/votacao/rebeldes-list.tsx` | `src/app/rds/votacoes/[id]/_components/rebeldes-list.tsx` | médio | `getTipoVotoStyle` da lib; `text-foreground-subtle→fg-quaternary` |
-| `src/components/votacao/proposicao-vinculada.tsx` | `src/app/rds/votacoes/[id]/_components/proposicao-vinculada.tsx` | baixo | link-card; href → `/proposicoes/...` produção |
-| `src/components/votacao/footer-relacionadas.tsx` | `src/app/rds/votacoes/[id]/_components/footer-relacionadas.tsx` | médio | `bg-brand/15 → bg-fg-brand/15` (generalização `bg-brand/N` da extensão piloto-4, CP4 aprovado); links → `/votacoes/[id]` produção |
-| `src/design-system/compositions/section-card.tsx` | `src/app/rds/votacoes/[id]/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia das pilotos 2/3 (Card compound) |
-| `src/design-system/compositions/section-nav.tsx` | `src/app/rds/votacoes/[id]/_components/section-nav.tsx` | médio | reuso VERBATIM da cópia das pilotos 2/3 (`useScrollSpy` via `./hooks` desde a varredura 2026-06-11) |
-
-Client islands importados dos originais (sem cópia, precedente
-piloto-2/3): `DisciplinaPartidariaChart`/`VotacaoPorPartidoChart`/
-`VotacaoVotosConsolidadosChart` (recharts, dynamic ssr:false),
-`ExportCsvLink`, `CompartilharVotacaoButton`, `TrustBadge`, `DataBadge`.
-`KpiStrip` → `StatGroup`+`Stat` do `/server` direto no `page.tsx`
-(tones inline: success/error/neutral).
-
-**Checkpoints resolvidos (decisão do owner, PR piloto-4):**
-`VotacaoHemicicloChart` (`src/components/votacao/charts/hemiciclo.tsx`,
-SVG inline com `fill: var(--success)` etc.) e `MargemDecisaoBar`
-(`src/components/votacao/margem-decisao.tsx`, barra CSS-only
-`bg-success`/`bg-destructive`) permanecem **imports dos ORIGINAIS**, sem
-cópia e sem tradução — mesma classe da pendência piloto-3 (cor via var
-em prop/atributo). Razão: consistência cross-chart na seção Resumo
-(mesmos verdes/vermelhos do donut recharts ao lado). Calibram na
-promoção, junto com os charts recharts e `getTipoVotoStyle`.
+13ª promoção (3º e último perfil; rota mais data-viz-heavy). Os 7 `_components/`
+de domínio (perfil-header, votos-resumo, votos-por-partido, votos-individuais,
+rebeldes-list, proposicao-vinculada, footer-relacionadas) sobrescritos pelas
+versões RDS verificadas em `@/components/votacao/*`; `section-card`/`section-nav`/
+`rds-accordion` já-canônicos (pilotos 2/3) → cópias deletadas. Página:
+`KpiStrip`→`Stat`/`StatGroup` do `/server`. Data-viz sobe como resíduo BaV
+(ADR-034 §5): hemiciclo SVG (`fill: var(--success)` etc.), `MargemDecisaoBar`
+CSS-only e 3 charts recharts (disciplina/por-partido/donut consolidados). QA
+Playwright a 1280px: perfil renderiza completo (`docH` 8928px), hemiciclo com
+fatias coloridas, 0 erro de console, 0 fill preto. **Surfou o bug de
+cascade-layer do bridge** (#416, ADR-034 §6): o QA de desktop revelou
+`hidden sm:block` colapsado para `display:none` (miolo do perfil invisível) —
+corrigido em PR separado antes desta promoção. Staging removido.
 
 ### Piloto-5 — `/rds/privacidade` + `/rds/feed` (pares em nível de página)
 
@@ -246,17 +231,18 @@ layout, FORA do escopo desta migração — `/rds/painel` herda do root
 layout via nesting, não do authenticated layout). Tokens BaV internos dos
 client islands calibram na promoção.
 
-### Wrappers de entry granular (varredura 3.9.0 — sem original)
+### Wrappers de entry granular (varredura 3.9.0) — ✅ CONSOLIDADO (2026-06-15)
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `(novo — sem original; re-export do RDS)` | `src/app/rds/parlamentares/[id]/_components/rds-accordion.ts` | baixo | wrapper 'use client' de 1 linha: faz o import do barrel `/granular` cruzar o boundary DENTRO de módulo client (tree-shaking poda ~200 re-exports; import direto de SC custava +294KB — medição na varredura 3.9.0) |
-| `(novo — sem original; re-export do RDS)` | `src/app/rds/proposicoes/[tipo]/[numero]/[ano]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
-| `(novo — sem original; re-export do RDS)` | `src/app/rds/votacoes/[id]/_components/rds-accordion.ts` | baixo | idem (cópia verbatim) |
+> Os 3 wrappers `rds-accordion.ts` (parlamentares/proposicoes/votacoes) foram
+> consolidados no primitivo canônico `src/design-system/primitives/rds-accordion.ts`
+> (criado na 11ª promoção, #414) ao promover os perfis; as cópias `/rds/` foram
+> deletadas. O wrapper `'use client'` de 1 linha re-exporta o `Accordion` do barrel
+> `/granular` cruzando o boundary DENTRO de módulo client (tree-shaking poda ~200
+> re-exports; import direto de SC custava +294KB — medição na varredura 3.9.0).
 
-O Accordion Radix local (`src/design-system/primitives/accordion`)
-segue em uso pelas rotas de PRODUÇÃO; as rotas `/rds/` não o consomem
-mais (Accordion do RDS via wrapper desde a varredura 3.9.0).
+O Accordion Radix local (`src/design-system/primitives/accordion`) segue em uso
+por rotas de PRODUÇÃO que ainda não consomem o RDS; os 3 perfis promovidos usam o
+Accordion do RDS via o wrapper canônico.
 
 ### Pendências upstream / client islands (piloto-2)
 

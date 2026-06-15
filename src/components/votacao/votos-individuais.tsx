@@ -1,5 +1,9 @@
 'use client'
 
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+// Client island da rota (useSearchParams); pill invertido usa text-fg-inverse;
+// getTipoVotoStyle traduzido na Fase B.
+
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
@@ -24,14 +28,6 @@ const TIPOS = [
   { value: 'OBSTRUCAO', label: 'Obstrução' },
 ]
 
-// Wave 9 Sprint 9.2 PR1 (D7) — filtro migrou de server-side query para
-// client-side filter in-memory. Justificativa: lista é finita pequena,
-// roundtrip de filtro novo via servidor não valia opt-out de SSG. Página
-// agora é estática (SSG + ISR) com filtro reativo via useSearchParams.
-//
-// Links dos pills continuam server-routed (preservam shareable URL +
-// SEO + back/forward histórico do navegador). useSearchParams reage à
-// mudança sem trigger novo SSR.
 export function VotosIndividuais({ votos, votacaoId }: Props) {
   const searchParams = useSearchParams()
   const filtroAtual = searchParams.get('voto') ?? ''
@@ -59,8 +55,14 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
             <Link
               className={
                 isAtivo
-                  ? 'rounded bg-foreground px-2.5 py-1 font-medium text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-                  : 'rounded border border-border-strong px-2.5 py-1 text-foreground hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                  ? // Pill invertido — extensão piloto-4 do token-map
+                    // (aprovada pelo owner, CP3). text-fg-inverse (não
+                    // text-surface-canvas): o RDS pré-compila text-fg-* mas
+                    // NÃO text-surface-* (text- é overloaded com font-size;
+                    // o bridge do @theme só gera utilities color-only —
+                    // bg/border/ring. Ver ADR-034 §limitação text-/stroke-).
+                    'rounded bg-fg-primary px-2.5 py-1 font-medium text-fg-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
+                  : 'rounded border border-line-emphasis px-2.5 py-1 text-fg-primary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
               }
               href={href}
               key={t.value}
@@ -73,14 +75,14 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
       </nav>
 
       {votosFiltrados.length === 0 ? (
-        <p className="text-foreground-muted text-sm">
+        <p className="text-fg-tertiary text-sm">
           {filtroAtual
             ? 'Nenhum voto deste tipo registrado nesta votação.'
             : 'Sem votos individuais.'}
         </p>
       ) : (
         <>
-          <p className="mb-2 text-foreground-muted text-xs">
+          <p className="mb-2 text-fg-tertiary text-xs">
             {votosFiltrados.length}
             {showCounter && ` de ${totalSemFiltro}`} voto
             {votosFiltrados.length === 1 ? '' : 's'}
@@ -90,16 +92,16 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
               const style = getTipoVotoStyle(v.voto)
               return (
                 <li
-                  className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-elevated"
+                  className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-raised"
                   key={v.id}
                 >
                   <Link
-                    className="min-w-0 flex-1 truncate rounded text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="min-w-0 flex-1 truncate rounded text-fg-primary underline decoration-dotted underline-offset-2 hover:text-fg-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                     href={`/parlamentares/${v.parlamentarId}`}
                   >
                     {v.parlamentarNome}
                   </Link>
-                  <span className="shrink-0 text-foreground-muted text-xs">
+                  <span className="shrink-0 text-fg-tertiary text-xs">
                     {v.parlamentarPartidoSigla}/{v.parlamentarUf}
                   </span>
                   <span

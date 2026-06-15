@@ -1,3 +1,17 @@
+// Perfil de votação — promovido ao RDS (migração ADR-033). Consome o design
+// system @fabio.caffarello/react-design-system — tokens traduzidos pela tabela
+// canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// por composição nested — NÃO importar aqui.
+//
+// - Stat/StatGroup (KPIs) + SectionCard (Card compound) do /server; SectionNav
+//   (useScrollSpy) de @/design-system/compositions; Accordion mobile via
+//   @/design-system/primitives/rds-accordion (/granular).
+// - Data-viz (VotacaoHemicicloChart SVG, MargemDecisaoBar CSS, 3 charts recharts)
+//   sobem como resíduo BaV (ADR-034 §5 — sem paleta de chart upstream).
+
+import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
 import {
   BarChart3,
   Check,
@@ -22,15 +36,9 @@ import { RebeldesList } from '@/components/votacao/rebeldes-list'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/design-system/primitives/accordion'
+import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { canExport } from '@/lib/auth-guards'
 import {
   getDisciplinaPartidariaPorVotacao,
@@ -48,20 +56,9 @@ interface PageProps {
 }
 
 // Rota dinâmica (server-rendered on demand) + cache de edge nas queries
-// via cached() wrappers (Sprint 9.0 PR 9.0.3). Paridade com
-// /parlamentares/[id] e /proposicoes/[tipo]/[numero]/[ano] que também
-// são dinâmicas em Workers.
-//
-// Por que NÃO usamos SSG via generateStaticParams (lição empírica do
-// fix #293, revertendo PR 9.2.1): OpenNext em Workers exige binding R2
-// como incremental cache para servir páginas SSG/ISR (ver wrangler.jsonc
-// comentário + Issue #58). Sem R2, qualquer rota com generateStaticParams
-// quebra em runtime com 500. Quando Issue #58 entregar R2 cache, podemos
-// reintroduzir SSG aqui (e em parlamentares/proposicoes também).
-//
-// O cliente filter de ?voto=X em VotosIndividuais (parte boa do PR 9.2.1)
-// é PRESERVADO — não causa nenhum problema de SSG porque a página é
-// dinâmica anyway. Filter in-memory continua reativo via useSearchParams.
+// via cached() wrappers — paridade com a rota original (ver comentário
+// em src/app/votacoes/[id]/page.tsx sobre por que NÃO usar SSG via
+// generateStaticParams em Workers sem R2).
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
@@ -151,47 +148,53 @@ export default async function VotacaoPage({ params }: PageProps) {
           }}
         />
 
-        <KpiStrip
-          items={[
-            {
-              icon: <Check className="h-4 w-4" />,
-              label: 'Sim',
-              value: v.votosSim,
-              hint:
-                pctSim !== null
-                  ? `${pctSim}% dos nominais`
-                  : 'votação simbólica',
-              tone: 'success',
-            },
-            {
-              icon: <X className="h-4 w-4" />,
-              label: 'Não',
-              value: v.votosNao,
-              hint:
-                pctNao !== null
-                  ? `${pctNao}% dos nominais`
-                  : 'votação simbólica',
-              tone: 'destructive',
-            },
-            {
-              icon: <BarChart3 className="h-4 w-4" />,
-              label: 'Margem',
-              value: margemValue,
-              hint: margemHint,
-            },
-            {
-              icon: <Users className="h-4 w-4" />,
-              label: 'Disciplina',
-              value: disciplinaValue,
-              hint: disciplinaHint,
-            },
-          ]}
-        />
+        {/* StatGroup do RDS substitui o KpiStrip local (padrão piloto-2:
+            borda externa via className; StatGroup só traz dividers).
+            Tone map estabelecido: default/muted→neutral,
+            destructive→error. */}
+        <StatGroup
+          className="overflow-hidden rounded-lg border border-line-default"
+          cols={4}
+          layout="grid"
+        >
+          <Stat
+            hint={
+              pctSim !== null ? `${pctSim}% dos nominais` : 'votação simbólica'
+            }
+            icon={<Check className="h-4 w-4" />}
+            label="Sim"
+            tone="success"
+            value={v.votosSim}
+          />
+          <Stat
+            hint={
+              pctNao !== null ? `${pctNao}% dos nominais` : 'votação simbólica'
+            }
+            icon={<X className="h-4 w-4" />}
+            label="Não"
+            tone="error"
+            value={v.votosNao}
+          />
+          <Stat
+            hint={margemHint}
+            icon={<BarChart3 className="h-4 w-4" />}
+            label="Margem"
+            tone="neutral"
+            value={margemValue}
+          />
+          <Stat
+            hint={disciplinaHint}
+            icon={<Users className="h-4 w-4" />}
+            label="Disciplina"
+            tone="neutral"
+            value={disciplinaValue}
+          />
+        </StatGroup>
       </div>
 
       {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
-          Wave 9 Sprint 9.2 PR5 (espelha padrão Wave 7 / Wave 8). Item
-          "Disciplina" é condicional (D5 — só renderiza com orientações). */}
+          Item "Disciplina" é condicional (D5 — só renderiza com
+          orientações). */}
       <SectionNav
         className="mt-6 hidden sm:block"
         items={[
@@ -233,146 +236,131 @@ export default async function VotacaoPage({ params }: PageProps) {
         stickyTop="3.5rem"
       />
 
-      {/* Mobile: Accordion colapsável. defaultValue=['resumo','partido']
-          abre os dois macros (visão consolidada + bancadas) — mantém peso
-          cognitivo similar ao Accordion Wave 8 (2 seções abertas). Ordem
-          narrativa mobile: resumo → partido → individuais → proposição. */}
+      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
+          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
+          varredura). defaultOpen=['resumo','partido'] preservado (2
+          macros abertos). Itens de disciplina/rebeldes seguem
+          condicionais (D5) via spread. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
-        defaultValue={['resumo', 'partido']}
+        defaultOpen={['resumo', 'partido']}
         type="multiple"
-      >
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="resumo"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Resumo
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4">
-            <MargemDecisaoBar
-              aprovada={v.aprovada}
-              votosNao={v.votosNao}
-              votosSim={v.votosSim}
-            />
-            <VotacaoVotosConsolidadosChart
-              data={{
-                sim: v.votosSim,
-                nao: v.votosNao,
-                abstencao: v.abstencoes,
-                ausentes: v.ausentes ?? 0,
-              }}
-            />
-            <VotosResumo
-              totais={{
-                sim: v.votosSim,
-                nao: v.votosNao,
-                abstencoes: v.abstencoes,
-                ausentes: v.ausentes,
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="partido"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Por partido
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3">
-            <VotacaoPorPartidoChart data={resumoPorPartido} />
-            <details className="text-sm">
-              <summary className="cursor-pointer text-foreground-muted hover:text-foreground">
-                Ver tabela numérica
-              </summary>
-              <div className="mt-3">
-                <VotosPorPartido porPartido={resumoPorPartido} />
-              </div>
-            </details>
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Disciplina partidária + Rebeldes — D5: condicionais, só
-            renderizam se há orientações de bancada registradas
-            (disciplinas.length > 0). */}
-        {disciplinas.length > 0 ? (
-          <>
-            <AccordionItem
-              className="rounded-lg border-border bg-surface px-4"
-              value="disciplina"
-            >
-              <AccordionTrigger className="font-semibold text-base">
-                Disciplina partidária
-              </AccordionTrigger>
-              <AccordionContent>
-                <DisciplinaPartidariaChart data={disciplinas} />
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem
-              className="rounded-lg border-border bg-surface px-4"
-              value="rebeldes"
-            >
-              <AccordionTrigger className="font-semibold text-base">
-                Quem rebelou-se
-              </AccordionTrigger>
-              <AccordionContent>
-                <RebeldesList
-                  partidosComOrientacao={disciplinas.length}
-                  rebeldes={rebeldes}
+        items={[
+          {
+            id: 'resumo',
+            title: 'Resumo',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-4">
+                <MargemDecisaoBar
+                  aprovada={v.aprovada}
+                  votosNao={v.votosNao}
+                  votosSim={v.votosSim}
                 />
-              </AccordionContent>
-            </AccordionItem>
-          </>
-        ) : null}
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="individuais"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Individuais
-          </AccordionTrigger>
-          <AccordionContent className="space-y-3">
-            {canExportData && (
-              <div className="flex justify-end">
-                <ExportCsvLink
-                  href={`/api/export/votacoes/${v.id}/votos`}
-                  label="Exportar todos os votos (CSV)"
+                <VotacaoVotosConsolidadosChart
+                  data={{
+                    sim: v.votosSim,
+                    nao: v.votosNao,
+                    abstencao: v.abstencoes,
+                    ausentes: v.ausentes ?? 0,
+                  }}
+                />
+                <VotosResumo
+                  totais={{
+                    sim: v.votosSim,
+                    nao: v.votosNao,
+                    abstencoes: v.abstencoes,
+                    ausentes: v.ausentes,
+                  }}
                 />
               </div>
-            )}
-            <VotosIndividuais votacaoId={v.id} votos={votos} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
-          className="rounded-lg border-border bg-surface px-4"
-          value="proposicao"
-        >
-          <AccordionTrigger className="font-semibold text-base">
-            Proposição vinculada
-          </AccordionTrigger>
-          <AccordionContent>
-            {proposicao ? (
+            ),
+          },
+          {
+            id: 'partido',
+            title: 'Por partido',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-3">
+                <VotacaoPorPartidoChart data={resumoPorPartido} />
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
+                    Ver tabela numérica
+                  </summary>
+                  <div className="mt-3">
+                    <VotosPorPartido porPartido={resumoPorPartido} />
+                  </div>
+                </details>
+              </div>
+            ),
+          },
+          ...(disciplinas.length > 0
+            ? [
+                {
+                  id: 'disciplina',
+                  title: 'Disciplina partidária',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: <DisciplinaPartidariaChart data={disciplinas} />,
+                },
+                {
+                  id: 'rebeldes',
+                  title: 'Quem rebelou-se',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <RebeldesList
+                      partidosComOrientacao={disciplinas.length}
+                      rebeldes={rebeldes}
+                    />
+                  ),
+                },
+              ]
+            : []),
+          {
+            id: 'individuais',
+            title: 'Individuais',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <div className="space-y-3">
+                {canExportData && (
+                  <div className="flex justify-end">
+                    <ExportCsvLink
+                      href={`/api/export/votacoes/${v.id}/votos`}
+                      label="Exportar todos os votos (CSV)"
+                    />
+                  </div>
+                )}
+                <VotosIndividuais votacaoId={v.id} votos={votos} />
+              </div>
+            ),
+          },
+          {
+            id: 'proposicao',
+            title: 'Proposição vinculada',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: proposicao ? (
               <ProposicaoVinculada proposicao={proposicao} />
             ) : (
-              <p className="text-foreground-muted text-sm">
+              <p className="text-fg-tertiary text-sm">
                 Nenhuma proposição foi vinculada a esta votação na base atual.
               </p>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            ),
+          },
+        ]}
+      />
 
-      {/* Desktop: stack linear de SectionCards (mantém scroll-spy anchors
-          do SectionNav). Ordem preserva grid 2-col em resumo+proposição
-          no md+, depois Por partido e Individuais em largura total. */}
+      {/* Desktop: stack linear de SectionCards (Card compound do RDS via
+          cópia local; scroll-mt-28 embutido). Ordem preserva grid 2-col
+          em resumo+proposição no md+, depois Por partido e Individuais
+          em largura total. */}
       <div className="mt-6 hidden space-y-5 sm:block">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <SectionCard className="scroll-mt-28" id="resumo" title="Resumo">
+          <SectionCard id="resumo" title="Resumo">
             <div className="space-y-4">
               <MargemDecisaoBar
                 aprovada={v.aprovada}
@@ -380,7 +368,7 @@ export default async function VotacaoPage({ params }: PageProps) {
                 votosSim={v.votosSim}
               />
               {/* D3 — Hemiciclo SVG em desktop (≥md), Donut em viewport
-                  estreito. SVG puro server-rendered, zero JS, ~120 linhas. */}
+                  estreito. SVG puro server-rendered, zero JS. */}
               <div className="hidden md:block">
                 <VotacaoHemicicloChart votos={votos} />
               </div>
@@ -405,15 +393,11 @@ export default async function VotacaoPage({ params }: PageProps) {
             </div>
           </SectionCard>
 
-          <SectionCard
-            className="scroll-mt-28"
-            id="proposicao"
-            title="Proposição vinculada"
-          >
+          <SectionCard id="proposicao" title="Proposição vinculada">
             {proposicao ? (
               <ProposicaoVinculada proposicao={proposicao} />
             ) : (
-              <p className="text-foreground-muted text-sm">
+              <p className="text-fg-tertiary text-sm">
                 Nenhuma proposição foi vinculada a esta votação na base atual. O
                 backfill liga apenas votações cuja proposição já foi ingerida (o
                 conjunto de proposições é restrito ao período coberto até
@@ -424,7 +408,6 @@ export default async function VotacaoPage({ params }: PageProps) {
         </div>
 
         <SectionCard
-          className="scroll-mt-28"
           id="partido"
           subtitle="Como cada bancada se posicionou (soma dos votos individuais)."
           title="Por partido"
@@ -432,7 +415,7 @@ export default async function VotacaoPage({ params }: PageProps) {
           <div className="space-y-3">
             <VotacaoPorPartidoChart data={resumoPorPartido} />
             <details className="text-sm">
-              <summary className="cursor-pointer text-foreground-muted hover:text-foreground">
+              <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
                 Ver tabela numérica
               </summary>
               <div className="mt-3">
@@ -448,7 +431,6 @@ export default async function VotacaoPage({ params }: PageProps) {
         {disciplinas.length > 0 ? (
           <>
             <SectionCard
-              className="scroll-mt-28"
               id="disciplina"
               subtitle="% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem."
               title="Disciplina partidária"
@@ -457,7 +439,6 @@ export default async function VotacaoPage({ params }: PageProps) {
             </SectionCard>
 
             <SectionCard
-              className="scroll-mt-28"
               id="rebeldes"
               subtitle="Parlamentares que votaram contra a orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva."
               title="Quem rebelou-se"
@@ -471,7 +452,6 @@ export default async function VotacaoPage({ params }: PageProps) {
         ) : null}
 
         <SectionCard
-          className="scroll-mt-28"
           id="individuais"
           subtitle="Clique no nome para ver o perfil 360° do parlamentar. Use os filtros para ver só uma direção."
           title="Votos individuais"
@@ -488,9 +468,9 @@ export default async function VotacaoPage({ params }: PageProps) {
         </SectionCard>
       </div>
 
-      {/* Footer cross-links — Wave 9 Sprint 9.4 PR3. Renderiza fora dos
-          containers mobile/desktop porque é responsivo nativo (grid
-          1-col → md:2-col). Empty state interno suprime quando não há
+      {/* Footer cross-links — renderiza fora dos containers
+          mobile/desktop porque é responsivo nativo (grid 1-col →
+          md:2-col). Empty state interno suprime quando não há
           relacionadas. */}
       <VotacoesRelacionadasFooter votacoes={relacionadas} />
     </div>

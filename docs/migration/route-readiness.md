@@ -2031,6 +2031,20 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   sobrescritos; barra/section-nav/rds-accordion já canônicos. Charts (ApoioPartido,
   donut #408) resíduo BaV. QA Playwright (perfil renderiza, 0 erros; dado de votos
   esparso → donut não exercitado visualmente, fix guard-verificado).
+- **13ª — `/votacoes/[id]`** (3º e último perfil; fecha o trio e a fila de rotas
+  ricas exceto `/painel`): 7 `_components/` de domínio sobrescritos pelas versões
+  RDS verificadas; section-card/section-nav/rds-accordion já canônicos;
+  `KpiStrip`→`Stat`/`StatGroup`. Data-viz resíduo BaV (hemiciclo SVG +
+  `MargemDecisaoBar` CSS + 3 charts recharts disciplina/por-partido/donut). **O QA
+  de desktop desta rota surfou um bug latente de cascade-layer do bridge** (desde
+  #405): o import do CSS do RDS sobrescrevia as utilities responsivas do BaV,
+  colapsando `hidden sm:block` para `display:none` — os perfis (split
+  Accordion-mobile/SectionCards-desktop) ficavam com o **miolo invisível** em
+  ≥640px, atingindo em produção os perfis 11ª/12ª já promovidos. Corrigido em
+  **#416** (RDS em `@layer rds`; ADR-034 §6; guard de invariante) ANTES desta
+  promoção. QA Playwright pós-fix a 1280px: perfil completo (`docH` 1091→8928px),
+  hemiciclo com fatias coloridas, 0 erro de console, 0 fill preto. Resta só
+  `/painel` + a limpeza final do `/rds/`.
 
 ## §4 — Notas e premissas
 
