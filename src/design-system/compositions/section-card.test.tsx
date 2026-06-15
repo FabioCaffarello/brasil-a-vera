@@ -37,15 +37,23 @@ describe('SectionCard composition', () => {
     expect(screen.getByTestId('trust-badge')).toBeDefined()
   })
 
-  it('renderiza ícone com aria-hidden quando fornecido', () => {
+  it('renderiza ícone no slot do Card.Title (RDS); decorativo via consumer', () => {
+    // Card.Title do RDS renderiza o nó do icon como passado — o consumer marca
+    // aria-hidden (uso real: `<Icon aria-hidden />`), não a composição.
     const { container } = render(
-      <SectionCard title="x" icon={<span data-testid="icon">★</span>}>
+      <SectionCard
+        title="x"
+        icon={
+          <span aria-hidden="true" data-testid="icon">
+            ★
+          </span>
+        }
+      >
         body
       </SectionCard>,
     )
-    const hidden = container.querySelector('[aria-hidden="true"]')
-    expect(hidden).not.toBeNull()
     expect(screen.getByTestId('icon')).toBeDefined()
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull()
   })
 
   it('quando id fornecido, aplica aria-labelledby + id no h2', () => {

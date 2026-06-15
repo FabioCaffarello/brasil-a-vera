@@ -11,21 +11,21 @@ describe('Input primitive', () => {
     expect(el.tagName).toBe('INPUT')
   })
 
-  it('aplica tokens do design system (border-strong + bg-background)', () => {
+  it('aplica tokens RDS (border-line-emphasis + bg-surface-canvas)', () => {
     render(<Input data-testid="input" />)
     const el = screen.getByTestId('input')
-    expect(el.className).toContain('border-border-strong')
-    expect(el.className).toContain('bg-background')
-    expect(el.className).toContain('placeholder:text-foreground-subtle')
+    expect(el.className).toContain('border-line-emphasis')
+    expect(el.className).toContain('bg-surface-canvas')
+    expect(el.className).toContain('placeholder:text-fg-quaternary')
   })
 
-  it('focus ring usa --ring + ring-offset-background (WCAG 2.4.7)', () => {
+  it('focus ring via token RDS line-focus (WCAG 2.4.7)', () => {
     render(<Input data-testid="input" />)
     const el = screen.getByTestId('input')
-    expect(el.className).toContain('focus-visible:ring-ring')
+    expect(el.className).toContain('focus-visible:ring-line-focus')
     expect(el.className).toContain('focus-visible:ring-2')
     expect(el.className).toContain('focus-visible:ring-offset-2')
-    expect(el.className).toContain('ring-offset-background')
+    expect(el.className).toContain('ring-offset-surface-canvas')
   })
 
   it('digita texto e propaga via onChange', async () => {

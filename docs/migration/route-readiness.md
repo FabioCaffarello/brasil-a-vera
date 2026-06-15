@@ -2009,6 +2009,11 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   success/error) + `filtros` canonicalizados; `alternates` RSS preservado. QA
   visual via Playwright nas 3 listagens (0 erros de console; hero/stats/chips/
   cards/empty-state corretos).
+- **8ª — `/busca`**: reusa os cards canonicalizados; `input` (primitivo) +
+  **`section-card`** canonicalizados (este é cross-route — API idêntica,
+  sobrescrito com a versão RDS Card compound; antecipa a convergência de
+  home/comparar/perfis sem quebrá-los). QA Playwright (entry/result/<2 chars;
+  0 erros; SectionCards + cards corretos).
 
 ## §4 — Notas e premissas
 
