@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import Link from 'next/link'
 
 import { getTipoVotoStyle } from '@/lib/format'
@@ -17,29 +19,10 @@ const ORIENTACAO_LABEL: Record<string, string> = {
   OBSTRUCAO: 'Obstrução',
 }
 
-/**
- * RebeldesList — Wave 9 Sprint 9.4 PR2.
- *
- * Lista de parlamentares que votaram contra a orientação do próprio
- * partido (semântica isRebelde de domain/disciplina.ts). Vem ordenada
- * por partido + nome direto da query (getRebeldesByVotacao).
- *
- * Cada item mostra:
- * - Nome (link para /parlamentares/[id])
- * - Partido/UF
- * - Badge do voto efetivo (cor semântica do voto)
- * - Hint "vs orientação: {orientacao}" (cor semântica da orientação)
- *
- * Estados:
- * - Sem orientações registradas (caller não deve renderizar — D5)
- * - Com orientações mas zero rebeldes (sinal positivo): mensagem
- *   "Nenhum parlamentar votou contra orientação do próprio partido."
- * - Com rebeldes: lista completa
- */
 export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
   if (partidosComOrientacao === 0) {
     return (
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Esta votação não teve orientações de bancada registradas.
       </p>
     )
@@ -47,7 +30,7 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
 
   if (rebeldes.length === 0) {
     return (
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Nenhum parlamentar votou contra a orientação do próprio partido nesta
         votação. Disciplina total entre as bancadas com orientação.
       </p>
@@ -56,7 +39,7 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
 
   return (
     <div className="space-y-2">
-      <p className="text-foreground-muted text-xs">
+      <p className="text-fg-tertiary text-xs">
         {rebeldes.length} parlamentar{rebeldes.length === 1 ? '' : 'es'} votou
         contra a orientação do próprio partido.
       </p>
@@ -66,16 +49,16 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
           const orientacaoLabel = ORIENTACAO_LABEL[r.orientacao] ?? r.orientacao
           return (
             <li
-              className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-elevated"
+              className="flex items-center justify-between gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-raised"
               key={r.parlamentarId}
             >
               <Link
-                className="min-w-0 flex-1 truncate rounded text-foreground underline decoration-dotted underline-offset-2 hover:text-foreground-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="min-w-0 flex-1 truncate rounded text-fg-primary underline decoration-dotted underline-offset-2 hover:text-fg-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                 href={`/parlamentares/${r.parlamentarId}`}
               >
                 {r.nome}
               </Link>
-              <span className="shrink-0 text-foreground-muted text-xs">
+              <span className="shrink-0 text-fg-tertiary text-xs">
                 {r.partidoSigla}/{r.uf}
               </span>
               <span
@@ -83,7 +66,7 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
                 title={`Votou ${votoStyle.label} — orientação do partido era ${orientacaoLabel}`}
               >
                 {votoStyle.label}
-                <span className="ml-1 text-foreground-subtle">
+                <span className="ml-1 text-fg-quaternary">
                   vs {orientacaoLabel}
                 </span>
               </span>

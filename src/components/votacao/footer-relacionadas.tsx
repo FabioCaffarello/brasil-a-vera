@@ -1,3 +1,5 @@
+// Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
+
 import Link from 'next/link'
 
 import { formatDataBR } from '@/lib/format'
@@ -17,47 +19,33 @@ const CASA_LABEL: Record<string, string> = {
   SENADO: 'Senado',
 }
 
-/**
- * VotacoesRelacionadasFooter — Wave 9 Sprint 9.4 PR3 (fecha Sprint 9.4).
- *
- * Cross-links contextuais no fim do detalhe. Reusa
- * getVotacoesRelacionadas (Sprint 9.0 PR 9.0.2, cached 7d): prioriza
- * "mesma_proposicao" (mais relevante) → "mesmo_orgao_janela" (±30d).
- *
- * Card por votação relacionada:
- * - Tag colorida da relação (brand para mesma_proposicao, muted para
- *   mesmo_orgao_janela)
- * - Casa + data + resultado
- * - Descrição truncada via line-clamp-2
- *
- * Empty state: se votacoes.length === 0, não renderiza nada — sem
- * placeholder "nada relacionado encontrado", apenas some.
- */
 export function VotacoesRelacionadasFooter({ votacoes }: Props) {
   if (votacoes.length === 0) return null
 
   return (
     <section
       aria-labelledby="footer-relacionadas-title"
-      className="mt-8 border-border border-t pt-6"
+      className="mt-8 border-line-default border-t pt-6"
     >
       <h2
-        className="mb-3 font-semibold text-foreground text-lg"
+        className="mb-3 font-semibold text-fg-primary text-lg"
         id="footer-relacionadas-title"
       >
         Outras votações relacionadas
       </h2>
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {votacoes.map((v) => {
+          // bg-brand/N → bg-fg-brand/N (generalização aprovada na
+          // extensão piloto-4 — base byte-idêntica pós-#358).
           const relacaoTone =
             v.relacao === 'mesma_proposicao'
-              ? 'bg-brand/15 text-brand'
-              : 'bg-surface-elevated text-foreground-muted'
-          const resultadoTone = v.aprovada ? 'text-success' : 'text-destructive'
+              ? 'bg-fg-brand/15 text-fg-brand'
+              : 'bg-surface-raised text-fg-tertiary'
+          const resultadoTone = v.aprovada ? 'text-fg-success' : 'text-fg-error'
           return (
             <li key={v.id}>
               <Link
-                className="flex h-full flex-col gap-2 rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="flex h-full flex-col gap-2 rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                 href={`/votacoes/${v.id}`}
               >
                 <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -66,19 +54,19 @@ export function VotacoesRelacionadasFooter({ votacoes }: Props) {
                   >
                     {RELACAO_LABEL[v.relacao] ?? v.relacao}
                   </span>
-                  <span className="text-foreground-muted">
+                  <span className="text-fg-tertiary">
                     {CASA_LABEL[v.casa] ?? v.casa}
                   </span>
-                  <span className="text-foreground-muted">·</span>
-                  <span className="text-foreground-muted">
+                  <span className="text-fg-tertiary">·</span>
+                  <span className="text-fg-tertiary">
                     {formatDataBR(v.dataHora)}
                   </span>
-                  <span className="text-foreground-muted">·</span>
+                  <span className="text-fg-tertiary">·</span>
                   <span className={`font-medium ${resultadoTone}`}>
                     {v.aprovada ? 'Aprovada' : 'Rejeitada'}
                   </span>
                 </div>
-                <p className="line-clamp-2 text-foreground text-sm">
+                <p className="line-clamp-2 text-fg-primary text-sm">
                   {v.descricao}
                 </p>
               </Link>
