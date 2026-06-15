@@ -1,14 +1,21 @@
+// Filtros de proposições — promovido ao RDS (migração ADR-033). Tokens pela
+// tabela canônica (docs/migration/token-map.md).
+//
+// - FilterChips (wrapper) + Label do RDS /server (server-safe; §3.9).
+// - FilterChip (item) de @/design-system/compositions (zero-JS; chips <Link>,
+//   ADR-022). Combobox: client island de @/design-system. Button de
+//   @/design-system/primitives. Busca: <input> cru com tokens RDS.
+
+import {
+  FilterChips,
+  Label,
+} from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
 
 import { Combobox } from '@/design-system/compositions/combobox'
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
+import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
-import { Input } from '@/design-system/primitives/input'
-import { Label } from '@/design-system/primitives/label'
 import type { TemaDistinto } from '@/lib/queries/proposicoes'
 
 interface Props {
@@ -55,12 +62,12 @@ const ORDEM_OPCOES = [
   { value: 'parada', label: 'Paradas há mais tempo' },
 ]
 
-const SELECT_CLASS =
-  'min-h-[44px] rounded-md border border-border-strong bg-background px-2 py-1.5 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+const INPUT_CLASS =
+  'min-h-[44px] rounded-md border border-line-emphasis bg-surface-canvas px-2 py-1.5 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
 /**
  * Helper interno: constrói href preservando outros filtros. Override
- * com `null` remove o filtro do URL.
+ * com `null` remove o filtro do URL. Base /rds/.
  *
  * Wave 8 Sprint 8.1 PR2 — preserva também q + ordem.
  * Wave 8 Sprint 8.1 PR3 — preserva também tema + reutilizado pelos
@@ -93,10 +100,10 @@ function buildHref(
 }
 
 /**
- * Chips de filtros aplicados (Wave 8 Sprint 8.1 PR3, espelhando padrão
- * da listagem /parlamentares). Cada chip mostra "Filtro: valor" e um
- * link × que remove apenas aquele filtro, preservando os demais via
- * buildHref. Ordem fica fora — é estado de visualização, não recorte.
+ * Chips de filtros aplicados (Wave 8 Sprint 8.1 PR3). Cada chip mostra
+ * "Filtro: valor" e um link × que remove apenas aquele filtro,
+ * preservando os demais via buildHref. Ordem fica fora — é estado de
+ * visualização, não recorte.
  */
 function FiltrosAtivos({
   selecionado,
@@ -144,22 +151,22 @@ function FiltrosAtivos({
   if (ativos.length === 0) return null
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-border border-t pt-3">
-      <span className="text-foreground-muted text-xs uppercase tracking-wider">
+    <div className="flex flex-wrap items-center gap-2 border-line-default border-t pt-3">
+      <span className="text-fg-tertiary text-xs uppercase tracking-wider">
         Filtros ativos:
       </span>
       {ativos.map((a) => (
         <Link
           aria-label={`Remover filtro ${a.label}: ${a.value}`}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-background px-3 py-1 text-foreground text-xs hover:bg-surface"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line-emphasis bg-surface-canvas px-3 py-1 text-fg-primary text-xs hover:bg-surface-base"
           href={buildHref(selecionado, { [a.key]: null })}
           key={a.key}
         >
           <span>
-            <span className="text-foreground-muted">{a.label}:</span>{' '}
+            <span className="text-fg-tertiary">{a.label}:</span>{' '}
             <span className="font-medium">{a.value}</span>
           </span>
-          <X aria-hidden className="h-3 w-3 text-foreground-muted" />
+          <X aria-hidden className="h-3 w-3 text-fg-tertiary" />
         </Link>
       ))}
     </div>
@@ -167,16 +174,12 @@ function FiltrosAtivos({
 }
 
 /**
- * Filtros de proposições — Sprint 6.2 PR 2 (Wave 6) +
- * Wave 8 Sprint 8.1 PR2 (busca + ordenação) +
- * Wave 8 Sprint 8.1 PR3 (Combobox tema + chips ativos).
- *
- * Hybrid pragmático:
+ * Filtros de proposições (cópia-rds). Mesmo contrato do original (hybrid
+ * pragmático):
  * - **Tipo** (6 opções + "Todos"): FilterChips com Links (sem form).
  * - **Situação** (5 opções + "Todas"): FilterChips com Links.
  * - **Busca** (`q`): input SSR, Enter submete.
  * - **Tema** (~50-200 catalogados): Combobox com busca embutida.
- *   Cardinalidade alta justifica a primitiva command sobre select.
  * - **Ano**: `<select>` no form (cardinalidade média).
  * - **Ordem**: `<select>` no form (4 opções fixas, sem busca).
  * - **Chips de filtros ativos**: abaixo dos filtros, um chip por
@@ -184,7 +187,7 @@ function FiltrosAtivos({
  */
 export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
+    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Tipo">
         <FilterChip asChild selected={!selecionado.tipo}>
           <Link href={buildHref(selecionado, { tipo: null })}>Todos</Link>
@@ -221,7 +224,7 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
 
       <form
         action="/proposicoes"
-        className="space-y-3 border-border border-t pt-4"
+        className="space-y-3 border-line-default border-t pt-4"
         method="get"
       >
         {selecionado.tipo ? (
@@ -232,10 +235,11 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
         ) : null}
 
         <div className="flex flex-col gap-1">
-          <Label className="text-foreground-muted text-xs" htmlFor="filtro-q">
+          <Label className="text-fg-tertiary text-xs" htmlFor="filtro-q">
             Buscar (número ou palavra na ementa)
           </Label>
-          <Input
+          <input
+            className={INPUT_CLASS}
             defaultValue={selecionado.q ?? ''}
             id="filtro-q"
             name="q"
@@ -246,10 +250,7 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
-            <Label
-              className="text-foreground-muted text-xs"
-              htmlFor="filtro-tema"
-            >
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-tema">
               Tema
             </Label>
             <Combobox
@@ -268,14 +269,11 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <Label
-              className="text-foreground-muted text-xs"
-              htmlFor="filtro-ano"
-            >
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ano">
               Ano
             </Label>
             <select
-              className={SELECT_CLASS}
+              className={INPUT_CLASS}
               defaultValue={selecionado.ano ?? ''}
               id="filtro-ano"
               name="ano"
@@ -290,14 +288,11 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <Label
-              className="text-foreground-muted text-xs"
-              htmlFor="filtro-ordem"
-            >
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ordem">
               Ordem
             </Label>
             <select
-              className={SELECT_CLASS}
+              className={INPUT_CLASS}
               defaultValue={selecionado.ordem ?? 'recente'}
               id="filtro-ordem"
               name="ordem"

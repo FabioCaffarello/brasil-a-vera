@@ -2002,6 +2002,13 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   hrefs produção) canonicalizados; página com `HeroSection`+`StatGroup` do
   `/server`; 5 cópias `_components/` + staging removidos. Estabelece o padrão das
   listagens (proposicoes/votacoes replicam).
+- **6ª — `/proposicoes`** (2ª listagem): `proposicao-card` + `barra-progresso`
+  (in-place; resíduo `bg-success`/`text-success-foreground` do badge
+  TRANSFORMADA_EM_NORMA preservado) e `filtros` canonicalizados; `StatGroup cols=4`.
+- **7ª — `/votacoes`** (3ª listagem; fecha o trio): `votacao-card` (badges
+  success/error) + `filtros` canonicalizados; `alternates` RSS preservado. QA
+  visual via Playwright nas 3 listagens (0 erros de console; hero/stats/chips/
+  cards/empty-state corretos).
 
 ## §4 — Notas e premissas
 

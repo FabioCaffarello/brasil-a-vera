@@ -147,72 +147,22 @@ href "Limpar" em `/parlamentares`; title sem `(rds-pilot)`). As 5 cópias em
 `button`/`empty-state`/`filter-chip` já eram RDS em produção (Fase B); cópias só
 deletadas.
 
-### Onda HeroSection #2 — `/rds/proposicoes` (listagem)
+### Onda HeroSection #2 — `/rds/proposicoes` (listagem) — ✅ PROMOVIDA (2026-06-14)
 
-Segunda das 3 listagens — replica o padrão da #1 (`/rds/parlamentares`)
-verbatim no bump 3.12.0. `button`, `empty-state` e `filter-chip` são
-reuso VERBATIM das cópias da listagem #1 (apresentacionais puros, sem
-href/rota embutida — só o header de comentário muda); `filtros` e
-`proposicao-card` são cópias de domínio próprias; `barra-progresso-tramitacao`
-é reuso verbatim da tradução da piloto-3 (mesmo original, usado lá pelo
-detalhe). `DataBadge`, `ExportCsvLink`, `Combobox` importados dos
-ORIGINAIS (client islands / composições mantidas), logo sem par de drift.
+6ª promoção (2ª listagem). `proposicao-card` e `barra-progresso-tramitacao`
+canonicalizados in-place (tokens RDS; resíduos `bg-success`/`text-success-foreground`
+do badge TRANSFORMADA_EM_NORMA + `bg-success/N` preservados; hrefs de produção);
+`filtros` adota RDS `FilterChips`/`Label` do `/server`. Página com `HeroSection` +
+`StatGroup cols=4` (com `hint`) do `/server`. Cópias `_components/` + staging
+removidas — pares retirados. `button`/`empty-state`/`filter-chip` já-RDS (Fase B).
 
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/proposicao/filtros.tsx` | `src/app/rds/proposicoes/_components/filtros.tsx` | médio | hybrid de filtros: Tipo + Situação via FilterChips Links (URL=state) + busca `q` (input SSR cru, precedente filtros #1) + Tema via Combobox (client island do original) + Ano/Ordem via select nativo + chips de filtros ativos; `FilterChips` wrapper do RDS `/server` (#162, §3.9); `FilterChip` item local; `Label` do RDS `/server` (server-safe, precedente piloto-6); `Button` da cópia local; hrefs/form `action`/links "Limpar" em `/rds/proposicoes`; tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `border-border→line-default`, `bg-surface→surface-base`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `hover:bg-surface→hover:bg-surface-base`); sem extensão de token nova |
-| `src/components/proposicao/proposicao-card.tsx` | `src/app/rds/proposicoes/_components/proposicao-card.tsx` | médio | card de listagem (ref + badge de situação + ementa line-clamp-3 + mini-barra de tramitação + footer compacto); href do card → `/rds/proposicoes/[tipo]/[numero]/[ano]` (perfil migrado na piloto-3); lógica de domínio única preservada (`classifyTramitacaoCard`/`inferirMarcoAtual`/`isSituacaoTerminalNegativa`); `BarraProgressoTramitacao` → cópia local; SITUACAO_CLASSES traduzidas (`bg-brand/20 text-brand→bg-fg-brand/20 text-fg-brand`, `text-success→text-fg-success` com `bg-success/N` homônimo mantido, `bg-destructive/20 text-destructive→bg-error/20 text-fg-error`, `bg-surface-elevated text-foreground-muted→bg-surface-raised text-fg-tertiary`); MANTIDO `bg-success text-success-foreground` (badge sólido TRANSFORMADA_EM_NORMA — resíduo on-color, ext. piloto-3); demais tokens 1:1 (`border-border{,-strong}→line-{default,emphasis}`, `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`, `ring-ring→line-focus`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`, `text-warning→fg-warning`) |
-| `src/components/proposicao/barra-progresso-tramitacao.tsx` | `src/app/rds/proposicoes/_components/barra-progresso-tramitacao.tsx` | médio | reuso VERBATIM da tradução da piloto-3 (mesmo original, lá usado pelo SectionCard do detalhe — original INTOCADO, compartilhado pelos dois `_components/`); barra CSS-only (regra 2 não disparada — width/flex-1 %, não SVG/chart/`hsl(var())`/`color-mix`; mesma classe do AlinhamentoStrip de #1); `brand→fg-brand` (byte-idêntico pós-#358), `destructive→error`, `surface-elevated→surface-raised`, `foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}` |
-| `src/design-system/primitives/button.tsx` | `src/app/rds/proposicoes/_components/button.tsx` | médio | reuso VERBATIM da cópia de #1 (Button do RDS é client, +JS; local diverge em token de marca → cópia local traduzida zero-JS + token-clean); `bg-brand/text-brand→*-fg-brand`, `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API (variantes não usadas): `brand-foreground`, `destructive`/`destructive-foreground` |
-| `src/components/ui/empty-state.tsx` | `src/app/rds/proposicoes/_components/empty-state.tsx` | baixo | reuso VERBATIM da cópia de #1 (EmptyState do RDS só no entry raiz client, +JS contra ADR-022 → cópia local traduzida zero-JS); tokens 1:1 (`border-border→line-default`, `bg-surface/50→surface-base/50`, `bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`) |
-| `src/design-system/compositions/filter-chips.tsx` (item `FilterChip`) | `src/app/rds/proposicoes/_components/filter-chip.tsx` | baixo | reuso VERBATIM da cópia de #1 (só o item; wrapper `FilterChips` vem do RDS `/server`); decisão §3.9: item local (Chip do RDS é client +5.759 bytes/rota, chips são `<Link>`, ADR-022); tokens 1:1 (`ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`, `border-brand bg-brand/10 text-brand→*-fg-brand`, `border-border→line-default`, `bg-surface{,-elevated}→surface-{base,raised}`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`); MANTIDO `shadow-glow` (resíduo sem par RDS) |
+### Onda HeroSection #3 — `/rds/votacoes` (listagem) — ✅ PROMOVIDA (2026-06-14)
 
-Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
-`HeroSection` (composição local) → `HeroSection` do `/server`
-(API 1:1: kicker/title/description/variant="plain"/align="center");
-`StatsGrid` (composição local) → `StatGroup layout="grid" cols={4}` +
-`Stat` do `/server` com prop `hint` (API 1:1: value/label/hint —
-precedente §3.6/§3.14; borda/dividers do próprio StatGroup). Lógica
-preservada do original: normalização de params, cursor (ADR-026 —
-`decodeCursor` + `permanentRedirect` 308 em token inválido), "Mostrar
-mais" com restantes da primeira página. Client islands importados dos
-originais (sem cópia): `ExportCsvLink`, `Combobox`, `DataBadge`, e o
-auth/`canExport`.
-
-### Onda HeroSection #3 — `/rds/votacoes` (listagem)
-
-Terceira e ÚLTIMA das 3 listagens — fecha o trio replicando o padrão das
-#1 (`/rds/parlamentares`, §3.14) e #2 (`/rds/proposicoes`, §3.15) verbatim
-no bump 3.12.0. `button`, `empty-state` e `filter-chip` são reuso VERBATIM
-das cópias das listagens #1/#2 (apresentacionais puros, sem href/rota
-embutida — só o header de comentário muda); `filtros` e `votacao-card` são
-cópias de domínio próprias, traduzidas 1:1. `DataBadge`, `ExportCsvLink`
-importados dos ORIGINAIS (client islands / composições mantidas), logo sem
-par de drift. Sem Combobox (Ano é `<select>`, não há filtro de alta
-cardinalidade como o Tema das proposições); sem busca livre `q`.
-
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/votacao/filtros.tsx` | `src/app/rds/votacoes/_components/filtros.tsx` | médio | hybrid de filtros: Casa + Resultado via FilterChips Links (URL=state) + "Só nominais" toggle (FilterChip único) + Ano via select nativo em form GET + chips de filtros ativos; `FilterChips` wrapper do RDS `/server` (#162, §3.9); `FilterChip` item local; `Label` do RDS `/server` (server-safe, precedente piloto-6/§3.14); `Button` da cópia local; hrefs/form `action`/links "Limpar" em `/rds/votacoes`; tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `border-border→line-default`, `bg-surface→surface-base`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `hover:bg-surface→hover:bg-surface-base`); sem extensão de token nova |
-| `src/components/votacao/votacao-card.tsx` | `src/app/rds/votacoes/_components/votacao-card.tsx` | baixo | card de listagem (data/casa/órgão + badge aprovada/rejeitada + descrição line-clamp-3 + linha de votos nominais); href do card → `/rds/votacoes/[id]` (perfil migrado na piloto-4); `formatDataBR` da lib preservado; SEM data-viz (regra 2 não disparada — sem SVG/chart/`hsl(var())`/`color-mix`, sem barra); badges traduzidos `bg-success/20 text-success→bg-success/20 text-fg-success` (bg-success utility homônimo, ext. piloto-2) e `bg-destructive/20 text-destructive→bg-error/20 text-fg-error` (ext. piloto-2/3, `destructive→error`); demais tokens 1:1 (`border-border→line-default`, `bg-surface→surface-base`, `hover:border-border-strong→hover:border-line-emphasis`, `hover:bg-surface-elevated→hover:bg-surface-raised`, `ring-ring→line-focus`, `text-foreground{,-muted}→fg-{primary,tertiary}`) |
-| `src/design-system/primitives/button.tsx` | `src/app/rds/votacoes/_components/button.tsx` | médio | reuso VERBATIM das cópias de #1/#2 (Button do RDS é client, +JS; local diverge em token de marca → cópia local traduzida zero-JS + token-clean); `bg-brand/text-brand→*-fg-brand`, `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API (variantes não usadas): `brand-foreground`, `destructive`/`destructive-foreground` |
-| `src/components/ui/empty-state.tsx` | `src/app/rds/votacoes/_components/empty-state.tsx` | baixo | reuso VERBATIM das cópias de #1/#2 (EmptyState do RDS só no entry raiz client, +JS contra ADR-022 → cópia local traduzida zero-JS); tokens 1:1 (`border-border→line-default`, `bg-surface/50→surface-base/50`, `bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`) |
-| `src/design-system/compositions/filter-chips.tsx` (item `FilterChip`) | `src/app/rds/votacoes/_components/filter-chip.tsx` | baixo | reuso VERBATIM das cópias de #1/#2 (só o item; wrapper `FilterChips` vem do RDS `/server`); decisão §3.9: item local (Chip do RDS é client +5.759 bytes/rota, chips são `<Link>`, ADR-022); tokens 1:1 (`ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`, `border-brand bg-brand/10 text-brand→*-fg-brand`, `border-border→line-default`, `bg-surface{,-elevated}→surface-{base,raised}`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`); MANTIDO `shadow-glow` (resíduo sem par RDS) |
-
-Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
-`HeroSection` (composição local) → `HeroSection` do `/server`
-(API 1:1: kicker/title/description/variant="plain"/align="center");
-`StatsGrid` (composição local) → `StatGroup layout="grid" cols={4}` +
-`Stat` do `/server` com prop `hint` (API 1:1: value/label/hint —
-precedente §3.6/§3.14/§3.15; borda/dividers do próprio StatGroup). Lógica
-preservada do original: normalização de params, compat `?offset=`
-(ADR-028 §4 — `permanentRedirect` 308 strip do param), cursor (ADR-026 —
-`decodeCursor` + `permanentRedirect` 308 em token inválido), helper
-`formatUltimaVotacaoStat`, descrição narrativa, "Mostrar mais" com
-restantes da primeira página. Client islands importados dos originais
-(sem cópia): `ExportCsvLink`, `DataBadge`, e o auth/`canExport`.
-`alternates` RSS → `/feed/votacoes` produção (é o produto, não navegação
-com contraparte `/rds/`).
+7ª promoção (3ª e última listagem; fecha o trio). `votacao-card` canonicalizado
+in-place (badges `bg-success/20 text-fg-success` e `bg-error/20 text-fg-error`;
+href de produção); `filtros` adota RDS `FilterChips`/`Label` do `/server`. Página
+com `HeroSection` + `StatGroup cols=4` do `/server`; `alternates` RSS →
+`/feed/votacoes`. Cópias `_components/` + staging removidas — pares retirados.
 
 ### Onda HeroSection #4 — `/rds/busca` (busca cruzada)
 

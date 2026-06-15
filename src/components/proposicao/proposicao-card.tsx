@@ -39,18 +39,18 @@ const SITUACAO_LABELS: Record<string, string> = {
 /**
  * Mapeamento situação → tokens semânticos (mantido vs Sprint 4.2).
  *
- * - TRAMITANDO: active, em progresso → bg-brand/20 + text-brand (subtle)
- * - APROVADA: outcome positivo → bg-success/20 + text-success (subtle)
- * - REJEITADA: outcome negativo → bg-destructive/20 + text-destructive
- * - ARQUIVADA: inativo → bg-surface-elevated + text-foreground-muted
+ * - TRAMITANDO: active, em progresso → bg-fg-brand/20 + text-fg-brand (subtle)
+ * - APROVADA: outcome positivo → bg-success/20 + text-fg-success (subtle)
+ * - REJEITADA: outcome negativo → bg-error/20 + text-fg-error
+ * - ARQUIVADA: inativo → bg-surface-raised + text-fg-tertiary
  * - TRANSFORMADA_EM_NORMA: pinnacle outcome (lei!) → bg-success solid
  *   text-success-foreground. Visual hierarchy: solid > subtle.
  */
 const SITUACAO_CLASSES: Record<string, string> = {
-  TRAMITANDO: 'bg-brand/20 text-brand',
-  APROVADA: 'bg-success/20 text-success',
-  REJEITADA: 'bg-destructive/20 text-destructive',
-  ARQUIVADA: 'bg-surface-elevated text-foreground-muted',
+  TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
+  APROVADA: 'bg-success/20 text-fg-success',
+  REJEITADA: 'bg-error/20 text-fg-error',
+  ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
   TRANSFORMADA_EM_NORMA: 'bg-success text-success-foreground',
 }
 
@@ -81,11 +81,11 @@ export function ProposicaoCard({ proposicao }: Props) {
   })
   return (
     <Link
-      className="block rounded-lg border border-border bg-surface p-4 transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
       href={href}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium font-mono text-foreground-muted text-sm">
+        <span className="font-medium font-mono text-fg-tertiary text-sm">
           {formatProposicaoRef(tipo, numero, ano)}
         </span>
         <span
@@ -94,9 +94,9 @@ export function ProposicaoCard({ proposicao }: Props) {
           {SITUACAO_LABELS[situacao] ?? situacao}
         </span>
       </div>
-      <p className="line-clamp-3 text-foreground text-sm">
+      <p className="line-clamp-3 text-fg-primary text-sm">
         {ementa || (
-          <span className="text-foreground-subtle italic">(sem ementa)</span>
+          <span className="text-fg-quaternary italic">(sem ementa)</span>
         )}
       </p>
       <TramitacaoStrip estado={estado} situacao={situacao} />
@@ -118,7 +118,7 @@ function TramitacaoStrip({
 }) {
   if (estado.kind === 'sem_tramitacao_registrada') {
     return (
-      <p className="mt-3 text-foreground-subtle text-xs">
+      <p className="mt-3 text-fg-quaternary text-xs">
         Sem tramitação registrada
       </p>
     )
@@ -126,7 +126,7 @@ function TramitacaoStrip({
 
   if (estado.kind === 'sem_marcos_relevantes') {
     return (
-      <p className="mt-3 text-foreground-subtle text-xs">
+      <p className="mt-3 text-fg-quaternary text-xs">
         Apresentada há {estado.diasEmTramitacao}{' '}
         {estado.diasEmTramitacao === 1 ? 'dia' : 'dias'}
       </p>
@@ -147,17 +147,17 @@ function TramitacaoStrip({
         variant="compact"
       />
       <p
-        className="mt-1.5 text-foreground-muted text-xs"
+        className="mt-1.5 text-fg-tertiary text-xs"
         title={
           estado.obsoleto ? 'Sem movimentação há mais de 1 ano' : undefined
         }
       >
         Em{' '}
-        <span className="font-medium text-foreground">
+        <span className="font-medium text-fg-primary">
           {estado.ultimoOrgao}
         </span>
         {estado.obsoleto ? (
-          <span className="ml-1 text-warning">· parada há &gt;1 ano</span>
+          <span className="ml-1 text-fg-warning">· parada há &gt;1 ano</span>
         ) : null}
       </p>
     </div>
@@ -188,7 +188,5 @@ function CardFooter({
     )
   }
   if (partes.length === 0) return null
-  return (
-    <p className="mt-2 text-foreground-subtle text-xs">{partes.join(' · ')}</p>
-  )
+  return <p className="mt-2 text-fg-quaternary text-xs">{partes.join(' · ')}</p>
 }
