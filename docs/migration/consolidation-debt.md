@@ -126,17 +126,14 @@ mesma vigilância de drift das checagens 1/2:
 > stagings removidos. Pares retirados da tabela — a seção piloto-5 está
 > totalmente quitada.
 
-### Piloto-6 — `/rds/parlamentares/[id]/gastos` (par em nível de página)
+### Piloto-6 — `/rds/parlamentares/[id]/gastos` — ✅ PROMOVIDA (2026-06-14)
 
-Rota AUTOCONTIDA: a lógica vive inline no `page.tsx` (filtros + tabela
-paginada por cursor), sem componentes de domínio em `src/components/`.
-Nenhum `_components/` — espelhamento em nível de página (precedente
-piloto-5). Sem data-viz/charts. O par abaixo dá ao guard a mesma
-vigilância de drift das checagens 1/2:
-
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/app/parlamentares/[id]/gastos/page.tsx` | `src/app/rds/parlamentares/[id]/gastos/page.tsx` | médio | filtros (trimestre via FilterChips + categoria via SELECT cru) + tabela CEAP paginada por cursor (`CursorGastosV1`, ADR-026); `FilterChips` wrapper do RDS `/server` (#162 fechada, varredura 3.10.0); `FilterChip` item local (zero-JS, §3.9); `Label` do RDS `/server` (server-safe, renderiza `<label>` nativo); tokens 1:1 pela tabela canônica (`border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-ring→line-focus`, `bg-surface→surface-base`, `hover:bg-surface-elevated→surface-raised`, `text-foreground{,-muted}→fg-{primary,tertiary}`, `border-border→line-default`); base href, back-link e form `action` em `/rds/`; sem extensão de token nova |
+Promovida ao RDS (4ª promoção; 1ª da fase de promoção das rotas ricas).
+A página de produção `src/app/parlamentares/[id]/gastos/page.tsx` recebeu o
+corpo RDS (tokens da tabela canônica; `FilterChips`/`Label` do `/server`;
+`FilterChip` item local) com des-staging (base href, back-link e form
+`action` em `/parlamentares/...`; title sem `(rds-pilot)`). Staging
+`src/app/rds/parlamentares/[id]/gastos/` removido — par retirado da tabela.
 
 ### Onda HeroSection #1 — `/rds/parlamentares` (listagem)
 
