@@ -1,4 +1,22 @@
+// Listagem de parlamentares — promovida ao RDS (migração ADR-033).
+// Consome o design system @fabio.caffarello/react-design-system — tokens
+// traduzidos pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection + Stat/StatGroup vêm do RDS /server (server-safe).
+// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - EmptyState/Button de @/design-system; Filtros/ParlamentarCard de
+//   @/components/parlamentar; ExportCsvLink/FollowButton/Combobox e
+//   auth/canExport/follows preservados.
+
 import { auth } from '@clerk/nextjs/server'
+import {
+  HeroSection,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Users } from 'lucide-react'
 
 import { ExportCsvLink } from '@/components/export-csv-link'
@@ -6,8 +24,6 @@ import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
-import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import { canExport } from '@/lib/auth-guards'
 import { getFollowsByUserId } from '@/lib/queries/follows'
@@ -69,15 +85,10 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
       canExport(),
     ])
 
-  // Wave 10 Hotfix 10.1 — gating server-side do FollowButton.
-  //
-  // Anônimos não vêem o footer-action do card (decisão de produto).
-  // Logo, NÃO disparamos `getFollowsByUserId` para eles e o card recebe
-  // `follow={undefined}` — zero HTML do botão, zero JS de toggle.
-  //
-  // Autenticados: lazy upsert do user_profile + query de follows
-  // (preserva o path Wave 10 Etapa 2 — só perdemos o branch "link
-  // para /sign-in", já que anônimo nem chega ao botão).
+  // Gating server-side do FollowButton (Wave 10 Hotfix 10.1, preservado):
+  // anônimos não disparam getFollowsByUserId e o card recebe
+  // follow={undefined} — zero HTML/JS do botão. Autenticados: lazy upsert
+  // do user_profile + query de follows.
   const { userId: clerkUserId } = await auth()
   let followingIds: Set<string> = new Set()
   if (clerkUserId) {
@@ -105,17 +116,15 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
-        <StatsGrid
-          items={[
-            { value: stats.totalParlamentares, label: 'parlamentares' },
-            { value: stats.totalPartidos, label: 'partidos' },
-            { value: stats.totalUfs, label: 'UFs' },
-          ]}
-        />
+        <StatGroup cols={3} layout="grid">
+          <Stat label="parlamentares" value={stats.totalParlamentares} />
+          <Stat label="partidos" value={stats.totalPartidos} />
+          <Stat label="UFs" value={stats.totalUfs} />
+        </StatGroup>
 
         <Filtros partidos={partidos} selecionado={filtros} ufs={ufs} />
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-foreground-muted text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-sm">
           <span>
             {parlamentares.length}{' '}
             {parlamentares.length === 1 ? 'resultado' : 'resultados'}

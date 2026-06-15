@@ -95,9 +95,9 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
   const state = classifyAlinhamento(votacoesAnalisadas, pctAlinhamento, casa)
 
   return (
-    <article className="group flex h-full flex-col rounded-lg border border-border bg-surface transition-colors hover:border-border-strong hover:bg-surface-elevated focus-within:border-border-strong">
+    <article className="group flex h-full flex-col rounded-lg border border-line-default bg-surface-base transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis">
       <Link
-        className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+        className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
         href={`/parlamentares/${id}`}
       >
         <div className="flex items-start gap-3">
@@ -114,14 +114,14 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
           ) : (
             <div
               aria-hidden="true"
-              className="size-14 shrink-0 rounded-full bg-surface-elevated"
+              className="size-14 shrink-0 rounded-full bg-surface-raised"
             />
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-medium text-foreground leading-snug">
+            <h3 className="line-clamp-2 font-medium text-fg-primary leading-snug">
               {nome}
             </h3>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-foreground-muted text-sm">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-fg-tertiary text-sm">
               <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
               <PartyBadge sigla={partidoSigla} size="sm" />
               <span aria-hidden>·</span>
@@ -133,7 +133,10 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
       </Link>
       {follow ? (
         <>
-          <div aria-hidden="true" className="mx-4 border-border border-t" />
+          <div
+            aria-hidden="true"
+            className="mx-4 border-line-default border-t"
+          />
           <div className="flex justify-end px-2 py-1">
             <FollowButton
               initialIsFollowing={follow.isFollowing}
@@ -160,8 +163,8 @@ function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
             style={{ width: `${state.percentual}%` }}
           />
         </div>
-        <p className="mt-1 text-foreground-muted text-xs">
-          <span className="font-medium text-foreground">
+        <p className="mt-1 text-fg-tertiary text-xs">
+          <span className="font-medium text-fg-primary">
             {state.percentual}% alinhado
           </span>{' '}
           · {state.votacoes} {state.votacoes === 1 ? 'votação' : 'votações'}
@@ -172,7 +175,7 @@ function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
 
   if (state.kind === 'amostra_insuficiente') {
     return (
-      <p className="text-foreground-subtle text-xs">
+      <p className="text-fg-quaternary text-xs">
         Amostra insuficiente · {state.votacoes}{' '}
         {state.votacoes === 1 ? 'votação' : 'votações'} no período
       </p>
@@ -182,7 +185,7 @@ function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
   // sem_dado
   return (
     <p
-      className="text-foreground-subtle text-xs"
+      className="text-fg-quaternary text-xs"
       title={
         state.senadoLegacy
           ? 'Senado: cobertura parcial de orientação partidária'
