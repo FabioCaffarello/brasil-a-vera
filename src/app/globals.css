@@ -1,3 +1,19 @@
+/* Ordem de cascade layers — fix do bug de cascade do bridge RDS (empírico).
+   `rds` é declarado PRIMEIRO → camada de MENOR prioridade. Necessário porque o
+   @import do CSS do RDS abaixo traz a @layer utilities PRECOMPILADA do pacote
+   (com `.hidden`, `.flex`, `.block` etc.). Sem este controle de layer, esse
+   conteúdo entra DEPOIS do utilities do BaV sob o MESMO nome de layer e, por ser
+   fonte posterior, sobrescreve as variantes responsivas do BaV de igual
+   especificidade: `.hidden{display:none}` do RDS vencia `@media{.sm:block}` do
+   BaV mesmo em ≥640px, colapsando `hidden sm:block` para display:none no desktop
+   (perfis com split mobile-accordion/desktop ficavam com o miolo invisível).
+   Confirmado no CSS buildado: `.sm:block` @ byte 64210 < `.hidden` (RDS) @ 72322,
+   mesma especificidade → fonte posterior vence. Pôr o RDS numa layer de menor
+   prioridade faz as utilities do BaV (layer `utilities` padrão do Tailwind)
+   vencerem sempre. Não afeta tokens (o RDS continua provedor único das famílias
+   fg, surface e line via :root/.dark) nem as neutralizações unlayered abaixo
+   (unlayered vence qualquer layer). Ver ADR-034 §6. */
+@layer rds;
 @import "tailwindcss";
 /* Token bridge do RDS (Fase B / ADR-034). Importa o CSS do pacote
    @fabio.caffarello/react-design-system globalmente: traz o :root/.dark
@@ -9,7 +25,7 @@
    RDS" no @theme. Sem isto, classes como `ring-line-focus`, `bg-surface-canvas`
    e `bg-fg-brand/10` no-op silenciosamente (build verde, visual quebrado —
    classe de falha do incidente #303/#304). */
-@import "@fabio.caffarello/react-design-system/styles";
+@import "@fabio.caffarello/react-design-system/styles" layer(rds);
 
 /* Custom dark variant — Sprint 4.1 PR 3.
    Por que: Sprint 4.1 introduz <html className="dark"> hardcoded (D1
