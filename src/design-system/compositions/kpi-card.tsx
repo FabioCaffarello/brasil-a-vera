@@ -52,7 +52,7 @@ export type KpiCardProps = {
  * Card de KPIs em surface elevated, otimizado para o hero da home.
  * Diferente de `KpiStrip` em quatro pontos:
  *
- * - Surface elevada (`bg-surface-elevated`) — destacado contra o hero.
+ * - Surface elevada (`bg-surface-raised`) — destacado contra o hero.
  * - Icon top → value → label → hint em vertical com ritmo uniforme
  *   (vs strip horizontal). Ícone anchora cada KPI visualmente.
  * - Type scale calibrada para densidade 4-col (`text-2xl` →
@@ -81,7 +81,7 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        'relative rounded-2xl border border-border bg-surface-elevated px-6 py-6 sm:py-8',
+        'relative rounded-2xl border border-line-default bg-surface-raised px-6 py-6 sm:py-8',
         floatingBadge && 'pt-10',
         className,
       )}
@@ -103,20 +103,18 @@ export function KpiCard({
             key={item.label}
           >
             {item.icon ? (
-              <div aria-hidden="true" className="text-foreground-muted">
+              <div aria-hidden="true" className="text-fg-tertiary">
                 {item.icon}
               </div>
             ) : null}
-            <div className="font-semibold text-2xl text-foreground tabular-nums sm:text-3xl">
+            <div className="font-semibold text-2xl text-fg-primary tabular-nums sm:text-3xl">
               {item.value}
             </div>
-            <div className="font-medium text-foreground-muted text-sm">
+            <div className="font-medium text-fg-tertiary text-sm">
               {item.label}
             </div>
             {item.hint ? (
-              <div className="mt-1 text-foreground-muted text-xs">
-                {item.hint}
-              </div>
+              <div className="mt-1 text-fg-tertiary text-xs">{item.hint}</div>
             ) : null}
           </li>
         ))}

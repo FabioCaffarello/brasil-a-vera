@@ -1,9 +1,21 @@
-import { Columns3 } from 'lucide-react'
+// Comparar parlamentares (lado a lado) — promovida ao RDS (migração ADR-033).
+// Consome o design system @fabio.caffarello/react-design-system — tokens
+// traduzidos pela tabela canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection do RDS /server; SectionCard (Card compound do RDS);
+//   ConcordanciaMatrix/ParlamentaresGrid de @/components/comparar.
+// - DataBadge (resíduo accent) mantido. ErrorState é helper local inline.
+// - Caixa "comparativo indisponível" mantém `border-warning/40 bg-warning/10`
+//   (BaV neutralizado) + `text-fg-warning`.
 
+import { HeroSection } from '@fabio.caffarello/react-design-system/server'
+import { Columns3 } from 'lucide-react'
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
 
@@ -42,17 +54,18 @@ function parseIds(raw: string | string[] | undefined): {
  * ErrorState — Sprint 4.3 D4 herdada. Caixa de "comparativo indisponível"
  * em warning subtle (mesmo padrão `ParesContraditorios`, `AlinhamentoBancada`
  * com amostra insuficiente). Mantido como helper local Sprint 6.4 — é
- * warning cirúrgico, não cabe em composição genérica.
+ * warning cirúrgico, não cabe em composição genérica. Tokens: `text-warning`
+ * → `text-fg-warning`; `border-warning/40`/`bg-warning/10` homônimos.
  */
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="rounded-lg border border-warning/40 bg-warning/10 p-5">
-        <h1 className="font-medium text-base text-warning">
+        <h1 className="font-medium text-base text-fg-warning">
           Comparativo indisponível
         </h1>
-        <p className="mt-1 text-sm text-warning">{message}</p>
-        <p className="mt-3 text-warning text-xs">
+        <p className="mt-1 text-fg-warning text-sm">{message}</p>
+        <p className="mt-3 text-fg-warning text-xs">
           Use a URL com 2 ou 3 IDs separados por vírgula:
           <br />
           <code className="font-mono">

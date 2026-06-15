@@ -68,7 +68,7 @@ describe('KpiCard composition', () => {
     )
     const wrapper = container.firstChild as HTMLElement
     expect(wrapper.className).toContain('custom-card')
-    expect(wrapper.className).toContain('bg-surface-elevated')
+    expect(wrapper.className).toContain('bg-surface-raised')
     expect(wrapper.className).toContain('rounded-2xl')
   })
 
