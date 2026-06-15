@@ -1,12 +1,26 @@
+// Busca cruzada (parlamentares + proposições + votações) — promovida ao RDS
+// (migração ADR-033). Consome o design system
+// @fabio.caffarello/react-design-system — tokens traduzidos pela tabela
+// canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection do RDS /server, 3 estados (entry / <2 chars / resultados).
+// - SectionCard (Card compound do RDS) + cards canônicos de @/components.
+// - SearchForm (form GET zero-JS) de @/components/busca. DataBadge local
+//   (resíduo accent, kicker do hero).
+// - Callout do match exato mantém `border-success/40 bg-success/10` (BaV
+//   neutralizado) + `text-fg-success`.
+
+import { HeroSection } from '@fabio.caffarello/react-design-system/server'
 import { Search } from 'lucide-react'
 import Link from 'next/link'
-
 import { SearchForm } from '@/components/busca/search-form'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatProposicaoRef } from '@/lib/format'
 import { busca } from '@/lib/queries/busca'
@@ -66,7 +80,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
         />
         <div className="mx-auto max-w-3xl space-y-4 px-4 pb-12">
           <SearchForm defaultValue={query} variant="page" />
-          <p className="text-foreground-muted text-sm">
+          <p className="text-fg-tertiary text-sm">
             Digite ao menos 2 caracteres.
           </p>
         </div>
@@ -101,10 +115,10 @@ export default async function BuscaPage({ searchParams }: PageProps) {
 
         {resultados.proposicaoMatchExato && (
           <section className="rounded-lg border border-success/40 bg-success/10 p-4">
-            <p className="text-foreground text-sm">
+            <p className="text-fg-primary text-sm">
               Você digitou uma referência de proposição. Ir direto para{' '}
               <Link
-                className="font-mono font-semibold text-success underline decoration-dotted underline-offset-2"
+                className="font-mono font-semibold text-fg-success underline decoration-dotted underline-offset-2"
                 href={`/proposicoes/${resultados.proposicaoMatchExato.tipo}/${resultados.proposicaoMatchExato.numero}/${resultados.proposicaoMatchExato.ano}`}
               >
                 {formatProposicaoRef(
@@ -119,7 +133,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
         )}
 
         {totalResultados === 0 ? (
-          <p className="rounded-lg border border-border bg-surface p-6 text-foreground-muted text-sm">
+          <p className="rounded-lg border border-line-default bg-surface-base p-6 text-fg-tertiary text-sm">
             Nenhum resultado encontrado. Tente termos mais curtos ou variantes
             (sem acento, sem aspas).
           </p>

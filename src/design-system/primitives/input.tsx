@@ -8,10 +8,10 @@ import { cn } from '@/lib/cn'
  *
  *   shadcn default → nosso ajuste
  *   ─────────────────────────────────────────────────────────
- *   border-input              → border-border-strong
- *   placeholder:text-muted-foreground → placeholder:text-foreground-subtle
- *   bg-background, text-base, ring-ring,
- *   ring-offset-background, file:text-foreground → preservados
+ *   border-input              → border-line-emphasis
+ *   placeholder:text-muted-foreground → placeholder:text-fg-quaternary
+ *   bg-surface-canvas, text-base, ring-line-focus,
+ *   ring-offset-surface-canvas, file:text-fg-primary → preservados
  *
  * Tap target mínimo 44×44px (WCAG 2.5.5) garantido por `h-10` (40px) +
  * vertical padding (em mobile passa de 44px via `md:text-sm` que mantém
@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
       <input
         type={type}
         className={cn(
-          'flex h-10 w-full rounded-md border border-border-strong bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-foreground-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+          'flex h-10 w-full rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 text-base ring-offset-surface-canvas file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-fg-primary placeholder:text-fg-quaternary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
           className,
         )}
         ref={ref}

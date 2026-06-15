@@ -164,43 +164,17 @@ href de produção); `filtros` adota RDS `FilterChips`/`Label` do `/server`. Pá
 com `HeroSection` + `StatGroup cols=4` do `/server`; `alternates` RSS →
 `/feed/votacoes`. Cópias `_components/` + staging removidas — pares retirados.
 
-### Onda HeroSection #4 — `/rds/busca` (busca cruzada)
+### Onda HeroSection #4 — `/rds/busca` (busca cruzada) — ✅ PROMOVIDA (2026-06-15)
 
-Quarta rota da onda HeroSection (bump 3.12.0). A `/busca` é uma rota de
-**busca cruzada server-rendered** — `<form>` GET (zero-JS) + 3 seções de
-resultado (parlamentares/proposições/votações) consumindo os MESMOS 3
-cards de listagem já migrados nas ondas #1/#2/#3. Padrão reusado: os
-cards são **espelho das traduções das listagens** (mesmos originais,
-hrefs → `/rds/`), mantendo `/rds/busca` self-contained com suas próprias
-cópias. `DataBadge` (kicker `tone="accent"` do hero) importado do
-ORIGINAL (sem par RDS — precedente listagens/perfis), logo sem par de
-drift. Sem data-viz (regra 2 não disparada — confirmado no scoping: 3
-estados de hero + grid de cards; os únicos elementos CSS-only de
-"barra" — AlinhamentoStrip do parlamentar-card, BarraProgresso do
-proposicao-card — não chegam a renderizar porque a query de busca não
-traz os agregados de alinhamento/tramitação).
-
-| Original | Cópia-rds | Risco | Notas |
-|---|---|:---:|---|
-| `src/components/busca/search-form.tsx` | `src/app/rds/busca/_components/search-form.tsx` | médio | `<form>` GET SERVER-safe (sem `'use client'`; `<search>` landmark + input/Button nativos — zero-JS, ADR-022); form `action` → `/rds/busca`; Button/Input das cópias LOCAIS traduzidas (não os primitivos do original); só `text-foreground-subtle→fg-quaternary` (ícone Search), demais classes layout/Tailwind puro |
-| `src/components/parlamentar/parlamentar-card.tsx` | `src/app/rds/busca/_components/parlamentar-card.tsx` | médio | reuso da tradução da listagem #1 (§3.14) — espelho verbatim, exceto header; `FollowButton`/`PartyBadge` dos ORIGINAIS; href do card → `/rds/parlamentares/[id]`; `/busca` não passa `follow` (anônimo, footer-action nunca renderiza); `bg-accent/15`/`bg-accent/60` (AlinhamentoStrip CSS-only) MANTIDO (resíduo data-viz ADR-024) mas inalcançável nesta rota (query sem agregado); demais tokens 1:1 (`border-border{,-strong}→line-{default,emphasis}`, `bg-surface{,-elevated}→surface-{base,raised}`, `ring-ring→line-focus`, `text-foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}`) |
-| `src/components/proposicao/proposicao-card.tsx` | `src/app/rds/busca/_components/proposicao-card.tsx` | médio | reuso da tradução da listagem #2 (§3.15) — espelho verbatim, exceto header; href do card → `/rds/proposicoes/[tipo]/[numero]/[ano]`; `BarraProgressoTramitacao` → cópia local (não renderiza em `/busca` — query sem agregado de tramitação); SITUACAO_CLASSES traduzidas (`bg-brand/20 text-brand→bg-fg-brand/20 text-fg-brand`, `text-success→text-fg-success` com `bg-success/N` homônimo, `bg-destructive/20 text-destructive→bg-error/20 text-fg-error`, `bg-surface-elevated text-foreground-muted→bg-surface-raised text-fg-tertiary`); MANTIDO `bg-success text-success-foreground` (badge sólido TRANSFORMADA_EM_NORMA — resíduo on-color, ext. piloto-3); demais tokens 1:1 |
-| `src/components/proposicao/barra-progresso-tramitacao.tsx` | `src/app/rds/busca/_components/barra-progresso-tramitacao.tsx` | médio | reuso VERBATIM da tradução da piloto-3 / listagem #2 (mesmo original, INTOCADO, compartilhado pelos `_components/`); barra CSS-only (regra 2 não disparada — width/flex-1 %); dependência de import do proposicao-card (não chega a renderizar em `/busca`); `brand→fg-brand` (byte-idêntico pós-#358), `destructive→error`, `surface-elevated→surface-raised`, `foreground{,-muted,-subtle}→fg-{primary,tertiary,quaternary}` |
-| `src/components/votacao/votacao-card.tsx` | `src/app/rds/busca/_components/votacao-card.tsx` | baixo | reuso da tradução da listagem #3 (§3.16) — espelho verbatim, exceto header; href do card → `/rds/votacoes/[id]`; SEM data-viz; badges `bg-success/20 text-success→bg-success/20 text-fg-success` (homônimo, ext. piloto-2) e `bg-destructive/20 text-destructive→bg-error/20 text-fg-error` (ext. piloto-2/3); demais tokens 1:1 |
-| `src/design-system/primitives/input.tsx` | `src/app/rds/busca/_components/input.tsx` | médio | primitivo Input (HTML nativo sem state — Server Component, zero-JS); cópia local traduzida (mesma régua do Button local: token-clean + zero-JS vs importar o primitivo do original com tokens BaV); `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `ring-offset-background→ring-offset-surface-canvas`, `file:text-foreground→file:text-fg-primary`, `placeholder:text-foreground-subtle→placeholder:text-fg-quaternary`, `ring-ring→line-focus` |
-| `src/design-system/primitives/button.tsx` | `src/app/rds/busca/_components/button.tsx` | médio | reuso VERBATIM das cópias das listagens #1/#2/#3 (Button do RDS é client, +JS; local diverge em token de marca → cópia local traduzida zero-JS + token-clean); `bg-brand/text-brand→*-fg-brand`, `border-border-strong→line-emphasis`, `bg-background→surface-canvas`, `bg-surface-elevated→surface-raised`, `text-foreground→fg-primary`, `ring-ring→line-focus`, `ring-offset-background→offset-surface-canvas`; MANTIDOS por paridade de API (variantes não usadas): `brand-foreground`, `destructive`/`destructive-foreground` |
-| `src/design-system/compositions/section-card.tsx` | `src/app/rds/busca/_components/section-card.tsx` | baixo | reuso VERBATIM da cópia da piloto-2 (Card compound do RDS); `/busca` usa sem `id` → sem `aria-labelledby` (mesmo contrato do original sem id) |
-
-Composições substituídas por upstream SEM cópia (direto no `page.tsx`):
-`HeroSection` (composição local) → `HeroSection` do `/server`
-(API 1:1: kicker/title/description/variant="plain"/align="center";
-3 estados de hero — entry / <2 chars / resultados — preservados).
-`DataBadge` importado do ORIGINAL (sem par RDS, kicker `tone="accent"`).
-Lógica de query (`busca`) e contrato dos 3 estados preservados do
-original; callout do match exato de proposição (`border-success/40
-bg-success/10`, base homônima ext. piloto-2 em papel border/bg — sem
-tradução) com cross-link → `/rds/proposicoes/...` (navegação contida na
-staging). Sem `_components/` para o callout (helper inline no `page.tsx`).
+8ª promoção. Reusa os 3 cards já canonicalizados (listagens). Canonicalizados
+neste PR: `input` (primitivo, tokens RDS in-place) e **`section-card`**
+(`@/design-system/compositions` — sobrescrito com a versão RDS Card compound;
+API idêntica → afeta home/comparar/perfis sem quebrar, convergência antecipada).
+`search-form` (`@/components/busca`) só trocou o token do ícone
+(`text-foreground-subtle→fg-quaternary`); action/imports já eram de produção.
+Página com `HeroSection` do `/server` (3 estados); callout do match exato mantém
+`border-success/40 bg-success/10` + `text-fg-success`; cross-link → `/proposicoes/...`.
+Staging removido — pares retirados.
 
 ### Onda HeroSection #5 — `/rds/comparar` (comparativo lado a lado)
 
