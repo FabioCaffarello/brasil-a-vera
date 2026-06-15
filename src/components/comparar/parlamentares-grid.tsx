@@ -27,7 +27,7 @@ export function ParlamentaresGrid({ parlamentares, metricas, ano }: Props) {
         if (!m) return null
         return (
           <div
-            className="space-y-3 rounded-lg border border-border bg-surface p-4"
+            className="space-y-3 rounded-lg border border-line-default bg-surface-base p-4"
             key={p.id}
           >
             <header className="flex items-center gap-3">
@@ -44,65 +44,65 @@ export function ParlamentaresGrid({ parlamentares, metricas, ano }: Props) {
               ) : (
                 <div
                   aria-hidden="true"
-                  className="size-12 shrink-0 rounded-full bg-surface-elevated"
+                  className="size-12 shrink-0 rounded-full bg-surface-raised"
                 />
               )}
               <div className="min-w-0">
-                <p className="truncate font-medium text-foreground text-sm">
+                <p className="truncate font-medium text-fg-primary text-sm">
                   {p.nome}
                 </p>
-                <p className="text-foreground-muted text-xs">
+                <p className="text-fg-tertiary text-xs">
                   {p.casa === 'CAMARA' ? 'Deputado' : 'Senador'} ·{' '}
                   <span className="font-medium">{p.partidoSigla}</span>/{p.uf}
                 </p>
               </div>
             </header>
 
-            <dl className="space-y-2.5 border-border border-t pt-3 text-sm">
+            <dl className="space-y-2.5 border-line-default border-t pt-3 text-sm">
               <div>
-                <dt className="text-foreground-muted text-xs uppercase tracking-wide">
+                <dt className="text-fg-tertiary text-xs uppercase tracking-wide">
                   Presença em votações nominais
                 </dt>
-                <dd className="mt-0.5 tabular-nums text-foreground">
+                <dd className="mt-0.5 tabular-nums text-fg-primary">
                   {m.presenca.percentual !== null ? (
                     <>
                       <span className="font-semibold">
                         {m.presenca.percentual}%
                       </span>{' '}
-                      <span className="text-foreground-muted text-xs">
+                      <span className="text-fg-tertiary text-xs">
                         ({m.presenca.presente}/{m.presenca.total})
                       </span>
                     </>
                   ) : (
-                    <span className="text-foreground-muted">Sem votos</span>
+                    <span className="text-fg-tertiary">Sem votos</span>
                   )}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-foreground-muted text-xs uppercase tracking-wide">
+                <dt className="text-fg-tertiary text-xs uppercase tracking-wide">
                   Proposições autoria primária
                 </dt>
-                <dd className="mt-0.5 font-semibold tabular-nums text-foreground">
+                <dd className="mt-0.5 font-semibold tabular-nums text-fg-primary">
                   {m.proposicoesAutoriaPrimaria}
                 </dd>
               </div>
 
               <div>
-                <dt className="text-foreground-muted text-xs uppercase tracking-wide">
+                <dt className="text-fg-tertiary text-xs uppercase tracking-wide">
                   Gasto CEAP — {ano}
                 </dt>
                 <dd className="mt-0.5">
                   {m.gastosTotalRegistros === 0 ? (
-                    <span className="text-foreground-muted">
+                    <span className="text-fg-tertiary">
                       Sem gastos registrados
                     </span>
                   ) : (
                     <>
-                      <p className="font-semibold tabular-nums text-foreground">
+                      <p className="font-semibold tabular-nums text-fg-primary">
                         {formatBRL(m.gastosTotalGeral)}
                       </p>
-                      <ul className="mt-1 space-y-0.5 text-foreground-muted text-xs">
+                      <ul className="mt-1 space-y-0.5 text-fg-tertiary text-xs">
                         {m.gastosTopCategorias.map((c) => (
                           <li
                             className="flex justify-between gap-2 tabular-nums"

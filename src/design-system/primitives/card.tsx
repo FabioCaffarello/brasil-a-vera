@@ -8,10 +8,10 @@ import { cn } from '@/lib/cn'
  *
  *   shadcn default → nosso token
  *   ─────────────────────────────────────────────────────────
- *   bg-card                 → bg-surface
- *   text-card-foreground    → text-foreground
- *   border (default color)  → border-border (explícito; usa --color-border)
- *   text-muted-foreground   → text-foreground-muted
+ *   bg-card                 → bg-surface-base
+ *   text-card-foreground    → text-fg-primary
+ *   border (default color)  → border-line-default (explícito; usa --color-border)
+ *   text-muted-foreground   → text-fg-tertiary
  */
 
 const Card = React.forwardRef<
@@ -21,7 +21,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'rounded-lg border border-border bg-surface text-foreground shadow-sm',
+      'rounded-lg border border-line-default bg-surface-base text-fg-primary shadow-sm',
       className,
     )}
     {...props}
@@ -62,7 +62,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('text-sm text-foreground-muted', className)}
+    className={cn('text-sm text-fg-tertiary', className)}
     {...props}
   />
 ))

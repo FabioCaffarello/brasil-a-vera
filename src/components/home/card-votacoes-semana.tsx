@@ -33,7 +33,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
       <CardHeader>
         <div
           aria-hidden
-          className="mb-3 flex size-10 items-center justify-center rounded-lg bg-surface-elevated text-brand"
+          className="mb-3 flex size-10 items-center justify-center rounded-lg bg-surface-raised text-fg-brand"
         >
           <Vote className="size-5" />
         </div>
@@ -42,7 +42,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
 
       <CardContent className="flex-1">
         {votacoes.length === 0 ? (
-          <p className="text-foreground-muted text-sm leading-relaxed">
+          <p className="text-fg-tertiary text-sm leading-relaxed">
             Nenhuma votação registrada nos últimos {diasJanela} dias. Atualize
             em alguns dias — o cron ingere 4×/dia.
           </p>
@@ -50,10 +50,10 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
           <ol className="space-y-3 text-sm">
             {votacoes.map((v) => (
               <li
-                className="border-border border-b pb-2 last:border-0"
+                className="border-line-default border-b pb-2 last:border-0"
                 key={v.id}
               >
-                <div className="mb-1 flex items-center gap-2 text-foreground-muted text-xs">
+                <div className="mb-1 flex items-center gap-2 text-fg-tertiary text-xs">
                   <span className="tabular-nums">
                     {formatDataBR(v.dataHora)}
                   </span>
@@ -65,15 +65,15 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
                   <span
                     className={`inline-flex items-center rounded px-1.5 py-0.5 font-medium text-[10px] uppercase ${
                       v.aprovada
-                        ? 'bg-success/20 text-success'
-                        : 'bg-destructive/20 text-destructive'
+                        ? 'bg-success/20 text-fg-success'
+                        : 'bg-error/20 text-fg-error'
                     }`}
                   >
                     {v.aprovada ? 'Aprovada' : 'Rejeitada'}
                   </span>
                 </div>
                 <Link
-                  className="line-clamp-2 text-foreground hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="line-clamp-2 text-fg-primary hover:text-fg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
                   href={`/votacoes/${v.id}`}
                 >
                   {truncar(v.descricao, 100)}
@@ -86,7 +86,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
 
       <CardFooter className="flex flex-col items-start gap-2">
         {votacoes.length > 0 && (
-          <p className="text-foreground-muted text-xs">
+          <p className="text-fg-tertiary text-xs">
             {votacoes.length}{' '}
             {votacoes.length === 1
               ? 'votação nos últimos'
@@ -95,7 +95,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
           </p>
         )}
         <Link
-          className="inline-flex items-center font-medium text-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="inline-flex items-center font-medium text-fg-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
           href="/votacoes"
         >
           Ver todas <span aria-hidden>→</span>

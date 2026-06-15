@@ -15,9 +15,9 @@ describe('Card primitive', () => {
     const { container } = render(<Card data-testid="root">x</Card>)
     const el = container.querySelector('[data-testid="root"]')
     expect(el).not.toBeNull()
-    expect(el?.className).toContain('bg-surface')
-    expect(el?.className).toContain('border-border')
-    expect(el?.className).toContain('text-foreground')
+    expect(el?.className).toContain('bg-surface-base')
+    expect(el?.className).toContain('border-line-default')
+    expect(el?.className).toContain('text-fg-primary')
     expect(el?.className).toContain('rounded-lg')
     expect(el?.className).toContain('shadow-sm')
   })
@@ -29,10 +29,10 @@ describe('Card primitive', () => {
     expect(title.className).toContain('font-semibold')
   })
 
-  it('CardDescription usa foreground-muted (secundário)', () => {
+  it('CardDescription usa fg-tertiary (secundário)', () => {
     render(<CardDescription>Eleitor de SP</CardDescription>)
     const desc = screen.getByText('Eleitor de SP')
-    expect(desc.className).toContain('text-foreground-muted')
+    expect(desc.className).toContain('text-fg-tertiary')
     expect(desc.className).toContain('text-sm')
   })
 
@@ -87,6 +87,6 @@ describe('Card primitive', () => {
     expect(captured).not.toBeNull()
     expect(captured?.tagName).toBe('DIV')
     expect(captured?.className).toContain('custom-elevated')
-    expect(captured?.className).toContain('bg-surface')
+    expect(captured?.className).toContain('bg-surface-base')
   })
 })

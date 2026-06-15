@@ -1,3 +1,18 @@
+// Home (/) — promovida ao RDS (migração ADR-033). Consome o design system
+// @fabio.caffarello/react-design-system — tokens traduzidos pela tabela
+// canônica (docs/migration/token-map.md).
+//
+// O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
+// `src/app/layout.tsx` por composição nested — NÃO importar aqui.
+//
+// - HeroSection do RDS /server (slot `kpis` recebe o KpiCard).
+// - KpiCard de @/design-system/compositions — mantido (NÃO migrou pro Stat do
+//   RDS: o Stat não tem slot p/ floatingBadge do TrustBadge L1; opção A).
+// - SectionCard (Card compound do RDS), CardParlamentares/CardVotacoesSemana/
+//   FeaturesGrid de @/components/home.
+// - DataBadge (resíduo accent) e TrustBadge (client island) mantidos.
+
+import { HeroSection } from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
   Clock,
@@ -7,13 +22,11 @@ import {
   Vote,
 } from 'lucide-react'
 import Link from 'next/link'
-
 import { CardParlamentares } from '@/components/home/card-parlamentares'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { Button } from '@/design-system/primitives/button'
@@ -22,6 +35,12 @@ import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'
 import type { TrustLevel } from '@/shared/trust'
 import { TRUST_LEVEL_DESCRIPTIONS } from '@/shared/trust'
+
+export const metadata = {
+  title: 'Transparência política sem ruído — Brasil à Vera',
+  description:
+    'Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais.',
+}
 
 const trustExamples: { level: TrustLevel; example: string }[] = [
   { level: 'L1', example: 'Nome e partido do deputado via API da Câmara' },
@@ -36,9 +55,7 @@ const trustExamples: { level: TrustLevel; example: string }[] = [
 // Dynamic por necessidade do build: cards consomem queries (getPublicStats +
 // getVotacoesRecentes) e o build do Cloudflare Workers usa placeholder
 // DATABASE_URL — ISR (`revalidate`) tentaria pré-renderizar e falharia.
-// Quando R2 incremental cache (#58, Wave 3+) entrar, mudar para
-// `export const revalidate = 3600` — alinhado com cron de votações 4×/dia.
-// Sprint 3.1 Tarefa 2.
+// Preservado do original.
 export const dynamic = 'force-dynamic'
 
 const VOTACOES_JANELA_PADRAO = 7
@@ -65,13 +82,9 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO minimalista — variant `plain` (fundo escuro só,
-          sem grid nem blobs) + align `center` (slogan, CTAs e
-          KpiCard centralizados). Decisão visual após avaliar o
-          gradient-glow: equilíbrio simétrico em fundo limpo carrega
-          a hierarquia melhor que decoração concorrendo com o
-          conteúdo. KPIs reais via getPublicStats(); meta pills
-          reforçam procedência sem misturar com os números. */}
+      {/* HERO minimalista — variant `plain` (fundo escuro só, sem grid nem
+          blobs) + align `center` (slogan, CTAs e KpiCard centralizados).
+          KPIs reais via getPublicStats(); meta pills reforçam procedência. */}
       <HeroSection
         actions={
           <>
@@ -147,9 +160,7 @@ export default async function Home() {
           <FeaturesGrid />
         </section>
 
-        {/* ENTRY POINTS pragmáticos — portas de entrada cívicas.
-            Movidos para BAIXO do features grid (Sprint 6.1 D3) — utilidade
-            permanece no mapa, depois da camada inspiracional. */}
+        {/* ENTRY POINTS pragmáticos — portas de entrada cívicas. */}
         <section aria-labelledby="entry-points-titulo">
           <h2
             className="mb-6 font-semibold text-2xl tracking-tight"
@@ -163,9 +174,8 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* PIRÂMIDE DE CONFIANÇA — refatorada Sprint 6.1 PR 3 D4:
-            SectionCard único com lista compacta (vs 4 cards anteriores).
-            Mantém âncora #piramide-confianca para TrustBadge tooltip. */}
+        {/* PIRÂMIDE DE CONFIANÇA — SectionCard único com lista compacta.
+            Mantém âncora #piramide-confianca para o link do TrustBadge. */}
         <SectionCard
           id="piramide-confianca"
           subtitle="Todo dado exibido no Brasil à Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
@@ -174,27 +184,27 @@ export default async function Home() {
           <ul className="space-y-4">
             {trustExamples.map(({ level, example }) => (
               <li
-                className="flex items-start gap-3 border-border border-b pb-4 last:border-0 last:pb-0"
+                className="flex items-start gap-3 border-line-default border-b pb-4 last:border-0 last:pb-0"
                 key={level}
               >
                 <div className="shrink-0">
                   <TrustBadge trustLevel={level} />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">
+                  <p className="font-medium text-fg-primary text-sm">
                     {TRUST_LEVEL_DESCRIPTIONS[level]}
                   </p>
-                  <p className="mt-1 text-foreground-muted text-xs italic">
+                  <p className="mt-1 text-fg-tertiary text-xs italic">
                     Ex: {example}
                   </p>
                 </div>
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-foreground-subtle text-xs">
+          <p className="mt-6 text-fg-quaternary text-xs">
             Mais detalhes em{' '}
             <Link
-              className="rounded text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="rounded text-fg-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
               href="/docs/piramide-de-confianca"
             >
               /docs/piramide-de-confianca

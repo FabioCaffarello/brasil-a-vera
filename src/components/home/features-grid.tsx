@@ -74,19 +74,19 @@ export function FeaturesGrid({ className }: { className?: string }) {
     >
       {FEATURES.map((feature) => (
         <li
-          className="rounded-lg border border-border bg-surface p-5 transition-colors duration-150 hover:border-border-strong hover:bg-surface-elevated"
+          className="rounded-lg border border-line-default bg-surface-base p-5 transition-colors duration-150 hover:border-line-emphasis hover:bg-surface-raised"
           key={feature.title}
         >
           <div
             aria-hidden="true"
-            className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-md bg-brand/10 text-brand"
+            className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-md bg-fg-brand/10 text-fg-brand"
           >
             {feature.icon}
           </div>
-          <h3 className="mb-1 font-semibold text-foreground">
+          <h3 className="mb-1 font-semibold text-fg-primary">
             {feature.title}
           </h3>
-          <p className="text-foreground-muted text-sm">{feature.description}</p>
+          <p className="text-fg-tertiary text-sm">{feature.description}</p>
         </li>
       ))}
     </ul>

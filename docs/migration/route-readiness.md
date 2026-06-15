@@ -2014,6 +2014,13 @@ Promoções (4ª em diante; as 3 primeiras em §3.21):
   sobrescrito com a versão RDS Card compound; antecipa a convergência de
   home/comparar/perfis sem quebrá-los). QA Playwright (entry/result/<2 chars;
   0 erros; SectionCards + cards corretos).
+- **9ª — `/comparar`**: `concordancia-matrix` + `parlamentares-grid`
+  canonicalizados; `ErrorState` inline. QA Playwright (results view com 2 IDs
+  reais; 0 erros).
+- **10ª — `/` (home)**: `kpi-card` (KpiCard local mantido — opção A do
+  floatingBadge), `card` (primitivo shadcn), `card-parlamentares`/
+  `card-votacoes-semana`/`features-grid` canonicalizados. QA Playwright (hero +
+  KpiCard com TrustBadge L1 flutuante + FeaturesGrid + entry cards; 0 erros).
 
 ## §4 — Notas e premissas
 

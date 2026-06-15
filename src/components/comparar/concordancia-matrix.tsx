@@ -12,9 +12,7 @@ interface Props {
 // foreground / warning. Coerência cross-rota na leitura de %.
 export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
   if (pares.length === 0) {
-    return (
-      <p className="text-foreground-muted text-sm">Sem pares para comparar.</p>
-    )
+    return <p className="text-fg-tertiary text-sm">Sem pares para comparar.</p>
   }
 
   return (
@@ -25,20 +23,20 @@ export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
         const insuficiente = par.percentual === null
 
         const colorClass = insuficiente
-          ? 'text-foreground-muted'
+          ? 'text-fg-tertiary'
           : (par.percentual ?? 0) >= 80
-            ? 'text-success'
+            ? 'text-fg-success'
             : (par.percentual ?? 0) >= 50
-              ? 'text-foreground'
-              : 'text-warning'
+              ? 'text-fg-primary'
+              : 'text-fg-warning'
 
         return (
           <li
-            className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-border p-3"
+            className="flex flex-wrap items-baseline justify-between gap-2 rounded-md border border-line-default p-3"
             key={`${par.parlamentarA}-${par.parlamentarB}`}
           >
-            <span className="text-foreground text-sm">
-              {nomeA} <span className="text-foreground-subtle">×</span> {nomeB}
+            <span className="text-fg-primary text-sm">
+              {nomeA} <span className="text-fg-quaternary">×</span> {nomeB}
             </span>
             <span className="text-right">
               {insuficiente ? (
@@ -52,7 +50,7 @@ export function ConcordanciaMatrix({ pares, nomesPorId }: Props) {
                   >
                     {par.percentual}%
                   </span>{' '}
-                  <span className="text-foreground-muted text-xs">
+                  <span className="text-fg-tertiary text-xs">
                     ({par.coincidentes}/{par.total} votos comuns)
                   </span>
                 </>
