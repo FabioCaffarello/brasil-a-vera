@@ -5,7 +5,8 @@
 // - FilterChips (wrapper) + Label vêm do RDS /server (server-safe; §3.9).
 // - Chip (item) de @/design-system/compositions (zero-JS; chips são
 //   <Link>, ADR-022 — o Chip do RDS é client).
-// - Combobox: client island de @/design-system/compositions (cmdk+popover).
+// - Autocomplete (partido/UF): client island do RDS via wrapper de bundle
+//   (rds-autocomplete), com name/form (#225) p/ o form GET nativo.
 // - Button de @/design-system/primitives.
 
 import {
@@ -15,8 +16,8 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { Combobox } from '@/design-system/compositions/combobox'
 import { Button } from '@/design-system/primitives/button'
+import { Autocomplete } from '@/design-system/primitives/rds-autocomplete'
 import type { OrdemListagem } from '@/lib/queries/parlamentares'
 
 interface Props {
@@ -181,14 +182,16 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
             >
               Partido
             </Label>
-            <Combobox
-              allOptionLabel="Todos"
-              ariaLabel="Filtrar por partido"
+            <Autocomplete
+              aria-label="Filtrar por partido"
               defaultValue={selecionado.partido ?? ''}
+              emptyMessage="Nenhum partido encontrado"
               name="partido"
-              options={partidos.map((p) => ({ value: p, label: p }))}
+              options={[
+                { value: '', label: 'Todos' },
+                ...partidos.map((p) => ({ value: p, label: p })),
+              ]}
               placeholder="Todos"
-              searchPlaceholder="Buscar partido"
             />
           </div>
 
@@ -196,14 +199,16 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
             <Label className="text-fg-tertiary text-xs" htmlFor="filtro-uf">
               UF
             </Label>
-            <Combobox
-              allOptionLabel="Todas"
-              ariaLabel="Filtrar por UF"
+            <Autocomplete
+              aria-label="Filtrar por UF"
               defaultValue={selecionado.uf ?? ''}
+              emptyMessage="Nenhuma UF encontrada"
               name="uf"
-              options={ufs.map((u) => ({ value: u, label: u }))}
+              options={[
+                { value: '', label: 'Todas' },
+                ...ufs.map((u) => ({ value: u, label: u })),
+              ]}
               placeholder="Todas"
-              searchPlaceholder="Buscar UF"
             />
           </div>
 

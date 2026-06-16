@@ -3,7 +3,8 @@
 //
 // - FilterChips (wrapper) + Label do RDS /server (server-safe; §3.9).
 // - Chip (item) de @/design-system/compositions (zero-JS; chips <Link>,
-//   ADR-022). Combobox: client island de @/design-system. Button de
+//   ADR-022). Autocomplete (tema): client island do RDS via wrapper de
+//   bundle (rds-autocomplete), name/form (#225). Button de
 //   @/design-system/primitives. Busca: <input> cru com tokens RDS.
 
 import {
@@ -13,8 +14,8 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { Combobox } from '@/design-system/compositions/combobox'
 import { Button } from '@/design-system/primitives/button'
+import { Autocomplete } from '@/design-system/primitives/rds-autocomplete'
 import type { TemaDistinto } from '@/lib/queries/proposicoes'
 
 interface Props {
@@ -248,18 +249,19 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
             <Label className="text-fg-tertiary text-xs" htmlFor="filtro-tema">
               Tema
             </Label>
-            <Combobox
-              allOptionLabel="Todos"
-              ariaLabel="Filtrar por tema"
+            <Autocomplete
+              aria-label="Filtrar por tema"
               defaultValue={selecionado.tema ?? ''}
-              emptyText="Nenhum tema casa com a busca"
+              emptyMessage="Nenhum tema casa com a busca"
               name="tema"
-              options={temas.map((t) => ({
-                value: String(t.codigo),
-                label: t.nome,
-              }))}
+              options={[
+                { value: '', label: 'Todos' },
+                ...temas.map((t) => ({
+                  value: String(t.codigo),
+                  label: t.nome,
+                })),
+              ]}
               placeholder="Todos"
-              searchPlaceholder="Buscar tema"
             />
           </div>
 
