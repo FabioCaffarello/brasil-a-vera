@@ -1,9 +1,7 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { FilterChips } from '@fabio.caffarello/react-design-system/server'
+import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
-
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR, getTipoVotoStyle } from '@/lib/format'
 import type {
   VotosAlinhamentoFilter,
@@ -68,7 +66,7 @@ export function VotosRecentes({
       <div className="space-y-2">
         <FilterChips label="Período">
           {(['all', '30d', '90d', '12m'] as VotosPeriodoFilter[]).map((p) => (
-            <FilterChip asChild key={p} selected={filtros.periodo === p}>
+            <Chip asChild key={p} selected={filtros.periodo === p}>
               <Link
                 href={buildFiltroHref({
                   periodo: p === 'all' ? null : p,
@@ -76,7 +74,7 @@ export function VotosRecentes({
               >
                 {PERIODO_LABEL[p]}
               </Link>
-            </FilterChip>
+            </Chip>
           ))}
         </FilterChips>
 
@@ -84,7 +82,7 @@ export function VotosRecentes({
           {(
             ['todos', 'alinhado', 'divergente'] as VotosAlinhamentoFilter[]
           ).map((a) => (
-            <FilterChip asChild key={a} selected={filtros.alinhamento === a}>
+            <Chip asChild key={a} selected={filtros.alinhamento === a}>
               <Link
                 href={buildFiltroHref({
                   alinhamento: a === 'todos' ? null : a,
@@ -92,7 +90,7 @@ export function VotosRecentes({
               >
                 {ALINHAMENTO_LABEL[a]}
               </Link>
-            </FilterChip>
+            </Chip>
           ))}
         </FilterChips>
       </div>

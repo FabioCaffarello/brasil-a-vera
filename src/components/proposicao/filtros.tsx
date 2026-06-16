@@ -2,19 +2,18 @@
 // tabela canônica (docs/migration/token-map.md).
 //
 // - FilterChips (wrapper) + Label do RDS /server (server-safe; §3.9).
-// - FilterChip (item) de @/design-system/compositions (zero-JS; chips <Link>,
+// - Chip (item) de @/design-system/compositions (zero-JS; chips <Link>,
 //   ADR-022). Combobox: client island de @/design-system. Button de
 //   @/design-system/primitives. Busca: <input> cru com tokens RDS.
 
 import {
+  Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-
 import { Combobox } from '@/design-system/compositions/combobox'
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 import type { TemaDistinto } from '@/lib/queries/proposicoes'
 
@@ -189,28 +188,24 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
   return (
     <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Tipo">
-        <FilterChip asChild selected={!selecionado.tipo}>
+        <Chip asChild selected={!selecionado.tipo}>
           <Link href={buildHref(selecionado, { tipo: null })}>Todos</Link>
-        </FilterChip>
+        </Chip>
         {TIPOS_CHIPS.map((t) => (
-          <FilterChip
-            asChild
-            key={t.value}
-            selected={selecionado.tipo === t.value}
-          >
+          <Chip asChild key={t.value} selected={selecionado.tipo === t.value}>
             <Link href={buildHref(selecionado, { tipo: t.value })}>
               {t.label}
             </Link>
-          </FilterChip>
+          </Chip>
         ))}
       </FilterChips>
 
       <FilterChips label="Situação">
-        <FilterChip asChild selected={!selecionado.situacao}>
+        <Chip asChild selected={!selecionado.situacao}>
           <Link href={buildHref(selecionado, { situacao: null })}>Todas</Link>
-        </FilterChip>
+        </Chip>
         {SITUACOES_CHIPS.map((s) => (
-          <FilterChip
+          <Chip
             asChild
             key={s.value}
             selected={selecionado.situacao === s.value}
@@ -218,7 +213,7 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
             <Link href={buildHref(selecionado, { situacao: s.value })}>
               {s.label}
             </Link>
-          </FilterChip>
+          </Chip>
         ))}
       </FilterChips>
 

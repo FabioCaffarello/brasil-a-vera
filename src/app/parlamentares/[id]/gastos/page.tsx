@@ -12,21 +12,20 @@
 // Componentes do RDS:
 // - FilterChips (wrapper) + Label vêm do /server (server-safe; <label>
 //   nativo, sem hooks client).
-// - FilterChip (item) é local de @/design-system/compositions —
+// - Chip (item) é local de @/design-system/compositions —
 //   server-safe/zero-JS; os chips são <Link> (ADR-022), e o Chip do RDS
 //   é client (+5.759 bytes/rota). Decisão do owner na §3.9.
 //
 // Cursor (ADR-026): cursor inválido → redirect 308 que strip o param.
 
 import {
+  Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
-
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatDataBR } from '@/lib/format'
 import { CursorGastosV1 } from '@/lib/queries/cursor-schemas'
@@ -156,13 +155,13 @@ export default async function GastosDetalhePage({
       <div className="mb-4 space-y-3 rounded-lg border border-line-default bg-surface-base p-4">
         <FilterChips label="Período">
           {GASTOS_TRIMESTRES.map((t) => (
-            <FilterChip asChild key={t} selected={(trimestre ?? 'todo') === t}>
+            <Chip asChild key={t} selected={(trimestre ?? 'todo') === t}>
               <Link
                 href={buildFiltroHref({ trimestre: t === 'todo' ? null : t })}
               >
                 {TRIMESTRE_LABEL[t]}
               </Link>
-            </FilterChip>
+            </Chip>
           ))}
         </FilterChips>
 

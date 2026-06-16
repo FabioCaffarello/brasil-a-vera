@@ -1,5 +1,7 @@
 import {
   Badge,
+  Chip,
+  FilterChips,
   Label,
   Separator,
   Skeleton,
@@ -18,10 +20,6 @@ import {
   Vote,
 } from 'lucide-react'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import {
-  FilterChip,
-  FilterChips,
-} from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
@@ -487,9 +485,9 @@ export default function DesignSystemPage() {
                 badge={<DataBadge label="L2" source="Câmara" tone="brand" />}
               >
                 <FilterChips label="Filtrar por sessão" className="mb-4">
-                  <FilterChip selected>Todas</FilterChip>
-                  <FilterChip count={10}>Plenário</FilterChip>
-                  <FilterChip count={3}>Comissões</FilterChip>
+                  <Chip selected>Todas</Chip>
+                  <Chip count={10}>Plenário</Chip>
+                  <Chip count={3}>Comissões</Chip>
                 </FilterChips>
                 <p className="text-foreground-muted text-sm">
                   Conteúdo da seção entraria aqui em produção (tabela de votos
@@ -894,7 +892,7 @@ export default function DesignSystemPage() {
         <div className="space-y-4">
           <h3 className="font-medium text-foreground text-lg">FilterChips</h3>
           <p className="text-foreground-muted text-sm">
-            Grupo de chips de filtro da Sprint 6.0 PR 5. <code>FilterChip</code>{' '}
+            Grupo de chips de filtro da Sprint 6.0 PR 5. <code>Chip</code>{' '}
             individual + <code>FilterChips</code> wrapper. RSC-compatível:
             consumer hooka comportamento via <code>asChild</code> (linka a URL
             com search params, mantém URL = state). State <code>selected</code>{' '}
@@ -903,32 +901,32 @@ export default function DesignSystemPage() {
 
           {/* Variante 1: button puro, com selected state */}
           <FilterChips label="Casa">
-            <FilterChip selected>Câmara</FilterChip>
-            <FilterChip>Senado</FilterChip>
+            <Chip selected>Câmara</Chip>
+            <Chip>Senado</Chip>
           </FilterChips>
 
           {/* Variante 2: com count badges */}
           <FilterChips label="Partido (top 5)">
-            <FilterChip selected count={92}>
+            <Chip selected count={92}>
               PT
-            </FilterChip>
-            <FilterChip count={88}>PL</FilterChip>
-            <FilterChip count={43}>UNIÃO</FilterChip>
-            <FilterChip count={38}>PP</FilterChip>
-            <FilterChip count={32}>MDB</FilterChip>
+            </Chip>
+            <Chip count={88}>PL</Chip>
+            <Chip count={43}>UNIÃO</Chip>
+            <Chip count={38}>PP</Chip>
+            <Chip count={32}>MDB</Chip>
           </FilterChips>
 
           {/* Variante 3: asChild polimórfico — chip vira <a> com href */}
           <FilterChips label="UF (asChild → <a>)">
-            <FilterChip asChild selected>
+            <Chip asChild selected>
               <a href="?uf=SP">SP</a>
-            </FilterChip>
-            <FilterChip asChild>
+            </Chip>
+            <Chip asChild>
               <a href="?uf=RJ">RJ</a>
-            </FilterChip>
-            <FilterChip asChild>
+            </Chip>
+            <Chip asChild>
               <a href="?uf=MG">MG</a>
-            </FilterChip>
+            </Chip>
           </FilterChips>
         </div>
 
