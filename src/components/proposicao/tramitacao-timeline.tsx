@@ -1,10 +1,8 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { FilterChips } from '@fabio.caffarello/react-design-system/server'
+import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
 import { ArrowDown } from 'lucide-react'
 import Link from 'next/link'
-
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
 import type { TramitacaoFiltro } from '@/lib/queries/proposicoes'
 
@@ -131,12 +129,12 @@ function FilterChipsHeader({
 }) {
   return (
     <FilterChips label="Eventos">
-      <FilterChip asChild selected={filtro === 'todos'}>
+      <Chip asChild selected={filtro === 'todos'}>
         <Link href={buildFiltroHref('todos')}>Tudo</Link>
-      </FilterChip>
-      <FilterChip asChild selected={filtro === 'marcos'}>
+      </Chip>
+      <Chip asChild selected={filtro === 'marcos'}>
         <Link href={buildFiltroHref('marcos')}>Marcos importantes</Link>
-      </FilterChip>
+      </Chip>
     </FilterChips>
   )
 }

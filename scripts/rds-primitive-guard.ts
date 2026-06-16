@@ -70,7 +70,12 @@ const FORBIDDEN: Forbidden[] = [
     use: 'import { Stat, StatGroup } from \'@fabio.caffarello/react-design-system/server\' (layout="grid")',
     ref: 'ADR-038 / WS4 — StatsGrid consolidado no Stat/StatGroup do RDS',
   },
-  // Próximos (WS4): filter-chips→Chip (precisa RDS ^4 p/ count), hero-section, combobox.
+  {
+    path: '@/design-system/compositions/filter-chips',
+    use: "import { Chip } from '@fabio.caffarello/react-design-system/server' (container: FilterChips do RDS)",
+    ref: 'ADR-038 / WS4 — FilterChip consolidado no Chip do RDS (^4, count via #222). FilterChips container já era do RDS',
+  },
+  // Próximos (WS4): hero-section, combobox.
   // Notas de deferimento (ficam locais):
   //   - input/button: RDS client-only → quebrariam o zero-JS (RDS #224).
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).

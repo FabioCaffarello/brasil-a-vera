@@ -2,17 +2,17 @@
 // tabela canônica (docs/migration/token-map.md).
 //
 // - FilterChips (wrapper) + Label do RDS /server (server-safe; §3.9).
-// - FilterChip (item) de @/design-system/compositions (zero-JS; chips <Link>,
+// - Chip (item) de @/design-system/compositions (zero-JS; chips <Link>,
 //   ADR-022). Button de @/design-system/primitives. Sem Combobox (Ano é
 //   `<select>`); sem busca livre (a listagem de votações não indexa texto).
 
 import {
+  Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 
 interface Props {
@@ -139,7 +139,7 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
  * pragmático):
  * - **Casa** (3 opções): FilterChips com Links.
  * - **Resultado** (3 opções): FilterChips com Links.
- * - **Só nominais** (toggle bool): FilterChip único acting as toggle —
+ * - **Só nominais** (toggle bool): Chip único acting as toggle —
  *   click adiciona/remove `somenteNominais=1` do URL.
  * - **Ano** (~10+ valores): mantém `<select>` em form GET.
  * - **Chips de filtros ativos**: abaixo dos filtros, um chip por
@@ -151,37 +151,37 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
   return (
     <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Casa">
-        <FilterChip asChild selected={!selecionado.casa}>
+        <Chip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>
             Câmara + Senado
           </Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.casa === 'CAMARA'}>
+        </Chip>
+        <Chip asChild selected={selecionado.casa === 'CAMARA'}>
           <Link href={buildHref(selecionado, { casa: 'CAMARA' })}>Câmara</Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.casa === 'SENADO'}>
+        </Chip>
+        <Chip asChild selected={selecionado.casa === 'SENADO'}>
           <Link href={buildHref(selecionado, { casa: 'SENADO' })}>Senado</Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
 
       <FilterChips label="Resultado">
-        <FilterChip asChild selected={!selecionado.resultado}>
+        <Chip asChild selected={!selecionado.resultado}>
           <Link href={buildHref(selecionado, { resultado: null })}>Todas</Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.resultado === 'aprovadas'}>
+        </Chip>
+        <Chip asChild selected={selecionado.resultado === 'aprovadas'}>
           <Link href={buildHref(selecionado, { resultado: 'aprovadas' })}>
             Só aprovadas
           </Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.resultado === 'rejeitadas'}>
+        </Chip>
+        <Chip asChild selected={selecionado.resultado === 'rejeitadas'}>
           <Link href={buildHref(selecionado, { resultado: 'rejeitadas' })}>
             Só rejeitadas
           </Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
 
       <FilterChips label="Tipo de registro">
-        <FilterChip asChild selected={Boolean(selecionado.somenteNominais)}>
+        <Chip asChild selected={Boolean(selecionado.somenteNominais)}>
           <Link
             href={buildHref(selecionado, {
               somenteNominais: selecionado.somenteNominais ? null : '1',
@@ -189,7 +189,7 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
           >
             Só nominais (com voto individual)
           </Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
 
       <form

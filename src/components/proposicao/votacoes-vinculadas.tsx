@@ -1,9 +1,7 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { FilterChips } from '@fabio.caffarello/react-design-system/server'
+import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
-
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatDataBR } from '@/lib/format'
 import type {
   VotacoesCasaFiltro,
@@ -123,30 +121,30 @@ function FilterChipsHeader({
   return (
     <div className="space-y-3">
       <FilterChips label="Resultado">
-        <FilterChip asChild selected={resultado === 'todos'}>
+        <Chip asChild selected={resultado === 'todos'}>
           <Link href={buildFiltroHref({ resultado: 'todos' })}>Todas</Link>
-        </FilterChip>
-        <FilterChip asChild selected={resultado === 'aprovadas'}>
+        </Chip>
+        <Chip asChild selected={resultado === 'aprovadas'}>
           <Link href={buildFiltroHref({ resultado: 'aprovadas' })}>
             Aprovadas
           </Link>
-        </FilterChip>
-        <FilterChip asChild selected={resultado === 'rejeitadas'}>
+        </Chip>
+        <Chip asChild selected={resultado === 'rejeitadas'}>
           <Link href={buildFiltroHref({ resultado: 'rejeitadas' })}>
             Rejeitadas
           </Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
       <FilterChips label="Casa">
-        <FilterChip asChild selected={casa === 'todas'}>
+        <Chip asChild selected={casa === 'todas'}>
           <Link href={buildFiltroHref({ casa: 'todas' })}>Todas</Link>
-        </FilterChip>
-        <FilterChip asChild selected={casa === 'CAMARA'}>
+        </Chip>
+        <Chip asChild selected={casa === 'CAMARA'}>
           <Link href={buildFiltroHref({ casa: 'CAMARA' })}>Câmara</Link>
-        </FilterChip>
-        <FilterChip asChild selected={casa === 'SENADO'}>
+        </Chip>
+        <Chip asChild selected={casa === 'SENADO'}>
           <Link href={buildFiltroHref({ casa: 'SENADO' })}>Senado</Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
     </div>
   )

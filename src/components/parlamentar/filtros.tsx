@@ -3,20 +3,19 @@
 //
 // Componentes:
 // - FilterChips (wrapper) + Label vêm do RDS /server (server-safe; §3.9).
-// - FilterChip (item) de @/design-system/compositions (zero-JS; chips são
+// - Chip (item) de @/design-system/compositions (zero-JS; chips são
 //   <Link>, ADR-022 — o Chip do RDS é client).
 // - Combobox: client island de @/design-system/compositions (cmdk+popover).
 // - Button de @/design-system/primitives.
 
 import {
+  Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-
 import { Combobox } from '@/design-system/compositions/combobox'
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { Button } from '@/design-system/primitives/button'
 import type { OrdemListagem } from '@/lib/queries/parlamentares'
 
@@ -139,15 +138,15 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
   return (
     <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
       <FilterChips label="Casa">
-        <FilterChip asChild selected={!selecionado.casa}>
+        <Chip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>Todas</Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.casa === 'CAMARA'}>
+        </Chip>
+        <Chip asChild selected={selecionado.casa === 'CAMARA'}>
           <Link href={buildHref(selecionado, { casa: 'CAMARA' })}>Câmara</Link>
-        </FilterChip>
-        <FilterChip asChild selected={selecionado.casa === 'SENADO'}>
+        </Chip>
+        <Chip asChild selected={selecionado.casa === 'SENADO'}>
           <Link href={buildHref(selecionado, { casa: 'SENADO' })}>Senado</Link>
-        </FilterChip>
+        </Chip>
       </FilterChips>
 
       <form

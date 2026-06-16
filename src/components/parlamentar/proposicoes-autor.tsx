@@ -1,9 +1,7 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { FilterChips } from '@fabio.caffarello/react-design-system/server'
+import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
-
-import { FilterChip } from '@/design-system/compositions/filter-chips'
 import { formatProposicaoRef } from '@/lib/format'
 import type {
   ProposicaoSituacaoFilter,
@@ -77,7 +75,7 @@ export function ProposicoesAutor({
       <div className="space-y-2">
         <FilterChips label="Tipo">
           {(Object.keys(TIPO_LABEL) as ProposicaoTipoFilter[]).map((t) => (
-            <FilterChip asChild key={t} selected={filtros.tipo === t}>
+            <Chip asChild key={t} selected={filtros.tipo === t}>
               <Link
                 href={buildFiltroHref({
                   tipo: t === 'todos' ? null : t,
@@ -85,7 +83,7 @@ export function ProposicoesAutor({
               >
                 {TIPO_LABEL[t]}
               </Link>
-            </FilterChip>
+            </Chip>
           ))}
         </FilterChips>
 
@@ -93,7 +91,7 @@ export function ProposicoesAutor({
           {(
             Object.keys(SITUACAO_FILTER_LABEL) as ProposicaoSituacaoFilter[]
           ).map((s) => (
-            <FilterChip asChild key={s} selected={filtros.situacao === s}>
+            <Chip asChild key={s} selected={filtros.situacao === s}>
               <Link
                 href={buildFiltroHref({
                   situacao: s === 'todas' ? null : s,
@@ -101,7 +99,7 @@ export function ProposicoesAutor({
               >
                 {SITUACAO_FILTER_LABEL[s]}
               </Link>
-            </FilterChip>
+            </Chip>
           ))}
         </FilterChips>
       </div>
