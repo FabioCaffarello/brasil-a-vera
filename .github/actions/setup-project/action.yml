@@ -1,0 +1,22 @@
+name: Setup project
+description: >-
+  Setup de Node + dependências, fonte única da versão de Node via .nvmrc.
+  NÃO faz checkout — o job precisa fazer actions/checkout ANTES, para que esta
+  action local (e quaisquer outras ./.github/actions/*) sejam resolvidas.
+
+# Colapsa o trio repetido (setup-node + cache + npm ci) que aparecia em ~17
+# jobs com `node-version: 22` hardcoded. Bump de Node agora é 1 edição no
+# .nvmrc. Cache via `cache: npm` do setup-node (cacheia ~/.npm, deixando o
+# `npm ci` rápido sem o anti-pattern de cachear node_modules e recriá-lo).
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci

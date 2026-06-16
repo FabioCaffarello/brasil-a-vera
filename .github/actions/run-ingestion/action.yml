@@ -1,0 +1,48 @@
+name: Run ingestion script
+description: >-
+  Roda um script de ingestão npm com os secrets de banco e, em caso de falha,
+  dispara a notify-failure (Discord + issue de incidente deduplicada).
+
+# Colapsa o corpo quase-idêntico dos ~9 jobs de ingestão, que diferiam só no
+# nome do script e no `context` de dedupe. Pré-requisito: o job já fez
+# actions/checkout e ./.github/actions/setup-project antes desta action, pois
+# (a) esta é uma action local e (b) ela reusa a action local notify-failure.
+
+inputs:
+  script:
+    description: Nome do script npm a rodar (ex. ingest:camara:deputados).
+    required: true
+  context:
+    description: Identificador estável do job, usado como chave de dedupe da issue de incidente.
+    required: true
+  database-url:
+    description: Connection string pooled (secrets.DATABASE_URL).
+    required: true
+  direct-url:
+    description: Connection string direta para DDL (secrets.DIRECT_URL).
+    required: true
+  webhook-url:
+    description: Discord webhook de falha de ingestão. Skip limpo se vazio.
+    required: false
+    default: ''
+  github-token:
+    description: Token para criar/comentar a issue de incidente (secrets.GITHUB_TOKEN).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Run npm run ${{ inputs.script }}
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+        DIRECT_URL: ${{ inputs.direct-url }}
+      run: npm run ${{ inputs.script }}
+
+    - name: Notify on failure
+      if: failure()
+      uses: ./.github/actions/notify-failure
+      with:
+        webhook-url: ${{ inputs.webhook-url }}
+        github-token: ${{ inputs.github-token }}
+        context: ${{ inputs.context }}

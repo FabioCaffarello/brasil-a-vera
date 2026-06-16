@@ -39,13 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
+      # Setup de Node/deps via .nvmrc (ver ./.github/actions/setup-project).
+      - uses: ./.github/actions/setup-project
 
       # Bootstrap idempotente dos Workers Secrets de runtime. Reproduz o
       # estado esperado a cada deploy a partir dos GitHub Secrets (fonte

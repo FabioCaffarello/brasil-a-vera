@@ -1,0 +1,59 @@
+name: Trigger cron endpoint
+description: >-
+  POST autenticado (header x-cron-secret) a um endpoint de cron em produção,
+  imprime os stats da resposta e, em caso de falha, dispara a notify-failure.
+
+# Colapsa o corpo idêntico de alertas-cron.yml e lgpd-cron.yml. Pré-requisito:
+# o job já fez actions/checkout antes (action local + reusa notify-failure).
+# Os endpoints são idempotentes (idempotency_key UNIQUE no banco / DELETE
+# idempotente), então re-execução na mesma janela não duplica efeitos.
+
+inputs:
+  endpoint:
+    description: URL completa do endpoint (ex. https://brasilavera.org/api/cron/alertas/run).
+    required: true
+  cron-secret:
+    description: Segredo compartilhado validado pelo endpoint (secrets.CRON_SECRET).
+    required: true
+  context:
+    description: Identificador estável do cron, usado como chave de dedupe da issue de incidente.
+    required: true
+  webhook-url:
+    description: Discord webhook de falha. Skip limpo se vazio.
+    required: false
+    default: ''
+  github-token:
+    description: Token para criar/comentar a issue de incidente (secrets.GITHUB_TOKEN).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: POST com x-cron-secret
+      shell: bash
+      env:
+        CRON_SECRET: ${{ inputs.cron-secret }}
+        ENDPOINT: ${{ inputs.endpoint }}
+      run: |
+        if [ -z "$CRON_SECRET" ]; then
+          echo "::error::CRON_SECRET não configurado nos GitHub Secrets"
+          exit 1
+        fi
+        curl --fail-with-body --silent --show-error \
+          --max-time 300 \
+          -X POST \
+          -H "x-cron-secret: $CRON_SECRET" \
+          -H "Content-Type: application/json" \
+          "$ENDPOINT" \
+          | tee /tmp/cron-response.json
+        echo
+        echo "--- stats ---"
+        jq '.stats // empty' /tmp/cron-response.json || true
+
+    - name: Notify on failure
+      if: failure()
+      uses: ./.github/actions/notify-failure
+      with:
+        webhook-url: ${{ inputs.webhook-url }}
+        github-token: ${{ inputs.github-token }}
+        context: ${{ inputs.context }}

@@ -8,6 +8,9 @@ name: CI
 # Não roda em outras branches por push direto — discipline de PR-only.
 # Workflow_dispatch ausente por design (CI roda em código, não em
 # botão). Ver docs/contributing/WORKFLOWS.md.
+#
+# Setup de Node/deps centralizado em ./.github/actions/setup-project
+# (fonte única da versão via .nvmrc; cache: npm do setup-node).
 
 on:
   push:
@@ -33,20 +36,12 @@ jobs:
       # semanas pós-Wave 10 porque só rodava manualmente (PR #365), e
       # path filter criaria check "expected" eterno se fosse promovido
       # a required. Inclui o caso de consistência ROLES.md ↔ matchers.
+      # Roda antes do setup-project (só precisa de bash + jq).
       - name: Hooks test matrix (.claude)
         run: bash .claude/hooks/__tests__/test-hooks.sh
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
+      - uses: ./.github/actions/setup-project
 
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node-modules-
-
-      - run: npm ci
       - run: npm run ci
       - run: npm run build
         env:
@@ -76,18 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node-modules-
-
-      - run: npm ci
+      - uses: ./.github/actions/setup-project
       - run: npm run wcag:check
 
   test:
@@ -95,18 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node-modules-
-
-      - run: npm ci
+      - uses: ./.github/actions/setup-project
       - run: npm run test:coverage
 
   test-integration:
@@ -114,18 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: node-modules-${{ hashFiles('package-lock.json') }}
-          restore-keys: node-modules-
-
-      - run: npm ci
+      - uses: ./.github/actions/setup-project
       # Linux runners têm Docker pré-instalado e daemon rodando;
       # testcontainers sobe postgres:17-alpine e aplica migrations.
       # Limitação reconhecida no ADR-015: driver `pg` ≠ driver de
