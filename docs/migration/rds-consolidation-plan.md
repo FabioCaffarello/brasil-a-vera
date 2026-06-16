@@ -60,13 +60,20 @@ stats-grid 1`.
 - **(X)** morto → remover.
 - **(G)** equivalente RDS incompleto → fica local + issue upstream documentada.
 
-> **Estado WS3 (2026-06-16):** as primitivas de baixo atrito foram consolidadas —
-> `accordion` (removida), `badge`/`label`/`separator` (#440), `skeleton` (#441).
-> O **restante encalha** em fricção real, não em volume: `button` e `input` são
-> **client-only no RDS** (bloqueados por [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) —
-> regridiriam o zero-JS); `card` tem **modelo de layout diferente** (refactor de 2
-> cards da home, exige QA do owner); `dialog` espera [RDS #221](https://github.com/FabioCaffarello/react-design-system/issues/221);
-> `sonner`/Toast precisa de provider; `command`/`popover` saem com o `combobox` (WS4).
+> **Estado WS3/WS4 (2026-06-16):** consolidados — `accordion` (removida),
+> `badge`/`label`/`separator` (#440), `skeleton` (#441), `kpi-strip`/`stats-grid`→
+> `Stat`/`StatGroup` (#443), `filter-chips`→`Chip` (#445, via **RDS v4** #444).
+> **RDS v4.0.0 adotado** (#444): shipou `Dialog.showCloseButton` (#221) e
+> `Chip.count` (#222).
+>
+> O **restante encalha em gap, não em volume** — todos com issue upstream aberta:
+> `button`/`input` client-only no RDS ([#224](https://github.com/FabioCaffarello/react-design-system/issues/224));
+> `combobox` (+ `command`/`popover` que só o compõem) precisa de `Autocomplete`
+> form-native ([#225](https://github.com/FabioCaffarello/react-design-system/issues/225));
+> `card` tem modelo de layout diferente (refactor de home com QA); `kpi-card` sem
+> slot `floatingBadge`; `data-badge` sem par (source+tone). `dialog` **destravado**
+> pelo v4 (`showCloseButton`) → WS2 #420. Sancionados (ficam): `rds-accordion`,
+> `section-nav`, `section-card` (já sobre o Card do RDS).
 
 ### Primitivas
 
@@ -80,10 +87,10 @@ stats-grid 1`.
 | `skeleton` | 4 | **R** | `Skeleton` (`./server`) | ✅ consolidado (WS3‑b; RSC-safe, dark via `.dark` do RDS → `slate-800`; delta sutil de shade p/ QA) | baixo-méd | ✓ |
 | `input` | 2 | **G** | `Input` (client-only) | BLOQUEADO: RDS Input não tem entry `./server`; quebraria o zero-JS do `search-form` (ADR-022). Fica local até resolver [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) | médio | bloqueado |
 | `card` | 3 | **R** | `Card` compound | DIFERIDO p/ PR dedicado: modelo diferente (padding no Card vs por seção; `CardFooter`→`CardActions`; padrão flex equal-height) → refactor de 2 cards da **home** com QA visual do owner | médio | WS3‑c (QA) |
-| `popover` | 1 | **R** | `Popover` | acoplado ao Combobox | médio | WS4 |
+| `popover` | 1 | **G** | `Popover` | só compõe o `Combobox` local → fica com ele ([RDS #225](https://github.com/FabioCaffarello/react-design-system/issues/225)) | médio | bloqueado |
 | `button` | 27 | **G** | `Button` (client-only) | BLOQUEADO: RDS Button só no entry client `.`; 13 dos 27 consumidores são Server Components → repointar empurra `"use client"` (regride ADR-022). Fica local até [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) | alto | bloqueado |
-| `dialog` | 7 | **G** | `Dialog` | falta `showCloseButton` p/ 3 modais → upstream | médio | WS3‑c |
-| `command` | 1 | **R/G** | `CommandPalette`/`Dropdown` | acoplado ao Combobox | alto | WS4 |
+| `dialog` | 7 | **R** | `Dialog` | DESTRAVADO no v4 (`showCloseButton` #221) → traduzir 3 modais do painel | médio | WS2 #420 |
+| `command` | 1 | **G** | (cmdk; sem par RDS) | só compõe o `Combobox` local → fica com ele ([RDS #225](https://github.com/FabioCaffarello/react-design-system/issues/225)) | alto | bloqueado |
 | `tabs` (stateful) | 1 | **G** | só `TabsAsLinks` | gap de tabs com estado → avaliar/issue | baixo | WS4 |
 | `sonner` (Toast) | 2 | **R** | `Toast`/`useToast` + provider | precisa provider; avaliar | médio | WS3‑c |
 
@@ -91,31 +98,24 @@ stats-grid 1`.
 
 | Local | Cons. | Balde | Equivalente RDS | Ação | Risco | PR |
 | --- | ---: | :---: | --- | --- | --- | --- |
-| `hero-section` | 1 | **R** | `HeroSection` | repointar `/dev/design` p/ RDS + deletar (precisa QA visual) | baixo | WS4 |
+| `filter-chips` (`FilterChip`) | 9 | **R** | `Chip` (+ `FilterChips`) | ✅ consolidado (WS4, #445; v4 `Chip.count`) | médio | ✓ |
+| `kpi-strip` | 1 | **R** | `Stat`/`StatGroup` | ✅ consolidado (WS4, #443) | médio | ✓ |
+| `stats-grid` | 1 | **R** | `Stat`/`StatGroup` | ✅ consolidado (WS4, #443) | médio | ✓ |
+| `section-card` | 7 | **D** | `Card` compound | manter — JÁ construído sobre o `Card` do RDS (wrapper sancionado) | — | — |
 | `section-nav` | 4 | **D** | wrapper sobre `useScrollSpy` | manter (composição sancionada) | — | — |
-| `section-card` | 7 | **R** | `Card` compound | repointar | médio | WS4 |
-| `kpi-strip` | 1 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
-| `stats-grid` | 1 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
-| `kpi-card` | 2 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
-| `filter-chips` (`FilterChip` singular) | 9 | **R** | `Chip` (+ container `FilterChips`) | repointar p/ `Chip` do RDS (verificar prop `count`); QA visual | médio | WS4 |
-| `data-badge` | 9 | **G** | `Chip`/`Info`/`Badge` | rico (source+tone) sem par RDS → upstream ou manter | médio | WS5 |
-| `combobox` | 2 | **R** | `Dropdown`/`SearchInput`/`Select` | re-arquitetura; remove `command`+`popover` | alto | WS4 |
 | `party-badge` | 4 | **D** | — | manter (cores oficiais, D4 Wave 6) | — | — |
+| `kpi-card` | 2 | **G** | `Stat` (sem `floatingBadge`) | fica local — `Stat` não tem slot p/ o `floatingBadge` (TrustBadge L1 na home; "opção A") | médio | local |
+| `hero-section` | 1 | **R** | `HeroSection` | repointar `/dev/design` p/ RDS; CUIDADO: showroom demonstra variantes gradient vedadas em produção | baixo | WS4 |
+| `combobox` | 2 | **G** | `Autocomplete` (callback-only) | fica local — `Autocomplete` do RDS não integra com form nativo (`name`/GET); regrideria o zero-JS dos filtros ([RDS #225](https://github.com/FabioCaffarello/react-design-system/issues/225)). Carrega `command`+`popover` | alto | bloqueado |
+| `data-badge` | 9 | **G** | `Chip`/`Info`/`Badge` | rico (source+tone) sem par RDS → manter ou upstream | médio | local |
 
-### Dual-existência (reclassificada para WS4 — são repoints, não dead-code)
+### Dual-existência — resolvida
 
-WS1 (PR3) ficou só com os **órfãos puros** (0 consumidores, deleção sem repoint):
-`accordion` local e `trust-banner`. As duas dual-existências abaixo exigem
-repoint + QA visual, então vão para a consolidação de composições (WS4):
-
-- **`HeroSection`**: RDS em 3 páginas de produto; local só no showroom
-  `/dev/design`. → repointar showroom p/ RDS, deletar local (QA visual).
-- **`Chip` (ex-`FilterChip`)**: páginas já usam o container `FilterChips` do RDS
-  (4); os 9 consumidores do chip singular usam o `FilterChip` **local**. O RDS
-  expõe o chip como **`Chip`** (docs mostram `<Chip asChild selected>`), com
-  `selected`/`asChild`. **Verificar a prop `count`** (sub-badge): se o `Chip` do
-  RDS a tiver, repoint direto; se não, é o único gap → issue upstream (WS5) e o
-  chip local sobrevive com a issue linkada.
+- **`Chip` (ex-`FilterChip`)**: ✅ consolidado no #445 (container `FilterChips` já
+  era do RDS; chip singular migrou p/ `Chip` do RDS v4).
+- **`HeroSection`**: só falta o showroom `/dev/design` (RDS já em 3 páginas de
+  produto). Repoint pendente (cuidado: o showroom demonstra variantes `gradient`
+  vedadas em produção que o RDS pode não ter).
 
 ## Resíduos ratificados — NÃO migrar (exigem novo ADR)
 
@@ -134,13 +134,18 @@ Paleta de charts `--chart-1..5`, `--accent` roxo (Okabe‑Ito), `text-success-fo
 3. ✅ [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224)
    — entry `./server` para `Button` e `Input` (hoje client-only → bloqueia as 2
    primitivas mais usadas do BaV: Button 27/13-server, Input no form zero-JS).
+4. ✅ [RDS #225](https://github.com/FabioCaffarello/react-design-system/issues/225)
+   — `Autocomplete` com integração de form nativo (`name` → hidden input); destrava
+   o `Combobox` local (+ `command`/`popover`) sem regredir o zero-JS dos filtros.
+
+> #221 e #222 já entregues no **RDS v4.0.0** (adotado no #444).
 
 **Candidatas (ainda não abertas, precisam de análise):**
 
-4. `DataBadge`-equivalente (`source` + `tone` semântico) — ou ratificar como
+5. `DataBadge`-equivalente (`source` + `tone` semântico) — ou ratificar como
    composição local.
-5. Paleta categórica de charts colorblind-safe (sem urgência; resíduo ADR‑034).
-6. Par on-color `success-foreground` (RDS tem `fg-success`/`success-bg-emphasis`
+6. Paleta categórica de charts colorblind-safe (sem urgência; resíduo ADR‑034).
+7. Par on-color `success-foreground` (RDS tem `fg-success`/`success-bg-emphasis`
    — analisar se já cobre antes de abrir).
 
 ## Sequenciamento
