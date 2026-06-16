@@ -1,0 +1,120 @@
+name: Ingestão diária
+
+# Roda 1x/dia (02:00 UTC = 23:00 do dia anterior em Brasília): deputados,
+# senadores, proposições, votações e derivados (orientações, backfill).
+# Votações eram 4×/dia num workflow próprio; consolidadas aqui em 2026-06-15
+# (ADR-035 §votações) — frescor diário trocado por menos runs.
+#
+# Gastos e tramitação têm cadência menor — ver ingestion-weekly.yml.
+#
+# Config-driven (ADR-035): os jobs NÃO são hand-written. O job `discover` lê o
+# registry (ingestion/registry.ts, cadence=daily) e emite a matrix por tier;
+# cada `tierN` roda as entradas via fan-out. Adicionar fonte = 1 entrada no
+# registry. DAG via tier:
+#   t0: deputados, votacoes-camara, votacoes-senado
+#   t1: senadores, proposicoes-camara, orientacoes
+#   t2: proposicoes-senado, backfill (liga votação→proposição já no mesmo run)
+# Ver docs/contributing/WORKFLOWS.md.
+#
+# Secrets necessários no repositório (configurar via gh secret set):
+#   - DATABASE_URL                    (conexão pooled, usada pela aplicação)
+#   - DIRECT_URL                      (conexão direta, usada pelo Drizzle Kit)
+#   - DISCORD_INGESTION_WEBHOOK_URL   (alerta de falha; opcional — skip clean se ausente)
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ingestion-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  discover:
+    name: Descobrir matrix (daily)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tier0: ${{ steps.matrix.outputs.tier0 }}
+      tier1: ${{ steps.matrix.outputs.tier1 }}
+      tier2: ${{ steps.matrix.outputs.tier2 }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - id: matrix
+        run: npm run ingest:print-matrix
+        env:
+          CADENCE: daily
+
+  tier0:
+    name: ${{ matrix.id }}
+    needs: discover
+    if: needs.discover.outputs.tier0 != '[]' && needs.discover.outputs.tier0 != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      # fail-fast:false preserva a independência dos jobs atuais — uma fonte
+      # falhando NÃO cancela as irmãs do mesmo tier.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier0) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  tier1:
+    name: ${{ matrix.id }}
+    needs: [discover, tier0]
+    if: needs.discover.outputs.tier1 != '[]' && needs.discover.outputs.tier1 != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier1) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  tier2:
+    name: ${{ matrix.id }}
+    needs: [discover, tier1]
+    if: needs.discover.outputs.tier2 != '[]' && needs.discover.outputs.tier2 != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier2) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
