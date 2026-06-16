@@ -105,6 +105,11 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { HeroSection } from '@fabio.caffarello/react-design-system/server' (mesmas variantes plain|gradient|gradient-glow + align)",
     ref: 'ADR-038 — HeroSection consolidado no RDS (/server). Drop-in: API/variantes idênticas; prod já usava o do RDS, só o showroom restava',
   },
+  {
+    path: '@/design-system/primitives/dialog',
+    use: "import { Dialog, DialogContent, ... } from '@/design-system/primitives/rds-dialog' (wrapper bundle do RDS; showCloseButton no DialogContent, #221)",
+    ref: 'ADR-038 — Dialog consolidado no Dialog do RDS (v4, showCloseButton via #221). Sub-componentes idênticos',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).

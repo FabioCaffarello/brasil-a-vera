@@ -44,7 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/design-system/primitives/dialog'
+} from '@/design-system/primitives/rds-dialog'
 import { Toaster } from '@/design-system/primitives/sonner'
 import {
   Tabs,
