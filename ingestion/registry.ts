@@ -149,7 +149,10 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       context: 'ingestion-camara-backfill-cpf',
       cadence: 'monthly',
       tier: 0,
-      timeoutMin: 30,
+      // Serial + pacing (detalhe da Câmara rejeita bursts). 513 deputados a
+      // ~0.5s ≈ 5min num IP saudável; folga grande p/ degradação da API. Em CI
+      // o IP do runner pode ser throttled — caminho confiável é rodar local.
+      timeoutMin: 60,
     },
     {
       id: 'tse-bens-2022',
