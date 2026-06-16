@@ -17,6 +17,7 @@ import {
   Building2,
   FileText,
   Inbox,
+  PieChart,
   TrendingDown,
   TrendingUp,
   Users,
@@ -28,6 +29,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
+import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
@@ -71,6 +73,7 @@ import {
   getEvolucaoPatrimonial,
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
+import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
 
@@ -242,6 +245,9 @@ export default async function ParlamentarPerfilPage({
     getPatrimonioSnapshot(parlamentar.id),
     getEvolucaoPatrimonial(parlamentar.id),
   ])
+
+  // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
+  const mixComposicao = buildMixComposicao(evolucaoPatrimonial)
 
   const votos = votosPage.rows
   const votosFiltros = {
@@ -459,6 +465,15 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(mixComposicao
+            ? [
+                {
+                  id: 'mix-patrimonio',
+                  label: 'Composição',
+                  icon: <PieChart className="h-4 w-4" />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             label: 'Top 5',
@@ -563,6 +578,17 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(mixComposicao
+            ? [
+                {
+                  id: 'mix-patrimonio',
+                  title: 'Composição patrimonial ao longo do tempo',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: <MixComposicaoBlock mix={mixComposicao} />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             title: 'Top 5 maior afinidade de voto',
@@ -659,6 +685,16 @@ export default async function ParlamentarPerfilPage({
             title="Evolução patrimonial entre pleitos"
           >
             <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
+          </SectionCard>
+        ) : null}
+
+        {mixComposicao ? (
+          <SectionCard
+            id="mix-patrimonio"
+            subtitle="Para onde o patrimônio migrou entre as candidaturas. Composição em %, imune à inflação — isola a mudança de mix dos valores absolutos."
+            title="Composição patrimonial ao longo do tempo"
+          >
+            <MixComposicaoBlock mix={mixComposicao} />
           </SectionCard>
         ) : null}
 
