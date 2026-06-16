@@ -14,6 +14,7 @@
 import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
+  Building2,
   FileText,
   Inbox,
   TrendingDown,
@@ -26,6 +27,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
+import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
@@ -63,6 +65,7 @@ import {
   type VotosAlinhamentoFilter,
   type VotosPeriodoFilter,
 } from '@/lib/queries/parlamentares'
+import { getPatrimonioSnapshot } from '@/lib/queries/patrimonio'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
 
@@ -205,6 +208,7 @@ export default async function ParlamentarPerfilPage({
     alinhamento,
     alinhamentoMensal,
     comparacoes,
+    patrimonio,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -229,6 +233,7 @@ export default async function ParlamentarPerfilPage({
     getAlinhamentoParlamentar(parlamentar.id),
     getAlinhamentoMensal(parlamentar.id, 12),
     getComparacoesCasa(parlamentar.id),
+    getPatrimonioSnapshot(parlamentar.id),
   ])
 
   const votos = votosPage.rows
@@ -429,6 +434,15 @@ export default async function ParlamentarPerfilPage({
             label: 'Gastos',
             icon: <TrendingDown className="h-4 w-4" />,
           },
+          ...(patrimonio
+            ? [
+                {
+                  id: 'patrimonio',
+                  label: 'Patrimônio',
+                  icon: <Building2 className="h-4 w-4" />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             label: 'Top 5',
@@ -509,6 +523,17 @@ export default async function ParlamentarPerfilPage({
               />
             ),
           },
+          ...(patrimonio
+            ? [
+                {
+                  id: 'patrimonio',
+                  title: 'Patrimônio declarado',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: <PatrimonioBlock snapshot={patrimonio} />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             title: 'Top 5 maior afinidade de voto',
@@ -587,6 +612,16 @@ export default async function ParlamentarPerfilPage({
             topFornecedores={gastosTopFornecedores}
           />
         </SectionCard>
+
+        {patrimonio ? (
+          <SectionCard
+            id="patrimonio"
+            subtitle="Bens declarados ao TSE na candidatura de 2022. Vínculo por CPF exato — só aparece para parlamentares da Câmara identificados na base do TSE."
+            title="Patrimônio declarado"
+          >
+            <PatrimonioBlock snapshot={patrimonio} />
+          </SectionCard>
+        ) : null}
 
         <SectionCard
           id="afinidade"

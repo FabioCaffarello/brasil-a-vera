@@ -22,7 +22,8 @@ export async function truncateAll(): Promise<void> {
           'parlamentares',
           'votacoes',
           'proposicoes',
-          'gastos'
+          'gastos',
+          'eleitoral'
         )
       LOOP
         EXECUTE format(
