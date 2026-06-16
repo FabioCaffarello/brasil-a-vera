@@ -55,12 +55,15 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Separator } from '@fabio.caffarello/react-design-system/server'",
     ref: 'ADR-038 / WS3-a — Separator consolidado no RDS (/server)',
   },
-  // WS3-b/WS4 adicionam aqui: skeleton, input, card, button, dialog…
-  // Notas de deferimento (não consolidados ainda):
+  {
+    path: '@/design-system/primitives/skeleton',
+    use: "import { Skeleton } from '@fabio.caffarello/react-design-system/server'",
+    ref: 'ADR-038 / WS3-b — Skeleton consolidado no RDS (/server, RSC-safe). Token dark via .dark do RDS (surface-muted→slate-800)',
+  },
+  // WS3-b/WS4 adicionam aqui: input, card, button, dialog…
+  // Nota de deferimento:
   //   - input: RDS Input é client-only; repointar quebraria o zero-JS
   //     do search-form (ADR-022). Espera Input server-safe upstream.
-  //   - skeleton: tem consumidores de produção (loading states) + delta de
-  //     token (bg-surface-elevated → bg-surface-muted); exige QA visual.
 ]
 
 function walk(dir: string, exts: string[]): string[] {
