@@ -11,17 +11,21 @@
 // (Clerk signOut → home). Link para `/privacidade` abre em nova
 // aba (não tira o usuário do modal).
 //
-// Implementação: uso direto dos primitives do Radix (não o
-// `<DialogContent>` do nosso DS) porque ele renderiza um botão de
-// fechar fixo no canto, e queremos modal não-fechável.
+// Implementação: Dialog do RDS com closeOnEscape/closeOnOverlayClick/
+// showCloseButton={false} (#221) — modal não-fechável sem precisar do
+// Radix direto (ADR-038).
 
 import { useClerk } from '@clerk/nextjs'
 import { Button } from '@fabio.caffarello/react-design-system/server'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/design-system/primitives/rds-dialog'
 import { useToast } from '@/design-system/primitives/rds-toast'
-import { cn } from '@/lib/cn'
 
 interface Props {
   policyVersion: string
@@ -69,60 +73,56 @@ export function ConsentModal({ policyVersion }: Props) {
   }
 
   return (
-    <DialogPrimitive.Root open>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
-        <DialogPrimitive.Content
-          className={cn(
-            'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-            'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
-          )}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
-            Atualizamos nossa Política de Privacidade
-          </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
-            <span className="block">
-              Para continuar usando o Brasil à Vera, precisamos do seu aceite à
-              versão vigente da política. Você pode ler o texto completo antes
-              de decidir.
-            </span>
-            <span className="block">
-              <a
-                className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
-                href="/privacidade"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Abrir política de privacidade
-              </a>{' '}
-              <span className="text-fg-tertiary text-xs">
-                (versão {policyVersion} · abre em nova aba)
-              </span>
-            </span>
-          </DialogPrimitive.Description>
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-            <Button
-              disabled={pendingAction !== null}
-              onClick={handleLeave}
-              type="button"
-              variant="outline"
+    <Dialog open>
+      {/* Consentimento LGPD — não-dispensável: sem Esc/click-outside/X.
+          showCloseButton do RDS (#221) substitui o Radix-direto. */}
+      <DialogContent
+        closeOnEscape={false}
+        closeOnOverlayClick={false}
+        showCloseButton={false}
+        size="lg"
+      >
+        <DialogTitle className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
+          Atualizamos nossa Política de Privacidade
+        </DialogTitle>
+        <DialogDescription className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
+          <span className="block">
+            Para continuar usando o Brasil à Vera, precisamos do seu aceite à
+            versão vigente da política. Você pode ler o texto completo antes de
+            decidir.
+          </span>
+          <span className="block">
+            <a
+              className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
+              href="/privacidade"
+              rel="noopener noreferrer"
+              target="_blank"
             >
-              {pendingAction === 'leave' ? 'Saindo...' : 'Sair'}
-            </Button>
-            <Button
-              disabled={pendingAction !== null}
-              onClick={handleAccept}
-              type="button"
-            >
-              {pendingAction === 'accept' ? 'Registrando...' : 'Aceitar'}
-            </Button>
-          </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+              Abrir política de privacidade
+            </a>{' '}
+            <span className="text-fg-tertiary text-xs">
+              (versão {policyVersion} · abre em nova aba)
+            </span>
+          </span>
+        </DialogDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <Button
+            disabled={pendingAction !== null}
+            onClick={handleLeave}
+            type="button"
+            variant="outline"
+          >
+            {pendingAction === 'leave' ? 'Saindo...' : 'Sair'}
+          </Button>
+          <Button
+            disabled={pendingAction !== null}
+            onClick={handleAccept}
+            type="button"
+          >
+            {pendingAction === 'accept' ? 'Registrando...' : 'Aceitar'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
