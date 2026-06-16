@@ -1,8 +1,7 @@
 'use client'
 
+import { Skeleton } from '@fabio.caffarello/react-design-system/server'
 import dynamic from 'next/dynamic'
-
-import { Skeleton } from '@/design-system/primitives/skeleton'
 
 /**
  * AuthIslandLoader — Sprint 4.1 PR 3.

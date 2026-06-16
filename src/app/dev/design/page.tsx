@@ -2,6 +2,7 @@ import {
   Badge,
   Label,
   Separator,
+  Skeleton,
 } from '@fabio.caffarello/react-design-system/server'
 import {
   Clock,
@@ -46,7 +47,6 @@ import {
   DialogTrigger,
 } from '@/design-system/primitives/dialog'
 import { Input } from '@/design-system/primitives/input'
-import { Skeleton } from '@/design-system/primitives/skeleton'
 import { Toaster } from '@/design-system/primitives/sonner'
 import {
   Tabs,

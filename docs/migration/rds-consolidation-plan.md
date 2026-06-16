@@ -69,7 +69,7 @@ stats-grid 1`.
 | `badge` | 1 | **R** | `Badge` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
 | `label` | 1 | **R** | `Label` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
 | `separator` | 1 | **R** | `Separator` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
-| `skeleton` | 4 | **R** | `Skeleton` (`./server`) | DEFERIDO: consumidores de produção (loading) + delta de token (`bg-surface-elevated`→`bg-surface-muted`) → QA visual | baixo-méd | WS3‑b |
+| `skeleton` | 4 | **R** | `Skeleton` (`./server`) | ✅ consolidado (WS3‑b; RSC-safe, dark via `.dark` do RDS → `slate-800`; delta sutil de shade p/ QA) | baixo-méd | ✓ |
 | `input` | 2 | **G** | `Input` (client-only) | DEFERIDO: RDS Input não tem entry server; repointar quebraria o zero-JS do `search-form` (ADR-022). Fica local até Input server-safe upstream | médio | WS5 |
 | `card` | 3 | **R** | `Card` compound | repointar (mapear sub-componentes) | médio | WS3‑b |
 | `popover` | 1 | **R** | `Popover` | acoplado ao Combobox | médio | WS4 |

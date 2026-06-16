@@ -1,4 +1,4 @@
-import { Skeleton } from '@/design-system/primitives/skeleton'
+import { Skeleton } from '@fabio.caffarello/react-design-system/server'
 
 /**
  * Loading skeleton para /votacoes/[id] — Wave 9 Sprint 9.5 PR2.
