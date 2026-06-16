@@ -37,31 +37,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # checkout é obrigatório: trigger-cron e notify-failure são actions
+      # locais (./.github/actions/*) e só resolvem com o repo no disco.
       - uses: actions/checkout@v6
-
-      - name: POST com x-cron-secret
-        env:
-          CRON_SECRET: ${{ secrets.CRON_SECRET }}
-        run: |
-          if [ -z "$CRON_SECRET" ]; then
-            echo "::error::CRON_SECRET não configurado nos GitHub Secrets"
-            exit 1
-          fi
-          curl --fail-with-body --silent --show-error \
-            --max-time 300 \
-            -X POST \
-            -H "x-cron-secret: $CRON_SECRET" \
-            -H "Content-Type: application/json" \
-            https://brasilavera.org/api/cron/lgpd/run \
-            | tee /tmp/cron-response.json
-          echo
-          echo "--- stats ---"
-          jq '.stats // empty' /tmp/cron-response.json || true
-
-      - name: Notify on failure
-        if: failure()
-        uses: ./.github/actions/notify-failure
+      - uses: ./.github/actions/trigger-cron
         with:
+          endpoint: https://brasilavera.org/api/cron/lgpd/run
+          cron-secret: ${{ secrets.CRON_SECRET }}
+          context: lgpd-cron-diario
           webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          context: lgpd-cron-diario
