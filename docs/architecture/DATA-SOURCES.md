@@ -198,15 +198,20 @@ flowchart TD
 
 ### Cron schedules (GitHub Actions)
 
+Um workflow por cadência, config-driven via `ingestion/registry.ts` (ADR-035):
+
 ```yaml
-# .github/workflows/ingestion.yml
+# .github/workflows/ingestion-daily.yml
 on:
   schedule:
-    - cron: '0 */6 * * *'   # votações: 4x por dia
-    - cron: '0 2 * * *'     # parlamentares/comissões: diário
-    - cron: '0 3 * * 0'     # gastos CEAP: semanal
-    - cron: '0 4 1 * *'     # reconciliação: mensal
-  workflow_dispatch:         # trigger manual para re-sync
+    - cron: '0 2 * * *'     # parlamentares + proposições + votações + derivados
+  workflow_dispatch:
+
+# .github/workflows/ingestion-weekly.yml
+on:
+  schedule:
+    - cron: '0 3 * * 0'     # gastos CEAP + tramitação
+  workflow_dispatch:
 ```
 
 GitHub Actions para repositórios open-source tem **minutos ilimitados** — sem custo adicional.

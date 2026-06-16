@@ -3,6 +3,10 @@ name: Ingestão semanal
 # Pipelines pesados que mudam pouco — domingo 03:00 UTC (00:00 BRT).
 # Gastos CEAP: ~57k registros, ~2min. Cadência diária seria desperdício
 # (a Câmara só atualiza despesas alguns dias após o documento).
+#
+# Config-driven (ADR-035): `discover` lê o registry (cadence=weekly) e emite a
+# matrix. Tier único (jobs independentes): gastos + tramitação Câmara/Senado.
+# Ver docs/contributing/WORKFLOWS.md.
 
 on:
   schedule:
@@ -18,75 +22,40 @@ permissions:
   issues: write
 
 jobs:
-  gastos-camara:
-    name: Gastos CEAP da Câmara (ano corrente)
+  discover:
+    name: Descobrir matrix (weekly)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    outputs:
+      tier0: ${{ steps.matrix.outputs.tier0 }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run ingest:camara:gastos
+      - uses: ./.github/actions/setup-project
+      - id: matrix
+        run: npm run ingest:print-matrix
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-      - name: Notify on failure
-        if: failure()
-        uses: ./.github/actions/notify-failure
-        with:
-          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          context: ingestion-camara-gastos
+          CADENCE: weekly
 
-  # Tramitação: itera todas as proposições no banco e fetcha o histórico de
-  # eventos de cada uma. Mais pesado que ingestões anteriores (~2 calls/prop
-  # no Senado, ~1 no Câmara). Timeout generoso pra cobrir backfill inicial
-  # das legislaturas 56 e 57.
-  tramitacao-camara:
-    name: Tramitação Câmara (todas as proposições)
+  tier0:
+    name: ${{ matrix.id }}
+    needs: discover
+    if: needs.discover.outputs.tier0 != '[]' && needs.discover.outputs.tier0 != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      # fail-fast:false preserva a independência dos jobs atuais — uma fonte
+      # falhando NÃO cancela as irmãs.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier0) }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
         with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run ingest:camara:tramitacao
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-      - name: Notify on failure
-        if: failure()
-        uses: ./.github/actions/notify-failure
-        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
           webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          context: ingestion-camara-tramitacao
-
-  tramitacao-senado:
-    name: Tramitação Senado (todas as proposições)
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run ingest:senado:tramitacao
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DIRECT_URL }}
-      - name: Notify on failure
-        if: failure()
-        uses: ./.github/actions/notify-failure
-        with:
-          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          context: ingestion-senado-tramitacao

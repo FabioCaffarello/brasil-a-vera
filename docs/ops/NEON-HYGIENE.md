@@ -44,7 +44,7 @@ problemas resolve nos itens 1-3.
 ## Cron jobs
 
 - [ ] Confirmar via
-      `gh run list --workflow=ingestion-votacoes.yml --limit 10`
+      `gh run list --workflow=ingestion-daily.yml --limit 10`
       (e workflows análogos) que crons não estão presos em
       retry/loop.
 

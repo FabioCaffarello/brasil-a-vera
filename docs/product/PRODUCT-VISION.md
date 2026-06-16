@@ -193,8 +193,8 @@ Hipóteses do PRODUCT-VISION foram refinadas por contato com as APIs reais:
 | Workflow | Trigger | Duração típica | Notas |
 |---|---|---|---|
 | `deploy.yml` | push em `main` | ~1m30s | inclui auto-migrate via #75 |
-| `ingestion-votacoes.yml` | cron 4×/dia | ~12 min | 4 jobs paralelos (Câmara/Senado/orientações/backfill) |
-| `ingestion-weekly.yml` | cron 1×/sem | sem dados ainda (primeira run domingo pós-#73) | proposições + tramitação |
+| `ingestion-daily.yml` | cron 1×/dia | ~15 min | matrix por tier (ADR-035): parlamentares + proposições + votações + derivados |
+| `ingestion-weekly.yml` | cron 1×/sem | gastos + tramitação | pipelines pesados |
 | `budget-poll.yml` | cron diário | ~30s | poll Neon API, sem touch DB |
 
 Probes adicionais em `/api/health` (não toca DB) servem como heartbeat — observabilidade ativa sem queimar Neon scale-to-zero.

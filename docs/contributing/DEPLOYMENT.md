@@ -143,7 +143,7 @@ Para 1 alerta, setup via API é overkill. Se o número de alertas crescer (multi
 
 ## Alertas de falha em jobs de ingestão
 
-Quando qualquer job de ingestão (`ingestion.yml`, `ingestion-votacoes.yml`, `ingestion-weekly.yml`) falha, a composite action `.github/actions/notify-failure` dispara dois canais em paralelo:
+Quando qualquer job de ingestão (`ingestion-daily.yml`, `ingestion-weekly.yml`) falha, a composite action `.github/actions/notify-failure` dispara dois canais em paralelo:
 
 1. **Discord** — alerta imediato (push no celular se app instalado)
 2. **Issue automática no GitHub** com label `incident` — rastro permanente auditável (`gh issue list --label incident`)
@@ -152,7 +152,7 @@ Quando qualquer job de ingestão (`ingestion.yml`, `ingestion-votacoes.yml`, `in
 
 Enquanto existir uma issue aberta com label `incident` cujo título contém o `context` do job (ex: `ingestion-camara-deputados`), novas falhas viram **comentários** na issue existente — não duplicatas. Fechar a issue (= "resolvido") faz a próxima falha criar uma issue nova.
 
-Razão: cron de 4x/dia que quebra o dia todo gera 4 alertas Discord (você quer ser avisado de cada um) mas 1 issue com 4 comentários (você não quer 4 issues idênticas no inbox).
+Razão: um job que quebra em runs sucessivos gera N alertas Discord (você quer ser avisado de cada um) mas 1 issue com N comentários (você não quer N issues idênticas no inbox).
 
 ### Setup one-time
 
