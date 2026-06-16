@@ -35,7 +35,7 @@ export function BannerMudancaUf({ newUf, followsForeign }: Props) {
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-accent/30 bg-accent/5 p-4">
-        <p className="text-foreground text-sm">
+        <p className="text-fg-primary text-sm">
           Você está em <span className="font-medium">{newUf}</span>. Seus{' '}
           <span className="font-medium">{followsForeign.length}</span>{' '}
           {followsForeign.length === 1 ? 'acompanhado' : 'acompanhados'} de

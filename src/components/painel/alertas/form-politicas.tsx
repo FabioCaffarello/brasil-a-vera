@@ -153,8 +153,8 @@ export function FormPoliticas({ initial }: Props) {
       }}
     >
       <section>
-        <h2 className="font-medium text-foreground text-lg">Frequência</h2>
-        <p className="mt-1 text-foreground-muted text-sm">
+        <h2 className="font-medium text-fg-primary text-lg">Frequência</h2>
+        <p className="mt-1 text-fg-tertiary text-sm">
           Quando o report consolidado é enviado.
         </p>
         <div className="mt-3 space-y-2">
@@ -165,8 +165,8 @@ export function FormPoliticas({ initial }: Props) {
                 className={cn(
                   'flex items-start gap-3 rounded-md border p-3 transition-colors cursor-pointer',
                   selected
-                    ? 'border-brand bg-brand/10'
-                    : 'border-border bg-surface hover:border-border-strong',
+                    ? 'border-fg-brand bg-fg-brand/10'
+                    : 'border-line-default bg-surface-base hover:border-line-emphasis',
                 )}
                 htmlFor={`cadence-${opt.value}`}
                 key={opt.value}
@@ -182,10 +182,10 @@ export function FormPoliticas({ initial }: Props) {
                   value={opt.value}
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-foreground text-sm">
+                  <p className="font-medium text-fg-primary text-sm">
                     {opt.label}
                   </p>
-                  <p className="text-foreground-muted text-xs">{opt.desc}</p>
+                  <p className="text-fg-tertiary text-xs">{opt.desc}</p>
                 </div>
               </label>
             )
@@ -194,8 +194,8 @@ export function FormPoliticas({ initial }: Props) {
       </section>
 
       <section>
-        <h2 className="font-medium text-foreground text-lg">Canais</h2>
-        <p className="mt-1 text-foreground-muted text-sm">
+        <h2 className="font-medium text-fg-primary text-lg">Canais</h2>
+        <p className="mt-1 text-fg-tertiary text-sm">
           Onde você quer receber o report.
         </p>
         <div className="mt-3 space-y-2">
@@ -219,8 +219,8 @@ export function FormPoliticas({ initial }: Props) {
       </section>
 
       <section>
-        <h2 className="font-medium text-foreground text-lg">Conteúdo</h2>
-        <p className="mt-1 text-foreground-muted text-sm">
+        <h2 className="font-medium text-fg-primary text-lg">Conteúdo</h2>
+        <p className="mt-1 text-fg-tertiary text-sm">
           O que entra em cada report.
         </p>
         <div className="mt-3 space-y-2">
@@ -239,10 +239,10 @@ export function FormPoliticas({ initial }: Props) {
       </section>
 
       <section>
-        <h2 className="font-medium text-foreground text-lg">
+        <h2 className="font-medium text-fg-primary text-lg">
           Períodos especiais
         </h2>
-        <p className="mt-1 text-foreground-muted text-sm">
+        <p className="mt-1 text-fg-tertiary text-sm">
           Aumentam a frequência além do ciclo regular em janelas relevantes.
         </p>
         <div className="mt-3 space-y-2">
@@ -286,7 +286,7 @@ function CheckboxRow({
 }) {
   return (
     <label
-      className="flex items-start gap-3 rounded-md border border-border bg-surface p-3"
+      className="flex items-start gap-3 rounded-md border border-line-default bg-surface-base p-3"
       htmlFor={id}
     >
       <input
@@ -298,8 +298,8 @@ function CheckboxRow({
         type="checkbox"
       />
       <div className="flex-1">
-        <p className="font-medium text-foreground text-sm">{label}</p>
-        <p className="text-foreground-muted text-xs">{description}</p>
+        <p className="font-medium text-fg-primary text-sm">{label}</p>
+        <p className="text-fg-tertiary text-xs">{description}</p>
       </div>
     </label>
   )

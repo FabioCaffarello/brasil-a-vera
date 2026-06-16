@@ -68,8 +68,8 @@ export function TemasChips({ initialThemes }: Props) {
               className={cn(
                 'rounded-full border px-3 py-1.5 text-sm transition-colors',
                 selected
-                  ? 'border-brand bg-brand/10 text-foreground'
-                  : 'border-border bg-background text-foreground-muted hover:border-border-strong hover:text-foreground',
+                  ? 'border-fg-brand bg-fg-brand/10 text-fg-primary'
+                  : 'border-line-default bg-surface-canvas text-fg-tertiary hover:border-line-emphasis hover:text-fg-primary',
               )}
               disabled={pending}
               key={tema.id}

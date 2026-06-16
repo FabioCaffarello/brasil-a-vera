@@ -3,10 +3,10 @@
 //
 // Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
 // docs/migration/token-map.md:
-//   text-foreground       → text-fg-primary
-//   text-foreground-muted → text-fg-tertiary
-//   text-foreground-subtle→ text-fg-quaternary
-//   hover:text-foreground → hover:text-fg-primary
+//   text-fg-primary       → text-fg-primary
+//   text-fg-tertiary → text-fg-tertiary
+//   text-fg-quaternary→ text-fg-quaternary
+//   hover:text-fg-primary → hover:text-fg-primary
 //
 // `Button` → cópia local ./button (Button do RDS é client; cópia local
 // token-clean — precedente ondas anteriores). `ParlamentarCard` importado do

@@ -14,8 +14,8 @@
 // preserva a navegação client-side (cruza o boundary RSC como client ref).
 //
 // Diferença visual da ADOÇÃO (não tradução de token, mesma régua §3.14):
-// active usa `border-line-brand text-fg-brand-emphasis` (vs `border-brand
-// text-foreground` local); count vira pill (vs `(N)` em texto). Apresentação
+// active usa `border-line-brand text-fg-brand-emphasis` (vs `border-fg-brand
+// text-fg-primary` local); count vira pill (vs `(N)` em texto). Apresentação
 // do componente adotado.
 
 import { TabsAsLinks } from '@fabio.caffarello/react-design-system/server'

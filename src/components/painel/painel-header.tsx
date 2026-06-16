@@ -3,10 +3,10 @@
 //
 // Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
 // docs/migration/token-map.md:
-//   border-border       → border-line-default
-//   bg-surface-elevated → bg-surface-raised
-//   text-foreground     → text-fg-primary
-//   text-foreground-muted → text-fg-tertiary
+//   border-line-default       → border-line-default
+//   bg-surface-raised → bg-surface-raised
+//   text-fg-primary     → text-fg-primary
+//   text-fg-tertiary → text-fg-tertiary
 //
 // Tokens MANTIDOS (não traduzidos — decisão de classe CONHECIDA):
 //   - `bg-gradient-primary`: utility custom do BaV (globals.css §313,

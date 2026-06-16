@@ -58,7 +58,7 @@ export function ComunicacaoToggles({
   return (
     <div className="space-y-3">
       <label
-        className="flex items-start gap-3 rounded-md border border-border bg-surface p-3"
+        className="flex items-start gap-3 rounded-md border border-line-default bg-surface-base p-3"
         htmlFor="comunicacao-marketing"
       >
         <input
@@ -70,10 +70,10 @@ export function ComunicacaoToggles({
           type="checkbox"
         />
         <div className="flex-1">
-          <p className="font-medium text-foreground text-sm">
+          <p className="font-medium text-fg-primary text-sm">
             Comunicações esporádicas do projeto
           </p>
-          <p className="text-foreground-muted text-xs">
+          <p className="text-fg-tertiary text-xs">
             Releases, novidades e mudanças relevantes do Brasil à Vera. Sem
             promoção comercial.
           </p>
@@ -81,7 +81,7 @@ export function ComunicacaoToggles({
       </label>
 
       <label
-        className="flex items-start gap-3 rounded-md border border-border bg-surface p-3"
+        className="flex items-start gap-3 rounded-md border border-line-default bg-surface-base p-3"
         htmlFor="comunicacao-survey"
       >
         <input
@@ -93,10 +93,10 @@ export function ComunicacaoToggles({
           type="checkbox"
         />
         <div className="flex-1">
-          <p className="font-medium text-foreground text-sm">
+          <p className="font-medium text-fg-primary text-sm">
             Convite para survey ocasional
           </p>
-          <p className="text-foreground-muted text-xs">
+          <p className="text-fg-tertiary text-xs">
             Pesquisas curtas para entender necessidades dos cidadãos usuários.
             Sempre opcionais.
           </p>

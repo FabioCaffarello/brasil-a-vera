@@ -126,16 +126,16 @@ export function MigracaoLocalStorageModal() {
         <DialogPrimitive.Content
           className={cn(
             'fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-            'border border-border bg-background p-6 shadow-lg sm:rounded-lg',
+            'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
           )}
           onEscapeKeyDown={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
         >
-          <DialogPrimitive.Title className="font-semibold text-foreground text-lg leading-none tracking-tight">
+          <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
             Migrar favoritos antigos?
           </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="space-y-3 text-foreground-muted text-sm leading-relaxed">
+          <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
             <span className="block">
               Encontramos <strong>{ids.length}</strong> parlamentar(es) salvos
               no seu navegador de versões anteriores do Brasil à Vera. Você pode

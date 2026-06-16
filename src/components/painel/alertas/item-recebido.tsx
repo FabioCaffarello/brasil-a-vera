@@ -56,31 +56,31 @@ export function ItemRecebido({
   return (
     <details
       className={cn(
-        'group rounded-lg border border-border bg-surface transition-colors',
-        isNovo && 'border-brand/40 bg-brand/5',
+        'group rounded-lg border border-line-default bg-surface-base transition-colors',
+        isNovo && 'border-fg-brand/40 bg-fg-brand/5',
       )}
       onToggle={handleToggle}
     >
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
         {isNovo && (
-          <span className="inline-flex items-center rounded-full bg-brand px-2 py-0.5 font-medium text-brand-foreground text-xs">
+          <span className="inline-flex items-center rounded-full bg-fg-brand px-2 py-0.5 font-medium text-brand-foreground text-xs">
             Novo
           </span>
         )}
-        <span className="flex-1 truncate text-foreground text-sm">
+        <span className="flex-1 truncate text-fg-primary text-sm">
           {subject}
         </span>
-        <time className="text-foreground-muted text-xs" dateTime={scheduledFor}>
+        <time className="text-fg-tertiary text-xs" dateTime={scheduledFor}>
           {formatDate(scheduledFor)}
         </time>
         <span
           aria-hidden="true"
-          className="text-foreground-muted text-xs transition-transform group-open:rotate-180"
+          className="text-fg-tertiary text-xs transition-transform group-open:rotate-180"
         >
           ▾
         </span>
       </summary>
-      <div className="border-border-strong border-t p-4">
+      <div className="border-line-emphasis border-t p-4">
         <div
           // biome-ignore lint/security/noDangerouslySetInnerHtml: markdown vem do composer interno (server-side), não user-provided
           dangerouslySetInnerHTML={{ __html: bodyHtml }}

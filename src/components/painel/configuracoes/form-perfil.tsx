@@ -67,13 +67,13 @@ export function FormPerfil({ initialDisplayName, email, initialUf }: Props) {
     >
       <div>
         <label
-          className="block font-medium text-foreground text-sm"
+          className="block font-medium text-fg-primary text-sm"
           htmlFor="form-perfil-nome"
         >
           Nome
         </label>
         <input
-          className="mt-1 block w-full rounded-md border border-border-strong bg-background px-3 py-2 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-1 block w-full rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus"
           disabled={pending}
           id="form-perfil-nome"
           maxLength={120}
@@ -86,33 +86,33 @@ export function FormPerfil({ initialDisplayName, email, initialUf }: Props) {
 
       <div>
         <label
-          className="block font-medium text-foreground text-sm"
+          className="block font-medium text-fg-primary text-sm"
           htmlFor="form-perfil-email"
         >
           E-mail
         </label>
         <input
-          className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-foreground-muted text-sm"
+          className="mt-1 block w-full rounded-md border border-line-default bg-surface-base px-3 py-2 text-fg-tertiary text-sm"
           disabled
           id="form-perfil-email"
           readOnly
           type="email"
           value={email}
         />
-        <p className="mt-1 text-foreground-subtle text-xs">
+        <p className="mt-1 text-fg-quaternary text-xs">
           Para alterar e-mail, acesse o gerenciador da sua conta de auth.
         </p>
       </div>
 
       <div>
         <label
-          className="block font-medium text-foreground text-sm"
+          className="block font-medium text-fg-primary text-sm"
           htmlFor="form-perfil-uf"
         >
           UF
         </label>
         <select
-          className="mt-1 block w-full rounded-md border border-border-strong bg-background px-3 py-2 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:w-48"
+          className="mt-1 block w-full rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus sm:w-48"
           disabled={pending}
           id="form-perfil-uf"
           onChange={(e) => setUf(e.target.value as Uf | '')}

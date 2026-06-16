@@ -75,16 +75,16 @@ export function ConsentModal({ policyVersion }: Props) {
         <DialogPrimitive.Content
           className={cn(
             'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-            'border border-border bg-background p-6 shadow-lg sm:rounded-lg',
+            'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
           )}
           onEscapeKeyDown={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
         >
-          <DialogPrimitive.Title className="font-semibold text-foreground text-lg leading-none tracking-tight">
+          <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
             Atualizamos nossa Política de Privacidade
           </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="space-y-3 text-foreground-muted text-sm leading-relaxed">
+          <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
             <span className="block">
               Para continuar usando o Brasil à Vera, precisamos do seu aceite à
               versão vigente da política. Você pode ler o texto completo antes
@@ -92,14 +92,14 @@ export function ConsentModal({ policyVersion }: Props) {
             </span>
             <span className="block">
               <a
-                className="text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80"
+                className="text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80"
                 href="/privacidade"
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 Abrir política de privacidade
               </a>{' '}
-              <span className="text-foreground-muted text-xs">
+              <span className="text-fg-tertiary text-xs">
                 (versão {policyVersion} · abre em nova aba)
               </span>
             </span>
