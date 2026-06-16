@@ -3,6 +3,7 @@ import {
   Button,
   Chip,
   FilterChips,
+  HeroSection,
   InputBase,
   Label,
   Separator,
@@ -22,7 +23,6 @@ import {
   Vote,
 } from 'lucide-react'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'

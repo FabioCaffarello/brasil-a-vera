@@ -100,6 +100,11 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Button } from '@fabio.caffarello/react-design-system/server' (server-safe v4.1). Variantes: primary|secondary|error|outline|ghost|iconOnly|link; sizes sm|md|lg",
     ref: 'ADR-038 — Button consolidado no Button do RDS (v4.1 server-safe + asChild, RDS #224). default→primary, destructive→error, size=icon→variant=iconOnly',
   },
+  {
+    path: '@/design-system/compositions/hero-section',
+    use: "import { HeroSection } from '@fabio.caffarello/react-design-system/server' (mesmas variantes plain|gradient|gradient-glow + align)",
+    ref: 'ADR-038 — HeroSection consolidado no RDS (/server). Drop-in: API/variantes idênticas; prod já usava o do RDS, só o showroom restava',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).
