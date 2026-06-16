@@ -64,7 +64,7 @@ stats-grid 1`.
 
 | Local | Cons. | Balde | Equivalente RDS | Ação | Risco | PR |
 | --- | ---: | :---: | --- | --- | --- | --- |
-| `accordion` (Radix) | 0 | **X** | `Accordion` (via `rds-accordion`) | remover (órfã; perfis já usam o wrapper) | baixo | WS1 |
+| `accordion` (Radix) | 0 | **X** | `Accordion` (via `rds-accordion`) | ✅ removida (WS1, PR3) | baixo | ✓ |
 | `rds-accordion` | 3 | **D** | wrapper sancionado | manter (razão de bundle) | — | — |
 | `skeleton` | 4 | **R** | `Skeleton` (`./server`) | repointar + deletar | baixo | WS3‑a |
 | `separator` | 1 | **R** | `Separator` (`./server`) | repointar + deletar | baixo | WS3‑a |
@@ -83,25 +83,31 @@ stats-grid 1`.
 
 | Local | Cons. | Balde | Equivalente RDS | Ação | Risco | PR |
 | --- | ---: | :---: | --- | --- | --- | --- |
-| `hero-section` | 1 | **X** | `HeroSection` | trocar `/dev/design` p/ RDS + deletar local | baixo | WS1 |
+| `hero-section` | 1 | **R** | `HeroSection` | repointar `/dev/design` p/ RDS + deletar (precisa QA visual) | baixo | WS4 |
 | `section-nav` | 4 | **D** | wrapper sobre `useScrollSpy` | manter (composição sancionada) | — | — |
 | `section-card` | 7 | **R** | `Card` compound | repointar | médio | WS4 |
 | `kpi-strip` | 1 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
 | `stats-grid` | 1 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
 | `kpi-card` | 2 | **R** | `Stat`/`StatGroup` | substituir | médio | WS4 |
-| `filter-chips` (`FilterChip` singular) | 9 | **G** | `FilterChips` (plural) | confirmar API; gap do chip singular → upstream | médio | WS1/WS5 |
+| `filter-chips` (`FilterChip` singular) | 9 | **R** | `Chip` (+ container `FilterChips`) | repointar p/ `Chip` do RDS (verificar prop `count`); QA visual | médio | WS4 |
 | `data-badge` | 9 | **G** | `Chip`/`Info`/`Badge` | rico (source+tone) sem par RDS → upstream ou manter | médio | WS5 |
 | `combobox` | 2 | **R** | `Dropdown`/`SearchInput`/`Select` | re-arquitetura; remove `command`+`popover` | alto | WS4 |
 | `party-badge` | 4 | **D** | — | manter (cores oficiais, D4 Wave 6) | — | — |
 
-### Dual-existência confirmada (WS1)
+### Dual-existência (reclassificada para WS4 — são repoints, não dead-code)
+
+WS1 (PR3) ficou só com os **órfãos puros** (0 consumidores, deleção sem repoint):
+`accordion` local e `trust-banner`. As duas dual-existências abaixo exigem
+repoint + QA visual, então vão para a consolidação de composições (WS4):
 
 - **`HeroSection`**: RDS em 3 páginas de produto; local só no showroom
-  `/dev/design`. → migrar showroom, deletar local.
-- **`FilterChips` vs `FilterChip`**: páginas usam o container `FilterChips` do RDS
-  (4); componentes usam o chip singular `FilterChip` local (9). Confirmar se o
-  `FilterChips` do RDS expõe o chip com `selected`/`count`/`asChild`; se não,
-  issue upstream e o chip singular fica local até fechar.
+  `/dev/design`. → repointar showroom p/ RDS, deletar local (QA visual).
+- **`Chip` (ex-`FilterChip`)**: páginas já usam o container `FilterChips` do RDS
+  (4); os 9 consumidores do chip singular usam o `FilterChip` **local**. O RDS
+  expõe o chip como **`Chip`** (docs mostram `<Chip asChild selected>`), com
+  `selected`/`asChild`. **Verificar a prop `count`** (sub-badge): se o `Chip` do
+  RDS a tiver, repoint direto; se não, é o único gap → issue upstream (WS5) e o
+  chip local sobrevive com a issue linkada.
 
 ## Resíduos ratificados — NÃO migrar (exigem novo ADR)
 
