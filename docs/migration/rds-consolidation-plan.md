@@ -137,13 +137,20 @@ server-safe por composição). Adotadas no BaV em `^4.2.0` (#448).
 
 > #221 e #222 já entregues no **RDS v4.0.0** (adotado no #444).
 
-**Candidatas (ainda não abertas, precisam de análise):**
+**Resíduos ratificados → viraram issue upstream** (analisados e confirmados gap):
 
-5. `DataBadge`-equivalente (`source` + `tone` semântico) — ou ratificar como
-   composição local.
-6. Paleta categórica de charts colorblind-safe (sem urgência; resíduo ADR‑034).
-7. Par on-color `success-foreground` (RDS tem `fg-success`/`success-bg-emphasis`
-   — analisar se já cobre antes de abrir).
+5. ✅ [RDS #228](https://github.com/FabioCaffarello/react-design-system/issues/228)
+   — `Badge` de metadado com sub-label `source` + `tone` (consolidar `DataBadge`,
+   9 consumidores; RDS não tem slot `source`).
+6. ✅ [RDS #229](https://github.com/FabioCaffarello/react-design-system/issues/229)
+   — paleta categórica de data-viz colorblind-safe (`chart-*`; RDS não expõe
+   nenhuma — só cores de status, que são outro eixo).
+7. ✅ [RDS #230](https://github.com/FabioCaffarello/react-design-system/issues/230)
+   — token on-color p/ fundos de status sólidos (`on-success` etc.; o
+   `success-foreground` do BaV é **branco**, `fg-inverse` do RDS não serve).
+
+> Enquanto não fecham upstream, `data-badge`, charts e `success-foreground`
+> seguem como **resíduo BaV ratificado** (corretos assim).
 
 ## Encerramento (2026-06-16)
 
