@@ -80,7 +80,22 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { InputBase } from '@fabio.caffarello/react-design-system/server' (server-safe; NÃO o Input client do RDS, que tem hooks)",
     ref: 'ADR-038 — Input consolidado no InputBase do RDS (v4.2, server-safe via composição; RDS #224)',
   },
-  // Próximos: button→Button (RDS v4.1 server), combobox→Autocomplete (RDS v4.1 name/form).
+  {
+    path: '@/design-system/compositions/combobox',
+    use: "import { Autocomplete } from '@/design-system/primitives/rds-autocomplete' (wrapper bundle do RDS, com name/form do #225)",
+    ref: 'ADR-038 — Combobox consolidado no Autocomplete do RDS (v4.1 name/form, RDS #225)',
+  },
+  {
+    path: '@/design-system/primitives/command',
+    use: 'usar o Autocomplete do RDS (cmdk não tem par; só compunha o Combobox local)',
+    ref: 'ADR-038 — command removido junto com o Combobox local (consolidado no Autocomplete)',
+  },
+  {
+    path: '@/design-system/primitives/popover',
+    use: "import { Popover } from '@fabio.caffarello/react-design-system' se precisar; só compunha o Combobox local",
+    ref: 'ADR-038 — popover removido junto com o Combobox local (consolidado no Autocomplete)',
+  },
+  // Próximo: button→Button (RDS v4.1 server) — app-wide, PR dedicado.
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).
