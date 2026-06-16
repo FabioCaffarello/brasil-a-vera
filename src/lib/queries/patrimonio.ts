@@ -2,6 +2,10 @@ import { and, eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import {
+  buildEvolucao,
+  type EvolucaoPatrimonial,
+} from '@/modules/eleitoral/domain/evolucao'
+import {
   aggregatePatrimonio,
   type PatrimonioSnapshot,
 } from '@/modules/eleitoral/domain/patrimonio'
@@ -53,5 +57,40 @@ export async function getPatrimonioSnapshot(
       .groupBy(tseBemCandidato.cdTipoBem, tseBemCandidato.dsTipoBem)
 
     return aggregatePatrimonio(rows, anoEleicao)
+  })
+}
+
+// Eixo 2 — Camada B: trajetória patrimonial do parlamentar entre os pleitos
+// em que se candidatou (vínculo por CPF). Pontos discretos por pleito, nominal
+// + corrigido por IPCA (ADR-036). null com < 2 pleitos (sem evolução a mostrar).
+export async function getEvolucaoPatrimonial(
+  parlamentarId: string,
+): Promise<EvolucaoPatrimonial | null> {
+  const key = `patrimonio:evolucao:${parlamentarId}`
+  return cached(key, TTL.patrimonioDeclarado, async () => {
+    const rows = await db
+      .select({
+        anoEleicao: tseBemCandidato.anoEleicao,
+        cdTipoBem: tseBemCandidato.cdTipoBem,
+        dsTipoBem: tseBemCandidato.dsTipoBem,
+        total: sql<string>`SUM(${tseBemCandidato.valorDeclarado})`,
+        n: sql<number>`COUNT(*)::int`,
+      })
+      .from(tseBemCandidato)
+      .innerJoin(
+        tseCandidatura,
+        and(
+          eq(tseCandidatura.anoEleicao, tseBemCandidato.anoEleicao),
+          eq(tseCandidatura.sqCandidato, tseBemCandidato.sqCandidato),
+        ),
+      )
+      .where(eq(tseCandidatura.parlamentarId, parlamentarId))
+      .groupBy(
+        tseBemCandidato.anoEleicao,
+        tseBemCandidato.cdTipoBem,
+        tseBemCandidato.dsTipoBem,
+      )
+
+    return buildEvolucao(rows)
   })
 }

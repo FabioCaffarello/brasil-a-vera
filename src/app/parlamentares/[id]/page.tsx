@@ -18,6 +18,7 @@ import {
   FileText,
   Inbox,
   TrendingDown,
+  TrendingUp,
   Users,
   Vote,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
+import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
@@ -65,7 +67,10 @@ import {
   type VotosAlinhamentoFilter,
   type VotosPeriodoFilter,
 } from '@/lib/queries/parlamentares'
-import { getPatrimonioSnapshot } from '@/lib/queries/patrimonio'
+import {
+  getEvolucaoPatrimonial,
+  getPatrimonioSnapshot,
+} from '@/lib/queries/patrimonio'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
 
@@ -209,6 +214,7 @@ export default async function ParlamentarPerfilPage({
     alinhamentoMensal,
     comparacoes,
     patrimonio,
+    evolucaoPatrimonial,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -234,6 +240,7 @@ export default async function ParlamentarPerfilPage({
     getAlinhamentoMensal(parlamentar.id, 12),
     getComparacoesCasa(parlamentar.id),
     getPatrimonioSnapshot(parlamentar.id),
+    getEvolucaoPatrimonial(parlamentar.id),
   ])
 
   const votos = votosPage.rows
@@ -443,6 +450,15 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(evolucaoPatrimonial
+            ? [
+                {
+                  id: 'evolucao-patrimonio',
+                  label: 'Evolução',
+                  icon: <TrendingUp className="h-4 w-4" />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             label: 'Top 5',
@@ -534,6 +550,19 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(evolucaoPatrimonial
+            ? [
+                {
+                  id: 'evolucao-patrimonio',
+                  title: 'Evolução patrimonial entre pleitos',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
+                  ),
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             title: 'Top 5 maior afinidade de voto',
@@ -620,6 +649,16 @@ export default async function ParlamentarPerfilPage({
             title="Patrimônio declarado"
           >
             <PatrimonioBlock snapshot={patrimonio} />
+          </SectionCard>
+        ) : null}
+
+        {evolucaoPatrimonial ? (
+          <SectionCard
+            id="evolucao-patrimonio"
+            subtitle="Como o patrimônio declarado variou entre as candidaturas. Valores corrigidos pela inflação (IPCA) para comparação justa; pontos discretos — o intervalo entre pleitos é desconhecido."
+            title="Evolução patrimonial entre pleitos"
+          >
+            <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
           </SectionCard>
         ) : null}
 
