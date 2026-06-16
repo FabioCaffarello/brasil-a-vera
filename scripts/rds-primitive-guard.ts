@@ -60,10 +60,21 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Skeleton } from '@fabio.caffarello/react-design-system/server'",
     ref: 'ADR-038 / WS3-b — Skeleton consolidado no RDS (/server, RSC-safe). Token dark via .dark do RDS (surface-muted→slate-800)',
   },
-  // WS3-b/WS4 adicionam aqui: input, card, button, dialog…
-  // Nota de deferimento:
-  //   - input: RDS Input é client-only; repointar quebraria o zero-JS
-  //     do search-form (ADR-022). Espera Input server-safe upstream.
+  {
+    path: '@/design-system/compositions/kpi-strip',
+    use: 'import { Stat, StatGroup } from \'@fabio.caffarello/react-design-system/server\' (layout="strip")',
+    ref: 'ADR-038 / WS4 — KpiStrip consolidado no Stat/StatGroup do RDS',
+  },
+  {
+    path: '@/design-system/compositions/stats-grid',
+    use: 'import { Stat, StatGroup } from \'@fabio.caffarello/react-design-system/server\' (layout="grid")',
+    ref: 'ADR-038 / WS4 — StatsGrid consolidado no Stat/StatGroup do RDS',
+  },
+  // Próximos (WS4): filter-chips→Chip (precisa RDS ^4 p/ count), hero-section, combobox.
+  // Notas de deferimento (ficam locais):
+  //   - input/button: RDS client-only → quebrariam o zero-JS (RDS #224).
+  //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
+  //   - card: modelo de layout diferente (refactor de home com QA).
 ]
 
 function walk(dir: string, exts: string[]): string[] {
