@@ -2,6 +2,7 @@ import {
   Badge,
   Chip,
   FilterChips,
+  InputBase,
   Label,
   Separator,
   Skeleton,
@@ -44,7 +45,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/design-system/primitives/dialog'
-import { Input } from '@/design-system/primitives/input'
 import { Toaster } from '@/design-system/primitives/sonner'
 import {
   Tabs,
@@ -286,16 +286,20 @@ export default function DesignSystemPage() {
       {/* ============================ INPUT + LABEL ============================ */}
       <section aria-labelledby="input-title" className="space-y-6">
         <h2 className="font-semibold text-2xl" id="input-title">
-          Input + Label
+          InputBase + Label
         </h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="busca">Buscar parlamentar</Label>
-            <Input id="busca" placeholder="Nome, partido, UF…" type="search" />
+            <InputBase
+              id="busca"
+              placeholder="Nome, partido, UF…"
+              type="search"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email (disabled)</Label>
-            <Input
+            <InputBase
               disabled
               id="email"
               placeholder="você@email.com"

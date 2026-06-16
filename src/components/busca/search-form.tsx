@@ -1,7 +1,6 @@
+import { InputBase } from '@fabio.caffarello/react-design-system/server'
 import { Search } from 'lucide-react'
-
 import { Button } from '@/design-system/primitives/button'
-import { Input } from '@/design-system/primitives/input'
 
 interface Props {
   defaultValue?: string
@@ -31,7 +30,7 @@ export function SearchForm({ defaultValue, variant = 'header' }: Props) {
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-fg-quaternary"
           />
-          <Input
+          <InputBase
             autoComplete="off"
             className="h-9 w-44 pl-9 transition-[width] duration-200 ease-out focus:w-56 lg:w-56 lg:focus:w-72"
             defaultValue={defaultValue}
@@ -56,7 +55,7 @@ export function SearchForm({ defaultValue, variant = 'header' }: Props) {
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-fg-quaternary"
           />
-          <Input
+          <InputBase
             autoComplete="off"
             className="pl-9"
             defaultValue={defaultValue}
