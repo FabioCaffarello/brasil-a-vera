@@ -41,6 +41,7 @@
     "seed:agregados:proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-proposicao.ts",
     "smoke": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/smoke.ts",
     "budget:poll": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/neon-budget.ts",
+    "ingest:print-matrix": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/print-matrix.ts",
     "prepare": "husky"
   },
   "dependencies": {
