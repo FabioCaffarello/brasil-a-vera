@@ -60,6 +60,14 @@ stats-grid 1`.
 - **(X)** morto → remover.
 - **(G)** equivalente RDS incompleto → fica local + issue upstream documentada.
 
+> **Estado WS3 (2026-06-16):** as primitivas de baixo atrito foram consolidadas —
+> `accordion` (removida), `badge`/`label`/`separator` (#440), `skeleton` (#441).
+> O **restante encalha** em fricção real, não em volume: `button` e `input` são
+> **client-only no RDS** (bloqueados por [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) —
+> regridiriam o zero-JS); `card` tem **modelo de layout diferente** (refactor de 2
+> cards da home, exige QA do owner); `dialog` espera [RDS #221](https://github.com/FabioCaffarello/react-design-system/issues/221);
+> `sonner`/Toast precisa de provider; `command`/`popover` saem com o `combobox` (WS4).
+
 ### Primitivas
 
 | Local | Cons. | Balde | Equivalente RDS | Ação | Risco | PR |
@@ -70,10 +78,10 @@ stats-grid 1`.
 | `label` | 1 | **R** | `Label` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
 | `separator` | 1 | **R** | `Separator` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
 | `skeleton` | 4 | **R** | `Skeleton` (`./server`) | ✅ consolidado (WS3‑b; RSC-safe, dark via `.dark` do RDS → `slate-800`; delta sutil de shade p/ QA) | baixo-méd | ✓ |
-| `input` | 2 | **G** | `Input` (client-only) | DEFERIDO: RDS Input não tem entry server; repointar quebraria o zero-JS do `search-form` (ADR-022). Fica local até Input server-safe upstream | médio | WS5 |
-| `card` | 3 | **R** | `Card` compound | repointar (mapear sub-componentes) | médio | WS3‑b |
+| `input` | 2 | **G** | `Input` (client-only) | BLOQUEADO: RDS Input não tem entry `./server`; quebraria o zero-JS do `search-form` (ADR-022). Fica local até resolver [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) | médio | bloqueado |
+| `card` | 3 | **R** | `Card` compound | DIFERIDO p/ PR dedicado: modelo diferente (padding no Card vs por seção; `CardFooter`→`CardActions`; padrão flex equal-height) → refactor de 2 cards da **home** com QA visual do owner | médio | WS3‑c (QA) |
 | `popover` | 1 | **R** | `Popover` | acoplado ao Combobox | médio | WS4 |
-| `button` | 27 | **R** | `Button` | repointar em massa (mecânico) | médio | WS3‑b |
+| `button` | 27 | **G** | `Button` (client-only) | BLOQUEADO: RDS Button só no entry client `.`; 13 dos 27 consumidores são Server Components → repointar empurra `"use client"` (regride ADR-022). Fica local até [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224) | alto | bloqueado |
 | `dialog` | 7 | **G** | `Dialog` | falta `showCloseButton` p/ 3 modais → upstream | médio | WS3‑c |
 | `command` | 1 | **R/G** | `CommandPalette`/`Dropdown` | acoplado ao Combobox | alto | WS4 |
 | `tabs` (stateful) | 1 | **G** | só `TabsAsLinks` | gap de tabs com estado → avaliar/issue | baixo | WS4 |
@@ -114,16 +122,26 @@ repoint + QA visual, então vão para a consolidação de composições (WS4):
 Paleta de charts `--chart-1..5`, `--accent` roxo (Okabe‑Ito), `text-success-foreground`
 (on-color), cores cruas de `PartyBadge`. Documentados em ADR‑034 §5 e D4 Wave 6.
 
-## Issues upstream candidatas (WS5)
+## Issues upstream (WS5)
 
-1. **`showCloseButton?: boolean`** no `Dialog`/`DialogContent` — desbloqueia
-   `ConsentModal`, `AcoesLgpd`, `MigracaoLocalStorageModal` (hoje usam Radix direto).
-2. **`FilterChip` singular** com `selected`/`count`/`asChild` (Slot) — se o
-   `FilterChips` do RDS não cobrir.
-3. **`DataBadge`-equivalente** (`source` + `tone` semântico) — ou ratificar como
+**Abertas** no repo `FabioCaffarello/react-design-system`:
+
+1. ✅ [RDS #221](https://github.com/FabioCaffarello/react-design-system/issues/221)
+   — `showCloseButton?: boolean` no `Dialog`/`DialogContent` (desbloqueia
+   `ConsentModal`, `AcoesLgpd`, `MigracaoLocalStorageModal`).
+2. ✅ [RDS #222](https://github.com/FabioCaffarello/react-design-system/issues/222)
+   — prop `count` (sub-badge) no `Chip` (workaround: `count` em `children`).
+3. ✅ [RDS #224](https://github.com/FabioCaffarello/react-design-system/issues/224)
+   — entry `./server` para `Button` e `Input` (hoje client-only → bloqueia as 2
+   primitivas mais usadas do BaV: Button 27/13-server, Input no form zero-JS).
+
+**Candidatas (ainda não abertas, precisam de análise):**
+
+4. `DataBadge`-equivalente (`source` + `tone` semântico) — ou ratificar como
    composição local.
-4. **Paleta categórica de charts** colorblind-safe (sem urgência; resíduo ADR‑034).
-5. **Par on-color `success-foreground`**.
+5. Paleta categórica de charts colorblind-safe (sem urgência; resíduo ADR‑034).
+6. Par on-color `success-foreground` (RDS tem `fg-success`/`success-bg-emphasis`
+   — analisar se já cobre antes de abrir).
 
 ## Sequenciamento
 
