@@ -27,7 +27,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/design-system/primitives/dialog'
+} from '@/design-system/primitives/rds-dialog'
 import { cn } from '@/lib/cn'
 import { TEMAS, type TemaId } from '@/lib/constants/temas'
 import { UFS, type Uf } from '@/lib/municipios'
@@ -136,9 +136,12 @@ export function OnboardingWizard() {
     <Dialog open>
       <DialogContent
         className="max-w-xl"
-        // Suprime o handler default de close (Esc / click outside).
-        onEscapeKeyDown={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
+        // Onboarding não-dispensável: sem Esc / click-outside / X. O usuário
+        // avança pelos botões do wizard (próximo/pular). Props do RDS Dialog
+        // (#221) que substituem os handlers Radix de close.
+        closeOnEscape={false}
+        closeOnOverlayClick={false}
+        showCloseButton={false}
       >
         <DialogHeader>
           <div className="flex items-center justify-between">

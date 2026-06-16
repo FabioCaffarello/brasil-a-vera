@@ -20,7 +20,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/design-system/primitives/dialog'
+} from '@/design-system/primitives/rds-dialog'
 
 interface FollowForeignToUf {
   id: string

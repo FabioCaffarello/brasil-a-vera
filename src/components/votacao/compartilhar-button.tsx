@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/design-system/primitives/dialog'
+} from '@/design-system/primitives/rds-dialog'
 
 interface Props {
   votacao: {
