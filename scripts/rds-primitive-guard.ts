@@ -75,9 +75,13 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Chip } from '@fabio.caffarello/react-design-system/server' (container: FilterChips do RDS)",
     ref: 'ADR-038 / WS4 — FilterChip consolidado no Chip do RDS (^4, count via #222). FilterChips container já era do RDS',
   },
-  // Próximos (WS4): hero-section, combobox.
+  {
+    path: '@/design-system/primitives/input',
+    use: "import { InputBase } from '@fabio.caffarello/react-design-system/server' (server-safe; NÃO o Input client do RDS, que tem hooks)",
+    ref: 'ADR-038 — Input consolidado no InputBase do RDS (v4.2, server-safe via composição; RDS #224)',
+  },
+  // Próximos: button→Button (RDS v4.1 server), combobox→Autocomplete (RDS v4.1 name/form).
   // Notas de deferimento (ficam locais):
-  //   - input/button: RDS client-only → quebrariam o zero-JS (RDS #224).
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).
 ]
