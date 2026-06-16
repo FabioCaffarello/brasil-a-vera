@@ -155,12 +155,13 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       timeoutMin: 60,
     },
     {
-      id: 'tse-bens-2022',
+      id: 'tse-bens',
       script: 'ingest:tse:bens',
-      context: 'ingestion-tse-bens-2022',
+      context: 'ingestion-tse-bens',
       cadence: 'monthly',
+      // 3 pleitos (2014/2018/2022) × 2 zips cada + upsert; anos isolados.
       tier: 1,
-      timeoutMin: 20,
+      timeoutMin: 30,
     },
   ],
 )

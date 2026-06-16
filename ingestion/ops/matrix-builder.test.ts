@@ -30,11 +30,11 @@ describe('buildTierMatrices', () => {
     expect(tiers[0]).toHaveLength(3)
   })
 
-  it('monthly agrupa em 2 tiers (Eixo 2 Inc 0): cpf antes de tse-bens', () => {
+  it('monthly agrupa em 2 tiers (Eixo 2): cpf antes de tse-bens', () => {
     const tiers = buildTierMatrices(SOURCES, 'monthly')
     expect(tiers).toHaveLength(2)
     expect(tiers[0].map((e) => e.id)).toEqual(['camara-backfill-cpf'])
-    expect(tiers[1].map((e) => e.id)).toEqual(['tse-bens-2022'])
+    expect(tiers[1].map((e) => e.id)).toEqual(['tse-bens'])
   })
 
   it('cadência sem entradas no registry retorna []', () => {

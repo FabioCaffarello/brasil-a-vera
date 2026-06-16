@@ -1,7 +1,7 @@
 name: Ingestão mensal
 
 # Dado histórico que muda raramente — dia 1 às 04:00 UTC (01:00 BRT).
-# Eixo 2 / Incremento 0 (Trilha Patrimonial): declaração de bens do TSE 2022.
+# Eixo 2 (Trilha Patrimonial): declaração de bens do TSE (2014/2018/2022).
 # O TSE reedita declarações retroativamente, então re-ingerimos mensalmente de
 # forma idempotente (DELETE-by-ano + bulk INSERT). Mensal evita churn diário de
 # um dataset estático.
@@ -9,7 +9,7 @@ name: Ingestão mensal
 # Config-driven (ADR-035): o job `discover` lê o registry (cadence=monthly) e
 # emite a matrix por tier. DAG via tier:
 #   t0: camara-backfill-cpf (preenche parlamentar.cpf — pré-requisito do vínculo)
-#   t1: tse-bens-2022 (download dos zips TSE + upsert + vínculo por CPF exato)
+#   t1: tse-bens (download dos zips TSE 2014/2018/2022 + upsert + vínculo CPF)
 # Ver docs/contributing/WORKFLOWS.md.
 #
 # Validação empírica pendente pós-merge (princípio 13 / gotcha do dispatch):
