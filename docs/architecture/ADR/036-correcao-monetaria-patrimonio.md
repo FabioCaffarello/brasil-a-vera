@@ -1,11 +1,10 @@
 # ADR-036: Correção monetária do patrimônio declarado (Eixo 2)
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-15
-> Status: **proposed** — esqueleto. Decisão de alto nível travada (owner,
-> 2026-06-15): **opção (b), IPCA com data-base fixa**. Pendências de validação
-> empírica (série, data-base, fonte) marcadas como `[A CONFIRMAR]` antes de
-> mudar status para `accepted` (princípio 13).
+> Última atualização: 2026-06-16
+> Status: **accepted**. Opção **(b), IPCA com data-base fixa** (owner,
+> 2026-06-15). Série e data-base confirmadas empiricamente na API do SIDRA em
+> 2026-06-16 (princípio 13) — ver §Decisão e §Referências.
 
 ---
 
@@ -41,12 +40,25 @@ Forças em jogo:
    `formula_url` apontando para a fórmula no repositório).
 3. O corrigido é o **default** das comparações inter-pleito (Camadas B e
    rótulos da C); o nominal permanece acessível como substrato.
-4. **Índice:** IPCA, série oficial do IBGE `[A CONFIRMAR: tabela SIDRA exata]`,
-   **vendorada como tabela de referência estática** versionada no repo (série
-   pequena, determinística; sem fetch em request-time).
-5. **Data-base fixa:** `[A CONFIRMAR — recomendação: dezembro do ano da
-   eleição mais recente coberta]`. Travada aqui; mudá-la é novo ADR (regra de
-   imutabilidade).
+4. **Índice:** IPCA **número-índice** do IBGE, **SIDRA tabela 1737, variável
+   2266** (*"IPCA - Número-índice (base: dezembro de 1993 = 100)"*),
+   nível Brasil, série mensal. Escolhemos o **número-índice** (não a variação %)
+   porque deflacionar é a razão entre dois meses — `V_base = V_mês × (I_base /
+   I_mês)` — determinística e sem composição de taxas. A série é **vendorada
+   como tabela de referência estática** versionada no repo (uma linha por mês,
+   pequena; sem fetch em request-time). A materialização da tabela acompanha o
+   incremento que a consome (Camadas B/C) — não criada agora (sem consumidor).
+5. **Data-base fixa: dezembro de 2022** (número-índice **6474.09**). É o
+   pleito mais recente coberto; tudo passa a ser expresso "a preços de
+   dez/2022". Para a Camada A (snapshot nominal) é inócua; serve às Camadas
+   B/C (comparação entre pleitos). **Travada aqui**: re-basear — p.ex. ao
+   ingerir a eleição de 2026 — exige **novo ADR** (regra de imutabilidade), o
+   que é apropriado porque adicionar um pleito já é mudança significativa.
+
+> Valores de referência confirmados no SIDRA (2026-06-16), p/ sanidade da
+> deflação futura: dez/2022 = 6474.09 (base) · out/2018 = 5103.69 · out/2014
+> = 4008.00. Ex.: bem declarado em out/2018 → preços de dez/2022 = ×(6474.09 /
+> 5103.69) ≈ ×1,269 (≈ +27% de IPCA acumulado no período).
 6. **Materialização:** deflacionamento calculado no batch de ingestão/derivação
    (GitHub Actions → Postgres). Zero cálculo em request-time.
 
@@ -98,4 +110,6 @@ Forças em jogo:
 - [Eixo 2 — Trilha Patrimonial](../../product/EIXO-2-PATRIMONIO.md) §6 e §7
 - [TRUST-PYRAMID.md](../TRUST-PYRAMID.md) (L1/L2)
 - Princípio 13 do CLAUDE.md (validação empírica antes de `accepted`)
-- IBGE / SIDRA — série IPCA `[A CONFIRMAR]`
+- IBGE / SIDRA — IPCA número-índice, tabela 1737, variável 2266:
+  `https://apisidra.ibge.gov.br/values/t/1737/n1/all/v/2266/p/all`
+  (confirmado 2026-06-16: dez/2022 = 6474.09; último disponível maio/2026 = 7640.15)
