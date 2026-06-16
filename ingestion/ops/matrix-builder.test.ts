@@ -30,8 +30,25 @@ describe('buildTierMatrices', () => {
     expect(tiers[0]).toHaveLength(3)
   })
 
-  it('cadência sem entradas (monthly hoje) retorna []', () => {
-    expect(buildTierMatrices(SOURCES, 'monthly')).toEqual([])
+  it('monthly agrupa em 2 tiers (Eixo 2 Inc 0): cpf antes de tse-bens', () => {
+    const tiers = buildTierMatrices(SOURCES, 'monthly')
+    expect(tiers).toHaveLength(2)
+    expect(tiers[0].map((e) => e.id)).toEqual(['camara-backfill-cpf'])
+    expect(tiers[1].map((e) => e.id)).toEqual(['tse-bens-2022'])
+  })
+
+  it('cadência sem entradas no registry retorna []', () => {
+    const onlyWeekly: IngestionSource[] = [
+      {
+        id: 'a',
+        script: 's:a',
+        context: 'c-a',
+        cadence: 'weekly',
+        tier: 0,
+        timeoutMin: 5,
+      },
+    ]
+    expect(buildTierMatrices(onlyWeekly, 'monthly')).toEqual([])
   })
 
   it('cada entrada expõe só os campos que a matrix consome', () => {

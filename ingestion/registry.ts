@@ -136,5 +136,28 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 90,
     },
+    // ── monthly ───────────────────────────────────────────────────────────
+    // Eixo 2 / Inc 0 — Trilha Patrimonial. Dado histórico do TSE (2022) que só
+    // muda quando o TSE reedita declarações: cadência mensal idempotente.
+    // DAG via tier: o vínculo por CPF exige parlamentar.cpf preenchido, então
+    // o backfill de CPF (Câmara) roda ANTES da ingestão de bens.
+    //   t0: backfill-cpf (no-op barato após preencher)
+    //   t1: tse-bens (download 2 zips TSE + upsert + vínculo)
+    {
+      id: 'camara-backfill-cpf',
+      script: 'backfill:camara:cpf',
+      context: 'ingestion-camara-backfill-cpf',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 30,
+    },
+    {
+      id: 'tse-bens-2022',
+      script: 'ingest:tse:bens',
+      context: 'ingestion-tse-bens-2022',
+      cadence: 'monthly',
+      tier: 1,
+      timeoutMin: 20,
+    },
   ],
 )

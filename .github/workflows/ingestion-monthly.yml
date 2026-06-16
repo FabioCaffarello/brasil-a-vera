@@ -1,0 +1,92 @@
+name: Ingestão mensal
+
+# Dado histórico que muda raramente — dia 1 às 04:00 UTC (01:00 BRT).
+# Eixo 2 / Incremento 0 (Trilha Patrimonial): declaração de bens do TSE 2022.
+# O TSE reedita declarações retroativamente, então re-ingerimos mensalmente de
+# forma idempotente (DELETE-by-ano + bulk INSERT). Mensal evita churn diário de
+# um dataset estático.
+#
+# Config-driven (ADR-035): o job `discover` lê o registry (cadence=monthly) e
+# emite a matrix por tier. DAG via tier:
+#   t0: camara-backfill-cpf (preenche parlamentar.cpf — pré-requisito do vínculo)
+#   t1: tse-bens-2022 (download dos zips TSE + upsert + vínculo por CPF exato)
+# Ver docs/contributing/WORKFLOWS.md.
+#
+# Validação empírica pendente pós-merge (princípio 13 / gotcha do dispatch):
+# workflow novo só é dispatchável após estar na branch default.
+
+on:
+  schedule:
+    - cron: '0 4 1 * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ingestion-monthly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  discover:
+    name: Descobrir matrix (monthly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tier0: ${{ steps.matrix.outputs.tier0 }}
+      tier1: ${{ steps.matrix.outputs.tier1 }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - id: matrix
+        run: npm run ingest:print-matrix
+        env:
+          CADENCE: monthly
+
+  tier0:
+    name: ${{ matrix.id }}
+    needs: discover
+    if: needs.discover.outputs.tier0 != '[]' && needs.discover.outputs.tier0 != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier0) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  tier1:
+    name: ${{ matrix.id }}
+    needs: [discover, tier0]
+    # !cancelled(): roda após o tier0 concluir, sem exigir sucesso. Se o
+    # backfill de CPF falhar, a ingestão de bens (L1) ainda roda — só o vínculo
+    # fica menor. Degrada de forma segura (scripts idempotentes; ADR-035).
+    if: ${{ !cancelled() && needs.discover.outputs.tier1 != '[]' && needs.discover.outputs.tier1 != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier1) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
