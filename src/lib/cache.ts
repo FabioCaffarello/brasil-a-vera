@@ -31,6 +31,11 @@ export const TTL = {
   alinhamentoPartidario: 86_400,
   partidoOverview: 21_600,
   compararParlamentares: 3_600,
+  // Snapshot patrimonial (Eixo 2 Camada A — declaração de bens TSE). Dado
+  // quase-estático: o TSE reedita declarações no máximo em ciclo mensal e a
+  // ingestão é mensal — 24h é folgado, barato e bem acima do horizonte de
+  // mudança real.
+  patrimonioDeclarado: 86_400,
   listagemFiltrada: 300,
 } as const
 
