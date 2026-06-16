@@ -89,8 +89,12 @@ Votações foram consolidadas no `daily` (1×/dia) em 2026-06-15 — antes eram
    via a composite `run-ingestion`. `tier N+1` faz `needs: [discover, tierN]`.
 
 Dependências (DAG) são modeladas por `tier` (nível N+1 espera todo o nível N).
-`strategy.fail-fast: false` mantém os jobs independentes (uma fonte falhando não
-cancela as irmãs). `timeout-minutes` vem de `matrix.timeoutMin`.
+`strategy.fail-fast: false` mantém os jobs do mesmo tier independentes (uma
+fonte falhando não cancela as irmãs). Os tiers downstream usam
+`if: ${{ !cancelled() && … }}` para rodar **mesmo que** o tier anterior tenha
+falhado (ordenação preservada, sucesso não exigido) — senão uma fonte flaky
+bloquearia toda a ingestão a jusante (ADR-035 §resiliência). `timeout-minutes`
+vem de `matrix.timeoutMin`.
 
 **Adicionar uma fonte = 1 entrada no registry** — nenhum job YAML novo. Uma
 cadência nova (ex. `monthly`) = 1 workflow a partir do template `discover→tier`.

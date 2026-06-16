@@ -78,7 +78,12 @@ jobs:
   tier1:
     name: ${{ matrix.id }}
     needs: [discover, tier0]
-    if: needs.discover.outputs.tier1 != '[]' && needs.discover.outputs.tier1 != ''
+    # !cancelled(): roda DEPOIS do tier0 concluir, mas SEM exigir que ele
+    # tenha tido sucesso. Uma fonte flaky no tier0 (ex. API do Senado caindo)
+    # não bloqueia o resto da ingestão diária — fontes independentes não se
+    # bloqueiam. Dependências reais degradam de forma segura (scripts
+    # idempotentes). Ver ADR-035 §resiliência.
+    if: ${{ !cancelled() && needs.discover.outputs.tier1 != '[]' && needs.discover.outputs.tier1 != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ matrix.timeoutMin }}
     strategy:
@@ -100,7 +105,8 @@ jobs:
   tier2:
     name: ${{ matrix.id }}
     needs: [discover, tier1]
-    if: needs.discover.outputs.tier2 != '[]' && needs.discover.outputs.tier2 != ''
+    # !cancelled(): idem tier1 — não exige sucesso do tier anterior.
+    if: ${{ !cancelled() && needs.discover.outputs.tier2 != '[]' && needs.discover.outputs.tier2 != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ matrix.timeoutMin }}
     strategy:

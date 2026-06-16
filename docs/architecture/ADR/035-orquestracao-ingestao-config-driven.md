@@ -129,6 +129,15 @@ tier`. Nenhum workflow `monthly` vazio é criado agora (ADR-019).
   um pouco de latência a mais quando uma dep cruza casas (ex. proposicoes-senado
   espera proposicoes-camara sem precisar). Aceitável: ingestão é cron, não
   caminho crítico de usuário.
+- **Propagação de falha entre tiers** (descoberto empiricamente no 1º run pós-
+  merge, princípio 13): por padrão, `needs: tierN` faz o GitHub **pular** o
+  tier seguinte se QUALQUER job do tier anterior falhar — uma fonte flaky (ex.
+  API do Senado com `fetch failed`) bloquearia toda a ingestão diária a jusante.
+  Mitigado com `if: ${{ !cancelled() && ... }}` nos tiers downstream: o tier
+  seguinte roda após o anterior **concluir** (preservando ordenação) sem exigir
+  seu **sucesso**. Fontes independentes voltam a não se bloquear; dependências
+  reais (backfill, orientações) degradam de forma segura (scripts idempotentes
+  processam o que existe).
 - Um job `discover` extra por cadência (npm ci + ~1s). Custo desprezível.
 - Indireção: ler "o que roda" exige abrir o registry, não o YAML. Mitigado pelo
   cabeçalho de cada workflow e pela tabela em WORKFLOWS.md.
