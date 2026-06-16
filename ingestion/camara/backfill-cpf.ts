@@ -14,9 +14,25 @@ import { camaraDeputadoDetalheSchema } from './deputado-detalhe-schema'
 // Câmara-only neste incremento).
 //
 // Idempotente e barato em reruns: processa só linhas com cpf IS NULL.
+//
+// Gentil de propósito (achado empírico do run mensal 2026-06-16): o endpoint de
+// detalhe throttla bursts — concorrência 5 a partir do IP de datacenter do
+// runner GH resultou em 0 CPFs em 30 min (todas as 513 esgotaram retry). Serial
+// (concorrência 1) + pacing evita o limite por burst. Em CI o IP do runner pode
+// estar bloqueado mesmo assim → rodar local (IP não-throttled) é o caminho
+// confiável; ver issue/memória do Eixo 2.
 
 const CASA = 'CAMARA' as const
-const CONCURRENCY = 5
+// Serial: o detalhe da Câmara rejeita bursts. NÃO aumentar sem evidência.
+const CONCURRENCY = 1
+// Pausa entre chamadas — respiro contra rate-limit por segundo.
+const PACING_MS = 200
+// Loga progresso a cada N processados (o script é silencioso até o fim).
+const PROGRESS_EVERY = 50
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 interface BackfillStats {
   candidatos: number
@@ -66,6 +82,21 @@ async function processDeputado(
       sourceId: dep.sourceId,
       reason: err instanceof Error ? err.message : String(err),
     })
+  } finally {
+    const processados = stats.fetched + stats.errors.length
+    if (processados % PROGRESS_EVERY === 0) {
+      console.log(
+        JSON.stringify({
+          event: 'backfill_cpf_camara_progress',
+          processados,
+          total: stats.candidatos,
+          preenchidos: stats.preenchidos,
+          semCpf: stats.semCpf,
+          errosAteAgora: stats.errors.length,
+        }),
+      )
+    }
+    await sleep(PACING_MS)
   }
 }
 
