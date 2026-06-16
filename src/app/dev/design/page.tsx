@@ -3,6 +3,8 @@ import {
   Label,
   Separator,
   Skeleton,
+  Stat,
+  StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import {
   Clock,
@@ -22,11 +24,9 @@ import {
 } from '@/design-system/compositions/filter-chips'
 import { HeroSection } from '@/design-system/compositions/hero-section'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
-import { KpiStrip } from '@/design-system/compositions/kpi-strip'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import { StatsGrid } from '@/design-system/compositions/stats-grid'
 import { Button } from '@/design-system/primitives/button'
 import {
   Card,
@@ -429,37 +429,35 @@ export default function DesignSystemPage() {
 
             {/* KPI strip */}
             <div className="p-6">
-              <KpiStrip
-                items={[
-                  {
-                    icon: <Vote className="h-4 w-4" />,
-                    label: 'Alinhamento',
-                    value: '87%',
-                    hint: '▲ 5 pp vs trimestre',
-                    tone: 'success',
-                  },
-                  {
-                    icon: <TrendingUp className="h-4 w-4" />,
-                    label: 'Votos analisados',
-                    value: '124',
-                    hint: 'últimos 30 dias',
-                  },
-                  {
-                    icon: <Inbox className="h-4 w-4" />,
-                    label: 'Proposições',
-                    value: '12',
-                    hint: 'como autor',
-                    tone: 'muted',
-                  },
-                  {
-                    icon: <TrendingDown className="h-4 w-4" />,
-                    label: 'Gastos CEAP',
-                    value: 'R$ 38k',
-                    hint: '▼ 12% vs trimestre',
-                    tone: 'destructive',
-                  },
-                ]}
-              />
+              <StatGroup layout="strip" cols={4}>
+                <Stat
+                  icon={<Vote className="h-4 w-4" />}
+                  label="Alinhamento"
+                  value="87%"
+                  hint="▲ 5 pp vs trimestre"
+                  tone="success"
+                />
+                <Stat
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  label="Votos analisados"
+                  value="124"
+                  hint="últimos 30 dias"
+                />
+                <Stat
+                  icon={<Inbox className="h-4 w-4" />}
+                  label="Proposições"
+                  value="12"
+                  hint="como autor"
+                  tone="neutral"
+                />
+                <Stat
+                  icon={<TrendingDown className="h-4 w-4" />}
+                  label="Gastos CEAP"
+                  value="R$ 38k"
+                  hint="▼ 12% vs trimestre"
+                  tone="error"
+                />
+              </StatGroup>
             </div>
 
             {/* SectionNav sticky */}
@@ -506,13 +504,11 @@ export default function DesignSystemPage() {
                 subtitle="% de votos no mesmo sentido que a orientação do partido"
                 badge={<DataBadge label="L3" source="análise" tone="accent" />}
               >
-                <StatsGrid
-                  items={[
-                    { value: '87%', label: 'Alinhamento médio' },
-                    { value: '8%', label: 'Divergência' },
-                    { value: '5%', label: 'Ausências em votos' },
-                  ]}
-                />
+                <StatGroup layout="grid" cols={3}>
+                  <Stat value="87%" label="Alinhamento médio" />
+                  <Stat value="8%" label="Divergência" />
+                  <Stat value="5%" label="Ausências em votos" />
+                </StatGroup>
               </SectionCard>
 
               <SectionCard
@@ -540,11 +536,11 @@ export default function DesignSystemPage() {
             Composições usadas neste mock: <code>HeroSection</code> (variant
             gradient — showcase only; rotas de produto usam plain por P8 da Wave
             8), <code>DataBadge</code> (kicker accent + badges por SectionCard),{' '}
-            <code>PartyBadge</code> (sigla PT), <code>KpiStrip</code> (4 KPIs
-            com tones), <code>SectionNav</code> (sticky, 3 anchors),{' '}
+            <code>PartyBadge</code> (sigla PT), <code>StatGroup</code> (strip, 4
+            KPIs com tones), <code>SectionNav</code> (sticky, 3 anchors),{' '}
             <code>SectionCard</code> (3 instâncias com ids),{' '}
-            <code>FilterChips</code> (selected state), <code>StatsGrid</code> (3
-            stats inline).
+            <code>FilterChips</code> (selected state), <code>StatGroup</code>{' '}
+            (grid, 3 stats inline).
           </p>
         </div>
 
@@ -726,67 +722,66 @@ export default function DesignSystemPage() {
           </div>
         </div>
 
-        {/* ----- KpiStrip ----- */}
+        {/* ----- StatGroup (strip) ----- */}
         <div className="space-y-4">
-          <h3 className="font-medium text-foreground text-lg">KpiStrip</h3>
+          <h3 className="font-medium text-foreground text-lg">
+            StatGroup — strip
+          </h3>
           <p className="text-foreground-muted text-sm">
-            Strip de KPIs configurável da Sprint 6.0 PR 4. Props:{' '}
-            <code>items: KpiItem[]</code>. Cap automático em 4 colunas md+
-            (evita fragmentação). Hint colorido por <code>tone</code> semântico
-            (sem hardcode de cores).
+            Strip de KPIs do RDS (<code>StatGroup layout="strip"</code> +{' '}
+            <code>Stat</code>), <code>cols</code> 2–4. Hint colorido por{' '}
+            <code>tone</code> semântico (<code>neutral</code>/
+            <code>success</code>/<code>warning</code>/<code>error</code>).
+            Consolidou o <code>KpiStrip</code> local (ADR-038, WS4).
           </p>
 
           {/* Variante 4 itens com tones diversos */}
-          <KpiStrip
-            items={[
-              {
-                icon: <Vote className="h-4 w-4" />,
-                label: 'Alinhamento',
-                value: '87%',
-                hint: '▲ 5 pp vs trimestre anterior',
-                tone: 'success',
-              },
-              {
-                icon: <TrendingUp className="h-4 w-4" />,
-                label: 'Votos analisados',
-                value: '124',
-                hint: 'últimos 30 dias',
-              },
-              {
-                icon: <Inbox className="h-4 w-4" />,
-                label: 'Proposições',
-                value: '12',
-                hint: 'como autor principal',
-                tone: 'muted',
-              },
-              {
-                icon: <TrendingDown className="h-4 w-4" />,
-                label: 'Gastos CEAP',
-                value: 'R$ 38k',
-                hint: '▼ 12% vs trimestre',
-                tone: 'destructive',
-              },
-            ]}
-          />
+          <StatGroup layout="strip" cols={4}>
+            <Stat
+              icon={<Vote className="h-4 w-4" />}
+              label="Alinhamento"
+              value="87%"
+              hint="▲ 5 pp vs trimestre anterior"
+              tone="success"
+            />
+            <Stat
+              icon={<TrendingUp className="h-4 w-4" />}
+              label="Votos analisados"
+              value="124"
+              hint="últimos 30 dias"
+            />
+            <Stat
+              icon={<Inbox className="h-4 w-4" />}
+              label="Proposições"
+              value="12"
+              hint="como autor principal"
+              tone="neutral"
+            />
+            <Stat
+              icon={<TrendingDown className="h-4 w-4" />}
+              label="Gastos CEAP"
+              value="R$ 38k"
+              hint="▼ 12% vs trimestre"
+              tone="error"
+            />
+          </StatGroup>
 
-          {/* Variante 2 itens (responsivo: cap em 2 col md+) */}
-          <KpiStrip
-            items={[
-              { label: 'Mandatos', value: '2' },
-              { label: 'Comissões ativas', value: '4', tone: 'warning' },
-            ]}
-          />
+          {/* Variante 2 itens */}
+          <StatGroup layout="strip" cols={2}>
+            <Stat label="Mandatos" value="2" />
+            <Stat label="Comissões ativas" value="4" tone="warning" />
+          </StatGroup>
         </div>
 
         {/* ----- KpiCard ----- */}
         <div className="space-y-4">
           <h3 className="font-medium text-foreground text-lg">KpiCard</h3>
           <p className="text-foreground-muted text-sm">
-            Card de KPIs em <code>surface-elevated</code>. Diferente de{' '}
-            <code>KpiStrip</code>: ícone top → value → label → hint em vertical
-            com ritmo uniforme, type scale calibrada para densidade 4-col (
-            <code>text-2xl</code> → <code>text-3xl</code>), whitespace gutters
-            (sem <code>divide-x</code>). Props por item:{' '}
+            Card de KPIs em <code>surface-elevated</code>. Diferente do{' '}
+            <code>StatGroup</code> (strip): ícone top → value → label → hint em
+            vertical com ritmo uniforme, type scale calibrada para densidade
+            4-col (<code>text-2xl</code> → <code>text-3xl</code>), whitespace
+            gutters (sem <code>divide-x</code>). Props por item:{' '}
             <code>icon?: ReactNode</code>, <code>label</code>,{' '}
             <code>value</code>, <code>hint?: ReactNode</code>. Consumer
             pré-formata <code>value</code>; composição não chama formatadores
@@ -1040,32 +1035,28 @@ export default function DesignSystemPage() {
           </div>
         </div>
 
-        {/* ----- StatsGrid ----- */}
+        {/* ----- StatGroup (grid) ----- */}
         <div className="space-y-4">
-          <h3 className="font-medium text-foreground text-lg">StatsGrid</h3>
+          <h3 className="font-medium text-foreground text-lg">
+            StatGroup — grid
+          </h3>
           <p className="text-foreground-muted text-sm">
-            Grid de stats para overviews/landings (Sprint 6.0 PR 6). Comparado a{' '}
-            <code>KpiStrip</code>: sem ícone, sem <code>tone</code>, valor maior
-            (<code>text-3xl</code>), separadores via grid gap em vez de border.
-            Markup <code>&lt;dl&gt;/&lt;dt&gt;/&lt;dd&gt;</code> semântico.
+            Grid de stats para overviews/landings (
+            <code>StatGroup layout="grid"</code>). Comparado ao strip: valores
+            maiores e separação por gap em vez de border. Consolidou o{' '}
+            <code>StatsGrid</code> local (ADR-038, WS4).
           </p>
 
-          <StatsGrid
-            items={[
-              {
-                value: '513',
-                label: 'Deputados',
-                hint: 'Câmara dos Deputados',
-              },
-              { value: '81', label: 'Senadores', hint: 'Senado Federal' },
-              {
-                value: '~3.5k',
-                label: 'Proposições/ano',
-                hint: 'Câmara + Senado',
-              },
-              { value: '24', label: 'Comissões' },
-            ]}
-          />
+          <StatGroup layout="grid" cols={4}>
+            <Stat value="513" label="Deputados" hint="Câmara dos Deputados" />
+            <Stat value="81" label="Senadores" hint="Senado Federal" />
+            <Stat
+              value="~3.5k"
+              label="Proposições/ano"
+              hint="Câmara + Senado"
+            />
+            <Stat value="24" label="Comissões" />
+          </StatGroup>
         </div>
 
         {/* ----- DataBadge ----- */}
