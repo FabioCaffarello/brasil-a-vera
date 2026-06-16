@@ -20,6 +20,10 @@ export default defineConfig({
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
       'ingestion/**/*.{test,spec}.{ts,tsx}',
+      // Guards versionados em scripts/ (ex.: wcag-check — gate de contraste
+      // #362). Coverage `include` abaixo permanece em src/** — scripts não
+      // entram na métrica de threshold.
+      'scripts/**/*.{test,spec}.{ts,tsx}',
     ],
     exclude: ['node_modules', '.next'],
     // Coverage cobre apenas o código razoavelmente testável sem DB/rede:

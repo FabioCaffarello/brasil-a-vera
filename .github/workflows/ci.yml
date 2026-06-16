@@ -65,6 +65,31 @@ jobs:
       # tradução dos compartilhados. Required check (job Lint & Build).
       - run: npm run guard:rds-noop
 
+  # Gate de contraste WCAG (issue #362). Job SEPARADO p/ visibilidade direta no
+  # rollup do PR ("Contrast / WCAG"). Roda em TODOS os PRs (sem path filter — um
+  # required check path-filtered fica "expected" eterno em PR que não toca a UI,
+  # mesma lição do design-tokens.yml). NÃO precisa de build: o gate parseia o
+  # FONTE src/app/globals.css (tokens reais) e falha se algum par regredir abaixo
+  # de AA — impede o cenário #361 (3 regressões AA por 3 dias em main).
+  wcag:
+    name: Contrast / WCAG
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: node-modules-
+
+      - run: npm ci
+      - run: npm run wcag:check
+
   test:
     name: Tests
     runs-on: ubuntu-latest

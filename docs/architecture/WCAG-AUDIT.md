@@ -127,13 +127,20 @@ texto/fundo validados.
 
 ### Método
 
-Script `.local/wcag-check.ts` (dev-time only, **não vai pro bundle**) usa
-a lib `culori` (devDep) pra:
+Gate versionado `scripts/wcag-check.ts` (`npm run wcag:check`, dev-time only,
+**não vai pro bundle**) — desde a issue #362 é **gate de CI** (job
+"Contrast / WCAG", roda em todo PR). Usa a lib `culori` (devDep) pra:
 
-1. Parsear cada valor OKLCH para sRGB
-2. Calcular relative luminance (WCAG fórmula)
-3. Computar ratio entre cada par fg/bg definido
-4. Marcar AA/AAA pass/fail por kind (body ≥ 4.5, ui/large ≥ 3.0)
+1. **Parsear os tokens reais de `src/app/globals.css`** (blocos `:root` light +
+   `.dark` + a escala navy do `@theme inline`, resolvendo `var(--color-primary-*)`)
+   — sem valores hardcoded, então **não pode driftar** (causa raiz do incidente
+   #361, onde a versão antiga `.local/wcag-check.ts` validava cores velhas).
+2. Calcular relative luminance (WCAG fórmula) e o ratio de cada par fg/bg.
+3. Marcar AA/AAA pass/fail por kind (body ≥ 4.5, ui/large ≥ 3.0). **Falha AA ou
+   token ausente → exit 1** (CI vermelho); AAA é advisory.
+
+> Histórico: até a #362 o check era `.local/wcag-check.ts` — gitignored, fora do
+> CI e com tokens hardcoded. Foi substituído pelo gate versionado acima.
 
 Output literal abaixo (rodado em 2026-05-15 após calibragem):
 
@@ -209,14 +216,16 @@ renderização em browser antigo, abrir issue com evidência e adicionar
 ### Como re-rodar a auditoria
 
 ```bash
-# Dev-time only — não roda em CI, não vai pro bundle.
+# Gate versionado — também roda no CI (job "Contrast / WCAG") em todo PR.
 # culori já está em devDependencies desde a Sprint 4.0 PR 2.
-npx tsx --tsconfig tsconfig.ingestion.json .local/wcag-check.ts
+npm run wcag:check
 ```
 
 Output retorna exit code 0 se todos os pares passam AA; exit code 1
-listando os pares falhando. Inclui na PR description ao introduzir token
-novo ou alterar valor existente.
+listando os pares falhando (ou tokens ausentes). Como roda no CI, uma
+regressão AA é barrada no PR automaticamente — não precisa lembrar de rodar.
+Ao introduzir token novo, adicione o par correspondente em
+`scripts/wcag-check.ts` (`PAIRS`).
 
 ---
 
