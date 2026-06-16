@@ -24,12 +24,16 @@
 //       de novo).
 
 import { Button } from '@fabio.caffarello/react-design-system/server'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/design-system/primitives/rds-dialog'
 import { useToast } from '@/design-system/primitives/rds-toast'
-import { cn } from '@/lib/cn'
 
 const LS_KEY = 'bav.parlamentares.favoritos'
 
@@ -120,56 +124,52 @@ export function MigracaoLocalStorageModal() {
   const pending = state === 'migrating'
 
   return (
-    <DialogPrimitive.Root open>
-      <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
-        <DialogPrimitive.Content
-          className={cn(
-            'fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-            'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
-          )}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-          onInteractOutside={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-        >
-          <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
-            Migrar favoritos antigos?
-          </DialogPrimitive.Title>
-          <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
-            <span className="block">
-              Encontramos <strong>{ids.length}</strong> parlamentar(es) salvos
-              no seu navegador de versões anteriores do Brasil à Vera. Você pode
-              importá-los para sua conta agora — eles passam a aparecer em{' '}
-              <strong>Parlamentares acompanhados</strong>.
-            </span>
-            <span className="block">
-              Se ignorar, removemos esse registro local (não dá pra desfazer).
-              Se preferir decidir depois, este aviso volta no próximo acesso.
-            </span>
-          </DialogPrimitive.Description>
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-            <Button
-              disabled={pending}
-              onClick={handleLater}
-              type="button"
-              variant="outline"
-            >
-              Depois
-            </Button>
-            <Button
-              disabled={pending}
-              onClick={handleIgnore}
-              type="button"
-              variant="outline"
-            >
-              Ignorar
-            </Button>
-            <Button disabled={pending} onClick={handleMigrate} type="button">
-              {pending ? 'Migrando...' : `Migrar ${ids.length}`}
-            </Button>
-          </div>
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+    <Dialog open>
+      {/* Migração de localStorage — não-dispensável; showCloseButton do RDS
+          (#221) substitui o Radix-direto. */}
+      <DialogContent
+        closeOnEscape={false}
+        closeOnOverlayClick={false}
+        showCloseButton={false}
+        size="lg"
+      >
+        <DialogTitle className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
+          Migrar favoritos antigos?
+        </DialogTitle>
+        <DialogDescription className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
+          <span className="block">
+            Encontramos <strong>{ids.length}</strong> parlamentar(es) salvos no
+            seu navegador de versões anteriores do Brasil à Vera. Você pode
+            importá-los para sua conta agora — eles passam a aparecer em{' '}
+            <strong>Parlamentares acompanhados</strong>.
+          </span>
+          <span className="block">
+            Se ignorar, removemos esse registro local (não dá pra desfazer). Se
+            preferir decidir depois, este aviso volta no próximo acesso.
+          </span>
+        </DialogDescription>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+          <Button
+            disabled={pending}
+            onClick={handleLater}
+            type="button"
+            variant="outline"
+          >
+            Depois
+          </Button>
+          <Button
+            disabled={pending}
+            onClick={handleIgnore}
+            type="button"
+            variant="outline"
+          >
+            Ignorar
+          </Button>
+          <Button disabled={pending} onClick={handleMigrate} type="button">
+            {pending ? 'Migrando...' : `Migrar ${ids.length}`}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -16,17 +16,20 @@
 //     Anonimizar é irreversível (PII apaga imediatamente);
 //     Eliminar é reversível em 30 dias.
 //
-// Botões usam DialogPrimitive direto (não DialogContent do DS) para
-// controlar o estado `open` manualmente — precisamos fechar o modal
-// ao confirmar e abrir um por vez.
+// Usa o Dialog do RDS controlado (`open`/`onOpenChange`) — fecha ao
+// confirmar e abre um modal por vez (export/anonymize/eliminar).
 
 import { useClerk } from '@clerk/nextjs'
 import { Button } from '@fabio.caffarello/react-design-system/server'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/design-system/primitives/rds-dialog'
 import { useToast } from '@/design-system/primitives/rds-toast'
-import { cn } from '@/lib/cn'
 
 type ActionKind = 'export' | 'anonymize' | 'erase' | null
 
@@ -179,113 +182,105 @@ export function AcoesLgpd() {
         </Button>
       </div>
 
-      <DialogPrimitive.Root onOpenChange={closeModal} open={open !== null}>
-        <DialogPrimitive.Portal>
-          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
-          <DialogPrimitive.Content
-            className={cn(
-              'fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-              'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
+      <Dialog onOpenChange={closeModal} open={open !== null}>
+        {/* Dispensável (Esc/overlay/X fecham → closeModal); size lg. */}
+        <DialogContent size="lg">
+          <DialogTitle className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
+            {open === 'export'
+              ? 'Exportar seus dados'
+              : open === 'anonymize'
+                ? 'Anonimizar sua conta'
+                : 'Eliminar sua conta'}
+          </DialogTitle>
+          <DialogDescription className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
+            {open === 'export' && (
+              <span className="block">
+                Vamos preparar um arquivo JSON com todos os dados que
+                registramos sobre você (perfil, parlamentares acompanhados,
+                política de alertas, histórico de reports e consentimentos). O
+                download começa automaticamente quando estiver pronto.
+              </span>
             )}
-          >
-            <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
-              {open === 'export'
-                ? 'Exportar seus dados'
-                : open === 'anonymize'
-                  ? 'Anonimizar sua conta'
-                  : 'Eliminar sua conta'}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
-              {open === 'export' && (
+            {open === 'anonymize' && (
+              <>
                 <span className="block">
-                  Vamos preparar um arquivo JSON com todos os dados que
-                  registramos sobre você (perfil, parlamentares acompanhados,
-                  política de alertas, histórico de reports e consentimentos). O
-                  download começa automaticamente quando estiver pronto.
+                  A anonimização é <strong>imediata e irreversível</strong>.
+                  Email, nome e identificadores associados a você serão apagados
+                  agora. Você não conseguirá recuperar a conta — um novo login
+                  criará um novo perfil em branco.
                 </span>
-              )}
-              {open === 'anonymize' && (
-                <>
-                  <span className="block">
-                    A anonimização é <strong>imediata e irreversível</strong>.
-                    Email, nome e identificadores associados a você serão
-                    apagados agora. Você não conseguirá recuperar a conta — um
-                    novo login criará um novo perfil em branco.
-                  </span>
-                  <span className="block">
-                    Para confirmar, digite{' '}
-                    <code className="font-mono text-fg-primary text-xs">
-                      {ANONIMIZAR_CONFIRM_WORD}
-                    </code>{' '}
-                    no campo abaixo.
-                  </span>
-                </>
-              )}
-              {open === 'erase' && (
-                <>
-                  <span className="block">
-                    Sua conta entra no estado eliminado agora. Você tem 30 dias
-                    para voltar e reativar acessando normalmente; depois desse
-                    prazo, eliminação definitiva.
-                  </span>
-                  <span className="block">
-                    Para confirmar, digite{' '}
-                    <code className="font-mono text-fg-primary text-xs">
-                      {ELIMINAR_CONFIRM_WORD}
-                    </code>{' '}
-                    no campo abaixo.
-                  </span>
-                </>
-              )}
-            </DialogPrimitive.Description>
-
-            {(open === 'anonymize' || open === 'erase') && (
-              <input
-                aria-label={
-                  open === 'anonymize'
-                    ? `Digite ${ANONIMIZAR_CONFIRM_WORD} para confirmar`
-                    : `Digite ${ELIMINAR_CONFIRM_WORD} para confirmar`
-                }
-                autoComplete="off"
-                className="w-full rounded-md border border-line-default bg-surface-base px-3 py-2 font-mono text-fg-primary text-sm outline-none focus:border-fg-brand focus:ring-2 focus:ring-fg-brand/30"
-                disabled={pending}
-                onChange={(e) => setConfirmText(e.target.value)}
-                type="text"
-                value={confirmText}
-              />
+                <span className="block">
+                  Para confirmar, digite{' '}
+                  <code className="font-mono text-fg-primary text-xs">
+                    {ANONIMIZAR_CONFIRM_WORD}
+                  </code>{' '}
+                  no campo abaixo.
+                </span>
+              </>
             )}
+            {open === 'erase' && (
+              <>
+                <span className="block">
+                  Sua conta entra no estado eliminado agora. Você tem 30 dias
+                  para voltar e reativar acessando normalmente; depois desse
+                  prazo, eliminação definitiva.
+                </span>
+                <span className="block">
+                  Para confirmar, digite{' '}
+                  <code className="font-mono text-fg-primary text-xs">
+                    {ELIMINAR_CONFIRM_WORD}
+                  </code>{' '}
+                  no campo abaixo.
+                </span>
+              </>
+            )}
+          </DialogDescription>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
-              <Button
-                disabled={pending}
-                onClick={closeModal}
-                type="button"
-                variant="outline"
-              >
-                Cancelar
-              </Button>
-              <Button
-                disabled={!confirmEnabled || pending}
-                onClick={() => {
-                  if (open === 'export') return handleExport()
-                  if (open === 'anonymize')
-                    return handleDestructive('anonymize')
-                  if (open === 'erase') return handleDestructive('erase')
-                }}
-                type="button"
-              >
-                {pending
-                  ? 'Processando...'
-                  : open === 'export'
-                    ? 'Confirmar export'
-                    : open === 'anonymize'
-                      ? 'Anonimizar agora'
-                      : 'Eliminar agora'}
-              </Button>
-            </div>
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Portal>
-      </DialogPrimitive.Root>
+          {(open === 'anonymize' || open === 'erase') && (
+            <input
+              aria-label={
+                open === 'anonymize'
+                  ? `Digite ${ANONIMIZAR_CONFIRM_WORD} para confirmar`
+                  : `Digite ${ELIMINAR_CONFIRM_WORD} para confirmar`
+              }
+              autoComplete="off"
+              className="w-full rounded-md border border-line-default bg-surface-base px-3 py-2 font-mono text-fg-primary text-sm outline-none focus:border-fg-brand focus:ring-2 focus:ring-fg-brand/30"
+              disabled={pending}
+              onChange={(e) => setConfirmText(e.target.value)}
+              type="text"
+              value={confirmText}
+            />
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:gap-3">
+            <Button
+              disabled={pending}
+              onClick={closeModal}
+              type="button"
+              variant="outline"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={!confirmEnabled || pending}
+              onClick={() => {
+                if (open === 'export') return handleExport()
+                if (open === 'anonymize') return handleDestructive('anonymize')
+                if (open === 'erase') return handleDestructive('erase')
+              }}
+              type="button"
+            >
+              {pending
+                ? 'Processando...'
+                : open === 'export'
+                  ? 'Confirmar export'
+                  : open === 'anonymize'
+                    ? 'Anonimizar agora'
+                    : 'Eliminar agora'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
