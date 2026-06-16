@@ -1,14 +1,40 @@
 ---
 name: add-primitive
 description: |
-  Adicionar uma nova primitiva shadcn ao design system seguindo os 7
-  passos do ADR-021. Argumento obrigatório: nome do componente
-  (ex: accordion, popover, command). Invoca o subagent
-  design-system-curator. Use quando o usuário pedir "adicione X
-  primitiva" ou "copia X do shadcn".
+  [DEPRECADA pelo ADR-038] Copiar uma primitiva shadcn para o design
+  system local. Origem padrão de primitiva genérica agora é o RDS
+  (@fabio.caffarello/react-design-system); gap vira issue upstream. Esta
+  skill só serve o caso raro de gap RDS ratificado. Argumento: nome do
+  componente. Invoca o subagent design-system-curator.
 ---
 
-Quando o usuário invocar `/add-primitive <componente>`:
+## 0. PARE — ADR-038: a origem padrão é o RDS, não o shadcn local
+
+Esta skill foi escrita para o pipeline do [ADR-021](../../../docs/architecture/ADR/021-design-system-shadcn-curado.md)
+(copiar shadcn → `src/design-system/primitives/`). O
+[ADR-033](../../../docs/architecture/ADR/033-adocao-react-design-system-externo.md)
+e o [ADR-038](../../../docs/architecture/ADR/038-consolidacao-primitivas-no-rds.md)
+**aposentaram esse caminho**: a camada local está em deprecação ativa e a
+origem de primitiva genérica é o `@fabio.caffarello/react-design-system`.
+
+Antes de copiar qualquer coisa:
+
+1. **Existe equivalente no RDS?** Cheque a superfície em
+   `node_modules/@fabio.caffarello/react-design-system/dist/**/*.d.ts` (ou a
+   lista em [`docs/migration/rds-consolidation-plan.md`](../../../docs/migration/rds-consolidation-plan.md)).
+   Se existir → use o RDS direto, **não** copie. Esta skill não se aplica.
+2. **Não existe?** Então é gap do RDS → **abra issue no repo do RDS** (regra
+   do ADR-033), não primitiva local nova.
+3. **Só prossiga com esta skill** se o owner ratificar explicitamente um motivo
+   para a primitiva ficar local (gap upstream + razão técnica, ex.: wrapper de
+   bundle como `rds-accordion`). Nesse caso, registre a issue upstream no
+   cabeçalho do arquivo e adicione contexto ao PR.
+
+Se nenhuma das três condições justificar a cópia, **pare aqui**.
+
+---
+
+Quando o usuário invocar `/add-primitive <componente>` (e o §0 autorizar):
 
 ## 1. Validações iniciais
 

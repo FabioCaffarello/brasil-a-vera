@@ -18,7 +18,7 @@ YAML (`name`, `description`, `tools`, `model`).
 | Nome | Função |
 |---|---|
 | `design-system-curator` | Adicionar/revisar primitivas curadas seguindo o ADR-021 (regras remanescentes pós-[ADR-033](../../docs/architecture/ADR/033-adocao-react-design-system-externo.md)) |
-| `rds-route-migrator` | Migrar rotas para staging `/rds/` pelo playbook versionado ([decisão B](../../docs/migration/route-readiness.md) §3.10: fricção majoritariamente mecânica nos pilotos 2–3). Contrato magro por desenho: referencia `docs/migration/*`, não inlinha estado |
+| `rds-route-migrator` | Consolidação de componentes no RDS ([ADR-038](../../docs/architecture/ADR/038-consolidacao-primitivas-no-rds.md)): repontar imports de primitiva/composição local para o pacote e deletar a cópia, um balde por PR + entrada no guard. A fase original (migração de rotas para staging `/rds/`) está concluída — histórico em `route-readiness.md`. Contrato magro: referencia `docs/**`, não inlinha estado |
 
 ## Histórico
 
