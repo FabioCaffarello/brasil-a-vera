@@ -66,11 +66,11 @@ stats-grid 1`.
 | --- | ---: | :---: | --- | --- | --- | --- |
 | `accordion` (Radix) | 0 | **X** | `Accordion` (via `rds-accordion`) | ✅ removida (WS1, PR3) | baixo | ✓ |
 | `rds-accordion` | 3 | **D** | wrapper sancionado | manter (razão de bundle) | — | — |
-| `skeleton` | 4 | **R** | `Skeleton` (`./server`) | repointar + deletar | baixo | WS3‑a |
-| `separator` | 1 | **R** | `Separator` (`./server`) | repointar + deletar | baixo | WS3‑a |
-| `badge` | 1 | **R** | `Badge` | repointar + deletar | baixo | WS3‑a |
-| `input` | 2 | **R** | `Input` | repointar + deletar | baixo | WS3‑a |
-| `label` | 1 | **R** | `Label` | repointar + deletar | baixo | WS3‑a |
+| `badge` | 1 | **R** | `Badge` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
+| `label` | 1 | **R** | `Label` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
+| `separator` | 1 | **R** | `Separator` (`./server`) | ✅ consolidado (showroom-only; WS3‑a) | baixo | ✓ |
+| `skeleton` | 4 | **R** | `Skeleton` (`./server`) | DEFERIDO: consumidores de produção (loading) + delta de token (`bg-surface-elevated`→`bg-surface-muted`) → QA visual | baixo-méd | WS3‑b |
+| `input` | 2 | **G** | `Input` (client-only) | DEFERIDO: RDS Input não tem entry server; repointar quebraria o zero-JS do `search-form` (ADR-022). Fica local até Input server-safe upstream | médio | WS5 |
 | `card` | 3 | **R** | `Card` compound | repointar (mapear sub-componentes) | médio | WS3‑b |
 | `popover` | 1 | **R** | `Popover` | acoplado ao Combobox | médio | WS4 |
 | `button` | 27 | **R** | `Button` | repointar em massa (mecânico) | médio | WS3‑b |

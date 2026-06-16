@@ -1,4 +1,9 @@
 import {
+  Badge,
+  Label,
+  Separator,
+} from '@fabio.caffarello/react-design-system/server'
+import {
   Clock,
   Database,
   FileText,
@@ -9,7 +14,6 @@ import {
   Users,
   Vote,
 } from 'lucide-react'
-
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import {
   FilterChip,
@@ -22,7 +26,6 @@ import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import { StatsGrid } from '@/design-system/compositions/stats-grid'
-import { Badge } from '@/design-system/primitives/badge'
 import { Button } from '@/design-system/primitives/button'
 import {
   Card,
@@ -43,8 +46,6 @@ import {
   DialogTrigger,
 } from '@/design-system/primitives/dialog'
 import { Input } from '@/design-system/primitives/input'
-import { Label } from '@/design-system/primitives/label'
-import { Separator } from '@/design-system/primitives/separator'
 import { Skeleton } from '@/design-system/primitives/skeleton'
 import { Toaster } from '@/design-system/primitives/sonner'
 import {
@@ -59,10 +60,12 @@ import { Swatch } from './_components/swatch'
 /**
  * /dev/design — Sprint 4.0 PR 7.
  *
- * Rota INTERNA para QA visual manual do design system. Renderiza todas as
- * 10 primitivas Tier 1 entregues pela Sprint 4.0 (button, card, badge,
- * skeleton, sonner, dialog, input, label, separator, tabs) + grade de
- * tokens semânticos (cores).
+ * Rota INTERNA para QA visual manual do design system. Renderiza as
+ * primitivas Tier 1 (button, card, skeleton, sonner, dialog, input, tabs)
+ * + grade de tokens semânticos (cores). Badge, Label e Separator foram
+ * consolidados no RDS (ADR-038, WS3-a) e são importados de
+ * `@fabio.caffarello/react-design-system/server` — o showroom passa a
+ * exibir as variantes reais do RDS.
  *
  * Não-indexável (metadata.robots no layout pai + X-Robots-Tag no
  * next.config.ts). Probe smoke `dev-routes-noindex` valida.
@@ -198,10 +201,16 @@ export default function DesignSystemPage() {
           Badge
         </h2>
         <div className="flex flex-wrap gap-3">
-          <Badge>Default</Badge>
+          <Badge variant="primary">Primary</Badge>
           <Badge variant="secondary">Secondary</Badge>
-          <Badge variant="destructive">Destructive</Badge>
-          <Badge variant="outline">Outline</Badge>
+          <Badge variant="success">Success</Badge>
+          <Badge variant="warning">Warning</Badge>
+          <Badge variant="error">Error</Badge>
+          <Badge variant="info">Info</Badge>
+          <Badge variant="neutral">Neutral</Badge>
+          <Badge variant="neutral" style="outline">
+            Outline
+          </Badge>
         </div>
       </section>
 
@@ -241,7 +250,9 @@ export default function DesignSystemPage() {
               <p>Item 3</p>
             </CardContent>
             <CardFooter className="gap-2">
-              <Badge variant="outline">10 votações</Badge>
+              <Badge variant="neutral" style="outline">
+                10 votações
+              </Badge>
               <Button variant="link">Ver todas →</Button>
             </CardFooter>
           </Card>
@@ -862,7 +873,7 @@ export default function DesignSystemPage() {
             subtitle="Últimas 10 votações nominais"
             icon={<Vote className="h-5 w-5" />}
             badge={
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="neutral" style="outline" className="text-xs">
                 L2 · Câmara
               </Badge>
             }

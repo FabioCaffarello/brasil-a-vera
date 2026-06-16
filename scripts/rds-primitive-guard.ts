@@ -40,7 +40,27 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Accordion } from '@/design-system/primitives/rds-accordion'",
     ref: 'ADR-038 / WS1 — accordion local (Radix) órfã; perfis já usam o wrapper RDS',
   },
-  // WS3/WS4 adicionam aqui: skeleton, separator, badge, input, label, card, button…
+  {
+    path: '@/design-system/primitives/badge',
+    use: "import { Badge } from '@fabio.caffarello/react-design-system/server'",
+    ref: 'ADR-038 / WS3-a — Badge consolidado no RDS (/server). Variantes RDS: primary|secondary|success|warning|error|info|neutral + style solid|outline',
+  },
+  {
+    path: '@/design-system/primitives/label',
+    use: "import { Label } from '@fabio.caffarello/react-design-system/server'",
+    ref: 'ADR-038 / WS3-a — Label consolidado no RDS (/server)',
+  },
+  {
+    path: '@/design-system/primitives/separator',
+    use: "import { Separator } from '@fabio.caffarello/react-design-system/server'",
+    ref: 'ADR-038 / WS3-a — Separator consolidado no RDS (/server)',
+  },
+  // WS3-b/WS4 adicionam aqui: skeleton, input, card, button, dialog…
+  // Notas de deferimento (não consolidados ainda):
+  //   - input: RDS Input é client-only; repointar quebraria o zero-JS
+  //     do search-form (ADR-022). Espera Input server-safe upstream.
+  //   - skeleton: tem consumidores de produção (loading states) + delta de
+  //     token (bg-surface-elevated → bg-surface-muted); exige QA visual.
 ]
 
 function walk(dir: string, exts: string[]): string[] {
