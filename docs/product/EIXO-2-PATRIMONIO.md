@@ -243,7 +243,7 @@ plano. ADR-036 destrava B; ADR-037 destrava D.
 
 ## 10. ADRs e referências
 
-- [ADR-036 — Correção monetária do patrimônio declarado](../architecture/ADR/036-correcao-monetaria-patrimonio.md) (skeleton; opção (b) registrada)
+- [ADR-036 — Correção monetária do patrimônio declarado](../architecture/ADR/036-correcao-monetaria-patrimonio.md) (accepted; IPCA número-índice SIDRA 1737/2266, data-base dez/2022 = 6474.09)
 - [ADR-037 — Modelagem do grafo de participação societária](../architecture/ADR/037-grafo-participacao-societaria.md) (skeleton; Incremento 2)
 - [ADR-018 — Cache de edge](../architecture/ADR/018-cache-edge-app.md) · [TRUST-PYRAMID.md](../architecture/TRUST-PYRAMID.md) · [DATA-SOURCES.md](../architecture/DATA-SOURCES.md) · [DATA-DICTIONARY.md](../domain/DATA-DICTIONARY.md)
 - Issue #96 (grafo → ReactFlow, Wave 3.4 pausada)
