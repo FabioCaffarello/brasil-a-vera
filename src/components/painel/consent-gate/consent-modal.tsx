@@ -20,7 +20,7 @@ import { Button } from '@fabio.caffarello/react-design-system/server'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 
 interface Props {
@@ -28,6 +28,7 @@ interface Props {
 }
 
 export function ConsentModal({ policyVersion }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const { signOut } = useClerk()
   const [pendingAction, setPendingAction] = useState<'accept' | 'leave' | null>(

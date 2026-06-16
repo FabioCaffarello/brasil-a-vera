@@ -14,7 +14,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 import type { AlertPolicyFields } from '@/lib/constants/alert-policy'
 
@@ -109,6 +109,7 @@ const BOOST_OPTIONS: {
 ]
 
 export function FormPoliticas({ initial }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const [policy, setPolicy] = useState<AlertPolicyFields>(initial)
   const [pending, startTransition] = useTransition()

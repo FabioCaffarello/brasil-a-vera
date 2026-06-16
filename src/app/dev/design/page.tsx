@@ -45,7 +45,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/design-system/primitives/rds-dialog'
-import { Toaster } from '@/design-system/primitives/sonner'
 import {
   Tabs,
   TabsContent,
@@ -1104,25 +1103,21 @@ export default function DesignSystemPage() {
 
       <Separator />
 
-      {/* ============================ SONNER (TOASTER) ============================ */}
-      <section aria-labelledby="toaster-title" className="space-y-6">
-        <h2 className="font-semibold text-2xl" id="toaster-title">
-          Sonner (Toaster)
+      {/* ============================ TOAST (RDS useToast) ============================ */}
+      <section aria-labelledby="toast-title" className="space-y-6">
+        <h2 className="font-semibold text-2xl" id="toast-title">
+          Toast (RDS useToast)
         </h2>
         <p className="text-foreground-muted text-sm">
-          O <code>&lt;Toaster /&gt;</code> é montado no fim da página. Para
-          disparar toasts, importe <code>toast</code> de <code>sonner</code> em
-          um Client Component. Esta rota só monta o container — a interação
-          ficará num futuro consumer real (Sprint 4.5+).
+          O <code>&lt;ToastContainer /&gt;</code> é montado uma vez no root
+          layout (dentro do <code>&lt;ToastProvider /&gt;</code>) — cobre todas
+          as rotas, inclusive esta. Para disparar, chame <code>useToast()</code>{' '}
+          num Client Component (ADR-038, substituiu o sonner).
         </p>
         <div className="rounded-md border border-border bg-surface p-4 font-mono text-foreground-muted text-xs">
-          <code>
-            {"import { toast } from 'sonner'; toast.success('Salvo!')"}
-          </code>
+          <code>{"const toast = useToast(); toast.success('Salvo!')"}</code>
         </div>
       </section>
-
-      <Toaster />
     </main>
   )
 }

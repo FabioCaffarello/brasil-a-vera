@@ -2,8 +2,6 @@
 
 import { Copy, Share2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
-
 import {
   Dialog,
   DialogContent,
@@ -12,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/design-system/primitives/rds-dialog'
+import { useToast } from '@/design-system/primitives/rds-toast'
 
 interface Props {
   parlamentar: {
@@ -42,7 +41,11 @@ function buildTwitter(parlamentar: Props['parlamentar'], url: string): string {
   return `📊 ${parlamentar.partidoSigla}/${parlamentar.uf}: como vota, propõe e gasta no Brasil à Vera 🇧🇷\n\n${url}`
 }
 
-async function copyToClipboard(text: string, label: string) {
+async function copyToClipboard(
+  text: string,
+  label: string,
+  toast: ReturnType<typeof useToast>,
+) {
   try {
     await navigator.clipboard.writeText(text)
     toast.success(`${label} copiado!`)
@@ -67,6 +70,7 @@ async function copyToClipboard(text: string, label: string) {
  * até Wave 9".
  */
 export function CompartilharButton({ parlamentar }: Props) {
+  const toast = useToast()
   const [url, setUrl] = useState('')
 
   useEffect(() => {
@@ -103,21 +107,25 @@ export function CompartilharButton({ parlamentar }: Props) {
             id="share-url"
             label="Link"
             text={url}
-            onCopy={() => copyToClipboard(url, 'Link')}
+            onCopy={() => copyToClipboard(url, 'Link', toast)}
             rows={1}
           />
           <Field
             id="share-whatsapp"
             label="WhatsApp"
             text={whatsAppText}
-            onCopy={() => copyToClipboard(whatsAppText, 'Texto WhatsApp')}
+            onCopy={() =>
+              copyToClipboard(whatsAppText, 'Texto WhatsApp', toast)
+            }
             rows={4}
           />
           <Field
             id="share-twitter"
             label="X / Twitter"
             text={twitterText}
-            onCopy={() => copyToClipboard(twitterText, 'Texto X/Twitter')}
+            onCopy={() =>
+              copyToClipboard(twitterText, 'Texto X/Twitter', toast)
+            }
             rows={3}
             hint={
               twitterText ? `${twitterText.length}/280 caracteres` : undefined

@@ -13,7 +13,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 
 interface Props {
   initialMarketingOptedIn: boolean
@@ -24,6 +24,7 @@ export function ComunicacaoToggles({
   initialMarketingOptedIn,
   initialSurveyOptedIn,
 }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const [marketingOptedIn, setMarketing] = useState(initialMarketingOptedIn)
   const [surveyOptedIn, setSurvey] = useState(initialSurveyOptedIn)

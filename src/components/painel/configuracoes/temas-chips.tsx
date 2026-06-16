@@ -10,7 +10,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 import { TEMAS, type TemaId } from '@/lib/constants/temas'
 
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export function TemasChips({ initialThemes }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const [themes, setThemes] = useState<TemaId[]>(
     initialThemes.filter((t): t is TemaId =>

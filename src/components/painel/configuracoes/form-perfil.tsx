@@ -12,7 +12,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { UFS, type Uf } from '@/lib/municipios'
 
 interface Props {
@@ -22,6 +22,7 @@ interface Props {
 }
 
 export function FormPerfil({ initialDisplayName, email, initialUf }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const [displayName, setDisplayName] = useState(initialDisplayName ?? '')
   const [uf, setUf] = useState<Uf | ''>((initialUf ?? '') as Uf | '')
