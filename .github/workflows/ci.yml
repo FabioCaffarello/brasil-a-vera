@@ -74,6 +74,19 @@ jobs:
       - uses: ./.github/actions/setup-project
       - run: npm run wcag:check
 
+  # Guard de deprecação de primitivas locais (ADR-038). Job SEPARADO e estático
+  # (sem build, igual ao wcag): falha se algum arquivo em src/** reintroduzir o
+  # import de uma primitiva local já consolidada/removida no RDS — a dupla-camada
+  # voltando pela porta dos fundos. A lista declarativa vive em
+  # scripts/rds-primitive-guard.ts e cresce no mesmo PR que remove cada primitiva.
+  rds-primitive:
+    name: RDS Primitive Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - run: npm run guard:rds-primitive
+
   test:
     name: Tests
     runs-on: ubuntu-latest
