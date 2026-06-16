@@ -1,13 +1,12 @@
-import { Vote } from 'lucide-react'
-import Link from 'next/link'
-
 import {
   Card,
-  CardContent,
-  CardFooter,
+  CardActions,
+  CardBody,
   CardHeader,
   CardTitle,
-} from '@/design-system/primitives/card'
+} from '@fabio.caffarello/react-design-system/server'
+import { Vote } from 'lucide-react'
+import Link from 'next/link'
 import { formatDataBR } from '@/lib/format'
 import type { VotacaoRecente } from '@/lib/queries/votacoes'
 
@@ -40,7 +39,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
         <CardTitle className="text-lg">Votações da semana</CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1">
+      <CardBody className="flex-1">
         {votacoes.length === 0 ? (
           <p className="text-fg-tertiary text-sm leading-relaxed">
             Nenhuma votação registrada nos últimos {diasJanela} dias. Atualize
@@ -82,9 +81,9 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
             ))}
           </ol>
         )}
-      </CardContent>
+      </CardBody>
 
-      <CardFooter className="flex flex-col items-start gap-2">
+      <CardActions className="flex flex-col items-start gap-2">
         {votacoes.length > 0 && (
           <p className="text-fg-tertiary text-xs">
             {votacoes.length}{' '}
@@ -100,7 +99,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
         >
           Ver todas <span aria-hidden>→</span>
         </Link>
-      </CardFooter>
+      </CardActions>
     </Card>
   )
 }

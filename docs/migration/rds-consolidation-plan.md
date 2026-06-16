@@ -86,8 +86,8 @@ stats-grid 1`.
 | `command` | 1 | **X** | — (cmdk; sem par) | ✅ removido com o `Combobox` (#450) | alto | ✓ |
 | `popover` | 1 | **X** | `Popover` | ✅ removido com o `Combobox` (#450) | médio | ✓ |
 | `rds-dialog` / `rds-toast` / `rds-autocomplete` | — | **D** | wrappers de bundle | manter — re-export `/granular` (razão de bundle, como `rds-accordion`) | — | — |
-| `card` | 3 | **G** | `Card` compound | FICA LOCAL: modelo de layout diferente (padding no Card; `CardFooter`→`CardActions`; flex equal-height da home). Refactor de home c/ QA — não feito | médio | local |
-| `tabs` (stateful) | 1 | **G** | só `TabsAsLinks` | FICA LOCAL: RDS só tem `TabsAsLinks` (sem tabs com estado interno) | baixo | local |
+| `card` | 3 | **R** | `Card` compound (`./server`) | ✅ consolidado (#456-follow; `CardContent`→`CardBody`, `CardDescription`→`CardSubtitle`, `CardFooter`→`CardActions`; spacer vazio da home virou `<div flex-1>` pois `CardBody` exige children) | médio | ✓ |
+| `tabs` (stateful) | 1 | **G** | só `TabsAsLinks` | FICA LOCAL: RDS só tem `TabsAsLinks` (sem tabs com estado interno) — único primitivo local restante | baixo | local |
 
 ### Composições
 
@@ -170,9 +170,10 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
 
 **Estado final da `src/design-system/`:**
 
-- **Primitivas:** só `card` + `tabs` (gaps ratificados, ficam locais) + 4 wrappers
-  de bundle sancionados `rds-accordion`/`rds-autocomplete`/`rds-dialog`/`rds-toast`
-  (`'use client'` re-exportando `/granular` — evita vazar +294KB do barrel num RSC).
+- **Primitivas:** só `tabs` (único gap ratificado — RDS só tem `TabsAsLinks`) +
+  4 wrappers de bundle sancionados `rds-accordion`/`rds-autocomplete`/`rds-dialog`/
+  `rds-toast` (`'use client'` re-exportando `/granular` — evita vazar +294KB do
+  barrel num RSC). `card` também foi consolidado (Card compound do RDS).
 - **Composições:** `data-badge`, `kpi-card`, `party-badge` (gaps/ratificados) +
   `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
 - **Zero duplicata local** de componente RDS. **Zero `@radix-ui/react-dialog`**
@@ -183,6 +184,6 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
 **Guard anti-regressão** (`scripts/rds-primitive-guard.ts`, CI): trava reintrodução
 de qualquer primitiva consolidada. A camada local em deprecação ativa fica honesta.
 
-**Follow-up em aberto (sem urgência):** `card` (refactor dos cards da home p/ o
-`Card` do RDS, com QA); issues upstream candidatas — `DataBadge` (source+tone),
-paleta de charts, `success-foreground` — só se o padrão se repetir.
+**Follow-up em aberto (sem urgência):** nenhum de consolidação — `tabs` é o único
+primitivo local restante (gap legítimo). Issues upstream candidatas (só se o padrão
+se repetir): `DataBadge` (source+tone), paleta de charts, `success-foreground`.

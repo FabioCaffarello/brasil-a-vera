@@ -115,9 +115,14 @@ const FORBIDDEN: Forbidden[] = [
     use: "ToastProvider/ToastContainer (root layout) + useToast() de '@/design-system/primitives/rds-toast' (substituiu o sonner global pelo Toast hook-based do RDS)",
     ref: 'ADR-038 — Toast consolidado no sistema do RDS (ToastProvider+useToast); dep `sonner` removida',
   },
+  {
+    path: '@/design-system/primitives/card',
+    use: "import { Card, CardHeader, CardTitle, CardSubtitle, CardBody, CardActions } from '@fabio.caffarello/react-design-system/server' (CardContent→CardBody, CardDescription→CardSubtitle, CardFooter→CardActions)",
+    ref: 'ADR-038 — Card consolidado no Card compound do RDS (/server). Card/CardHeader/CardTitle iguais; renames de sub-componentes',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
-  //   - card: modelo de layout diferente (refactor de home com QA).
+  //   - tabs: RDS só tem TabsAsLinks (sem tabs com estado interno).
 ]
 
 function walk(dir: string, exts: string[]): string[] {
