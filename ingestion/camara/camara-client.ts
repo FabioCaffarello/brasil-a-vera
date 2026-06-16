@@ -29,6 +29,20 @@ interface CamaraEnvelope<T> {
   links?: Array<{ rel: string; href: string }>
 }
 
+// GET único para endpoints de detalhe (ex.: /deputados/{id}) que devolvem
+// `{ dados: {...} }`. Retorna o JSON cru (unknown) — a validação Zod fica no
+// boundary do consumer (princípio 2).
+export async function fetchJson(
+  path: string,
+  options: { signal?: AbortSignal } = {},
+): Promise<unknown> {
+  const response = await fetchWithRetry(`${BASE_URL}${path}`, {
+    headers: HEADERS,
+    signal: options.signal,
+  })
+  return response.json()
+}
+
 // Itera por todas as páginas de um endpoint que devolve `{ dados: T[] }`.
 // Yielda os items individualmente para que o consumer possa processar em
 // streaming sem materializar tudo em memória.
