@@ -1,5 +1,9 @@
 # Matriz de migração brasil-a-vera × RDS 3.0.0
 
+> ⚠️ **Categorização superada (2026-06-16).** Snapshot contra RDS 3.0.0; o RDS
+> hoje está em 3.12.0 e a migração de rotas terminou. Fila de consolidação
+> atual em [`rds-consolidation-plan.md`](rds-consolidation-plan.md).
+>
 > Data: 2026-06-05 · Branch `docs/component-inventory` · Read-only
 >
 > Fontes: `docs/migration/component-inventory.md` (133 componentes,
