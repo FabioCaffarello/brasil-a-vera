@@ -3,10 +3,10 @@
 //
 // Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
 // docs/migration/token-map.md:
-//   border-border         → border-line-default
-//   bg-surface            → bg-surface-base
-//   text-foreground       → text-fg-primary
-//   text-foreground-muted → text-fg-tertiary
+//   border-line-default         → border-line-default
+//   bg-surface-base            → bg-surface-base
+//   text-fg-primary       → text-fg-primary
+//   text-fg-tertiary → text-fg-tertiary
 //
 // `ItemRecebido` importado do ORIGINAL (client island — accordion + marcação
 // de leitura). `renderMarkdown` da lib (lógica pura, preservada).

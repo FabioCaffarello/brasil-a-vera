@@ -119,11 +119,11 @@ export function AcoesLgpd() {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border border-border bg-surface p-4">
-        <h3 className="font-medium text-foreground text-sm">
+      <div className="rounded-md border border-line-default bg-surface-base p-4">
+        <h3 className="font-medium text-fg-primary text-sm">
           Exportar seus dados
         </h3>
-        <p className="mt-1 text-foreground-muted text-xs">
+        <p className="mt-1 text-fg-tertiary text-xs">
           Recebe um arquivo JSON com tudo que registramos sobre você. LGPD art.
           18 V (portabilidade).
         </p>
@@ -138,11 +138,11 @@ export function AcoesLgpd() {
         </Button>
       </div>
 
-      <div className="rounded-md border border-border bg-surface p-4">
-        <h3 className="font-medium text-foreground text-sm">
+      <div className="rounded-md border border-line-default bg-surface-base p-4">
+        <h3 className="font-medium text-fg-primary text-sm">
           Anonimizar sua conta
         </h3>
-        <p className="mt-1 text-foreground-muted text-xs">
+        <p className="mt-1 text-fg-tertiary text-xs">
           Apaga email, nome e qualquer identificador agora.{' '}
           <strong>Irreversível.</strong> Histórico cívico abstrato
           (consentimentos prestados, sem identificá-lo) é preservado para
@@ -160,10 +160,10 @@ export function AcoesLgpd() {
       </div>
 
       <div className="rounded-md border border-red-500/40 bg-red-500/5 p-4">
-        <h3 className="font-medium text-foreground text-sm">
+        <h3 className="font-medium text-fg-primary text-sm">
           Eliminar sua conta
         </h3>
-        <p className="mt-1 text-foreground-muted text-xs">
+        <p className="mt-1 text-fg-tertiary text-xs">
           Sua conta vai para o estado "eliminada" agora. Você pode reativar em
           até 30 dias acessando novamente; depois disso, eliminação definitiva.
           LGPD art. 18 VI.
@@ -185,17 +185,17 @@ export function AcoesLgpd() {
           <DialogPrimitive.Content
             className={cn(
               'fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4',
-              'border border-border bg-background p-6 shadow-lg sm:rounded-lg',
+              'border border-line-default bg-surface-canvas p-6 shadow-lg sm:rounded-lg',
             )}
           >
-            <DialogPrimitive.Title className="font-semibold text-foreground text-lg leading-none tracking-tight">
+            <DialogPrimitive.Title className="font-semibold text-fg-primary text-lg leading-none tracking-tight">
               {open === 'export'
                 ? 'Exportar seus dados'
                 : open === 'anonymize'
                   ? 'Anonimizar sua conta'
                   : 'Eliminar sua conta'}
             </DialogPrimitive.Title>
-            <DialogPrimitive.Description className="space-y-3 text-foreground-muted text-sm leading-relaxed">
+            <DialogPrimitive.Description className="space-y-3 text-fg-tertiary text-sm leading-relaxed">
               {open === 'export' && (
                 <span className="block">
                   Vamos preparar um arquivo JSON com todos os dados que
@@ -214,7 +214,7 @@ export function AcoesLgpd() {
                   </span>
                   <span className="block">
                     Para confirmar, digite{' '}
-                    <code className="font-mono text-foreground text-xs">
+                    <code className="font-mono text-fg-primary text-xs">
                       {ANONIMIZAR_CONFIRM_WORD}
                     </code>{' '}
                     no campo abaixo.
@@ -230,7 +230,7 @@ export function AcoesLgpd() {
                   </span>
                   <span className="block">
                     Para confirmar, digite{' '}
-                    <code className="font-mono text-foreground text-xs">
+                    <code className="font-mono text-fg-primary text-xs">
                       {ELIMINAR_CONFIRM_WORD}
                     </code>{' '}
                     no campo abaixo.
@@ -247,7 +247,7 @@ export function AcoesLgpd() {
                     : `Digite ${ELIMINAR_CONFIRM_WORD} para confirmar`
                 }
                 autoComplete="off"
-                className="w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-foreground text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
+                className="w-full rounded-md border border-line-default bg-surface-base px-3 py-2 font-mono text-fg-primary text-sm outline-none focus:border-fg-brand focus:ring-2 focus:ring-fg-brand/30"
                 disabled={pending}
                 onChange={(e) => setConfirmText(e.target.value)}
                 type="text"

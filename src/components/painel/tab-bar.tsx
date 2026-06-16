@@ -20,7 +20,7 @@
 // Diferenças visuais da ADOÇÃO do componente RDS (não tradução de token —
 // mesma régua da typography do HeroSection, §3.14 decisão 1):
 //   - active: o RDS usa `border-line-brand text-fg-brand-emphasis font-medium`
-//     (vs `border-brand text-foreground` local) — typography/cor do componente
+//     (vs `border-fg-brand text-fg-primary` local) — typography/cor do componente
 //     adotado, não token fora do mapa.
 //   - count: o RDS renderiza um pill arredondado (`bg-surface-muted
 //     text-fg-secondary text-xs`) em vez do `· N` em middot local — é a

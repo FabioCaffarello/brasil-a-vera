@@ -3,8 +3,8 @@
 //
 // Original INTOCADO. Tradução de classnames EXCLUSIVAMENTE por
 // docs/migration/token-map.md:
-//   text-foreground       → text-fg-primary
-//   text-foreground-muted → text-fg-tertiary
+//   text-fg-primary       → text-fg-primary
+//   text-fg-tertiary → text-fg-tertiary
 //
 // `KpiStrip` → `StatGroup layout="grid" cols={4}` + `Stat` do RDS /server
 // (precedente piloto-2/§3.6); tone map default/muted→neutral, warning→warning.

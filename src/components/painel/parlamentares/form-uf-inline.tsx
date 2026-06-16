@@ -48,13 +48,13 @@ export function FormUfInline() {
     >
       <div className="w-full sm:w-48">
         <label
-          className="block font-medium text-foreground text-sm"
+          className="block font-medium text-fg-primary text-sm"
           htmlFor="form-uf-inline"
         >
           Sua UF
         </label>
         <select
-          className="mt-1 block w-full rounded-md border border-border-strong bg-background px-3 py-2 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-1 block w-full rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus"
           disabled={pending}
           id="form-uf-inline"
           onChange={(e) => setUf(e.target.value as Uf | '')}

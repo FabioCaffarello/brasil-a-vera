@@ -144,9 +144,7 @@ export function OnboardingWizard() {
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Vamos configurar sua área</DialogTitle>
-            <span className="text-foreground-muted text-xs">
-              Passo {step}/3
-            </span>
+            <span className="text-fg-tertiary text-xs">Passo {step}/3</span>
           </div>
           <DialogDescription>
             {step === 1 && 'Personalize as recomendações pela sua UF.'}
@@ -158,13 +156,13 @@ export function OnboardingWizard() {
         {step === 1 && (
           <div className="py-4">
             <label
-              className="font-medium text-foreground text-sm"
+              className="font-medium text-fg-primary text-sm"
               htmlFor="onboarding-uf"
             >
               De onde você acompanha a política?
             </label>
             <select
-              className="mt-2 block w-full rounded-md border border-border-strong bg-background px-3 py-2 text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="mt-2 block w-full rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 text-fg-primary text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus"
               id="onboarding-uf"
               onChange={(e) => setUf((e.target.value || null) as Uf | null)}
               value={uf ?? ''}
@@ -181,10 +179,10 @@ export function OnboardingWizard() {
 
         {step === 2 && (
           <div className="py-4">
-            <p className="font-medium text-foreground text-sm">
+            <p className="font-medium text-fg-primary text-sm">
               Quais temas mais te importam?
             </p>
-            <p className="mt-1 text-foreground-muted text-xs">
+            <p className="mt-1 text-fg-tertiary text-xs">
               Pode escolher quantos quiser. Influencia recomendações e o
               conteúdo do report.
             </p>
@@ -197,8 +195,8 @@ export function OnboardingWizard() {
                     className={cn(
                       'rounded-full border px-3 py-1.5 text-sm transition-colors',
                       selected
-                        ? 'border-brand bg-brand/10 text-foreground'
-                        : 'border-border bg-background text-foreground-muted hover:border-border-strong hover:text-foreground',
+                        ? 'border-fg-brand bg-fg-brand/10 text-fg-primary'
+                        : 'border-line-default bg-surface-canvas text-fg-tertiary hover:border-line-emphasis hover:text-fg-primary',
                     )}
                     key={tema.id}
                     onClick={() => toggleTheme(tema.id)}
@@ -214,10 +212,10 @@ export function OnboardingWizard() {
 
         {step === 3 && (
           <div className="py-4">
-            <p className="font-medium text-foreground text-sm">
+            <p className="font-medium text-fg-primary text-sm">
               O que você quer receber no report semanal?
             </p>
-            <p className="mt-1 text-foreground-muted text-xs">
+            <p className="mt-1 text-fg-tertiary text-xs">
               Pelo menos uma opção, se quiser configurar agora. Sempre dá pra
               ajustar depois em Configurações.
             </p>
@@ -231,16 +229,16 @@ export function OnboardingWizard() {
                       className={cn(
                         'w-full rounded-md border px-3 py-2 text-left transition-colors',
                         selected
-                          ? 'border-brand bg-brand/10'
-                          : 'border-border bg-background hover:border-border-strong',
+                          ? 'border-fg-brand bg-fg-brand/10'
+                          : 'border-line-default bg-surface-canvas hover:border-line-emphasis',
                       )}
                       onClick={() => toggleTopic(opt.key)}
                       type="button"
                     >
-                      <span className="block font-medium text-foreground text-sm">
+                      <span className="block font-medium text-fg-primary text-sm">
                         {opt.label}
                       </span>
-                      <span className="mt-0.5 block text-foreground-muted text-xs">
+                      <span className="mt-0.5 block text-fg-tertiary text-xs">
                         {opt.description}
                       </span>
                     </button>
@@ -249,14 +247,14 @@ export function OnboardingWizard() {
               })}
             </ul>
             {topicsChosen && !atLeastOneTopic && (
-              <p className="mt-2 text-destructive text-xs">
+              <p className="mt-2 text-fg-error text-xs">
                 Selecione pelo menos uma opção ou clique em "Pular".
               </p>
             )}
           </div>
         )}
 
-        <footer className="mt-2 flex items-center justify-between border-border-strong border-t pt-4">
+        <footer className="mt-2 flex items-center justify-between border-line-emphasis border-t pt-4">
           {step < 3 ? (
             <Button
               disabled={pending}

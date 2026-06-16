@@ -103,7 +103,7 @@ export function ModalRevisarUfAntiga({
             return (
               <li key={p.id}>
                 <label
-                  className="flex items-center gap-3 rounded-md border border-border bg-surface p-3 transition-colors hover:border-border-strong has-[input:checked]:border-destructive has-[input:checked]:bg-destructive/5"
+                  className="flex items-center gap-3 rounded-md border border-line-default bg-surface-base p-3 transition-colors hover:border-line-emphasis has-[input:checked]:border-error has-[input:checked]:bg-destructive/5"
                   htmlFor={`revisar-${p.id}`}
                 >
                   <input
@@ -126,14 +126,14 @@ export function ModalRevisarUfAntiga({
                   ) : (
                     <div
                       aria-hidden="true"
-                      className="size-10 shrink-0 rounded-full bg-surface-elevated"
+                      className="size-10 shrink-0 rounded-full bg-surface-raised"
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-foreground text-sm">
+                    <p className="truncate font-medium text-fg-primary text-sm">
                       {p.nome}
                     </p>
-                    <p className="text-foreground-muted text-xs">
+                    <p className="text-fg-tertiary text-xs">
                       {p.partidoSigla} · {p.uf}
                     </p>
                   </div>
@@ -143,7 +143,7 @@ export function ModalRevisarUfAntiga({
           })}
         </ul>
 
-        <footer className="flex items-center justify-between gap-2 border-border-strong border-t pt-4">
+        <footer className="flex items-center justify-between gap-2 border-line-emphasis border-t pt-4">
           <Button
             disabled={pending}
             onClick={manterTodos}
