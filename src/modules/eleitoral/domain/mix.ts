@@ -58,16 +58,20 @@ export function buildMixComposicao(
     pctPorAno.set(p.ano, m)
   }
 
-  // Ranking por participação no pleito mais recente.
-  const ultimoMap =
-    pctPorAno.get(pontos[pontos.length - 1].ano) ??
-    new Map<number, { ds: string; pct: number }>()
+  // Ranking pela MAIOR participação em qualquer pleito (não só o último): assim
+  // uma categoria que dominou um pleito antigo e encolheu também ganha cor —
+  // é o que torna a MIGRAÇÃO visível (o ponto da Camada C). Rankear só pelo
+  // último pleito jogaria o passado todo em "Outras".
   const cds = new Map<number, string>()
+  const maxPct = new Map<number, number>()
   for (const m of pctPorAno.values()) {
-    for (const [cd, v] of m) cds.set(cd, v.ds)
+    for (const [cd, v] of m) {
+      cds.set(cd, v.ds)
+      maxPct.set(cd, Math.max(maxPct.get(cd) ?? 0, v.pct))
+    }
   }
   const ranked = [...cds.entries()].sort(
-    (a, b) => (ultimoMap.get(b[0])?.pct ?? 0) - (ultimoMap.get(a[0])?.pct ?? 0),
+    (a, b) => (maxPct.get(b[0]) ?? 0) - (maxPct.get(a[0]) ?? 0),
   )
   const top = ranked.slice(0, MIX_TOP)
   const corDe = new Map<number, number>()

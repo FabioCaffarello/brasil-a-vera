@@ -56,7 +56,7 @@ describe('buildMixComposicao', () => {
     expect(p2022?.segmentos.find((s) => s.cdTipoBem === 32)?.pct).toBe(60)
   })
 
-  it('cor estável por categoria entre pleitos (ranking do último pleito)', () => {
+  it('cor estável por categoria entre pleitos (ranking por maior participação)', () => {
     const mix = buildMixComposicao(
       evo([
         ponto(2018, [
@@ -69,14 +69,13 @@ describe('buildMixComposicao', () => {
         ]),
       ]),
     )
-    // Quotas lidera o último pleito → corIdx 1; Casa → corIdx 2. Estável nos 2.
-    const corQuotas = mix?.legenda.find((l) => l.label === 'Quotas')?.corIdx
-    const corCasa = mix?.legenda.find((l) => l.label === 'Casa')?.corIdx
-    expect(corQuotas).toBe(1)
-    expect(corCasa).toBe(2)
+    // Maior participação: Casa 70% (2018) > Quotas 60% (2022) → Casa corIdx 1,
+    // Quotas corIdx 2. Estável entre os pleitos (mostra a migração).
+    expect(mix?.legenda.find((l) => l.label === 'Casa')?.corIdx).toBe(1)
+    expect(mix?.legenda.find((l) => l.label === 'Quotas')?.corIdx).toBe(2)
     for (const p of mix?.pleitos ?? []) {
-      expect(p.segmentos.find((s) => s.cdTipoBem === 32)?.corIdx).toBe(1)
-      expect(p.segmentos.find((s) => s.cdTipoBem === 12)?.corIdx).toBe(2)
+      expect(p.segmentos.find((s) => s.cdTipoBem === 12)?.corIdx).toBe(1)
+      expect(p.segmentos.find((s) => s.cdTipoBem === 32)?.corIdx).toBe(2)
     }
   })
 
