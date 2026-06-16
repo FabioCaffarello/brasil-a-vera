@@ -2,8 +2,13 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-06-16
-> Status: **accepted** (estende o [ADR-033](033-adocao-react-design-system-externo.md);
-> decidido pelo owner via aprovação do plano de consolidação, 2026-06-16)
+> Status: **accepted · implementada** (estende o
+> [ADR-033](033-adocao-react-design-system-externo.md); decidido pelo owner via
+> aprovação do plano, 2026-06-16). **Consolidação concluída** no mesmo dia — ver
+> [`docs/migration/rds-consolidation-plan.md`](../../migration/rds-consolidation-plan.md)
+> §Encerramento: camada local de genéricos zerada (só `card`/`tabs` + 4 wrappers
+> de bundle sancionados); zero duplicata local / zero `@radix-ui/react-dialog`
+> direto. As 5 issues upstream (#221–#225) foram entregues no RDS v4.0–v4.2.
 
 ---
 
