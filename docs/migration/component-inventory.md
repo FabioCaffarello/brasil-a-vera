@@ -1,5 +1,10 @@
 # Inventário de componentes UI — brasil-a-vera
 
+> ⚠️ **Classificação superada (2026-06-16).** Para a fila de consolidação
+> acionável contra RDS 3.12, ver
+> [`rds-consolidation-plan.md`](rds-consolidation-plan.md). Este inventário
+> permanece como registro histórico do snapshot abaixo.
+>
 > Data: 2026-06-05 · Branch: `docs/component-inventory` · Read-only
 >
 > Escopo: `.tsx` em `src/components/**`, `src/design-system/**` e
