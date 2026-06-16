@@ -1,9 +1,8 @@
 'use client'
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { AlertTriangle, ArrowLeft, RotateCcw } from 'lucide-react'
 import { useEffect } from 'react'
-
-import { Button } from '@/design-system/primitives/button'
 
 interface Props {
   error: Error & { digest?: string }
@@ -57,7 +56,7 @@ export default function VotacaoError({ error, reset }: Props) {
         ) : null}
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={reset} type="button" variant="default">
+          <Button onClick={reset} type="button" variant="primary">
             <RotateCcw aria-hidden className="h-4 w-4" />
             Tentar novamente
           </Button>

@@ -10,11 +10,10 @@
 //
 // Batch DELETE via /api/painel/follows com body { parlamentarIds: [] }.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import {
   Dialog,
   DialogContent,
@@ -156,7 +155,7 @@ export function ModalRevisarUfAntiga({
             disabled={pending || selected.size === 0}
             onClick={desacompanharSelecionados}
             type="button"
-            variant="destructive"
+            variant="error"
           >
             Desacompanhar selecionados ({selected.size})
           </Button>

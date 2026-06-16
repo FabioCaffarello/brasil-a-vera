@@ -13,11 +13,10 @@
 // Optimistic update: clica → state vira pro destino imediatamente →
 // fetch em background → se falha, reverte + toast. Mesmo padrão pré-Hotfix.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { Bell, BellRing } from 'lucide-react'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import { cn } from '@/lib/cn'
 
 interface Props {
@@ -74,14 +73,13 @@ export function FollowButton({
       aria-label={label}
       aria-pressed={isFollowing}
       className={cn(
-        'h-11 w-11',
+        'size-11 p-0',
         isFollowing
           ? 'text-fg-brand hover:text-fg-brand'
           : 'text-fg-quaternary hover:text-fg-primary',
       )}
       disabled={pending}
       onClick={handleClick}
-      size="icon"
       title={label}
       variant="ghost"
     >

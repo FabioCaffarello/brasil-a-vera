@@ -23,13 +23,12 @@
 //     - Depois: fecha modal sem limpar LS (próxima visita pergunta
 //       de novo).
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { z } from 'zod'
-
-import { Button } from '@/design-system/primitives/button'
 import { cn } from '@/lib/cn'
 
 const LS_KEY = 'bav.parlamentares.favoritos'

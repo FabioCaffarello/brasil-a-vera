@@ -1,6 +1,5 @@
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { Download } from 'lucide-react'
-
-import { Button } from '@/design-system/primitives/button'
 
 interface Props {
   /** Caminho completo do endpoint, ex.: "/api/export/parlamentares?casa=CAMARA". */

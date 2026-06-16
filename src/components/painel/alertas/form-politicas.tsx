@@ -11,11 +11,10 @@
 // Save POST /api/painel/alertas/policy com replace inteiro do state.
 // Defaults vêm do server (DEFAULT_ALERT_POLICY se ainda não persistido).
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import { cn } from '@/lib/cn'
 import type { AlertPolicyFields } from '@/lib/constants/alert-policy'
 

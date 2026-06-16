@@ -17,11 +17,10 @@
 // (27 opções não justificam Combobox), `<button>` toggle para chips
 // (sem peer dep nova).
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import {
   Dialog,
   DialogContent,

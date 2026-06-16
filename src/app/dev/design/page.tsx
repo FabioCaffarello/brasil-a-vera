@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Chip,
   FilterChips,
   InputBase,
@@ -26,7 +27,6 @@ import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import { Button } from '@/design-system/primitives/button'
 import {
   Card,
   CardContent,
@@ -161,7 +161,7 @@ export default function DesignSystemPage() {
             <Label>Variantes</Label>
             <div className="flex flex-wrap gap-3">
               <Button>Default</Button>
-              <Button variant="destructive">Destructive</Button>
+              <Button variant="error">Destructive</Button>
               <Button variant="outline">Outline</Button>
               <Button variant="secondary">Secondary</Button>
               <Button variant="ghost">Ghost</Button>
@@ -172,9 +172,9 @@ export default function DesignSystemPage() {
             <Label>Tamanhos</Label>
             <div className="flex flex-wrap items-center gap-3">
               <Button size="sm">Small</Button>
-              <Button size="default">Default</Button>
+              <Button size="md">Default</Button>
               <Button size="lg">Large</Button>
-              <Button size="icon" aria-label="Caixa de entrada">
+              <Button variant="iconOnly" aria-label="Caixa de entrada">
                 <Inbox />
               </Button>
             </div>

@@ -1,9 +1,8 @@
 'use client'
 
 import { Show, SignInButton } from '@clerk/nextjs'
-import { Skeleton } from '@fabio.caffarello/react-design-system/server'
+import { Button, Skeleton } from '@fabio.caffarello/react-design-system/server'
 import dynamic from 'next/dynamic'
-import { Button } from '@/design-system/primitives/button'
 
 /**
  * AuthIsland — Sprint 4.1 PR 2, revisado em Wave 10 (fix em

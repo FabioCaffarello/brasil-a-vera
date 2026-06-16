@@ -16,12 +16,11 @@
 // fechar fixo no canto, e queremos modal não-fechável.
 
 import { useClerk } from '@clerk/nextjs'
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import { cn } from '@/lib/cn'
 
 interface Props {

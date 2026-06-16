@@ -95,7 +95,11 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Popover } from '@fabio.caffarello/react-design-system' se precisar; só compunha o Combobox local",
     ref: 'ADR-038 — popover removido junto com o Combobox local (consolidado no Autocomplete)',
   },
-  // Próximo: button→Button (RDS v4.1 server) — app-wide, PR dedicado.
+  {
+    path: '@/design-system/primitives/button',
+    use: "import { Button } from '@fabio.caffarello/react-design-system/server' (server-safe v4.1). Variantes: primary|secondary|error|outline|ghost|iconOnly|link; sizes sm|md|lg",
+    ref: 'ADR-038 — Button consolidado no Button do RDS (v4.1 server-safe + asChild, RDS #224). default→primary, destructive→error, size=icon→variant=iconOnly',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).

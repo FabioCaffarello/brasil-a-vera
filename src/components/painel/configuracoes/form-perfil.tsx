@@ -9,11 +9,10 @@
 //
 // PATCH /api/painel/profile só envia campos que mudaram (dirty fields).
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import { UFS, type Uf } from '@/lib/municipios'
 
 interface Props {

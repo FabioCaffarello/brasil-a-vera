@@ -10,11 +10,10 @@
 // SERVIÇO (sempre ligados quando há follows). Isto é comunicação FORA
 // do serviço — releases, surveys, novidades do projeto.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 
 interface Props {
   initialMarketingOptedIn: boolean
