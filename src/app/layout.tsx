@@ -5,7 +5,10 @@ import { Geist_Mono, Inter } from 'next/font/google'
 
 import { Footer } from '@/components/site/footer'
 import { Navbar } from '@/components/site/navbar'
-import { Toaster } from '@/design-system/primitives/sonner'
+import {
+  ToastContainer,
+  ToastProvider,
+} from '@/design-system/primitives/rds-toast'
 import { env } from '@/env'
 import './globals.css'
 
@@ -134,14 +137,17 @@ export default function RootLayout({
           >
             Pular para o conteúdo
           </a>
-          <Navbar />
-          <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
-            {children}
-          </main>
-          <Footer />
-          {/* Toaster global (Wave 7 Sprint 7.2 PR3) — habilita toast em
-              qualquer rota. Hardcoded theme="dark" no primitive (sonner.tsx). */}
-          <Toaster />
+          {/* ToastProvider (RDS) — contexto de toast p/ todo o app; substitui
+              o Toaster global do sonner (ADR-038). useToast() só funciona dentro
+              dele. ToastContainer renderiza os toasts no canto. */}
+          <ToastProvider>
+            <Navbar />
+            <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
+              {children}
+            </main>
+            <Footer />
+            <ToastContainer position="bottom-right" />
+          </ToastProvider>
         </body>
       </html>
     </ClerkProvider>

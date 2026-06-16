@@ -16,7 +16,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { Bell, BellRing } from 'lucide-react'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 
 interface Props {
@@ -30,6 +30,7 @@ export function FollowButton({
   parlamentarNome,
   initialIsFollowing,
 }: Props) {
+  const toast = useToast()
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [pending, startTransition] = useTransition()
 

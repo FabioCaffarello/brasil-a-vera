@@ -158,7 +158,8 @@ describe('MigracaoLocalStorageModal', () => {
         json: async () => ({}),
       } as Response)
     })
-    const { toast } = await import('sonner')
+    const { useToast } = await import('@/design-system/primitives/rds-toast')
+    const toast = useToast()
 
     window.localStorage.setItem(LS_KEY, JSON.stringify([UUID_A, UUID_B]))
     render(<MigracaoLocalStorageModal />)

@@ -2,8 +2,6 @@
 
 import { Copy, Share2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
-
 import {
   Dialog,
   DialogContent,
@@ -12,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/design-system/primitives/rds-dialog'
+import { useToast } from '@/design-system/primitives/rds-toast'
 
 interface Props {
   votacao: {
@@ -61,7 +60,11 @@ function buildTwitter(v: Props['votacao'], url: string): string {
   return `🗳️ ${truncate(v.descricao, DESCRICAO_MAX_TWITTER_FALLBACK)}\n${linha}\n\n${url}`
 }
 
-async function copyToClipboard(text: string, label: string) {
+async function copyToClipboard(
+  text: string,
+  label: string,
+  toast: ReturnType<typeof useToast>,
+) {
   try {
     await navigator.clipboard.writeText(text)
     toast.success(`${label} copiado!`)
@@ -82,6 +85,7 @@ async function copyToClipboard(text: string, label: string) {
  * mostrados como "X a Y" para destacar margem da decisão.
  */
 export function CompartilharVotacaoButton({ votacao }: Props) {
+  const toast = useToast()
   const [url, setUrl] = useState('')
 
   useEffect(() => {
@@ -114,14 +118,16 @@ export function CompartilharVotacaoButton({ votacao }: Props) {
           <Field
             id="share-vot-url"
             label="Link"
-            onCopy={() => copyToClipboard(url, 'Link')}
+            onCopy={() => copyToClipboard(url, 'Link', toast)}
             rows={1}
             text={url}
           />
           <Field
             id="share-vot-whatsapp"
             label="WhatsApp"
-            onCopy={() => copyToClipboard(whatsAppText, 'Texto WhatsApp')}
+            onCopy={() =>
+              copyToClipboard(whatsAppText, 'Texto WhatsApp', toast)
+            }
             rows={5}
             text={whatsAppText}
           />
@@ -131,7 +137,9 @@ export function CompartilharVotacaoButton({ votacao }: Props) {
             }
             id="share-vot-twitter"
             label="X / Twitter"
-            onCopy={() => copyToClipboard(twitterText, 'Texto X/Twitter')}
+            onCopy={() =>
+              copyToClipboard(twitterText, 'Texto X/Twitter', toast)
+            }
             rows={4}
             text={twitterText}
           />

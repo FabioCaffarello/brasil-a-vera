@@ -20,7 +20,6 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/design-system/primitives/rds-dialog'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 import { TEMAS, type TemaId } from '@/lib/constants/temas'
 import { UFS, type Uf } from '@/lib/municipios'
@@ -83,6 +83,7 @@ const EMPTY_TOPICS: TopicSelection = {
 }
 
 export function OnboardingWizard() {
+  const toast = useToast()
   const router = useRouter()
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [uf, setUf] = useState<Uf | null>(null)

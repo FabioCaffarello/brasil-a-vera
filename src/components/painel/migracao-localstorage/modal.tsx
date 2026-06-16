@@ -27,8 +27,8 @@ import { Button } from '@fabio.caffarello/react-design-system/server'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
 import { z } from 'zod'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 
 const LS_KEY = 'bav.parlamentares.favoritos'
@@ -41,6 +41,7 @@ const legacySchema = z.array(z.string().uuid()).min(1).max(500)
 type ModalState = 'idle' | 'open' | 'migrating' | 'done'
 
 export function MigracaoLocalStorageModal() {
+  const toast = useToast()
   const router = useRouter()
   const [state, setState] = useState<ModalState>('idle')
   const [ids, setIds] = useState<string[]>([])

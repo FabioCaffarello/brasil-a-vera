@@ -110,6 +110,11 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Dialog, DialogContent, ... } from '@/design-system/primitives/rds-dialog' (wrapper bundle do RDS; showCloseButton no DialogContent, #221)",
     ref: 'ADR-038 — Dialog consolidado no Dialog do RDS (v4, showCloseButton via #221). Sub-componentes idênticos',
   },
+  {
+    path: '@/design-system/primitives/sonner',
+    use: "ToastProvider/ToastContainer (root layout) + useToast() de '@/design-system/primitives/rds-toast' (substituiu o sonner global pelo Toast hook-based do RDS)",
+    ref: 'ADR-038 — Toast consolidado no sistema do RDS (ToastProvider+useToast); dep `sonner` removida',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - card: modelo de layout diferente (refactor de home com QA).

@@ -13,7 +13,6 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { toast } from 'sonner'
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/design-system/primitives/rds-dialog'
+import { useToast } from '@/design-system/primitives/rds-toast'
 
 interface FollowForeignToUf {
   id: string
@@ -43,6 +43,7 @@ export function ModalRevisarUfAntiga({
   newUf,
   followsForeign,
 }: Props) {
+  const toast = useToast()
   const router = useRouter()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [pending, startTransition] = useTransition()

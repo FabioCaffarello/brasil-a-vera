@@ -25,7 +25,7 @@ import { Button } from '@fabio.caffarello/react-design-system/server'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { toast } from 'sonner'
+import { useToast } from '@/design-system/primitives/rds-toast'
 import { cn } from '@/lib/cn'
 
 type ActionKind = 'export' | 'anonymize' | 'erase' | null
@@ -34,6 +34,7 @@ const ANONIMIZAR_CONFIRM_WORD = 'ANONIMIZAR'
 const ELIMINAR_CONFIRM_WORD = 'ELIMINAR'
 
 export function AcoesLgpd() {
+  const toast = useToast()
   const router = useRouter()
   const { signOut } = useClerk()
   const [open, setOpen] = useState<ActionKind>(null)

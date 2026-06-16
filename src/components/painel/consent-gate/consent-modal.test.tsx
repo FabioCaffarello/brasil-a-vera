@@ -101,7 +101,8 @@ describe('ConsentModal', () => {
       status: 500,
       json: async () => ({ error: 'internal' }),
     } as Response)
-    const { toast } = await import('sonner')
+    const { useToast } = await import('@/design-system/primitives/rds-toast')
+    const toast = useToast()
 
     render(<ConsentModal policyVersion="2026-05-19" />)
     await userEvent.click(screen.getByRole('button', { name: 'Aceitar' }))
