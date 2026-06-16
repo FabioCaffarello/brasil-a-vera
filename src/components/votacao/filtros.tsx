@@ -7,13 +7,13 @@
 //   `<select>`); sem busca livre (a listagem de votações não indexa texto).
 
 import {
+  Button,
   Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/design-system/primitives/button'
 
 interface Props {
   anos: number[]

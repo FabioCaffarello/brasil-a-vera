@@ -3,11 +3,9 @@
 // border-line-default, bg-surface-base, text-fg-primary, text-fg-tertiary.
 // `Button` (canônico) e `ParlamentarCard` (client island) importados.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
-
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
-
-import { Button } from '@/design-system/primitives/button'
 
 interface Parlamentar {
   id: string

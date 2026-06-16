@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 
-import { Button } from '@/design-system/primitives/button'
+import { Button } from '@fabio.caffarello/react-design-system/server'
 
 import { AuthIslandLoader } from './auth-island-loader'
 

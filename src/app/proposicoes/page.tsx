@@ -13,19 +13,18 @@
 //   inválido; "Mostrar mais (N restantes)" na primeira página.
 
 import {
+  Button,
   HeroSection,
   Stat,
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { FileText, SearchX } from 'lucide-react'
 import { permanentRedirect } from 'next/navigation'
-
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { Button } from '@/design-system/primitives/button'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'

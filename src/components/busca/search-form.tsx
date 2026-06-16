@@ -1,6 +1,5 @@
-import { InputBase } from '@fabio.caffarello/react-design-system/server'
+import { Button, InputBase } from '@fabio.caffarello/react-design-system/server'
 import { Search } from 'lucide-react'
-import { Button } from '@/design-system/primitives/button'
 
 interface Props {
   defaultValue?: string

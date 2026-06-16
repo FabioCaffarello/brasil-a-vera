@@ -13,11 +13,10 @@
 // ORIGINAL (client island de domínio — precedente listagens/perfis; tokens BaV
 // internos calibram na promoção). Hrefs reescritos pra /.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
-import { Button } from '@/design-system/primitives/button'
 import { listRecomendacoesByUf } from '@/lib/queries/recomendacoes'
 
 interface Props {

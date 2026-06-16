@@ -10,13 +10,13 @@
 // - Button de @/design-system/primitives.
 
 import {
+  Button,
   Chip,
   FilterChips,
   Label,
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/design-system/primitives/button'
 import { Autocomplete } from '@/design-system/primitives/rds-autocomplete'
 import type { OrdemListagem } from '@/lib/queries/parlamentares'
 

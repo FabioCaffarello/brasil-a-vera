@@ -7,11 +7,10 @@
 // PATCH por toggle individual. UI espelha a do wizard de onboarding
 // passo 2 (intencional — usuário reconhece o componente).
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-
-import { Button } from '@/design-system/primitives/button'
 import { cn } from '@/lib/cn'
 import { TEMAS, type TemaId } from '@/lib/constants/temas'
 

@@ -9,9 +9,8 @@
 // naturalmente quando o usuário desacompanha os divergentes via modal
 // ou muda UF.
 
+import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useState } from 'react'
-
-import { Button } from '@/design-system/primitives/button'
 
 import { ModalRevisarUfAntiga } from './modal-revisar-uf-antiga'
 

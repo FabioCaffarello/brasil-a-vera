@@ -12,7 +12,10 @@
 //   FeaturesGrid de @/components/home.
 // - DataBadge (resíduo accent) e TrustBadge (client island) mantidos.
 
-import { HeroSection } from '@fabio.caffarello/react-design-system/server'
+import {
+  Button,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
   Clock,
@@ -29,7 +32,6 @@ import { TrustBadge } from '@/components/trust/trust-badge'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
-import { Button } from '@/design-system/primitives/button'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'

@@ -13,18 +13,17 @@
 
 import { auth } from '@clerk/nextjs/server'
 import {
+  Button,
   HeroSection,
   Stat,
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Users } from 'lucide-react'
-
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
-import { Button } from '@/design-system/primitives/button'
 import { canExport } from '@/lib/auth-guards'
 import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
