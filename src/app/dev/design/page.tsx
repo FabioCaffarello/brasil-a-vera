@@ -1,6 +1,12 @@
 import {
   Badge,
   Button,
+  Card,
+  CardActions,
+  CardBody,
+  CardHeader,
+  CardSubtitle,
+  CardTitle,
   Chip,
   FilterChips,
   HeroSection,
@@ -27,14 +33,6 @@ import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/design-system/primitives/card'
 import {
   Dialog,
   DialogClose,
@@ -222,36 +220,36 @@ export default function DesignSystemPage() {
           <Card>
             <CardHeader>
               <CardTitle>Quem representa seu estado?</CardTitle>
-              <CardDescription>
+              <CardSubtitle>
                 Encontre seus parlamentares por UF e município.
-              </CardDescription>
+              </CardSubtitle>
             </CardHeader>
-            <CardContent>
+            <CardBody>
               Conteúdo principal do card. Pode incluir listas, tabelas,
               gráficos.
-            </CardContent>
-            <CardFooter>
+            </CardBody>
+            <CardActions>
               <Button>Explorar</Button>
-            </CardFooter>
+            </CardActions>
           </Card>
           <Card>
             <CardHeader>
               <CardTitle>Votações da semana</CardTitle>
-              <CardDescription>
+              <CardSubtitle>
                 As principais matérias votadas nos últimos 7 dias.
-              </CardDescription>
+              </CardSubtitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardBody className="space-y-2">
               <p>Item 1</p>
               <p>Item 2</p>
               <p>Item 3</p>
-            </CardContent>
-            <CardFooter className="gap-2">
+            </CardBody>
+            <CardActions className="gap-2">
               <Badge variant="neutral" style="outline">
                 10 votações
               </Badge>
               <Button variant="link">Ver todas →</Button>
-            </CardFooter>
+            </CardActions>
           </Card>
         </div>
       </section>
@@ -323,23 +321,23 @@ export default function DesignSystemPage() {
           </TabsList>
           <TabsContent value="votos">
             <Card>
-              <CardContent className="pt-6">
+              <CardBody className="pt-6">
                 Lista de votações nominais (placeholder visual).
-              </CardContent>
+              </CardBody>
             </Card>
           </TabsContent>
           <TabsContent value="proposicoes">
             <Card>
-              <CardContent className="pt-6">
+              <CardBody className="pt-6">
                 Proposições autoradas (placeholder visual).
-              </CardContent>
+              </CardBody>
             </Card>
           </TabsContent>
           <TabsContent value="gastos">
             <Card>
-              <CardContent className="pt-6">
+              <CardBody className="pt-6">
                 Resumo de gastos CEAP (placeholder visual).
-              </CardContent>
+              </CardBody>
             </Card>
           </TabsContent>
         </Tabs>

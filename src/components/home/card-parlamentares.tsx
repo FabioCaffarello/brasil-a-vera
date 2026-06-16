@@ -1,14 +1,12 @@
-import { Users } from 'lucide-react'
-import Link from 'next/link'
-
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
+  CardActions,
   CardHeader,
+  CardSubtitle,
   CardTitle,
-} from '@/design-system/primitives/card'
+} from '@fabio.caffarello/react-design-system/server'
+import { Users } from 'lucide-react'
+import Link from 'next/link'
 
 export function CardParlamentares() {
   return (
@@ -21,13 +19,15 @@ export function CardParlamentares() {
           <Users className="size-5" />
         </div>
         <CardTitle className="text-lg">Quem está no Congresso</CardTitle>
-        <CardDescription>
+        <CardSubtitle>
           Explore deputados federais e senadores em exercício — filtre por casa,
           UF, partido e veja o perfil 360 de cada parlamentar.
-        </CardDescription>
+        </CardSubtitle>
       </CardHeader>
-      <CardContent className="flex-1" />
-      <CardFooter>
+      {/* Espaçador p/ equal-height (footer no rodapé); Card.Body do RDS exige
+          children, então um div simples cumpre o flex-1. */}
+      <div className="flex-1" />
+      <CardActions>
         <Link
           aria-label="Explorar parlamentares"
           className="inline-flex items-center font-medium text-fg-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
@@ -35,7 +35,7 @@ export function CardParlamentares() {
         >
           Explorar <span aria-hidden>→</span>
         </Link>
-      </CardFooter>
+      </CardActions>
     </Card>
   )
 }
