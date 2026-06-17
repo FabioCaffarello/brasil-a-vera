@@ -44,23 +44,6 @@ export function GrafoParticipacaoBlock({ grafo, parlamentarNome }: Props) {
         parlamentarNome={parlamentarNome}
       />
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-fg-tertiary text-xs">
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-2.5 w-3 rounded-sm border border-[var(--color-chart-1)]"
-          />
-          com CNPJ ({nResolvidas})
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-2.5 w-3 rounded-sm border border-fg-quaternary border-dashed"
-          />
-          sem CNPJ ({totalEmpresas - nResolvidas})
-        </span>
-      </div>
-
       <ul className="space-y-1.5 text-sm">
         {top.map((e) => (
           <li
