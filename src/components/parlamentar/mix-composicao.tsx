@@ -15,7 +15,9 @@ interface Props {
 
 // corIdx 1..5 → paleta de chart; 0 = "Outras" (cinza neutro).
 function corVar(corIdx: number): string {
-  return corIdx === 0 ? 'var(--color-fg-quaternary)' : `var(--chart-${corIdx})`
+  return corIdx === 0
+    ? 'var(--color-fg-quaternary)'
+    : `var(--color-chart-${corIdx})`
 }
 
 export function MixComposicaoBlock({ mix }: Props) {

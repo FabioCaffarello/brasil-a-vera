@@ -80,7 +80,7 @@ export function PatrimonioBlock({ snapshot }: Props) {
                 className="h-full rounded-full"
                 style={{
                   width: `${Math.max(c.pct, 0.5)}%`,
-                  backgroundColor: 'var(--chart-1)',
+                  backgroundColor: 'var(--color-chart-2)',
                   // Hierarquia visual decrescente por ranking (igual ao chart de gastos).
                   opacity: Math.max(1 - idx * 0.09, 0.35),
                 }}

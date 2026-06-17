@@ -16,7 +16,8 @@ import {
 
 // Opacidade decrescente por posição no ranking (DESIGN-TOKENS.md
 // §"Padrões de uso em charts"). Reforça hierarquia visual sem
-// virar arco-íris — uma cor única (--chart-1), 7 níveis de opacidade.
+// virar arco-íris — uma cor única (RDS --color-chart-2, azul), 7 níveis
+// de opacidade.
 // Cap em 0.3 (último item nunca abaixo disso, preservando contraste
 // WCAG 1.4.11 ≥3:1 para non-text).
 const RANKING_OPACITY: readonly number[] = [
@@ -121,7 +122,7 @@ function LineTooltip({ active, payload, label }: CustomTooltipProps) {
     <div className="rounded-md border border-border bg-surface-elevated px-3 py-2 text-xs shadow-md">
       <p className="font-medium text-foreground">{String(label ?? '')}</p>
       <div className="mt-1 space-y-0.5 tabular-nums">
-        <p className="text-[var(--chart-1)]">
+        <p className="text-[var(--color-chart-2)]">
           Parlamentar: {brl.format(parlValue)}
         </p>
         <p className="text-foreground-muted">
@@ -247,14 +248,14 @@ export function GastosChart({ categorias, mensal }: Props) {
                 />
                 <Bar
                   dataKey="valor"
-                  fill="var(--chart-1)"
+                  fill="var(--color-chart-2)"
                   radius={[0, 6, 6, 0]}
                 >
                   {/* Opacidade decrescente por posição no ranking
                       (DESIGN-TOKENS §"Padrões de uso em charts"). */}
                   {barData.map((entry, idx) => (
                     <Cell
-                      fill="var(--chart-1)"
+                      fill="var(--color-chart-2)"
                       fillOpacity={rankingOpacity(idx)}
                       key={entry.categoria}
                     />
@@ -291,14 +292,14 @@ export function GastosChart({ categorias, mensal }: Props) {
             <span className="inline-flex items-center gap-1.5 text-foreground">
               <span
                 aria-hidden
-                className="h-0.5 w-5 rounded-full bg-[var(--chart-1)]"
+                className="h-0.5 w-5 rounded-full bg-[var(--color-chart-2)]"
               />
               <span className="font-medium">Parlamentar</span>
             </span>
             <span className="inline-flex items-center gap-1.5 text-foreground-muted">
               <span
                 aria-hidden
-                className="h-0.5 w-5 rounded-full border-[var(--chart-3)] border-t-2 border-dashed"
+                className="h-0.5 w-5 rounded-full border-[var(--color-chart-1)] border-t-2 border-dashed"
               />
               Mediana da casa
             </span>
@@ -346,7 +347,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                 <Line
                   dataKey="medianaCasa"
                   dot={false}
-                  stroke="var(--chart-3)"
+                  stroke="var(--color-chart-1)"
                   strokeDasharray="4 4"
                   strokeWidth={1.5}
                   type="monotone"
@@ -355,7 +356,7 @@ export function GastosChart({ categorias, mensal }: Props) {
                   activeDot={{ r: 4, strokeWidth: 0 }}
                   dataKey="parlamentar"
                   dot={false}
-                  stroke="var(--chart-1)"
+                  stroke="var(--color-chart-2)"
                   strokeWidth={2.5}
                   type="monotone"
                 />

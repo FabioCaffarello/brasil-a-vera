@@ -92,7 +92,7 @@ function ApoioTooltip({ active, payload }: CustomTooltipProps) {
  * - Top 6 + "Outros" (agregação no caller via getApoioPorPartido)
  * - Tooltip com até 5 nomes + "...e N outros"
  *
- * Cor: --chart-1 sólido nos partidos principais; --chart-1/40
+ * Cor: --color-chart-2 sólido nos partidos principais; --color-chart-2/40
  * (variação por tom, P4) no "Outros" — sinal visual de que é
  * agregado, não um partido único. Sem hue distinto (P4 reserva
  * cores semânticas).
@@ -148,14 +148,18 @@ export function ApoioPartidoChart({ data }: Props) {
               fill: 'color-mix(in oklch, var(--accent) 6%, transparent)',
             }}
           />
-          {/* Opacidade decrescente por ranking de autores (--chart-1
+          {/* Opacidade decrescente por ranking de autores (--color-chart-2
               + RANKING_OPACITY). Data vem ordenada por count DESC do
               getApoioPorPartido, então índice = posição no ranking.
               "Outros" cai naturalmente no último slot (opacity 0.3). */}
-          <Bar dataKey="count" fill="var(--chart-1)" radius={[0, 6, 6, 0]}>
+          <Bar
+            dataKey="count"
+            fill="var(--color-chart-2)"
+            radius={[0, 6, 6, 0]}
+          >
             {data.map((entry, idx) => (
               <Cell
-                fill="var(--chart-1)"
+                fill="var(--color-chart-2)"
                 fillOpacity={rankingOpacity(idx)}
                 key={entry.sigla}
               />
