@@ -39,6 +39,11 @@ import { z } from 'zod'
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().min(1),
+    // Seleção de driver de banco por ambiente (ADR-015). Ausente/'neon-http'
+    // = produção (Cloudflare Workers / Neon). 'node-postgres' = dev local
+    // contra o Postgres em Docker (docker-compose.yml), sem consumir a cota
+    // do Neon. Lido também em ingestion/shared/db.ts via process.env.
+    DB_DRIVER: z.enum(['neon-http', 'node-postgres']).optional(),
     SITE_URL: z.string().url().optional(),
     ADMIN_API_KEY: z
       .string()
@@ -66,6 +71,7 @@ export const env = createEnv({
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
+    DB_DRIVER: process.env.DB_DRIVER,
     SITE_URL: process.env.SITE_URL,
     ADMIN_API_KEY: process.env.ADMIN_API_KEY,
     IP_HASH_SALT: process.env.IP_HASH_SALT,

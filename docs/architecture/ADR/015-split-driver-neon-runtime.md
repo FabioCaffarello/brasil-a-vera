@@ -1,7 +1,7 @@
 # ADR-015: Split de driver Neon por runtime
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-05-12
+> Última atualização: 2026-06-17
 > Status: accepted (amends [ADR-011](011-database-driver.md))
 
 ---
@@ -78,6 +78,37 @@ configuração:
 
 O **schema Drizzle (`src/shared/db/schema.ts`) é compartilhado**
 entre os dois drivers; só o módulo de conexão diverge.
+
+### Amendamento (2026-06-17): terceiro caminho para dev local
+
+Quando a cota do free tier do Neon esgota — ou simplesmente para não
+consumir o banco serverless durante o desenvolvimento — o dev local
+roda contra um **Postgres 17 em Docker** (`docker-compose.yml`), o
+mesmo Postgres do testcontainers de integração e da mesma major de
+produção. A seleção é por env var **`DB_DRIVER`**:
+
+- **`DB_DRIVER` ausente / `neon-http`** — comportamento de produção
+  inalterado (app em `neon-http`, ingestão em `neon-serverless`).
+- **`DB_DRIVER=node-postgres`** — app (`src/shared/db/index.ts`) e
+  ingestão (`ingestion/shared/db.ts`) usam `drizzle-orm/node-postgres`
+  + `pg` contra o Postgres local. É o **mesmo driver que o
+  testcontainers já usava**, então nenhum dialeto novo é introduzido;
+  schema e as 18 migrations rodam idênticos.
+
+O caminho local é carregado por **import dinâmico** atrás do branch de
+`DB_DRIVER`. No app isso é deliberado: mantém `pg` (que depende de
+`net`/`tls` de Node, incompatíveis com o isolate do Worker) fora do
+caminho `neon-http` do bundle Cloudflare. `npm run build` e
+`npm run cf:build` validam empiricamente que `pg` não vaza para o
+bundle de produção (princípio 13).
+
+Por que **não** SQLite local: o schema é 100% `pg-core` (10 `pgEnum`,
+schemas/namespaces Postgres, `uuid`/`jsonb`/`numeric`/`timestamptz`,
+índices parciais) e as 18 migrations são SQL puro Postgres. SQLite
+exigiria reescrever schema e migrations num segundo dialeto mantido
+em paralelo — alto custo contínuo, contraria ADR-003. Postgres em
+Docker resolve a dor (não tocar o Neon) com fidelidade total e quase
+zero código novo.
 
 ## Alternativas Consideradas
 
@@ -185,9 +216,13 @@ o driver de testes) também falsificada pelo mesmo método.
 
 ## Referências
 
-- `src/shared/db/index.ts` (driver app — neon-http)
+- `src/shared/db/index.ts` (driver app — neon-http; branch
+  `DB_DRIVER` para dev local)
+- `src/shared/db/local.ts` (driver dev local — node-postgres,
+  importado dinamicamente)
 - `ingestion/shared/db.ts` (driver ingestão — neon-serverless +
-  Pool)
+  Pool; branch `DB_DRIVER` para dev local)
+- `docker-compose.yml` (Postgres 17 local para dev sem Neon)
 - [PR #20 — fix(db): use neon-http driver no app Cloudflare Workers](https://github.com/FabioCaffarello/brasil-a-vera/pull/20)
   (correção empírica)
 - [Issue #34 — registro de gerência](https://github.com/FabioCaffarello/brasil-a-vera/issues/34)
