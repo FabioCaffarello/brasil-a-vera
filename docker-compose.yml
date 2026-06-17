@@ -1,0 +1,33 @@
+# Postgres local para desenvolvimento — alternativa ao Neon quando a cota
+# do free tier esgota (ou simplesmente para não consumir o banco serverless
+# em dev). Casa com o Postgres 17 de produção (Neon) e com o Postgres do
+# testcontainers de integração, então schema e as 18 migrations rodam idênticos.
+#
+# Uso:
+#   npm run db:local:up        # sobe o banco
+#   npm run db:migrate         # aplica migrations (DIRECT_URL aponta p/ localhost)
+#   npm run db:local:reset     # zera o volume e sobe limpo
+#
+# Requer DB_DRIVER=node-postgres + DATABASE_URL/DIRECT_URL locais no .env.local
+# (ver .env.example). Ver ADR-015 (split de driver por runtime — caminho dev local).
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: bav-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bav
+      POSTGRES_USER: bav
+      POSTGRES_PASSWORD: bav
+    ports:
+      - "5432:5432"
+    volumes:
+      - bav-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bav -d bav"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bav-pgdata:
