@@ -1,6 +1,6 @@
 # Plano de consolidação RDS — fase pós-migração
 
-> Data: 2026-06-16 · RDS instalado: **3.12.0** · Read-only (planejamento)
+> Data: 2026-06-16 · RDS instalado: **4.3.0** · Read-only (planejamento)
 >
 > Este documento **supersede a classificação** de
 > [`component-inventory.md`](component-inventory.md) (snapshot RDS ~3.7) e
@@ -102,7 +102,7 @@ stats-grid 1`.
 | `kpi-card` | 2 | **G** | `Stat` (sem `floatingBadge`) | fica local — `Stat` não tem slot p/ o `floatingBadge` (TrustBadge L1 na home; "opção A") | médio | local |
 | `hero-section` | 1 | **R** | `HeroSection` (`./server`) | ✅ consolidado (#452; drop-in — mesmas variantes `plain`/`gradient`/`gradient-glow`) | baixo | ✓ |
 | `combobox` | 2 | **R** | `Autocomplete` (wrapper `rds-autocomplete`) | ✅ consolidado (#450; v4.1 ganhou `name`/form [#225](https://github.com/FabioCaffarello/react-design-system/issues/225)). Levou junto `command`+`popover` | alto | ✓ |
-| `data-badge` | 9 | **G** | `Chip`/`Info`/`Badge` | rico (source+tone) sem par RDS → manter ou upstream | médio | local |
+| `data-badge` | 9 | **G** | RDS `DataBadge` (v4.3, [#228](https://github.com/FabioCaffarello/react-design-system/issues/228)) | server-safe entregue; consolida quando o tom `accent`/data-viz sair ([#232](https://github.com/FabioCaffarello/react-design-system/issues/232)) — fica local como carrier do `accent` (16×) até lá | médio | local |
 
 ### Dual-existência — resolvida
 
@@ -111,10 +111,18 @@ stats-grid 1`.
 - **`HeroSection`**: ✅ consolidado no #452 (o showroom também — o RDS tem as
   mesmas variantes `gradient`/`gradient-glow`).
 
-## Resíduos ratificados — NÃO migrar (exigem novo ADR)
+## Resíduos de cor — fase ADR-039 (2026-06-16)
 
-Paleta de charts `--chart-1..5`, `--accent` roxo (Okabe‑Ito), `text-success-foreground`
-(on-color), cores cruas de `PartyBadge`. Documentados em ADR‑034 §5 e D4 Wave 6.
+Os resíduos antes "ratificados, não migram" foram revisitados: virraram issues
+upstream e o [ADR-039](../architecture/ADR/039-migracao-residuos-de-cor-para-o-rds.md)
+revogou parte da §Resíduos do ADR-038. Estado:
+
+| Resíduo | Issue RDS | Destino | PR de consumo |
+| --- | --- | --- | --- |
+| Paleta de charts `--chart-1..5` | [#229](https://github.com/FabioCaffarello/react-design-system/issues/229) ✅ | migrou p/ `--color-chart-1..8` (Okabe‑Ito RDS, v4.3). single-hue→`chart-2` (azul preservado), mediana→`chart-1`, mix→`chart-1..5` | **#460 ✅** |
+| Par on-color `success-foreground` | [#230](https://github.com/FabioCaffarello/react-design-system/issues/230) ✅ | migrou p/ par sólido `bg-success-solid`+`text-fg-on-success` (emerald-700/branco, ≈5.48:1 AA) | **#461 ✅** |
+| `accent` roxo (DataBadge) | [#232](https://github.com/FabioCaffarello/react-design-system/issues/232) ⏳ | **gap-com-issue** — DataBadge fica local como carrier até o RDS expor o tom data-viz | ⏳ aguarda release |
+| Cores cruas de `PartyBadge` | — | **segue ratificado** (D4 Wave 6, identidade oficial) — fora de escopo | — |
 
 ## Issues upstream (WS5) — TODAS resolvidas
 
@@ -137,13 +145,18 @@ server-safe por composição). Adotadas no BaV em `^4.2.0` (#448).
 
 > #221 e #222 já entregues no **RDS v4.0.0** (adotado no #444).
 
-**Candidatas (ainda não abertas, precisam de análise):**
+**Fase de resíduos de cor — abertas e (quase) todas resolvidas na v4.3.0:**
 
-5. `DataBadge`-equivalente (`source` + `tone` semântico) — ou ratificar como
-   composição local.
-6. Paleta categórica de charts colorblind-safe (sem urgência; resíduo ADR‑034).
-7. Par on-color `success-foreground` (RDS tem `fg-success`/`success-bg-emphasis`
-   — analisar se já cobre antes de abrir).
+5. ✅ [RDS #228](https://github.com/FabioCaffarello/react-design-system/issues/228)
+   — `DataBadge` server-safe (`source` + `tone`). Entregue v4.3; consolidação local
+   aguarda o tom `accent` (#232).
+6. ✅ [RDS #229](https://github.com/FabioCaffarello/react-design-system/issues/229)
+   — paleta categórica Okabe‑Ito + `getChartColor`. Entregue v4.3, consumido (#460).
+7. ✅ [RDS #230](https://github.com/FabioCaffarello/react-design-system/issues/230)
+   — par on-color `fg-on-success` + `success-solid`. Entregue v4.3, consumido (#461).
+8. ⏳ [RDS #232](https://github.com/FabioCaffarello/react-design-system/issues/232)
+   — tom `accent`/data-viz no `DataBadge` (par categórico, fora da escala de status).
+   **Aberta** — destrava a consolidação do `data-badge` local.
 
 ## Encerramento (2026-06-16)
 
@@ -178,12 +191,14 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
   `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
 - **Zero duplicata local** de componente RDS. **Zero `@radix-ui/react-dialog`**
   direto (deps radix de 7 → 1: só `react-tabs`, #455).
-- **Resíduos ratificados** (novo ADR p/ mudar): paleta de charts `--chart-1..5`,
-  `--accent`, `success-foreground`, cores de `PartyBadge`.
+- **Resíduos de cor:** revisitados na fase ADR-039 (ver §"Resíduos de cor" acima) —
+  charts (#460) e on-success (#461) migraram p/ o RDS; `accent` aguarda RDS #232;
+  só `PartyBadge` segue ratificado.
 
 **Guard anti-regressão** (`scripts/rds-primitive-guard.ts`, CI): trava reintrodução
 de qualquer primitiva consolidada. A camada local em deprecação ativa fica honesta.
 
-**Follow-up em aberto (sem urgência):** nenhum de consolidação — `tabs` é o único
-primitivo local restante (gap legítimo). Issues upstream candidatas (só se o padrão
-se repetir): `DataBadge` (source+tone), paleta de charts, `success-foreground`.
+**Follow-up em aberto:** só a consolidação do `data-badge`, **bloqueada** pela
+[RDS #232](https://github.com/FabioCaffarello/react-design-system/issues/232) (tom
+`accent`/data-viz) — ainda aberta upstream; consome no próximo bump quando sair.
+`tabs` segue como único primitivo local por gap legítimo (RDS só tem `TabsAsLinks`).
