@@ -194,7 +194,7 @@ Um token novo e uma classe de pendência:
 
 | classe BaV | classe RDS | valor BaV (dark) | valor RDS (dark) | Δ | nota |
 |---|---|---|---|---|---|
-| `text-success-foreground` | **sem equivalente — MANTIDO** | `--success-foreground` `oklch(0.12 0 0)` (on-color quase-preto) | n/a — RDS tem `success-bg` (tint emerald-950) e `fg-success`, mas nenhum token on-success para bg sólido | **divergente** | usado no badge sólido `bg-success text-success-foreground` (TRANSFORMADA_EM_NORMA — "virou lei" como pinnacle). Mesmo destino do `accent`: token do projeto, resíduo registrado. Reavaliar se o RDS ganhar par on-color |
+| `text-success-foreground` → `text-fg-on-success` | **`fg-on-success` + `bg-success-solid`** (RDS v4.3, #230) | — (token BaV removido) | `--color-success-solid` emerald-700 `#047857` + `--color-fg-on-success` branco (≈ 5.48:1 AA, estável nos dois temas) | **migrado** | par on-color sólido entregue upstream (#230); badge `TRANSFORMADA_EM_NORMA` migrado em ADR-039. Resíduo encerrado — sobra só o `accent` (RDS #232) |
 
 Pendência (não traduzida, fora do escopo de classe Tailwind): os charts
 recharts (`apoio-partido-chart.tsx`, `votos-consolidados-chart.tsx`)
