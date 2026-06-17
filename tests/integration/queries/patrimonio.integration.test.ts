@@ -4,6 +4,7 @@ vi.mock('@/shared/db', () => import('../setup/db'))
 
 import {
   getEvolucaoPatrimonial,
+  getGrafoParticipacao,
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
 import {
@@ -189,5 +190,63 @@ describe('queries/patrimonio (integration)', () => {
       ])
     // Só 1 pleito vinculado (2018) → sem evolução.
     expect(await getEvolucaoPatrimonial(p.id as string)).toBeNull()
+  })
+
+  it('grafo: null sem participação; agrupa por CNPJ ignorando bens não-societários', async () => {
+    const p = buildParlamentar()
+    await db.insert(parlamentar).values(p)
+    const cand = buildTseCandidatura({
+      sqCandidato: 940001,
+      parlamentarId: p.id as string,
+    })
+    await db.insert(tseCandidatura).values(cand)
+
+    // Só um imóvel (cat 12) → sem participação societária.
+    await db.insert(tseBemCandidato).values(
+      buildTseBem({
+        sqCandidato: 940001,
+        nrOrdemBem: 1,
+        cdTipoBem: 12,
+        dsTipoBem: 'Casa',
+        dsBem: 'Imóvel',
+        valorDeclarado: '100.00',
+      }),
+    )
+    expect(await getGrafoParticipacao(p.id as string)).toBeNull()
+
+    // Duas quotas (cat 32) do mesmo CNPJ + uma sem CNPJ.
+    await db.insert(tseBemCandidato).values([
+      buildTseBem({
+        sqCandidato: 940001,
+        nrOrdemBem: 2,
+        cdTipoBem: 32,
+        dsTipoBem: 'Quotas ou quinhões de capital',
+        dsBem: 'QUOTAS DA ACME CNPJ 15.463.090/0001-24',
+        valorDeclarado: '1000.00',
+      }),
+      buildTseBem({
+        sqCandidato: 940001,
+        nrOrdemBem: 3,
+        cdTipoBem: 31,
+        dsTipoBem: 'Ações',
+        dsBem: 'AÇÕES ACME CNPJ 15.463.090/0001-24',
+        valorDeclarado: '500.00',
+      }),
+      buildTseBem({
+        sqCandidato: 940001,
+        nrOrdemBem: 4,
+        cdTipoBem: 39,
+        dsTipoBem: 'Outras participações societárias',
+        dsBem: 'PARTICIPAÇÃO NA EMPRESA SEM REGISTRO',
+        valorDeclarado: '200.00',
+      }),
+    ])
+
+    const g = await getGrafoParticipacao(p.id as string)
+    expect(g?.totalEmpresas).toBe(2) // ACME (resolvida) + 1 não-resolvida
+    expect(g?.nResolvidas).toBe(1)
+    const acme = g?.empresas.find((e) => e.cnpj === '15463090000124')
+    expect(acme?.totalDeclarado).toBe('1500.00')
+    expect(acme?.participacoes).toHaveLength(2)
   })
 })

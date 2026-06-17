@@ -1,10 +1,15 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import {
   buildEvolucao,
   type EvolucaoPatrimonial,
 } from '@/modules/eleitoral/domain/evolucao'
+import {
+  buildGrafoParticipacao,
+  CATEGORIAS_PARTICIPACAO,
+  type GrafoParticipacao,
+} from '@/modules/eleitoral/domain/grafo'
 import {
   aggregatePatrimonio,
   type PatrimonioSnapshot,
@@ -92,5 +97,41 @@ export async function getEvolucaoPatrimonial(
       )
 
     return buildEvolucao(rows)
+  })
+}
+
+// Eixo 2 — Camada D: ego-grafo de participação societária do parlamentar
+// (parlamentar central + empresas declaradas, qualquer pleito vinculado).
+// Lê só os bens de participação (categorias 31/32/39); o CNPJ sai da descrição
+// livre (extração determinística, L3 — ADR-037). null se não houver nenhum.
+export async function getGrafoParticipacao(
+  parlamentarId: string,
+): Promise<GrafoParticipacao | null> {
+  const key = `patrimonio:grafo:${parlamentarId}`
+  return cached(key, TTL.patrimonioDeclarado, async () => {
+    const rows = await db
+      .select({
+        anoEleicao: tseBemCandidato.anoEleicao,
+        cdTipoBem: tseBemCandidato.cdTipoBem,
+        dsTipoBem: tseBemCandidato.dsTipoBem,
+        dsBem: tseBemCandidato.dsBem,
+        valor: tseBemCandidato.valorDeclarado,
+      })
+      .from(tseBemCandidato)
+      .innerJoin(
+        tseCandidatura,
+        and(
+          eq(tseCandidatura.anoEleicao, tseBemCandidato.anoEleicao),
+          eq(tseCandidatura.sqCandidato, tseBemCandidato.sqCandidato),
+        ),
+      )
+      .where(
+        and(
+          eq(tseCandidatura.parlamentarId, parlamentarId),
+          inArray(tseBemCandidato.cdTipoBem, [...CATEGORIAS_PARTICIPACAO]),
+        ),
+      )
+
+    return buildGrafoParticipacao(rows)
   })
 }
