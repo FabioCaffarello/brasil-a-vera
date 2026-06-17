@@ -31,8 +31,21 @@
    ADR-034): aquele registrava `--color-fg-brand: var(--color-fg-brand)` etc., que o
    Tailwind emitia em `layer(theme)` colidindo com as declarações do RDS 4.3.0+ no
    mesmo layer → referência circular → 39/41 tokens semânticos resolviam VAZIO
-   (botão primário invisível). Ver issue #468. */
-@import "@fabio.caffarello/react-design-system/theme" layer(rds);
+   (botão primário invisível). Ver issue #468.
+
+   IMPORTA SEM `layer()` — DELIBERADO (regressão de tema, pós-#469). O Tailwind v4
+   SEMPRE iça os blocos `@theme {}` (os defaults LIGHT do RDS) para o `@layer theme`
+   de topo (alta prioridade), independentemente do `layer()` deste @import. Já os
+   overrides de tema do RDS (`.dark`, `:root:not(.light)`, `@media`) são CSS comum e
+   permanecem na layer deste import. Quando importado em `layer(rds)` (declarada
+   primeiro em globals.css → MENOR prioridade), o LIGHT içado vencia o DARK → todas
+   as famílias fg/surface/line resolviam light no shell dark (h1 navy invisível,
+   cards brancos). Confirmado empiricamente: `--color-fg-primary` = #0f172a (slate-900)
+   e `bg-surface-raised` = #fff com `html.dark`, em qualquer prefers-color-scheme.
+   UNLAYERED faz os overrides `.dark`/`:not(.light)` vencerem o `@theme` (layer theme)
+   por serem unlayered (vence qualquer layer), restaurando o tema dark. Não toca o
+   import COMPILADO `/styles` acima — esse continua em `layer(rds)` pelo fix #416. */
+@import "@fabio.caffarello/react-design-system/theme";
 
 /* Varre os COMPONENTES do RDS (dist) para o Tailwind do BaV (re)gerar as
    utilities deles na PRÓPRIA `layer(utilities)` (prioridade máxima). Necessário
