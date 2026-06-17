@@ -1,8 +1,21 @@
 # ADR-034: Token bridge do RDS e estratégia da Fase B (tradução dos compartilhados)
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-13
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-06-17
 > Status: accepted (estende o [ADR-033](033-adocao-react-design-system-externo.md))
+
+---
+
+> **Atualização 2026-06-17 — o bridge `@theme inline` auto-referente foi SUPERSEDED
+> (ver [§7](#7-supersessão-do-bridge-auto-referente--consumo-da-fonte-theme-do-rds-2026-06-17)).**
+> O mecanismo da Decisão §1 (registrar `--color-fg-brand: var(--color-fg-brand)` etc.
+> em `@theme inline`) **quebrou estruturalmente** no RDS 4.3.0+: o Tailwind emitia
+> essas declarações em `layer(theme)` colidindo com as do RDS no mesmo layer →
+> referência circular → **39/41 tokens semânticos resolviam vazio** (botão primário
+> invisível). Causa de fundo: o RDS publicava só CSS **compilado**, sem fonte `@theme`
+> consumível. Resolvido em duas frentes (issues RDS#234 + BaV#468): o RDS passou a
+> exportar `./theme` (fonte `@theme` raw) e o BaV a consumi-la nativamente, deletando
+> o bridge. Detalhe na §7.
 
 ---
 
@@ -162,7 +175,52 @@ retroativamente; listagens/home sem regressão; 0 erro de console, 0 fill preto.
 O `rds-noop-guard.ts` ganhou uma checagem de **invariante de fonte**: falha se o
 `globals.css` perder o `@layer rds;` ou o `layer(rds)` do import.
 
+### 7. Supersessão do bridge auto-referente — consumo da fonte `@theme` do RDS (2026-06-17)
+
+**Problema.** O bridge da §1 registrava os tokens RDS em `@theme inline` por
+**auto-referência** (`--color-fg-brand: var(--color-fg-brand)`). A premissa ("`inline`
+não emite `:root`, o `var()` resolve no RDS") era falsa contra o **RDS 4.3.0+**: o
+Tailwind emitia `:root { --color-fg-brand: var(--color-fg-brand) }` em `layer(theme)`,
+e como o RDS 4.3.0+ também declara seus tokens em `layer(theme)`, a auto-referência
+vencia por ordem de fonte → **referência circular → vazio**. Probe runtime: **39 de
+41** famílias `fg-*`/`surface-*`/`line-*` resolviam vazio; `bg-surface-brand-strong`
+(botão primário) ficava `transparent`. Causa de fundo: o RDS publicava **só CSS
+compilado** (sem fonte `@theme` consumível), forçando o consumidor a esse bridge frágil.
+
+**Decisão.** Resolver na raiz, em duas frentes:
+
+1. **RDS (issue [#234](https://github.com/FabioCaffarello/react-design-system/issues/234),
+   entregue no 4.5.0):** novo export `./theme` → `dist/tokens.css` — a fonte `@theme`
+   **raw** (não compilada) dos tokens + overrides `.light`/`.dark`.
+2. **BaV (issue #468):** em `globals.css`,
+   - `@import ".../theme" layer(rds)` — o Tailwind do BaV processa os `@theme {}` e gera
+     as utilities nativamente, com os valores theme-aware do RDS. Em `layer(rds)` para
+     a neutralização unlayered da §2 (success/warning/surface-overlay) continuar vencendo.
+   - `@source ".../dist/**/*.{js,cjs}"` — varre os componentes do RDS para o Tailwind do
+     BaV **regerar as utilities deles na própria `layer(utilities)`** (prioridade máxima).
+     Necessário porque a utility do RDS compilado fica em `layer(rds)` (baixa, mantida
+     pelo fix #416) e ali **perde** para o reset `button { background: transparent }` do
+     preflight (`layer base`) — deixando `<button>` de variante primária transparente.
+   - **Deleção** do bloco bridge `@theme inline` auto-referente (famílias fg/surface/line/error).
+
+**Validação empírica (princípio 13, dev real).** Pós-fix: as 41 famílias resolvem
+(0 vazias); `bg-surface-brand-strong` em `<button>` = `#7390ad` (era `transparent`);
+`hidden sm:block` @1440px = `block` (**#416 não regrediu**); `--color-success/-warning/
+-surface-overlay` permanecem nos valores do BaV (neutralização §2 preservada);
+`npm run build` verde (4.5s). Telas em `.tmp/design/screens/fixed-*`.
+
+**Consequência:** a §1 (bridge `@theme inline` auto-referente) e a **Limitação
+`text-`/`stroke-`** abaixo ficam **OBSOLETAS** — com a fonte `@theme` + `@source`, o
+Tailwind do BaV passa a gerar TODAS as utilities color (incl. `text-surface-*`,
+`text-line-*`, `stroke-<rds>` e variantes de opacidade) por conta própria, sem depender
+do que o RDS pré-compila. O invariante de fonte do guard (§6: `@layer rds;` + `layer(rds)`
+no import) **continua válido** — ambos preservados.
+
 ## Limitação `text-` / `stroke-`
+
+> **OBSOLETA desde 2026-06-17 (ver §7).** Com a fonte `@theme` + `@source`, o Tailwind do
+> BaV gera as variantes `text-`/`stroke-` dos tokens RDS por conta própria. Mantida abaixo
+> por contexto histórico.
 
 `text-` e `stroke-` são utilities **overloaded** no Tailwind v4 (também
 `text-<size>` e `stroke-<width>`). O bridge por `@theme inline` auto-referente

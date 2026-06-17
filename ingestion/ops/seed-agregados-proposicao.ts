@@ -155,12 +155,12 @@ async function seed(proposicaoIdFilter: string | null): Promise<number> {
         SELECT
           pa.proposicao_id,
           COUNT(*)::int AS n_autores,
-          COUNT(DISTINCT p.partido_sigla)::int FILTER (
+          COUNT(DISTINCT p.partido_sigla) FILTER (
             WHERE pa.parlamentar_id IS NOT NULL
-          ) AS n_partidos_autores,
-          COUNT(DISTINCT p.uf)::int FILTER (
+          )::int AS n_partidos_autores,
+          COUNT(DISTINCT p.uf) FILTER (
             WHERE pa.parlamentar_id IS NOT NULL
-          ) AS n_ufs_autores
+          )::int AS n_ufs_autores
         FROM proposicoes.proposicao_autor pa
         LEFT JOIN parlamentares.parlamentar p ON p.id = pa.parlamentar_id
         GROUP BY pa.proposicao_id
