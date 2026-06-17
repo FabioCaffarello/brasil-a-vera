@@ -68,7 +68,9 @@ export function GrafoParticipacaoBlock({ grafo, parlamentarNome }: Props) {
             key={e.key}
           >
             <span className="min-w-0">
-              <span className="block truncate text-fg-primary">{e.label}</span>
+              <span className="block truncate text-fg-primary" title={e.label}>
+                {e.nomeCurto}
+              </span>
               <span className="text-fg-tertiary text-xs">
                 {e.cnpj ? formatarCnpj(e.cnpj) : 'sem CNPJ declarado'} ·{' '}
                 {anosDe(e.participacoes)}
