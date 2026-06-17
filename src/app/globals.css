@@ -100,11 +100,9 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  /* Paleta categórica de charts (--color-chart-1..8) vem do RDS (v4.3,
+     Okabe-Ito canônico, issue #229) via @import layer(rds) abaixo — não há
+     mais token BaV `--chart-N`. Ver ADR-039. */
 
   /* Acento narrativo Wave 6 — ADR-024.
      Uso restrito (badge de contexto hero, gradient overlay, chip narrativo).
@@ -252,22 +250,8 @@
   --accent: oklch(0.45 0.18 295);
   --accent-foreground: oklch(1 0 0);
 
-  /* Paleta categórica para charts (não-semântica). Wave 9 Sprint 9.5 PR5
-     ajustou chart-1 e chart-3 light theme (Okabe-Ito colorblind-safe,
-     padrão-ouro em dataviz):
-       chart-1 era oklch(0.32 0.06 248) → preto azulado em light theme.
-       chart-3 era oklch(0.5 0.18 27)   → vermelho podia confundir com
-                                           --destructive (sinal "negativo").
-     Sky blue + orange é par clássico Okabe-Ito para bar+line: ambos
-     legíveis em light, distância de matiz suficiente para daltonismo,
-     sem colisão semântica com --success/--destructive.
-     chart-2/4/5 mantidos (não usados hoje em produção; revisitar com
-     Okabe-Ito completo quando entrarem em uso). */
-  --chart-1: oklch(0.6 0.13 240); /* sky blue (Okabe-Ito) */
-  --chart-2: oklch(0.5 0.13 150);
-  --chart-3: oklch(0.65 0.15 70); /* orange (Okabe-Ito) */
-  --chart-4: oklch(0.45 0.18 295);
-  --chart-5: oklch(0.55 0.16 60);
+  /* Paleta categórica de charts: migrada para o RDS (--color-chart-1..8,
+     Okabe-Ito canônico, v4.3 #229 / ADR-039). Sem token BaV `--chart-N`. */
 }
 
 /* ---------- 3. Tema dark (Wave 4 padrão) ----------
@@ -297,19 +281,16 @@
     --surface-overlay: oklch(0.07 0.006 260 / 0.6);
     --border: oklch(0.3 0.014 260);
     --border-strong: oklch(0.4 0.014 260);
-    /* --primary, --ring e --chart-1 alinhados à escala navy
-       `--color-primary-*` (issue #358) e refinados em follow-up
-       (revisão WCAG retroativa pós-PR #361):
+    /* --primary e --ring alinhados à escala navy `--color-primary-*`
+       (issue #358) e refinados em follow-up (revisão WCAG retroativa
+       pós-PR #361):
        - --primary: navy-400 (#7390ad). navy-500 falhou AA body em texto
          sobre fundo dark (3.28:1); navy-400 dá 6.00:1 AAA.
        - --ring: navy-300 (#9fb3c8). Mantém hierarquia ring > primary em
          luminância para o halo ficar visível em volta do botão focado
          (navy-300 sobre superfície dark: 8.86:1 AAA).
-       - --chart-1: sky blue Okabe-Ito `oklch(0.6 0.13 240)` (mesmo do
-         light, Wave 9 PR5). Cor de DADO é sistema próprio, separado da
-         brand: navy-400 tinha chroma 0.04 e perdia distinção com
-         chart-2..5 (chroma 0.16–0.22). Charts permanecem colorblind-safe
-         em ambos os temas. */
+       Paleta de charts: migrada para o RDS (--color-chart-N theme-aware,
+       ADR-039) — sem token BaV `--chart-N` aqui. */
     --primary: var(--color-primary-400);
     --primary-foreground: oklch(0.14 0.012 260);
     --success: oklch(0.72 0.18 150);
@@ -321,12 +302,6 @@
     --ring: var(--color-primary-300);
     --accent: oklch(0.62 0.22 295);
     --accent-foreground: oklch(0.14 0.012 260);
-
-    --chart-1: oklch(0.6 0.13 240);
-    --chart-2: oklch(0.72 0.18 150);
-    --chart-3: oklch(0.66 0.22 25);
-    --chart-4: oklch(0.62 0.22 295);
-    --chart-5: oklch(0.78 0.16 75);
   }
 }
 
@@ -342,8 +317,8 @@
   --border-strong: oklch(0.4 0.014 260);
   /* Espelho byte-idêntico do bloco @media acima (issue #358 + follow-up
      WCAG): --primary navy-400 (AA body restored), --ring navy-300
-     (hierarquia primary < ring preservada), --chart-1 sky blue Okabe-Ito
-     (paleta categórica como sistema próprio). */
+     (hierarquia primary < ring preservada). Paleta de charts migrada para
+     o RDS (--color-chart-N theme-aware, ADR-039). */
   --primary: var(--color-primary-400);
   --primary-foreground: oklch(0.14 0.012 260);
   --success: oklch(0.72 0.18 150);
@@ -355,12 +330,6 @@
   --ring: var(--color-primary-300);
   --accent: oklch(0.62 0.22 295);
   --accent-foreground: oklch(0.14 0.012 260);
-
-  --chart-1: oklch(0.6 0.13 240);
-  --chart-2: oklch(0.72 0.18 150);
-  --chart-3: oklch(0.66 0.22 25);
-  --chart-4: oklch(0.62 0.22 295);
-  --chart-5: oklch(0.78 0.16 75);
 }
 
 /* ---------- 5. Utilitários (opt-in via @apply ou className direta) ----------

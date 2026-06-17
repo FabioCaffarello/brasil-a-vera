@@ -12,7 +12,7 @@ export interface MixSegmento {
   cdTipoBem: number | null // null = agregado "Outras"
   label: string
   pct: number // 0–100, 1 casa
-  corIdx: number // 1..5 (top, → var(--chart-N)); 0 = "Outras"
+  corIdx: number // 1..5 (top, → var(--color-chart-N)); 0 = "Outras"
 }
 
 export interface MixPleito {

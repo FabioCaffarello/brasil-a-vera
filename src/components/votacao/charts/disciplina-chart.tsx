@@ -140,16 +140,16 @@ export function DisciplinaPartidariaChart({ data }: Props) {
           />
           <Bar
             dataKey="pctDisciplina"
-            fill="var(--chart-1)"
+            fill="var(--color-chart-2)"
             radius={[0, 4, 4, 0]}
           >
             {/* Opacidade decrescente por ranking de disciplina (a query
                 já ordena por totalAtivo DESC). Disciplina não é "bom/ruim"
-                (P2 honestidade) — usa --chart-1 (categórico), não
+                (P2 honestidade) — usa --color-chart-2 (categórico), não
                 --success. Cap em 0.3 preserva WCAG 1.4.11. */}
             {data.map((entry, idx) => (
               <Cell
-                fill="var(--chart-1)"
+                fill="var(--color-chart-2)"
                 fillOpacity={rankingOpacity(idx)}
                 key={entry.partido}
               />
