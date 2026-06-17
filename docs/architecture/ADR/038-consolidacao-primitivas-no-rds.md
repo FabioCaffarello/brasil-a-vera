@@ -88,6 +88,11 @@ verificável**, sem cair no big‑bang.
 
 ## Resíduos ratificados que NÃO migram
 
+> **Atualização (2026-06-16):** o [ADR-039](039-migracao-residuos-de-cor-para-o-rds.md)
+> é o "novo ADR" previsto abaixo e **revoga parte desta lista**: charts e
+> `success-foreground` migram para o RDS (v4.3, issues #229/#230); `accent` vira
+> gap‑com‑issue upstream (RDS #232). Só `PartyBadge` segue ratificado.
+
 Estes permanecem em tokens/código BaV e **exigem novo ADR** para mudar — não são
 dívida desta fase:
 
