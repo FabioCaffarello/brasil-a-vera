@@ -43,15 +43,16 @@ const SITUACAO_LABELS: Record<string, string> = {
  * - APROVADA: outcome positivo → bg-success/20 + text-fg-success (subtle)
  * - REJEITADA: outcome negativo → bg-error/20 + text-fg-error
  * - ARQUIVADA: inativo → bg-surface-raised + text-fg-tertiary
- * - TRANSFORMADA_EM_NORMA: pinnacle outcome (lei!) → bg-success solid
- *   text-success-foreground. Visual hierarchy: solid > subtle.
+ * - TRANSFORMADA_EM_NORMA: pinnacle outcome (lei!) → par on-color sólido do
+ *   RDS bg-success-solid + text-fg-on-success (emerald-700/branco, estável
+ *   nos dois temas, ADR-039 / #230). Visual hierarchy: solid > subtle.
  */
 const SITUACAO_CLASSES: Record<string, string> = {
   TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
   APROVADA: 'bg-success/20 text-fg-success',
   REJEITADA: 'bg-error/20 text-fg-error',
   ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
-  TRANSFORMADA_EM_NORMA: 'bg-success text-success-foreground',
+  TRANSFORMADA_EM_NORMA: 'bg-success-solid text-fg-on-success',
 }
 
 /**

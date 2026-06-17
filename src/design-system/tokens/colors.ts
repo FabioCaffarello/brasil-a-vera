@@ -33,7 +33,8 @@ export const colors = {
 
   // Estados
   success: 'var(--color-success)',
-  successForeground: 'var(--color-success-foreground)',
+  // on-color do badge sólido: par do RDS (success-solid + fg-on-success,
+  // ADR-039 / #230); sem token BaV `successForeground`.
   warning: 'var(--color-warning)',
   warningForeground: 'var(--color-warning-foreground)',
   destructive: 'var(--color-destructive)',

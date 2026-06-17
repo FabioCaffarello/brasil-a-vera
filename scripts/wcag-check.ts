@@ -115,13 +115,10 @@ export const PAIRS: Pair[] = [
     kind: 'body',
     theme: 'light',
   },
-  {
-    label: 'success-foreground / success (badge)',
-    fg: 'success-foreground',
-    bg: 'success',
-    kind: 'body',
-    theme: 'light',
-  },
+  // O badge sólido (TRANSFORMADA_EM_NORMA) migrou p/ o par on-color do RDS
+  // (success-solid emerald-700 + fg-on-success branco ≈ 5.48:1 AA, estável nos
+  // dois temas; verificado upstream #230 / ADR-039). Fora deste gate, que cobre
+  // só tokens BaV de globals.css.
   {
     label: 'warning-foreground / warning (badge)',
     fg: 'warning-foreground',
@@ -247,13 +244,6 @@ export const PAIRS: Pair[] = [
     label: 'primary / surface (link em card)',
     fg: 'primary',
     bg: 'surface',
-    kind: 'body',
-    theme: 'dark',
-  },
-  {
-    label: 'success-foreground / success (badge)',
-    fg: 'success-foreground',
-    bg: 'success',
     kind: 'body',
     theme: 'dark',
   },

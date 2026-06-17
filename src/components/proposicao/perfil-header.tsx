@@ -35,17 +35,17 @@ const SITUACAO_LABELS: Record<string, string> = {
   TRANSFORMADA_EM_NORMA: 'Transformada em norma jurídica',
 }
 
-// Mesmo mapping do original (proposicao-card.tsx). Solid `bg-success`
-// em TRANSFORMADA_EM_NORMA reforça hierarquia (virou lei = pinnacle).
-// Traduções piloto-2/3: brand→fg-brand, destructive→error,
-// surface-elevated→surface-raised; success/N e success-foreground
-// mantidos (ver header).
+// Mesmo mapping do original (proposicao-card.tsx). Badge sólido de
+// TRANSFORMADA_EM_NORMA reforça hierarquia (virou lei = pinnacle) e usa o
+// par on-color do RDS `bg-success-solid` + `text-fg-on-success`
+// (emerald-700/branco, estável nos dois temas, ADR-039 / #230) — antes
+// `bg-success text-success-foreground` (par BaV theme-split, removido).
 const SITUACAO_CLASSES: Record<string, string> = {
   TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
   APROVADA: 'bg-success/20 text-fg-success',
   REJEITADA: 'bg-error/20 text-fg-error',
   ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
-  TRANSFORMADA_EM_NORMA: 'bg-success text-success-foreground',
+  TRANSFORMADA_EM_NORMA: 'bg-success-solid text-fg-on-success',
 }
 
 export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
