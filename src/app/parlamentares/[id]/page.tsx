@@ -17,6 +17,7 @@ import {
   Building2,
   FileText,
   Inbox,
+  Network,
   PieChart,
   TrendingDown,
   TrendingUp,
@@ -29,6 +30,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
+import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
 import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
@@ -71,6 +73,7 @@ import {
 } from '@/lib/queries/parlamentares'
 import {
   getEvolucaoPatrimonial,
+  getGrafoParticipacao,
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
@@ -218,6 +221,7 @@ export default async function ParlamentarPerfilPage({
     comparacoes,
     patrimonio,
     evolucaoPatrimonial,
+    grafoParticipacao,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -244,6 +248,7 @@ export default async function ParlamentarPerfilPage({
     getComparacoesCasa(parlamentar.id),
     getPatrimonioSnapshot(parlamentar.id),
     getEvolucaoPatrimonial(parlamentar.id),
+    getGrafoParticipacao(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -474,6 +479,15 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(grafoParticipacao
+            ? [
+                {
+                  id: 'grafo-participacao',
+                  label: 'Empresas',
+                  icon: <Network className="h-4 w-4" />,
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             label: 'Top 5',
@@ -589,6 +603,22 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(grafoParticipacao
+            ? [
+                {
+                  id: 'grafo-participacao',
+                  title: 'Participação societária',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <GrafoParticipacaoBlock
+                      grafo={grafoParticipacao}
+                      parlamentarNome={parlamentar.nome}
+                    />
+                  ),
+                },
+              ]
+            : []),
           {
             id: 'afinidade',
             title: 'Top 5 maior afinidade de voto',
@@ -695,6 +725,19 @@ export default async function ParlamentarPerfilPage({
             title="Composição patrimonial ao longo do tempo"
           >
             <MixComposicaoBlock mix={mixComposicao} />
+          </SectionCard>
+        ) : null}
+
+        {grafoParticipacao ? (
+          <SectionCard
+            id="grafo-participacao"
+            subtitle="Empresas em que o parlamentar declarou participação societária (quotas/ações). Extraído da descrição do TSE; só o que foi declarado, sem consulta externa."
+            title="Participação societária"
+          >
+            <GrafoParticipacaoBlock
+              grafo={grafoParticipacao}
+              parlamentarNome={parlamentar.nome}
+            />
           </SectionCard>
         ) : null}
 
