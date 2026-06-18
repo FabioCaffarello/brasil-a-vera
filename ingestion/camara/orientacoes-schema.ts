@@ -10,9 +10,11 @@ import { z } from 'zod'
 //     "uriPartidoBloco": "https://..." | null
 //   }
 //
-// Ingestão filtra `codTipoLideranca === "P"` (orientações partidárias) e
-// `orientacaoVoto !== ""` — só essas casam com `parlamentar.partidoSigla`
-// no consumer (`getAlinhamentoParlamentar`).
+// Ingestão (ADR-040) retém `codTipoLideranca === "P"` (orientações
+// partidárias, casam com `parlamentar.partidoSigla`) e `=== "B"` quando a
+// sigla é bloco institucional (Governo/Oposição/Maioria/Minoria). Federações
+// e blocos ad-hoc ("Fdr ...", "Bl ...") e `orientacaoVoto === ""` são
+// descartados. Discriminação via classificarOrientacao (orientacoes-mapper).
 
 export const camaraOrientacaoSchema = z
   .object({

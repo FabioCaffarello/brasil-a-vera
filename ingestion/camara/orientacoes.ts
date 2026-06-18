@@ -4,7 +4,7 @@ import { orientacao, votacao } from '@/shared/db/schema'
 import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
 import { fetchWithRetry } from '../shared/http'
-import { mapOrientacaoVoto } from './orientacoes-mapper'
+import { classificarOrientacao, mapOrientacaoVoto } from './orientacoes-mapper'
 import { camaraOrientacaoSchema } from './orientacoes-schema'
 
 const CASA = 'CAMARA' as const
@@ -15,6 +15,7 @@ interface IngestionStats {
   votacoesProcessadas: number
   orientacoesUpserted: number
   votacoesSemOrientacao: number
+  orientacoesBlocoRetidas: number
   orientacoesSkippedBloco: number
   orientacoesSkippedVazia: number
   orientacoesSkippedDesconhecida: number
@@ -77,6 +78,7 @@ async function processVotacao(
     {
       partidoSigla: string
       orientacao: 'SIM' | 'NAO' | 'LIBERADO' | 'OBSTRUCAO'
+      tipoLideranca: 'P' | 'B'
     }
   >()
 
@@ -91,17 +93,12 @@ async function processVotacao(
     }
     const o = parsed.data
 
-    // Filtro 1: só partidos (codTipoLideranca === 'P'). Blocos ("Governo",
-    // "Oposição", "Fdr PT-PCdoB-PV") não casam com parlamentar.partidoSigla
-    // no consumer getAlinhamentoParlamentar.
-    if (o.codTipoLideranca !== 'P') {
-      stats.orientacoesSkippedBloco++
-      continue
-    }
-
-    // Filtro 2 (defesa): codPartidoBloco null em entrada P seria anomalia
-    // — partidos formais sempre têm código. Skip silencioso.
-    if (o.codPartidoBloco == null) {
+    // ADR-040: retém orientação de partido ('P') e de bloco institucional
+    // ('B': Governo/Oposição/Maioria/Minoria). Federações e blocos ad-hoc
+    // ('Fdr .../Bl ...') e 'P' sem código de partido retornam null e são
+    // descartados.
+    const classificada = classificarOrientacao(o)
+    if (classificada === null) {
       stats.orientacoesSkippedBloco++
       continue
     }
@@ -124,9 +121,10 @@ async function processVotacao(
       continue
     }
 
-    mappedByPartido.set(o.siglaPartidoBloco, {
-      partidoSigla: o.siglaPartidoBloco,
+    mappedByPartido.set(classificada.partidoSigla, {
+      partidoSigla: classificada.partidoSigla,
       orientacao: orientacaoNormalizada,
+      tipoLideranca: classificada.tipoLideranca,
     })
   }
 
@@ -147,11 +145,16 @@ async function processVotacao(
         votacaoId: prop.id,
         partidoSigla: o.partidoSigla,
         orientacao: o.orientacao,
+        // 'B' explícito para blocos — nunca herda o default 'P' da coluna.
+        tipoLideranca: o.tipoLideranca,
       })),
     )
   })
 
   stats.orientacoesUpserted += orientacoesFinais.length
+  stats.orientacoesBlocoRetidas += orientacoesFinais.filter(
+    (o) => o.tipoLideranca === 'B',
+  ).length
   stats.votacoesProcessadas++
 }
 
@@ -177,6 +180,7 @@ export async function ingestOrientacoesCamara(
     votacoesProcessadas: 0,
     orientacoesUpserted: 0,
     votacoesSemOrientacao: 0,
+    orientacoesBlocoRetidas: 0,
     orientacoesSkippedBloco: 0,
     orientacoesSkippedVazia: 0,
     orientacoesSkippedDesconhecida: 0,
@@ -208,6 +212,7 @@ ingestOrientacoesCamara({ maxVotacoes })
         maxVotacoes: maxVotacoes ?? null,
         votacoesProcessadas: stats.votacoesProcessadas,
         orientacoesUpserted: stats.orientacoesUpserted,
+        orientacoesBlocoRetidas: stats.orientacoesBlocoRetidas,
         votacoesSemOrientacao: stats.votacoesSemOrientacao,
         orientacoesSkippedBloco: stats.orientacoesSkippedBloco,
         orientacoesSkippedVazia: stats.orientacoesSkippedVazia,
