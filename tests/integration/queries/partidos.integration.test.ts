@@ -89,15 +89,17 @@ describe('queries/partidos (integration)', () => {
       expect(r.parlamentaresTotal).toBe(0)
     })
 
+    // Siglas de cálculo usam PL (não-federada). PT/PCdoB/PV etc. caem no
+    // short-circuit de federação (ADR-041) — testado à parte abaixo.
     it('ignora parlamentares com < 50 votos comparáveis', async () => {
-      const p = buildParlamentar({ partidoSigla: 'PT' })
+      const p = buildParlamentar({ partidoSigla: 'PL' })
       const v = buildVotacao()
       await db.insert(parlamentar).values(p)
       await db.insert(votacao).values(v)
       await db.insert(orientacao).values(
         buildOrientacao({
           votacaoId: v.id as string,
-          partidoSigla: 'PT',
+          partidoSigla: 'PL',
           orientacao: 'SIM',
         }),
       )
@@ -109,19 +111,20 @@ describe('queries/partidos (integration)', () => {
         }),
       )
 
-      const r = await getFidelidadeInternaMedia('PT')
+      const r = await getFidelidadeInternaMedia('PL')
       expect(r.parlamentaresElegiveis).toBe(0)
       expect(r.parlamentaresTotal).toBe(1) // tem dados mas só 1 voto
       expect(r.percentualMedio).toBeNull()
+      expect(r.emFederacao).toBe(false)
     })
 
     it('calcula média simples dos parlamentares elegíveis', async () => {
-      // 2 parlamentares PT, ambos com ≥ 50 votos comparáveis.
+      // 2 parlamentares PL, ambos com ≥ 50 votos comparáveis.
       // P1: 50 alinhados de 50 → 100%
       // P2: 25 alinhados de 50 → 50%
       // Média simples: 75%
-      const p1 = buildParlamentar({ nome: 'P1', partidoSigla: 'PT' })
-      const p2 = buildParlamentar({ nome: 'P2', partidoSigla: 'PT' })
+      const p1 = buildParlamentar({ nome: 'P1', partidoSigla: 'PL' })
+      const p2 = buildParlamentar({ nome: 'P2', partidoSigla: 'PL' })
       await db.insert(parlamentar).values([p1, p2])
 
       const votacoes = Array.from({ length: 50 }, () => buildVotacao())
@@ -130,7 +133,7 @@ describe('queries/partidos (integration)', () => {
         votacoes.map((v) =>
           buildOrientacao({
             votacaoId: v.id as string,
-            partidoSigla: 'PT',
+            partidoSigla: 'PL',
             orientacao: 'SIM',
           }),
         ),
@@ -153,10 +156,50 @@ describe('queries/partidos (integration)', () => {
       )
       await db.insert(votoNominal).values([...votosP1, ...votosP2])
 
-      const r = await getFidelidadeInternaMedia('PT')
+      const r = await getFidelidadeInternaMedia('PL')
       expect(r.parlamentaresElegiveis).toBe(2)
       expect(r.parlamentaresTotal).toBe(2)
       expect(r.percentualMedio).toBe(75)
+      expect(r.emFederacao).toBe(false)
+      expect(r.federacaoNome).toBeNull()
+    })
+
+    // Federação (ADR-041, #483): partido federado é short-circuitado ANTES do
+    // join — nenhum número é produzido, mesmo com dados suficientes no banco
+    // (caso de borda ≥50 votos: o percentual espúrio é eliminado por desenho,
+    // não por limiar). Sinaliza emFederacao + federacaoNome.
+    it('suprime cálculo e sinaliza federação para partido federado (PT)', async () => {
+      // Insere dados que DARIAM ≥50 votos comparáveis casáveis pela sigla — a
+      // supressão tem que ganhar mesmo assim.
+      const p = buildParlamentar({ nome: 'Petista', partidoSigla: 'PT' })
+      await db.insert(parlamentar).values(p)
+      const votacoes = Array.from({ length: 50 }, () => buildVotacao())
+      await db.insert(votacao).values(votacoes)
+      await db.insert(orientacao).values(
+        votacoes.map((v) =>
+          buildOrientacao({
+            votacaoId: v.id as string,
+            partidoSigla: 'PT',
+            orientacao: 'SIM',
+          }),
+        ),
+      )
+      await db.insert(votoNominal).values(
+        votacoes.map((v) =>
+          buildVotoNominal({
+            votacaoId: v.id as string,
+            parlamentarId: p.id as string,
+            voto: 'SIM',
+          }),
+        ),
+      )
+
+      const r = await getFidelidadeInternaMedia('PT')
+      expect(r.emFederacao).toBe(true)
+      expect(r.federacaoNome).toBe('Federação Brasil da Esperança (FE BRASIL)')
+      expect(r.percentualMedio).toBeNull()
+      expect(r.parlamentaresElegiveis).toBe(0)
+      expect(r.parlamentaresTotal).toBe(0)
     })
   })
 
