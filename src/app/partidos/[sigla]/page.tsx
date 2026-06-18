@@ -120,10 +120,18 @@ export default async function PartidoPage({ params }: PageProps) {
       </Section>
 
       <Section
-        hint="Quão coesa é a bancada na hora do voto — média do alinhamento individual dos membros à orientação do partido."
+        // Hint federation-aware (ADR-041): para partido federado não existe
+        // orientação da sigla, então o subtítulo NÃO pode prometer "alinhamento
+        // à orientação do partido" — seria contradito pelo corpo do bloco.
+        // Nenhuma superfície afirma o que outra nega.
+        hint={
+          fidelidade.emFederacao
+            ? 'Quão coesa é a bancada na hora do voto.'
+            : 'Quão coesa é a bancada na hora do voto — média do alinhamento individual dos membros à orientação do partido.'
+        }
         title="Fidelidade interna média"
       >
-        <FidelidadeMediaBlock fidelidade={fidelidade} />
+        <FidelidadeMediaBlock fidelidade={fidelidade} sigla={overview.sigla} />
       </Section>
 
       <Section

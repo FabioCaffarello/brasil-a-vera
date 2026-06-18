@@ -94,6 +94,31 @@ cálculo via parse é uma decisão de invariante própria, adiada (ver
    federados → bloco oculto sem nota) rastreado em #488. A página de partido
    (#483) e o agregado L2 (#485) permanecem follow-ups separados.
 
+   **Atualização (2026-06-18, #483 — encerra a família federação na UI).** A
+   página de partido (`/partidos/{sigla}`) foi tratada: `getFidelidadeInternaMedia`
+   faz short-circuit por `federacaoDoPartido(sigla)` antes do join (§3, mesmo
+   padrão de `getAlinhamentoParlamentar`), retornando `emFederacao = true` +
+   `federacaoNome` sem rodar o cálculo. Diferença desta superfície: a **página
+   inteira** é de um partido federado, então a sinalização é **central ao bloco**
+   (corpo do componente), não nota de rodapé como na página de votação. A copy
+   declara que a unidade de orientação é a **federação** — fidelidade interna
+   pela sigla é uma **métrica mal-formada** (não há orientação da sigla contra a
+   qual medir), **não uma lacuna** que mais ingestão venha a preencher. O
+   subtítulo da seção (`hint`) é federation-aware: para federado não promete
+   "alinhamento à orientação do partido" (nenhuma superfície afirma o que outra
+   nega). **Auditoria dos 4 blocos da página:** só `getFidelidadeInternaMedia`
+   colapsa para federados; `getPartidoOverview` (bancada), `getTop5TemasPartido`
+   (temas) e `getGastoBancadaAno` (gasto) usam a sigla como chave de **filiação**
+   (correta para federados) e não tocam orientação — #483 é só a fidelidade.
+
+   **Família federação encerrada para sinalização-UI.** Os consumidores que
+   exibiam explicação falsa estão tratados (#480 perfil, #482/#484 votação, #483
+   partido). Permanecem, fora deste eixo: **#485** — agregado L2 (`pct_alinhamento`
+   NULL no card/comparar), que é **ingestão**, não sinalização; **#486** —
+   cálculo via parse de `Fdr X-Y-Z`, **deferred** (muda a invariante de
+   atribuição, Alternativa B); **#488** — caso de borda (votação só com
+   orientação de federados → bloco oculto sem nota).
+
 ## Alternativas Consideradas
 
 ### Alternativa A — apenas trocar o texto do aviso "amostra insuficiente"
@@ -155,8 +180,8 @@ cálculo via parse é uma decisão de invariante própria, adiada (ver
 - Follow-ups (consumidores fora do escopo deste incremento):
   - #482 (**prioritária**) — bancadas federadas invisíveis em
     disciplina/rebeldia (`getRebeldesByVotacao`); mesma classe de desonestidade.
-  - #483 — rótulo "amostra insuficiente" falso na página de partido
-    (`getFidelidadeInternaMedia`).
+  - #483 (**tratado**, ver §5 acima) — rótulo "amostra insuficiente" falso na
+    página de partido (`getFidelidadeInternaMedia`); sinalização central.
   - #484 — partidos federados ausentes da tabela de disciplina por votação
     (`getDisciplinaPartidariaPorVotacao`).
   - #485 — `pct_alinhamento` NULL sem sinalização no agregado L2 (card/comparar).

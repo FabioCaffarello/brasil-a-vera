@@ -9,6 +9,7 @@ import {
   proposicaoAutor,
   proposicaoTema,
 } from '@/shared/db/schema'
+import { federacaoDoPartido } from '@/shared/federacoes'
 
 export interface PartidoMembro {
   id: string
@@ -31,6 +32,15 @@ export interface FidelidadeInternaMedia {
   percentualMedio: number | null
   parlamentaresElegiveis: number
   parlamentaresTotal: number
+  /**
+   * true quando a sigla integra federação (ADR-041). A Câmara publica a
+   * orientação de voto pela federação, não pela sigla — a fidelidade interna
+   * pela sigla NÃO é calculada (é uma métrica mal-formada: não há orientação
+   * da sigla contra a qual medir). Nenhum número é produzido; a UI explica.
+   */
+  emFederacao: boolean
+  /** Nome da federação quando `emFederacao`; `null` caso contrário. */
+  federacaoNome: string | null
 }
 
 export interface TemaContagem {
@@ -103,6 +113,22 @@ export async function getFidelidadeInternaMedia(
     `partido:fidelidade:${sigla}`,
     TTL.partidoOverview,
     async () => {
+      // Federação (ADR-041): a Câmara publica orientação pela federação, não
+      // pela sigla individual, então o join `ob.partido_sigla = p.partido_sigla`
+      // abaixo colapsaria o denominador a ~0 para toda a bancada. Sinaliza e
+      // suprime sem rodar o cálculo (sinalizar, não calcular). Não é amostra
+      // insuficiente: não há orientação da sigla contra a qual medir.
+      const federacao = federacaoDoPartido(sigla)
+      if (federacao) {
+        return {
+          percentualMedio: null,
+          parlamentaresElegiveis: 0,
+          parlamentaresTotal: 0,
+          emFederacao: true,
+          federacaoNome: federacao.nome,
+        }
+      }
+
       const result = await db.execute(sql`
         WITH alinhamento_por_parlamentar AS (
           SELECT
@@ -145,6 +171,8 @@ export async function getFidelidadeInternaMedia(
           percentualMedio: null,
           parlamentaresElegiveis: 0,
           parlamentaresTotal: 0,
+          emFederacao: false,
+          federacaoNome: null,
         }
       }
 
@@ -153,6 +181,8 @@ export async function getFidelidadeInternaMedia(
           row.pct_medio === null ? null : Math.round(Number(row.pct_medio)),
         parlamentaresElegiveis: row.elegiveis,
         parlamentaresTotal: row.com_dados,
+        emFederacao: false,
+        federacaoNome: null,
       }
     },
   )
