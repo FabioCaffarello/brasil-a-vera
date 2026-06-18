@@ -17,6 +17,7 @@ import {
   Building2,
   FileText,
   Inbox,
+  Landmark,
   Network,
   PieChart,
   TrendingDown,
@@ -28,6 +29,7 @@ import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
+import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
@@ -42,7 +44,10 @@ import { SectionNav } from '@/design-system/compositions/section-nav'
 import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL } from '@/lib/format'
-import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
+import {
+  getAlinhamentoBlocos,
+  getAlinhamentoParlamentar,
+} from '@/lib/queries/alinhamento'
 import {
   getCoerenciaStats,
   getParesContraditorios,
@@ -218,6 +223,7 @@ export default async function ParlamentarPerfilPage({
     coerenciaStats,
     alinhamento,
     alinhamentoMensal,
+    alinhamentoBlocos,
     comparacoes,
     patrimonio,
     evolucaoPatrimonial,
@@ -245,6 +251,11 @@ export default async function ParlamentarPerfilPage({
     getCoerenciaStats(parlamentar.id),
     getAlinhamentoParlamentar(parlamentar.id),
     getAlinhamentoMensal(parlamentar.id, 12),
+    // Alinhamento com Governo/Oposição existe só na Câmara (ADR-040); para
+    // senador resolve vazio e a UI mostra a nota de assimetria da fonte.
+    parlamentar.casa === 'CAMARA'
+      ? getAlinhamentoBlocos(parlamentar.id)
+      : Promise.resolve([] as Awaited<ReturnType<typeof getAlinhamentoBlocos>>),
     getComparacoesCasa(parlamentar.id),
     getPatrimonioSnapshot(parlamentar.id),
     getEvolucaoPatrimonial(parlamentar.id),
@@ -324,6 +335,19 @@ export default async function ParlamentarPerfilPage({
         : alinhamento.percentual >= 50
           ? 'neutral'
           : 'warning'
+
+  // Seção de alinhamento com Governo/Oposição (ADR-040). Câmara-only; no
+  // Senado a fonte não publica orientação — nota de assimetria, sem substituto.
+  const alinhamentoBlocosContent =
+    parlamentar.casa === 'SENADO' ? (
+      <p className="text-fg-tertiary text-sm">
+        A fonte do Senado não publica orientação de bancada nem de bloco
+        (Governo/Oposição) em endpoint público. Esta comparação existe apenas
+        para deputados federais (Câmara).
+      </p>
+    ) : (
+      <AlinhamentoBlocos blocos={alinhamentoBlocos} />
+    )
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -443,6 +467,11 @@ export default async function ParlamentarPerfilPage({
             icon: <Users className="h-4 w-4" />,
           },
           {
+            id: 'alinhamento-blocos',
+            label: 'Gov/Oposição',
+            icon: <Landmark className="h-4 w-4" />,
+          },
+          {
             id: 'proposicoes',
             label: 'Proposições',
             icon: <Inbox className="h-4 w-4" />,
@@ -540,6 +569,13 @@ export default async function ParlamentarPerfilPage({
                 mensal={alinhamentoMensal}
               />
             ),
+          },
+          {
+            id: 'alinhamento-blocos',
+            title: 'Alinhamento com Governo e Oposição',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: alinhamentoBlocosContent,
           },
           {
             id: 'proposicoes',
@@ -669,6 +705,14 @@ export default async function ParlamentarPerfilPage({
             casa={parlamentar.casa}
             mensal={alinhamentoMensal}
           />
+        </SectionCard>
+
+        <SectionCard
+          id="alinhamento-blocos"
+          subtitle="Comparação factual entre o voto individual e a orientação formalizada pelas lideranças do Governo e da Oposição na Câmara. Referência de leitura, não juízo de valor."
+          title="Alinhamento com Governo e Oposição"
+        >
+          {alinhamentoBlocosContent}
         </SectionCard>
 
         <SectionCard

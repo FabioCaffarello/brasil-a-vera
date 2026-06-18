@@ -57,3 +57,68 @@ export function calcularAlinhamento(
 /** Threshold de votações para mostrar alinhamento — abaixo disso, amostra
  * é estatisticamente pobre (issue #46). */
 export const ALINHAMENTO_AMOSTRA_MINIMA = 50
+
+// --- Alinhamento com orientação de bloco institucional (ADR-040) ---
+//
+// Moldura neutra: contagem factual de coincidências entre o voto do
+// parlamentar e a orientação do bloco (Governo/Oposição) + quais votações.
+// Sem score que ranqueie, sem juízo de valor. Mesma semântica determinística
+// de classifyAlinhamento (igualdade de strings; LIBERADO/AUSENTE ignorados).
+
+export interface EventoBloco<TVotacao = unknown> {
+  bloco: string
+  voto: Voto
+  orientacao: Orientacao
+  votacao: TVotacao
+}
+
+export interface VotacaoBloco<TVotacao> {
+  votacao: TVotacao
+  voto: Voto
+  orientacao: Orientacao
+  classificacao: Extract<Classificacao, 'ALINHADO' | 'DIVERGENTE'>
+}
+
+export interface AlinhamentoBlocoAgregado<TVotacao> {
+  bloco: string
+  total: number
+  alinhados: number
+  divergentes: number
+  amostraInsuficiente: boolean
+  /** Votações comparáveis, ordem preservada da entrada, até `limiteVotacoes`. */
+  votacoes: VotacaoBloco<TVotacao>[]
+}
+
+// Agrega eventos (já ordenados pelo caller, p.ex. data desc) por bloco,
+// preservando apenas os blocos pedidos e na ordem pedida. Eventos IGNORADO
+// (LIBERADO/AUSENTE) não entram na contagem nem na lista.
+export function agruparAlinhamentoBlocos<TVotacao>(
+  eventos: ReadonlyArray<EventoBloco<TVotacao>>,
+  blocos: readonly string[],
+  limiteVotacoes: number,
+): AlinhamentoBlocoAgregado<TVotacao>[] {
+  return blocos.map((bloco) => {
+    const doBloco = eventos.filter((e) => e.bloco === bloco)
+    const stats = calcularAlinhamento(doBloco)
+    const votacoes: VotacaoBloco<TVotacao>[] = []
+    for (const e of doBloco) {
+      if (votacoes.length >= limiteVotacoes) break
+      const c = classifyAlinhamento(e.voto, e.orientacao)
+      if (c === 'IGNORADO') continue
+      votacoes.push({
+        votacao: e.votacao,
+        voto: e.voto,
+        orientacao: e.orientacao,
+        classificacao: c,
+      })
+    }
+    return {
+      bloco,
+      total: stats.total,
+      alinhados: stats.alinhados,
+      divergentes: stats.divergentes,
+      amostraInsuficiente: stats.total < ALINHAMENTO_AMOSTRA_MINIMA,
+      votacoes,
+    }
+  })
+}

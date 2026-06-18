@@ -1,10 +1,12 @@
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import {
   ALINHAMENTO_AMOSTRA_MINIMA,
+  agruparAlinhamentoBlocos,
   calcularAlinhamento,
   classifyAlinhamento,
+  type EventoBloco,
   type Orientacao,
   type Voto,
 } from '@/modules/parlamentares/domain/alinhamento'
@@ -139,6 +141,105 @@ export async function getAlinhamentoParlamentar(
         topDivergencias,
         topConvergencias,
       }
+    },
+  )
+}
+
+// Blocos institucionais expostos na UI (ADR-040): Governo e Oposição.
+// Maioria/Minoria são ingeridos/persistidos mas não renderizados nesta versão.
+const BLOCOS_EXPOSTOS = ['Governo', 'Oposição'] as const
+
+// Quantas votações listar por bloco (amostra factual "quais votações").
+const BLOCO_VOTACOES_LIMIT = 8
+
+export interface VotacaoBlocoResult {
+  votacaoId: string
+  dataHora: Date | string
+  descricao: string
+  voto: Voto
+  orientacao: Orientacao
+  classificacao: 'ALINHADO' | 'DIVERGENTE'
+}
+
+export interface BlocoAlinhamentoResult {
+  /** Nome do bloco institucional ('Governo' | 'Oposição'). */
+  bloco: string
+  total: number
+  alinhados: number
+  divergentes: number
+  amostraInsuficiente: boolean
+  votacoes: VotacaoBlocoResult[]
+}
+
+// Alinhamento do voto individual vs. orientação dos blocos institucionais
+// (Governo/Oposição). Independe do partido do parlamentar — join por
+// tipo_lideranca = 'B'. Câmara-only por natureza da fonte (ADR-040). Mesmo
+// regime de cache do alinhamento partidário (princípio 8 / ADR-018).
+export async function getAlinhamentoBlocos(
+  parlamentarId: string,
+): Promise<BlocoAlinhamentoResult[]> {
+  return cached(
+    `parlamentar:alinhamento-blocos:${parlamentarId}`,
+    TTL.alinhamentoPartidario,
+    async () => {
+      const rows = await db
+        .select({
+          bloco: orientacao.partidoSigla,
+          votacaoId: votacao.id,
+          dataHora: votacao.dataHora,
+          descricao: votacao.descricao,
+          voto: votoNominal.voto,
+          orientacao: orientacao.orientacao,
+        })
+        .from(votoNominal)
+        .innerJoin(
+          orientacao,
+          and(
+            eq(orientacao.votacaoId, votoNominal.votacaoId),
+            eq(orientacao.tipoLideranca, 'B'),
+            inArray(orientacao.partidoSigla, [...BLOCOS_EXPOSTOS]),
+          ),
+        )
+        .innerJoin(votacao, eq(votacao.id, votoNominal.votacaoId))
+        .where(eq(votoNominal.parlamentarId, parlamentarId))
+        .orderBy(desc(votacao.dataHora))
+
+      const eventos: EventoBloco<{
+        votacaoId: string
+        dataHora: Date | string
+        descricao: string
+      }>[] = rows.map((r) => ({
+        bloco: r.bloco,
+        voto: r.voto as Voto,
+        orientacao: r.orientacao,
+        votacao: {
+          votacaoId: r.votacaoId,
+          dataHora: r.dataHora,
+          descricao: r.descricao,
+        },
+      }))
+
+      const agregados = agruparAlinhamentoBlocos(
+        eventos,
+        BLOCOS_EXPOSTOS,
+        BLOCO_VOTACOES_LIMIT,
+      )
+
+      return agregados.map((a) => ({
+        bloco: a.bloco,
+        total: a.total,
+        alinhados: a.alinhados,
+        divergentes: a.divergentes,
+        amostraInsuficiente: a.amostraInsuficiente,
+        votacoes: a.votacoes.map((v) => ({
+          votacaoId: v.votacao.votacaoId,
+          dataHora: v.votacao.dataHora,
+          descricao: v.votacao.descricao,
+          voto: v.voto,
+          orientacao: v.orientacao,
+          classificacao: v.classificacao,
+        })),
+      }))
     },
   )
 }
