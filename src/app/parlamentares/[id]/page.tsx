@@ -387,9 +387,11 @@ export default async function ParlamentarPerfilPage({
             }
             hint={
               <>
-                {alinhamento.total > 0
-                  ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
-                  : 'sem orientação no período'}
+                {alinhamento.emFederacao
+                  ? 'orientação publicada pela federação'
+                  : alinhamento.total > 0
+                    ? `${alinhamento.alinhados}/${alinhamento.total} com orientação`
+                    : 'sem orientação no período'}
                 {comparacoes.medianaAlinhamentoCasa !== null ? (
                   <>
                     {' · '}

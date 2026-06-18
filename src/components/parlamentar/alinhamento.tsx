@@ -118,6 +118,22 @@ function Sparkline12m({ data }: { data: AlinhamentoMensalPoint[] }) {
 }
 
 export function AlinhamentoBancada({ alinhamento, casa, mensal = [] }: Props) {
+  // Federação (ADR-041): a Câmara publica orientação pela federação, não pela
+  // sigla individual — por isso o alinhamento partidário pela sigla não é
+  // calculado. Branch no topo: precede total===0 e amostraInsuficiente para
+  // nunca exibir número nem o rótulo falso "amostra insuficiente".
+  if (alinhamento.emFederacao) {
+    return (
+      <p className="text-fg-tertiary text-sm">
+        Este parlamentar integra a <strong>{alinhamento.federacaoNome}</strong>.
+        A Câmara publica a orientação de voto <strong>pela federação</strong>,
+        não pela sigla individual — por isso o alinhamento partidário pela sigla
+        não é calculado aqui. Não se trata de amostra insuficiente: é uma
+        característica de como a fonte registra a orientação.
+      </p>
+    )
+  }
+
   if (alinhamento.total === 0) {
     if (casa === 'SENADO') {
       return (
