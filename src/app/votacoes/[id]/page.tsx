@@ -28,11 +28,11 @@ import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplin
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
 import { VotacaoVotosConsolidadosChart } from '@/components/votacao/charts/votos-consolidados-chart-client'
+import { DivergenciasList } from '@/components/votacao/divergencias-list'
 import { VotacoesRelacionadasFooter } from '@/components/votacao/footer-relacionadas'
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
-import { RebeldesList } from '@/components/votacao/rebeldes-list'
 import { VotosIndividuais } from '@/components/votacao/votos-individuais'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
@@ -42,8 +42,8 @@ import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { canExport } from '@/lib/auth-guards'
 import {
   getDisciplinaPartidariaPorVotacao,
+  getDivergenciasByVotacao,
   getProposicaoVinculada,
-  getRebeldesByVotacao,
   getVotacaoById,
   getVotacoesRelacionadas,
   getVotosByVotacao,
@@ -85,7 +85,7 @@ export default async function VotacaoPage({ params }: PageProps) {
     votos,
     resumoPorPartido,
     disciplinas,
-    rebeldes,
+    divergencias,
     relacionadas,
     canExportData,
   ] = await Promise.all([
@@ -93,7 +93,7 @@ export default async function VotacaoPage({ params }: PageProps) {
     getVotosByVotacao(v.id),
     getVotosResumoPorPartido(v.id),
     getDisciplinaPartidariaPorVotacao(v.id),
-    getRebeldesByVotacao(v.id),
+    getDivergenciasByVotacao(v.id),
     getVotacoesRelacionadas(v.id, 4),
     canExport(),
   ])
@@ -221,8 +221,8 @@ export default async function VotacaoPage({ params }: PageProps) {
                   icon: <BarChart3 className="h-4 w-4" />,
                 },
                 {
-                  id: 'rebeldes',
-                  label: 'Rebeldes',
+                  id: 'divergencias',
+                  label: 'Divergências',
                   icon: <UserMinus className="h-4 w-4" />,
                 },
               ]
@@ -239,7 +239,7 @@ export default async function VotacaoPage({ params }: PageProps) {
       {/* Mobile: Accordion do RDS via wrapper client de ./_components/
           rds-accordion (entry /granular da 3.9.0; ver medição no PR da
           varredura). defaultOpen=['resumo','partido'] preservado (2
-          macros abertos). Itens de disciplina/rebeldes seguem
+          macros abertos). Itens de disciplina/divergências seguem
           condicionais (D5) via spread. */}
       <Accordion
         className="mt-6 space-y-3 sm:hidden"
@@ -306,14 +306,14 @@ export default async function VotacaoPage({ params }: PageProps) {
                   content: <DisciplinaPartidariaChart data={disciplinas} />,
                 },
                 {
-                  id: 'rebeldes',
-                  title: 'Quem rebelou-se',
+                  id: 'divergencias',
+                  title: 'Quem votou diferente da orientação',
                   className: 'rounded-lg border-line-default bg-surface-base',
                   triggerClassName: 'font-semibold text-base',
                   content: (
-                    <RebeldesList
+                    <DivergenciasList
+                      divergencias={divergencias}
                       partidosComOrientacao={disciplinas.length}
-                      rebeldes={rebeldes}
                     />
                   ),
                 },
@@ -425,7 +425,7 @@ export default async function VotacaoPage({ params }: PageProps) {
           </div>
         </SectionCard>
 
-        {/* Disciplina partidária + Rebeldes — D5: condicionais, só
+        {/* Disciplina partidária + Divergências — D5: condicionais, só
             renderizam se há orientações de bancada registradas. Quando
             ausentes, ambas as seções somem (sem placeholders vazios). */}
         {disciplinas.length > 0 ? (
@@ -439,13 +439,13 @@ export default async function VotacaoPage({ params }: PageProps) {
             </SectionCard>
 
             <SectionCard
-              id="rebeldes"
-              subtitle="Parlamentares que votaram contra a orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva."
-              title="Quem rebelou-se"
+              id="divergencias"
+              subtitle="Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva."
+              title="Quem votou diferente da orientação"
             >
-              <RebeldesList
+              <DivergenciasList
+                divergencias={divergencias}
                 partidosComOrientacao={disciplinas.length}
-                rebeldes={rebeldes}
               />
             </SectionCard>
           </>

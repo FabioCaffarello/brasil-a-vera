@@ -78,6 +78,14 @@ Restrições assumidas para este incremento (escopo fechado):
      (X de Y votações) e **quais** votações. O cidadão conclui.
    - Determinístico: a comparação é igualdade de strings entre orientação e
      voto. Sem IA, sem classificação de tema.
+   - **Retroatividade (adendo 2026-06-18).** Esta invariante **alcança copy e
+     identificadores anteriores à sua adoção** — não é apenas prospectiva. A
+     superfície de disciplina por votação (Wave 9, PRs #279/#297, anterior a
+     este ADR) usava "rebelde / rebeldia / rebelou-se", termo valorativo coibido
+     por esta regra. Foi renomeada para **"divergência da orientação"** (factual:
+     "votou diferente da orientação"). A anterioridade ao ADR **não é isenção**;
+     nenhuma copy ou identificador novo pode reintroduzir o vocabulário
+     valorativo. Ver #482 e ADR-041 §5.
 
 5. **UI Câmara-only com assimetria explícita.** No perfil de deputado,
    renderizam-se os blocos **Governo** e **Oposição** (Maioria/Minoria ficam

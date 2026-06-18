@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   calcularDisciplinaMedia,
   calcularDisciplinaPartido,
+  divergiuDaOrientacao,
   isOrientacaoEfetiva,
-  isRebelde,
   isVotoAtivo,
 } from './disciplina'
 
@@ -33,33 +33,33 @@ describe('isOrientacaoEfetiva', () => {
   })
 })
 
-describe('isRebelde', () => {
-  it('considera rebelde quando voto ativo diverge de orientação efetiva', () => {
-    expect(isRebelde('NAO', 'SIM')).toBe(true)
-    expect(isRebelde('SIM', 'NAO')).toBe(true)
-    expect(isRebelde('SIM', 'OBSTRUCAO')).toBe(true)
+describe('divergiuDaOrientacao', () => {
+  it('considera divergência quando voto ativo diverge de orientação efetiva', () => {
+    expect(divergiuDaOrientacao('NAO', 'SIM')).toBe(true)
+    expect(divergiuDaOrientacao('SIM', 'NAO')).toBe(true)
+    expect(divergiuDaOrientacao('SIM', 'OBSTRUCAO')).toBe(true)
   })
 
-  it('não considera rebelde quando voto segue orientação', () => {
-    expect(isRebelde('SIM', 'SIM')).toBe(false)
-    expect(isRebelde('NAO', 'NAO')).toBe(false)
-    expect(isRebelde('OBSTRUCAO', 'OBSTRUCAO')).toBe(false)
+  it('não considera divergência quando voto segue orientação', () => {
+    expect(divergiuDaOrientacao('SIM', 'SIM')).toBe(false)
+    expect(divergiuDaOrientacao('NAO', 'NAO')).toBe(false)
+    expect(divergiuDaOrientacao('OBSTRUCAO', 'OBSTRUCAO')).toBe(false)
   })
 
-  it('não considera rebelde quando partido liberou bancada', () => {
-    expect(isRebelde('SIM', 'LIBERADO')).toBe(false)
-    expect(isRebelde('NAO', 'LIBERADO')).toBe(false)
+  it('não considera divergência quando partido liberou bancada', () => {
+    expect(divergiuDaOrientacao('SIM', 'LIBERADO')).toBe(false)
+    expect(divergiuDaOrientacao('NAO', 'LIBERADO')).toBe(false)
   })
 
-  it('não considera rebelde quando voto é AUSENTE ou ABSTENCAO', () => {
-    expect(isRebelde('AUSENTE', 'SIM')).toBe(false)
-    expect(isRebelde('ABSTENCAO', 'NAO')).toBe(false)
-    expect(isRebelde('AUSENTE', 'OBSTRUCAO')).toBe(false)
+  it('não considera divergência quando voto é AUSENTE ou ABSTENCAO', () => {
+    expect(divergiuDaOrientacao('AUSENTE', 'SIM')).toBe(false)
+    expect(divergiuDaOrientacao('ABSTENCAO', 'NAO')).toBe(false)
+    expect(divergiuDaOrientacao('AUSENTE', 'OBSTRUCAO')).toBe(false)
   })
 })
 
 describe('calcularDisciplinaPartido', () => {
-  it('calcula seguiram/rebelaram/total e pct corretamente', () => {
+  it('calcula seguiram/divergiram/total e pct corretamente', () => {
     const resultado = calcularDisciplinaPartido('XYZ', 'SIM', [
       'SIM',
       'SIM',
@@ -71,7 +71,7 @@ describe('calcularDisciplinaPartido', () => {
       partido: 'XYZ',
       orientacao: 'SIM',
       seguiram: 4,
-      rebelaram: 1,
+      divergiram: 1,
       totalAtivo: 5,
       pctDisciplina: 80,
     })
@@ -86,7 +86,7 @@ describe('calcularDisciplinaPartido', () => {
     ])
     expect(resultado).toMatchObject({
       seguiram: 2,
-      rebelaram: 0,
+      divergiram: 0,
       totalAtivo: 2,
       pctDisciplina: 100,
     })
@@ -114,7 +114,7 @@ describe('calcularDisciplinaPartido', () => {
     expect(resultado?.pctDisciplina).toBe(100)
   })
 
-  it('considera 0% quando todos rebelam', () => {
+  it('considera 0% quando todos divergem', () => {
     const resultado = calcularDisciplinaPartido('XYZ', 'SIM', [
       'NAO',
       'NAO',
@@ -131,7 +131,7 @@ describe('calcularDisciplinaMedia', () => {
         partido: 'A',
         orientacao: 'SIM',
         seguiram: 8,
-        rebelaram: 2,
+        divergiram: 2,
         totalAtivo: 10,
         pctDisciplina: 80,
       },
@@ -139,7 +139,7 @@ describe('calcularDisciplinaMedia', () => {
         partido: 'B',
         orientacao: 'NAO',
         seguiram: 9,
-        rebelaram: 1,
+        divergiram: 1,
         totalAtivo: 10,
         pctDisciplina: 90,
       },
@@ -157,7 +157,7 @@ describe('calcularDisciplinaMedia', () => {
         partido: 'A',
         orientacao: 'SIM',
         seguiram: 1,
-        rebelaram: 2,
+        divergiram: 2,
         totalAtivo: 3,
         pctDisciplina: (1 / 3) * 100,
       },
@@ -165,7 +165,7 @@ describe('calcularDisciplinaMedia', () => {
         partido: 'B',
         orientacao: 'NAO',
         seguiram: 2,
-        rebelaram: 1,
+        divergiram: 1,
         totalAtivo: 3,
         pctDisciplina: (2 / 3) * 100,
       },

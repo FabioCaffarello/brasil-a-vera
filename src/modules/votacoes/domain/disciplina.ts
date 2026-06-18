@@ -1,6 +1,6 @@
 // Lógica pura de disciplina partidária em votações.
 // Princípio: voto AUSENTE e ABSTENCAO não tomam posição, portanto não
-// contam para "seguiu/rebelou" nem para o denominador da disciplina.
+// contam para "seguiu/divergiu" nem para o denominador da disciplina.
 // LIBERADO equivale a "sem orientação efetiva" — partido sai do cálculo.
 
 export type TipoVoto = 'SIM' | 'NAO' | 'ABSTENCAO' | 'AUSENTE' | 'OBSTRUCAO'
@@ -8,7 +8,7 @@ export type TipoVoto = 'SIM' | 'NAO' | 'ABSTENCAO' | 'AUSENTE' | 'OBSTRUCAO'
 export type OrientacaoBancada = 'SIM' | 'NAO' | 'LIBERADO' | 'OBSTRUCAO'
 
 // Votos que representam posicionamento ativo (entram no denominador da
-// disciplina e podem caracterizar rebeldia).
+// disciplina e podem caracterizar divergência da orientação).
 const VOTO_ATIVO: ReadonlySet<TipoVoto> = new Set(['SIM', 'NAO', 'OBSTRUCAO'])
 
 // Orientações que representam direção efetiva da bancada.
@@ -26,10 +26,10 @@ export function isOrientacaoEfetiva(orientacao: OrientacaoBancada): boolean {
   return ORIENTACAO_EFETIVA.has(orientacao)
 }
 
-// Rebelde: partido orientou direção efetiva (SIM/NAO/OBSTRUCAO),
-// parlamentar deu voto ativo diferente da orientação. AUSENTE/ABSTENCAO
-// não caracterizam rebeldia.
-export function isRebelde(
+// Divergência da orientação: partido orientou direção efetiva
+// (SIM/NAO/OBSTRUCAO), parlamentar deu voto ativo diferente da orientação.
+// AUSENTE/ABSTENCAO não caracterizam divergência.
+export function divergiuDaOrientacao(
   voto: TipoVoto,
   orientacao: OrientacaoBancada,
 ): boolean {
@@ -42,7 +42,7 @@ export interface DisciplinaPartido {
   partido: string
   orientacao: OrientacaoBancada
   seguiram: number
-  rebelaram: number
+  divergiram: number
   totalAtivo: number
   pctDisciplina: number
 }
@@ -58,7 +58,7 @@ export function calcularDisciplinaPartido(
   if (!isOrientacaoEfetiva(orientacao)) return null
 
   let seguiram = 0
-  let rebelaram = 0
+  let divergiram = 0
   let totalAtivo = 0
 
   for (const voto of votos) {
@@ -67,7 +67,7 @@ export function calcularDisciplinaPartido(
     if (voto === orientacao) {
       seguiram += 1
     } else {
-      rebelaram += 1
+      divergiram += 1
     }
   }
 
@@ -77,7 +77,7 @@ export function calcularDisciplinaPartido(
     partido,
     orientacao,
     seguiram,
-    rebelaram,
+    divergiram,
     totalAtivo,
     pctDisciplina: (seguiram / totalAtivo) * 100,
   }
