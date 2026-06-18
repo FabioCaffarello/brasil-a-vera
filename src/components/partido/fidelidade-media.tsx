@@ -10,11 +10,32 @@ import type { FidelidadeInternaMedia } from '@/lib/queries/partidos'
 
 interface Props {
   fidelidade: FidelidadeInternaMedia
+  /** Sigla da rota — usada na copy de federação para nomear a sigla sem orientação própria. */
+  sigla: string
 }
 
-export function FidelidadeMediaBlock({ fidelidade }: Props) {
+export function FidelidadeMediaBlock({ fidelidade, sigla }: Props) {
   const { percentualMedio, parlamentaresElegiveis, parlamentaresTotal } =
     fidelidade
+
+  // Federação (ADR-041): branch central (não rodapé), no topo — precede o ramo
+  // percentualMedio===null para nunca exibir número nem o rótulo falso "amostra
+  // insuficiente". A página inteira é de um partido federado, então a
+  // sinalização é central ao bloco. Métrica mal-formada, não lacuna temporária:
+  // a unidade de orientação é a federação, não a sigla.
+  if (fidelidade.emFederacao) {
+    return (
+      <p className="text-fg-tertiary text-sm">
+        Os parlamentares desta bancada integram a{' '}
+        <strong>{fidelidade.federacaoNome}</strong>. A Câmara publica a
+        orientação de voto <strong>pela federação</strong>, não pela sigla{' '}
+        <strong>{sigla}</strong> — então não existe uma orientação do {sigla}{' '}
+        contra a qual medir fidelidade interna. Esta métrica não se aplica a
+        partidos federados: é uma propriedade de como a orientação é registrada,
+        não uma cobertura que mais ingestão venha a preencher.
+      </p>
+    )
+  }
 
   if (percentualMedio === null) {
     return (
