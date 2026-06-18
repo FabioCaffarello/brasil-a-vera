@@ -138,8 +138,17 @@ cálculo via parse é uma decisão de invariante própria, adiada (ver
 - ADR-040 — alinhamento com orientação de bloco; "Negativas" documenta o
   colapso por federação e a Alternativa C (reter federações).
 - Issue #480 — cobertura degradada / colapso do alinhamento por federação.
+- Follow-ups (consumidores fora do escopo deste incremento):
+  - #482 (**prioritária**) — bancadas federadas invisíveis em
+    disciplina/rebeldia (`getRebeldesByVotacao`); mesma classe de desonestidade.
+  - #483 — rótulo "amostra insuficiente" falso na página de partido
+    (`getFidelidadeInternaMedia`).
+  - #484 — partidos federados ausentes da tabela de disciplina por votação
+    (`getDisciplinaPartidariaPorVotacao`).
+  - #485 — `pct_alinhamento` NULL sem sinalização no agregado L2 (card/comparar).
 - ADR futuro (proposed/deferred) — cálculo de alinhamento de federação via
-  parse de `Fdr X-Y-Z`; muda a invariante de atribuição, não decidido aqui.
+  parse de `Fdr X-Y-Z`; muda a invariante de atribuição, não decidido aqui
+  (rastreado em #486).
 - Verificação empírica pendente (cota Neon, reset 2026-07-01): buckets
   `=0` / `1–49` / `≥50` de matches `P` por deputado federado + grafia das
   siglas via `SELECT DISTINCT`.
