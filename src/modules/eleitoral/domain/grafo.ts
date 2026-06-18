@@ -44,6 +44,35 @@ function limparLabel(dsBem: string): string {
     .slice(0, 90)
 }
 
+// Nome curto da empresa para rótulo de nó do grafo: a partir do label já
+// limpo (sem CNPJ), tira o boilerplate de declaração ("QUOTAS DE CAPITAL DA
+// EMPRESA …", "AÇÕES …", "X% DO CAPITAL …") e o rabicho ("…, INSCRITA NO …",
+// "SEM RESERVA …") para sobrar o nome. Heurístico/determinístico (L3).
+export function nomeCurtoEmpresa(label: string): string {
+  let s = label
+  const aposEmpresa = s.match(/\bEMPRESA\s+(.*)/i)
+  if (aposEmpresa) {
+    s = aposEmpresa[1]
+  } else {
+    s = s
+      .replace(/^\s*\d+%?\s*(d[aeo]s?\s+)?/i, '')
+      .replace(
+        /^\s*(QUOTAS?|A[ÇC][ÕO]ES|PARTICIPA[ÇC][ÃA]O|CAPITAL SOCIAL|QUINH[ÕO]ES)\b[^A-Za-zÀ-Ú]*/i,
+        '',
+      )
+      .replace(/^\s*(d[aeo]s?\s+|n[ao]\s+|capital\s+|social\s+)+/i, '')
+  }
+  s = s.split(
+    /[,.]?\s*(INSCRIT[AO]|SEM RESERVA|COM RESERVA|ONDE|EM NOME|SOCIEDADE SIMPLES)\b/i,
+  )[0]
+  s = s
+    .replace(/^EMPRESA\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .replace(/[\s\-,.:]+$/, '')
+    .trim()
+  return s.slice(0, 38) || label.slice(0, 38)
+}
+
 function toCents(v: string): number {
   return Math.round(Number(v) * 100)
 }
@@ -60,6 +89,8 @@ export interface ParticipacaoAresta {
 export interface EmpresaNo {
   key: string // "cnpj:<14d>" ou "desc:<normalizado>"
   label: string
+  // Nome curto p/ rótulo do nó (boilerplate removido). label é o texto cru.
+  nomeCurto: string
   cnpj: string | null
   resolvido: boolean
   // Soma nominal das participações declaradas nesta empresa (magnitude do nó).
@@ -121,6 +152,7 @@ export function buildGrafoParticipacao(
     .map(([key, e]) => ({
       key,
       label: e.label,
+      nomeCurto: nomeCurtoEmpresa(e.label),
       cnpj: e.cnpj,
       resolvido: e.resolvido,
       totalDeclarado: centsToStr(e.cents),

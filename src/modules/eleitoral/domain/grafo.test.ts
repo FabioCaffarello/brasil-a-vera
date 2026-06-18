@@ -5,7 +5,36 @@ import {
   extrairCnpj,
   formatarCnpj,
   type GrafoRow,
+  nomeCurtoEmpresa,
 } from './grafo'
+
+describe('nomeCurtoEmpresa', () => {
+  it('tira "QUOTAS DE CAPITAL DA EMPRESA …" e o rabicho', () => {
+    expect(
+      nomeCurtoEmpresa(
+        'QUOTAS DE CAPITAL DA EMPRESA FOKUS LOGISTICA LTDA , INSCRITA NO',
+      ),
+    ).toBe('FOKUS LOGISTICA LTDA')
+    expect(
+      nomeCurtoEmpresa(
+        'QUOTAS DE CAPITAL DA EMPRESA SIGMA PRODUTOS ALIMENTICIOS LTDA INSCRITA',
+      ),
+    ).toBe('SIGMA PRODUTOS ALIMENTICIOS LTDA')
+  })
+
+  it('tira prefixo sem a palavra EMPRESA', () => {
+    expect(nomeCurtoEmpresa('QUOTAS DE CAPITAL DA CDC NUCLEAR S/S')).toBe(
+      'CDC NUCLEAR S/S',
+    )
+    expect(nomeCurtoEmpresa('10% DO CAPITAL SOCIAL DA ACME LTDA')).toBe(
+      'ACME LTDA',
+    )
+  })
+
+  it('fallback ao próprio texto quando não há nome extraível', () => {
+    expect(nomeCurtoEmpresa('SAUDE CEAM')).toBe('SAUDE CEAM')
+  })
+})
 
 function row(over: Partial<GrafoRow>): GrafoRow {
   return {

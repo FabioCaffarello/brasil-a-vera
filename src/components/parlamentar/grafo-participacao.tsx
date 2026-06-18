@@ -39,26 +39,14 @@ export function GrafoParticipacaoBlock({ grafo, parlamentarNome }: Props) {
         </span>
       </div>
 
-      <GrafoParticipacaoCanvas
-        grafo={grafo}
-        parlamentarNome={parlamentarNome}
-      />
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-fg-tertiary text-xs">
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-2.5 w-3 rounded-sm border border-[var(--color-chart-1)]"
-          />
-          com CNPJ ({nResolvidas})
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="h-2.5 w-3 rounded-sm border border-fg-quaternary border-dashed"
-          />
-          sem CNPJ ({totalEmpresas - nResolvidas})
-        </span>
+      {/* Canvas só no desktop: um grafo radial não cabe legível num viewport
+          estreito. No mobile a lista abaixo (nome, CNPJ, valor, anos) é a
+          experiência — completa e scannável. */}
+      <div className="hidden sm:block">
+        <GrafoParticipacaoCanvas
+          grafo={grafo}
+          parlamentarNome={parlamentarNome}
+        />
       </div>
 
       <ul className="space-y-1.5 text-sm">
@@ -68,7 +56,9 @@ export function GrafoParticipacaoBlock({ grafo, parlamentarNome }: Props) {
             key={e.key}
           >
             <span className="min-w-0">
-              <span className="block truncate text-fg-primary">{e.label}</span>
+              <span className="block truncate text-fg-primary" title={e.label}>
+                {e.nomeCurto}
+              </span>
               <span className="text-fg-tertiary text-xs">
                 {e.cnpj ? formatarCnpj(e.cnpj) : 'sem CNPJ declarado'} ·{' '}
                 {anosDe(e.participacoes)}
