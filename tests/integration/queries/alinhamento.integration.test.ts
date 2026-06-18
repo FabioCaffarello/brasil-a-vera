@@ -34,7 +34,8 @@ describe('queries/alinhamento (integration)', () => {
   })
 
   it('retorna 100% alinhado quando todos os votos batem com orientação', async () => {
-    const p = buildParlamentar({ partidoSigla: 'PT' })
+    // Sigla não-federada: o caminho de cálculo (ADR-041 curto-circuita federados).
+    const p = buildParlamentar({ partidoSigla: 'PL' })
     const v1 = buildVotacao({
       dataHora: new Date('2026-01-01T10:00:00Z'),
     })
@@ -46,12 +47,12 @@ describe('queries/alinhamento (integration)', () => {
     await db.insert(orientacao).values([
       buildOrientacao({
         votacaoId: v1.id as string,
-        partidoSigla: 'PT',
+        partidoSigla: 'PL',
         orientacao: 'SIM',
       }),
       buildOrientacao({
         votacaoId: v2.id as string,
-        partidoSigla: 'PT',
+        partidoSigla: 'PL',
         orientacao: 'NAO',
       }),
     ])
@@ -69,7 +70,7 @@ describe('queries/alinhamento (integration)', () => {
     ])
 
     const r = await getAlinhamentoParlamentar(p.id as string)
-    expect(r.partidoSigla).toBe('PT')
+    expect(r.partidoSigla).toBe('PL')
     expect(r.percentual).toBe(100)
     expect(r.total).toBe(2)
     expect(r.alinhados).toBe(2)
@@ -166,14 +167,14 @@ describe('queries/alinhamento (integration)', () => {
   })
 
   it('amostraInsuficiente=true quando total < 50', async () => {
-    const p = buildParlamentar({ partidoSigla: 'PSDB' })
+    const p = buildParlamentar({ partidoSigla: 'PL' })
     const v = buildVotacao()
     await db.insert(parlamentar).values(p)
     await db.insert(votacao).values(v)
     await db.insert(orientacao).values(
       buildOrientacao({
         votacaoId: v.id as string,
-        partidoSigla: 'PSDB',
+        partidoSigla: 'PL',
         orientacao: 'SIM',
       }),
     )
@@ -192,7 +193,7 @@ describe('queries/alinhamento (integration)', () => {
   })
 
   it('topDivergencias e topConvergencias respeitam limite 5 e ordem desc(dataHora)', async () => {
-    const p = buildParlamentar({ partidoSigla: 'PT' })
+    const p = buildParlamentar({ partidoSigla: 'PL' })
     await db.insert(parlamentar).values(p)
 
     // 7 divergentes e 7 alinhados, datas crescentes; top 5 deve ser os 5 mais recentes
@@ -209,7 +210,7 @@ describe('queries/alinhamento (integration)', () => {
       votacoes.map((v, i) =>
         buildOrientacao({
           votacaoId: v.id as string,
-          partidoSigla: 'PT',
+          partidoSigla: 'PL',
           orientacao: i < 7 ? 'SIM' : 'NAO',
         }),
       ),
@@ -231,11 +232,12 @@ describe('queries/alinhamento (integration)', () => {
   })
 
   it('ignora orientação de outro partido', async () => {
-    const p = buildParlamentar({ partidoSigla: 'PT' })
+    const p = buildParlamentar({ partidoSigla: 'MDB' })
     const v = buildVotacao()
     await db.insert(parlamentar).values(p)
     await db.insert(votacao).values(v)
-    // Orientação apenas para PL (não PT)
+    // Orientação apenas para PL (não MDB) — ambos não-federados, então o
+    // total=0 vem do filtro do join, não do short-circuit de federação.
     await db.insert(orientacao).values(
       buildOrientacao({
         votacaoId: v.id as string,
@@ -252,7 +254,41 @@ describe('queries/alinhamento (integration)', () => {
     )
 
     const r = await getAlinhamentoParlamentar(p.id as string)
+    expect(r.partidoSigla).toBe('MDB')
+    expect(r.total).toBe(0) // não há orientação do MDB
+    expect(r.emFederacao).toBe(false)
+  })
+
+  it('curto-circuita partido federado: sinaliza sem calcular (ADR-041)', async () => {
+    // PT integra a Federação Brasil da Esperança. Mesmo havendo orientação 'PT'
+    // e voto que casaria, o alinhamento partidário NÃO é calculado — a Câmara
+    // publica orientação pela federação, não pela sigla. Ver #480.
+    const p = buildParlamentar({ partidoSigla: 'PT' })
+    const v = buildVotacao()
+    await db.insert(parlamentar).values(p)
+    await db.insert(votacao).values(v)
+    await db.insert(orientacao).values(
+      buildOrientacao({
+        votacaoId: v.id as string,
+        partidoSigla: 'PT',
+        orientacao: 'SIM',
+      }),
+    )
+    await db.insert(votoNominal).values(
+      buildVotoNominal({
+        votacaoId: v.id as string,
+        parlamentarId: p.id as string,
+        voto: 'SIM',
+      }),
+    )
+
+    const r = await getAlinhamentoParlamentar(p.id as string)
+    expect(r.emFederacao).toBe(true)
+    expect(r.federacaoNome).toContain('Esperança')
     expect(r.partidoSigla).toBe('PT')
-    expect(r.total).toBe(0) // não há orientação do PT
+    // Suprimido por construção, apesar do match 'PT' existente no banco.
+    expect(r.percentual).toBeNull()
+    expect(r.total).toBe(0)
+    expect(r.topConvergencias).toEqual([])
   })
 })
