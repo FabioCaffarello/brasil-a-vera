@@ -433,7 +433,14 @@ export async function getOrientacoesByVotacao(
         orientacao: orientacao.orientacao,
       })
       .from(orientacao)
-      .where(eq(orientacao.votacaoId, votacaoId))
+      // Só orientação partidária ('P'). Linhas de bloco institucional
+      // (tipo_lideranca = 'B', ADR-040) não entram nesta listagem de partidos.
+      .where(
+        and(
+          eq(orientacao.votacaoId, votacaoId),
+          eq(orientacao.tipoLideranca, 'P'),
+        ),
+      )
       .orderBy(asc(orientacao.partidoSigla))
     return rows.map((r) => ({
       partidoSigla: r.partidoSigla,

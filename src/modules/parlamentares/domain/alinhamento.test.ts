@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import {
   ALINHAMENTO_AMOSTRA_MINIMA,
+  agruparAlinhamentoBlocos,
   calcularAlinhamento,
   classifyAlinhamento,
+  type EventoBloco,
 } from './alinhamento'
 
 describe('classifyAlinhamento', () => {
@@ -118,5 +120,63 @@ describe('calcularAlinhamento', () => {
 
   it('ALINHAMENTO_AMOSTRA_MINIMA = 50 (issue #46)', () => {
     expect(ALINHAMENTO_AMOSTRA_MINIMA).toBe(50)
+  })
+})
+
+describe('agruparAlinhamentoBlocos', () => {
+  const ev = (
+    bloco: string,
+    voto: EventoBloco['voto'],
+    orientacao: EventoBloco['orientacao'],
+    votacao: string,
+  ): EventoBloco<string> => ({ bloco, voto, orientacao, votacao })
+
+  it('agrega contagem por bloco e ignora LIBERADO/AUSENTE', () => {
+    const r = agruparAlinhamentoBlocos<string>(
+      [
+        ev('Governo', 'SIM', 'SIM', 'v1'),
+        ev('Governo', 'NAO', 'SIM', 'v2'),
+        ev('Governo', 'SIM', 'LIBERADO', 'v3'), // ignorado
+        ev('Governo', 'AUSENTE', 'SIM', 'v4'), // ignorado
+        ev('Oposição', 'NAO', 'NAO', 'v5'),
+      ],
+      ['Governo', 'Oposição'],
+      10,
+    )
+    const gov = r[0]
+    expect(gov.bloco).toBe('Governo')
+    expect(gov.total).toBe(2)
+    expect(gov.alinhados).toBe(1)
+    expect(gov.divergentes).toBe(1)
+    expect(gov.votacoes.map((v) => v.votacao)).toEqual(['v1', 'v2'])
+    expect(r[1].bloco).toBe('Oposição')
+    expect(r[1].alinhados).toBe(1)
+  })
+
+  it('preserva ordem dos blocos pedidos e retorna vazio sem dados', () => {
+    const r = agruparAlinhamentoBlocos<string>(
+      [ev('Governo', 'SIM', 'SIM', 'v1')],
+      ['Governo', 'Oposição'],
+      10,
+    )
+    expect(r.map((b) => b.bloco)).toEqual(['Governo', 'Oposição'])
+    expect(r[1].total).toBe(0)
+    expect(r[1].votacoes).toEqual([])
+    expect(r[1].amostraInsuficiente).toBe(true)
+  })
+
+  it('respeita limiteVotacoes sem afetar a contagem total', () => {
+    const r = agruparAlinhamentoBlocos<string>(
+      [
+        ev('Governo', 'SIM', 'SIM', 'v1'),
+        ev('Governo', 'SIM', 'SIM', 'v2'),
+        ev('Governo', 'NAO', 'SIM', 'v3'),
+      ],
+      ['Governo'],
+      2,
+    )
+    expect(r[0].total).toBe(3)
+    expect(r[0].votacoes).toHaveLength(2)
+    expect(r[0].votacoes.map((v) => v.votacao)).toEqual(['v1', 'v2'])
   })
 })

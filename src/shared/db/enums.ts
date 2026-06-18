@@ -64,6 +64,11 @@ export const orientacaoBancada = pgEnum('orientacao_bancada', [
   'OBSTRUCAO',
 ])
 
+// Tipo de liderança que emitiu a orientação (ADR-040):
+//  - 'P': orientação de partido (sigla casa com parlamentar.partido_sigla)
+//  - 'B': orientação de bloco institucional (Governo/Oposição/Maioria/Minoria)
+export const tipoLideranca = pgEnum('tipo_lideranca', ['P', 'B'])
+
 // Tipo de gasto parlamentar
 export const tipoGasto = pgEnum('tipo_gasto', [
   'CEAP',

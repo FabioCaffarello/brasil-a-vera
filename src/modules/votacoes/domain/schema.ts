@@ -17,6 +17,7 @@ import { proposicao } from '@/modules/proposicoes/domain/schema'
 import {
   casa,
   orientacaoBancada,
+  tipoLideranca,
   tipoVoto,
   trustLevel,
 } from '@/shared/db/enums'
@@ -97,6 +98,10 @@ export const orientacao = votacoesSchema.table(
       .references(() => votacao.id, { onDelete: 'cascade' }),
     partidoSigla: text('partido_sigla').notNull(),
     orientacao: orientacaoBancada('orientacao').notNull(),
+    // 'P' = orientação de partido; 'B' = bloco institucional (ADR-040).
+    // Default 'P' faz backfill das linhas pré-existentes; a ingestão grava
+    // 'B' explícito para Governo/Oposição/Maioria/Minoria.
+    tipoLideranca: tipoLideranca('tipo_lideranca').notNull().default('P'),
   },
   (table) => [
     primaryKey({
