@@ -80,6 +80,20 @@ cálculo via parse é uma decisão de invariante própria, adiada (ver
    disciplina/rebeldia (`getRebeldesByVotacao`) é a **mesma classe de
    desonestidade** e tem issue **prioritária**.
 
+   **Atualização (2026-06-18, #482 + #484).** A invisibilidade estrutural na
+   página de votação foi tratada para os dois consumidores que compartilham a
+   raiz do join por sigla — `getRebeldesByVotacao` (#482) e
+   `getDisciplinaPartidariaPorVotacao` (#484). A sinalização é **de nível-lista**
+   (nota única no rodapé de cada seção, não marcação por deputado): uma nota
+   factual explica que partidos em federação não entram porque a Câmara publica
+   a orientação pela federação, não pela sigla. A detecção reusa `emFederacao`
+   (`src/shared/federacoes.ts`) sobre os partidos que votaram, sem nova query.
+   No mesmo incremento, o vocabulário valorativo "rebelde" (anterior a esta
+   regra) foi renomeado para **"divergência da orientação"** (ADR-040 §4,
+   retroatividade). Caso de borda residual (votação só com orientação de
+   federados → bloco oculto sem nota) rastreado em #488. A página de partido
+   (#483) e o agregado L2 (#485) permanecem follow-ups separados.
+
 ## Alternativas Consideradas
 
 ### Alternativa A — apenas trocar o texto do aviso "amostra insuficiente"

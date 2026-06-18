@@ -64,7 +64,7 @@ function DisciplinaTooltip({ active, payload }: CustomTooltipProps) {
           </span>
         </li>
         <li>
-          Rebelaram: <span className="text-destructive">{row.rebelaram}</span>
+          Divergiram: <span className="text-destructive">{row.divergiram}</span>
         </li>
         <li className="mt-1 border-border border-t pt-1 font-medium text-foreground">
           Disciplina: {row.pctDisciplina.toFixed(0)}%

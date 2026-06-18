@@ -3,12 +3,12 @@
 import Link from 'next/link'
 
 import { getTipoVotoStyle } from '@/lib/format'
-import type { RebeldeRow } from '@/lib/queries/votacoes'
+import type { DivergenciaRow } from '@/lib/queries/votacoes'
 
 interface Props {
-  rebeldes: readonly RebeldeRow[]
+  divergencias: readonly DivergenciaRow[]
   /** Quantos partidos têm orientação efetiva nesta votação. Quando >0 e
-   * `rebeldes.length === 0`, é sinal positivo (disciplina total), não
+   * `divergencias.length === 0`, é sinal positivo (alinhamento total), não
    * ausência de dado — caller deve renderizar a seção mesmo assim. */
   partidosComOrientacao: number
 }
@@ -19,7 +19,10 @@ const ORIENTACAO_LABEL: Record<string, string> = {
   OBSTRUCAO: 'Obstrução',
 }
 
-export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
+export function DivergenciasList({
+  divergencias,
+  partidosComOrientacao,
+}: Props) {
   if (partidosComOrientacao === 0) {
     return (
       <p className="text-fg-tertiary text-sm">
@@ -28,11 +31,11 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
     )
   }
 
-  if (rebeldes.length === 0) {
+  if (divergencias.length === 0) {
     return (
       <p className="text-fg-tertiary text-sm">
-        Nenhum parlamentar votou contra a orientação do próprio partido nesta
-        votação. Disciplina total entre as bancadas com orientação.
+        Nenhum parlamentar votou diferente da orientação do próprio partido
+        nesta votação. Alinhamento total entre as bancadas com orientação.
       </p>
     )
   }
@@ -40,11 +43,11 @@ export function RebeldesList({ rebeldes, partidosComOrientacao }: Props) {
   return (
     <div className="space-y-2">
       <p className="text-fg-tertiary text-xs">
-        {rebeldes.length} parlamentar{rebeldes.length === 1 ? '' : 'es'} votou
-        contra a orientação do próprio partido.
+        {divergencias.length} parlamentar{divergencias.length === 1 ? '' : 'es'}{' '}
+        votou diferente da orientação do próprio partido.
       </p>
       <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-        {rebeldes.map((r) => {
+        {divergencias.map((r) => {
           const votoStyle = getTipoVotoStyle(r.votou)
           const orientacaoLabel = ORIENTACAO_LABEL[r.orientacao] ?? r.orientacao
           return (

@@ -453,14 +453,14 @@ export interface DisciplinaPartidoRow {
   partido: string
   orientacao: OrientacaoBancada
   seguiram: number
-  rebelaram: number
+  divergiram: number
   totalAtivo: number
   pctDisciplina: number
 }
 
 // Disciplina partidária: para cada partido com orientação efetiva
 // (SIM/NAO/OBSTRUCAO; LIBERADO excluído), conta quantos parlamentares
-// seguiram a orientação vs. rebelaram.
+// seguiram a orientação vs. divergiram.
 //
 // Denominador (totalAtivo) ignora AUSENTE e ABSTENCAO — só conta voto
 // "ativo" (SIM, NAO, OBSTRUCAO), espelhando a semântica de
@@ -497,7 +497,7 @@ export async function getDisciplinaPartidariaPorVotacao(
         partido: String(r.partido),
         orientacao: r.orientacao as OrientacaoBancada,
         seguiram,
-        rebelaram: totalAtivo - seguiram,
+        divergiram: totalAtivo - seguiram,
         totalAtivo,
         pctDisciplina: (seguiram / totalAtivo) * 100,
       }
@@ -505,7 +505,7 @@ export async function getDisciplinaPartidariaPorVotacao(
   })
 }
 
-export interface RebeldeRow {
+export interface DivergenciaRow {
   parlamentarId: string
   nome: string
   partidoSigla: string
@@ -514,14 +514,15 @@ export interface RebeldeRow {
   orientacao: OrientacaoBancada
 }
 
-// Rebeldes: parlamentares que votaram diferente da orientação do próprio
-// partido. Critério: orientação efetiva (SIM/NAO/OBSTRUCAO) + voto ativo
-// (SIM/NAO/OBSTRUCAO) divergente. AUSENTE/ABSTENCAO não caracterizam
-// rebeldia — mesma semântica de `isRebelde` em `domain/disciplina.ts`.
-export async function getRebeldesByVotacao(
+// Divergências da orientação: parlamentares que votaram diferente da
+// orientação do próprio partido. Critério: orientação efetiva
+// (SIM/NAO/OBSTRUCAO) + voto ativo (SIM/NAO/OBSTRUCAO) divergente.
+// AUSENTE/ABSTENCAO não caracterizam divergência — mesma semântica de
+// `divergiuDaOrientacao` em `domain/disciplina.ts`.
+export async function getDivergenciasByVotacao(
   votacaoId: string,
-): Promise<RebeldeRow[]> {
-  const key = `votacoes:rebeldes:${votacaoId}`
+): Promise<DivergenciaRow[]> {
+  const key = `votacoes:divergencias:${votacaoId}`
   return cached(key, TTL.votacaoHistorica, async () => {
     const result = await db.execute(sql`
       SELECT
