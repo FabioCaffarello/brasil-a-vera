@@ -6,6 +6,8 @@ import {
   divergiuDaOrientacao,
   isOrientacaoEfetiva,
   isVotoAtivo,
+  siglasFederadasExcluidas,
+  type VotosAtivosPartido,
 } from './disciplina'
 
 describe('isVotoAtivo', () => {
@@ -171,5 +173,56 @@ describe('calcularDisciplinaMedia', () => {
       },
     ])
     expect(media).toBeCloseTo(50, 5)
+  })
+})
+
+describe('siglasFederadasExcluidas', () => {
+  const votos = (
+    partidoSigla: string,
+    sim = 0,
+    nao = 0,
+    obstrucao = 0,
+  ): VotosAtivosPartido => ({ partidoSigla, sim, nao, obstrucao })
+
+  it('sinaliza federada com voto ativo ausente das barras de disciplina', () => {
+    // PT votou (federada) e não tem orientação P → fora de `disciplinas`.
+    expect(
+      siglasFederadasExcluidas([votos('PT', 5, 2), votos('PL', 10)], ['PL']),
+    ).toEqual(['PT'])
+  })
+
+  it('ignora partido não federado ausente das barras', () => {
+    // PL votou e não tem disciplina, mas não é federado → não sinaliza.
+    expect(siglasFederadasExcluidas([votos('PL', 4)], [])).toEqual([])
+  })
+
+  it('não sinaliza federada que aparece nas barras (P esparso da sigla)', () => {
+    // Caso de borda: PT tem orientação P nesta votação → está em `disciplinas`.
+    // O MINUS evita contradizer a barra visível.
+    expect(siglasFederadasExcluidas([votos('PT', 3, 1)], ['PT'])).toEqual([])
+  })
+
+  it('não sinaliza federada sem voto ativo (só abstenção/ausência)', () => {
+    // Ausência aqui não é por federação → não atribuir à federação.
+    expect(siglasFederadasExcluidas([votos('PSOL', 0, 0, 0)], [])).toEqual([])
+  })
+
+  it('detecção é case-insensitive (grafia da sigla varia na fonte)', () => {
+    expect(siglasFederadasExcluidas([votos('pcdob', 2)], [])).toEqual(['pcdob'])
+  })
+
+  it('preserva múltiplas federadas excluídas na ordem de entrada', () => {
+    expect(
+      siglasFederadasExcluidas(
+        [votos('PT', 5), votos('PL', 9), votos('PSOL', 0, 3)],
+        ['PL'],
+      ),
+    ).toEqual(['PT', 'PSOL'])
+  })
+
+  it('lista vazia quando nenhuma federada votou', () => {
+    expect(
+      siglasFederadasExcluidas([votos('PL', 5), votos('NOVO', 2)], []),
+    ).toEqual([])
   })
 })

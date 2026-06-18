@@ -3,6 +3,8 @@
 // contam para "seguiu/divergiu" nem para o denominador da disciplina.
 // LIBERADO equivale a "sem orientação efetiva" — partido sai do cálculo.
 
+import { emFederacao } from '@/shared/federacoes'
+
 export type TipoVoto = 'SIM' | 'NAO' | 'ABSTENCAO' | 'AUSENTE' | 'OBSTRUCAO'
 
 export type OrientacaoBancada = 'SIM' | 'NAO' | 'LIBERADO' | 'OBSTRUCAO'
@@ -92,4 +94,41 @@ export function calcularDisciplinaMedia(
   if (disciplinas.length === 0) return null
   const soma = disciplinas.reduce((acc, d) => acc + d.pctDisciplina, 0)
   return soma / disciplinas.length
+}
+
+// Votos ativos de um partido numa votação — shape mínimo consumido por
+// `siglasFederadasExcluidas` (estruturalmente compatível com ResumoPorPartido).
+export interface VotosAtivosPartido {
+  partidoSigla: string
+  sim: number
+  nao: number
+  obstrucao: number
+}
+
+// Siglas de partidos em FEDERAÇÃO que votaram ativamente nesta votação mas
+// NÃO aparecem na análise de disciplina/divergências (#482/#484, ADR-041 §5).
+// A Câmara publica a orientação pela federação ('Fdr ...', descartada na
+// ingestão — ADR-040 §1), não pela sigla, então o join por sigla não casa e
+// esses deputados somem sem aviso. Esta função identifica QUAIS sinalizar no
+// nível da lista — não infere orientação nem calcula alinhamento (ADR-041 §2).
+//
+// Critério (robusto por construção):
+// - voto ATIVO > 0: ignora bancada que só se absteve/ausentou (a ausência aí
+//   não é por federação);
+// - em federação: detecção determinística via `emFederacao` (allowlist);
+// - AUSENTE das barras de disciplina (`partidosComDisciplina`): o MINUS evita
+//   contradizer barras visíveis no caso raro de um 'P' esparso da sigla.
+export function siglasFederadasExcluidas(
+  votosPorPartido: readonly VotosAtivosPartido[],
+  partidosComDisciplina: readonly string[],
+): string[] {
+  const comDisciplina = new Set(partidosComDisciplina)
+  return votosPorPartido
+    .filter(
+      (r) =>
+        r.sim + r.nao + r.obstrucao > 0 &&
+        emFederacao(r.partidoSigla) &&
+        !comDisciplina.has(r.partidoSigla),
+    )
+    .map((r) => r.partidoSigla)
 }
