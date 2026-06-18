@@ -9,6 +9,7 @@ import {
   type EdgeProps,
   getStraightPath,
   Handle,
+  MiniMap,
   type Node,
   type NodeProps,
   Panel,
@@ -246,7 +247,11 @@ export function GrafoParticipacaoFlow({ grafo, parlamentarNome }: Props) {
   const capN = grafo.totalEmpresas - empresas.length
 
   return (
-    <div className="h-[28rem] w-full overflow-hidden rounded-lg border border-line-default bg-surface-canvas">
+    <div
+      aria-label={`Grafo de participação societária de ${parlamentarNome}: ${grafo.totalEmpresas} ${grafo.totalEmpresas === 1 ? 'empresa' : 'empresas'}. Detalhes na lista abaixo.`}
+      className="h-[28rem] w-full overflow-hidden rounded-lg border border-line-default bg-surface-canvas"
+      role="img"
+    >
       <ReactFlow
         colorMode="dark"
         edges={edges}
@@ -267,6 +272,19 @@ export function GrafoParticipacaoFlow({ grafo, parlamentarNome }: Props) {
       >
         <Background gap={22} size={1} variant={BackgroundVariant.Dots} />
         <Controls position="bottom-right" showInteractive={false} />
+        {grafo.totalEmpresas > 6 ? (
+          <MiniMap
+            nodeColor={(node) =>
+              node.type === 'ego' || (node.data as EmpresaData).resolvido
+                ? 'var(--color-chart-1)'
+                : 'var(--color-chart-3)'
+            }
+            nodeStrokeWidth={2}
+            pannable
+            position="bottom-left"
+            zoomable
+          />
+        ) : null}
         <Panel position="top-left">
           <div className="flex flex-col gap-1 rounded-md border border-line-default bg-surface-base/85 px-2.5 py-1.5 text-[11px] text-fg-tertiary backdrop-blur">
             <span className="inline-flex items-center gap-1.5">

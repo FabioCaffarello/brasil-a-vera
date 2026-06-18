@@ -39,10 +39,15 @@ export function GrafoParticipacaoBlock({ grafo, parlamentarNome }: Props) {
         </span>
       </div>
 
-      <GrafoParticipacaoCanvas
-        grafo={grafo}
-        parlamentarNome={parlamentarNome}
-      />
+      {/* Canvas só no desktop: um grafo radial não cabe legível num viewport
+          estreito. No mobile a lista abaixo (nome, CNPJ, valor, anos) é a
+          experiência — completa e scannável. */}
+      <div className="hidden sm:block">
+        <GrafoParticipacaoCanvas
+          grafo={grafo}
+          parlamentarNome={parlamentarNome}
+        />
+      </div>
 
       <ul className="space-y-1.5 text-sm">
         {top.map((e) => (
