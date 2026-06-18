@@ -17,6 +17,7 @@ import {
   votacao,
   votoNominal,
 } from '@/shared/db/schema'
+import { federacaoDoPartido } from '@/shared/federacoes'
 
 export interface VotacaoAlinhamento {
   votacaoId: string
@@ -37,6 +38,14 @@ export interface AlinhamentoResult {
   divergentes: number
   /** true se total < ALINHAMENTO_AMOSTRA_MINIMA — UI deve sinalizar. */
   amostraInsuficiente: boolean
+  /**
+   * true quando o partido integra federação (ADR-041). A Câmara publica
+   * orientação pela federação, não pela sigla — o alinhamento partidário
+   * pela sigla NÃO é calculado. Nenhum número é exibido; a UI explica o motivo.
+   */
+  emFederacao: boolean
+  /** Nome da federação quando `emFederacao`; `null` caso contrário. */
+  federacaoNome: string | null
   /** Top 5 divergiu — mais recentes primeiro. */
   topDivergencias: VotacaoAlinhamento[]
   /** Top 5 convergiu — mais recentes primeiro. */
@@ -52,6 +61,8 @@ const EMPTY: AlinhamentoResult = {
   alinhados: 0,
   divergentes: 0,
   amostraInsuficiente: true,
+  emFederacao: false,
+  federacaoNome: null,
   topDivergencias: [],
   topConvergencias: [],
 }
@@ -77,6 +88,20 @@ export async function getAlinhamentoParlamentar(
         .limit(1)
       const partidoSigla = parlRows[0]?.partidoSigla
       if (!partidoSigla) return EMPTY
+
+      // Federação (ADR-041): a Câmara publica orientação pela federação, não
+      // pela sigla individual, então o join abaixo colapsaria o denominador a
+      // ~0. Sinaliza e suprime sem rodar o cálculo — robusto aos três casos
+      // (denominador 0, esparso 1–49 ou ≥50): nenhum número é produzido.
+      const federacao = federacaoDoPartido(partidoSigla)
+      if (federacao) {
+        return {
+          ...EMPTY,
+          partidoSigla,
+          emFederacao: true,
+          federacaoNome: federacao.nome,
+        }
+      }
 
       const rows = await db
         .select({
@@ -138,6 +163,8 @@ export async function getAlinhamentoParlamentar(
         alinhados: stats.alinhados,
         divergentes: stats.divergentes,
         amostraInsuficiente: stats.total < ALINHAMENTO_AMOSTRA_MINIMA,
+        emFederacao: false,
+        federacaoNome: null,
         topDivergencias,
         topConvergencias,
       }
