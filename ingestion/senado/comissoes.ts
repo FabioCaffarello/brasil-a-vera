@@ -4,6 +4,7 @@ import { membroComissao, parlamentar } from '@/shared/db/schema'
 import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
 import {
+  classificarColegiadoPorNome,
   dedupePorChaveNatural,
   type MembroComissaoRow,
 } from '../shared/membro-comissao'
@@ -36,6 +37,11 @@ interface IngestionStats {
   // fallback é keep-by-default (fail-open), este conjunto é o ponto de auditoria:
   // tudo aqui deveria ser CPI/CPMI/colegiado extinto — não ruído.
   fallbackSiglas: Set<string>
+  // Nomes DISTINTOS mantidos cujo nome não casa padrão positivo de comissão nem
+  // deny — sinal operacional pareado ao teste de classificação. Em run saudável
+  // são só os ratificados (INDETERMINADOS_COMISSAO); um nome novo aqui = família
+  // a triar (a fixture do teste, atualizada, o pega como assert vermelho).
+  indeterminados: Set<string>
   rejected: number
   tiposMantidos: Record<string, number>
   errors: Array<{ context: string; reason: string }>
@@ -131,6 +137,9 @@ async function processSenador(
         const chave = tipo?.descricao ?? `cod:${codigoTipo}`
         stats.tiposMantidos[chave] = (stats.tiposMantidos[chave] ?? 0) + 1
       }
+      if (classificarColegiadoPorNome(row.comissaoNome) === 'indeterminado') {
+        stats.indeterminados.add(row.comissaoNome)
+      }
       rows.push(row)
     }
   } catch (err) {
@@ -185,6 +194,7 @@ export async function ingestComissoesSenado(): Promise<IngestionStats> {
     naoComissaoSkipped: 0,
     classificadoPorSigla: 0,
     fallbackSiglas: new Set(),
+    indeterminados: new Set(),
     rejected: 0,
     tiposMantidos: {},
     errors: [],
@@ -219,6 +229,7 @@ ingestComissoesSenado()
         naoComissaoSkipped: stats.naoComissaoSkipped,
         classificadoPorSigla: stats.classificadoPorSigla,
         fallbackSiglas: [...stats.fallbackSiglas].sort(),
+        indeterminados: [...stats.indeterminados].sort(),
         rejected: stats.rejected,
         tiposMantidos: stats.tiposMantidos,
         errorsCount: stats.errors.length,
