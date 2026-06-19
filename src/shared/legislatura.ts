@@ -19,3 +19,10 @@ export const LEGISLATURAS_QUENTES = [
 // legislatura. Usado para filtrar tabelas que não têm coluna `legislatura`
 // direta (votacao, proposicao) por meio do campo de data.
 export const DATA_INICIO_JANELA_QUENTE = new Date('2019-02-01T00:00:00Z')
+
+// Marco temporal da legislatura atual (57ª) — datas oficiais da Câmara API
+// (/legislaturas/57). Escopa a ingestão de histórico de comissão da Câmara ao
+// mandato corrente; reutilizável pelo futuro filtro de mandato da feature de
+// exibição (comparar Câmara leg.57 vs Senado all-time de forma justa).
+export const DATA_INICIO_LEGISLATURA_ATUAL = new Date('2023-02-01T00:00:00Z')
+export const DATA_FIM_LEGISLATURA_ATUAL = new Date('2027-01-31T00:00:00Z')
