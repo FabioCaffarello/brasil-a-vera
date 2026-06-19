@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Building2,
   FileText,
+  Gavel,
   Inbox,
   Landmark,
   Network,
@@ -30,6 +31,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
+import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
@@ -52,6 +54,7 @@ import {
   getCoerenciaStats,
   getParesContraditorios,
 } from '@/lib/queries/coerencia'
+import { getComissoesParlamentar } from '@/lib/queries/comissoes'
 import {
   CursorProposicoesV1,
   CursorVotosV1,
@@ -228,6 +231,7 @@ export default async function ParlamentarPerfilPage({
     patrimonio,
     evolucaoPatrimonial,
     grafoParticipacao,
+    comissoes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -260,6 +264,7 @@ export default async function ParlamentarPerfilPage({
     getPatrimonioSnapshot(parlamentar.id),
     getEvolucaoPatrimonial(parlamentar.id),
     getGrafoParticipacao(parlamentar.id),
+    getComissoesParlamentar(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -474,6 +479,11 @@ export default async function ParlamentarPerfilPage({
             icon: <Landmark className="h-4 w-4" />,
           },
           {
+            id: 'comissoes',
+            label: 'Comissões',
+            icon: <Gavel className="h-4 w-4" />,
+          },
+          {
             id: 'proposicoes',
             label: 'Proposições',
             icon: <Inbox className="h-4 w-4" />,
@@ -578,6 +588,13 @@ export default async function ParlamentarPerfilPage({
             className: 'rounded-lg border-line-default bg-surface-base',
             triggerClassName: 'font-semibold text-base',
             content: alinhamentoBlocosContent,
+          },
+          {
+            id: 'comissoes',
+            title: 'Comissões',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <ComissoesMembro {...comissoes} />,
           },
           {
             id: 'proposicoes',
@@ -715,6 +732,14 @@ export default async function ParlamentarPerfilPage({
           title="Alinhamento com Governo e Oposição"
         >
           {alinhamentoBlocosContent}
+        </SectionCard>
+
+        <SectionCard
+          id="comissoes"
+          subtitle="Comissões nesta legislatura (57ª). 'Atualmente' = vínculo ativo hoje; o histórico cobre só o mandato corrente."
+          title="Comissões"
+        >
+          <ComissoesMembro {...comissoes} />
         </SectionCard>
 
         <SectionCard
