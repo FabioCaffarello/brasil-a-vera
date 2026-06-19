@@ -27,7 +27,13 @@ describe('buildTierMatrices', () => {
   it('weekly é um único tier de jobs independentes', () => {
     const tiers = buildTierMatrices(SOURCES, 'weekly')
     expect(tiers).toHaveLength(1)
-    expect(tiers[0]).toHaveLength(3)
+    expect(tiers[0].map((e) => e.id).sort()).toEqual([
+      'camara-comissoes',
+      'camara-gastos',
+      'camara-tramitacao',
+      'senado-comissoes',
+      'senado-tramitacao',
+    ])
   })
 
   it('monthly agrupa em 2 tiers (Eixo 2): cpf antes de tse-bens', () => {

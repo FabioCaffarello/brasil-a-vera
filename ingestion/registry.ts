@@ -36,11 +36,12 @@ export type IngestionSource = z.infer<typeof ingestionSourceSchema>
 
 export const ingestionSourcesSchema = z.array(ingestionSourceSchema)
 
-// As 11 unidades de ingestão atuais (Câmara + Senado). DAG preservado via tier:
+// As unidades de ingestão atuais (Câmara + Senado). DAG preservado via tier:
 //   daily:  t0 deputados, votacoes-camara, votacoes-senado
 //           t1 senadores, proposicoes-camara, orientacoes
 //           t2 proposicoes-senado, backfill (votação→proposição no mesmo run)
-//   weekly: {gastos, tramitacao-camara, tramitacao-senado}  (independentes)
+//   weekly: {gastos, tramitacao-camara, tramitacao-senado, comissoes-camara,
+//           comissoes-senado}  (independentes)
 export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
   [
     // ── daily ───────────────────────────────────────────────────────────────
@@ -116,6 +117,27 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       id: 'camara-gastos',
       script: 'ingest:camara:gastos',
       context: 'ingestion-camara-gastos',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 30,
+    },
+    // Membros de comissão: composição muda poucas vezes/ano → weekly. tier 0:
+    // dependem de parlamentar já populado (ingestão diária deputados/senadores
+    // de runs anteriores), análogo à dependência cross-cadência de tse-bens.
+    // Câmara é serial + pacing (detalhe /orgaos/{id} throttla bursts, igual ao
+    // backfill-cpf) → timeout folgado.
+    {
+      id: 'camara-comissoes',
+      script: 'ingest:camara:comissoes',
+      context: 'ingestion-camara-comissoes',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 60,
+    },
+    {
+      id: 'senado-comissoes',
+      script: 'ingest:senado:comissoes',
+      context: 'ingestion-senado-comissoes',
       cadence: 'weekly',
       tier: 0,
       timeoutMin: 30,
