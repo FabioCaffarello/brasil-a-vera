@@ -14,6 +14,24 @@ export interface MembroComissaoRow {
   dataFim: string | null
 }
 
+// Exclusão por NOME, cross-casa, para órgãos que NÃO são comissão mas escapam
+// dos discriminadores por tipo/sigla. Descoberto auditando o fallback do Senado
+// (PR #491): conselhos honoríficos (Comenda/Prêmio/Diploma/Ordem), procuradorias,
+// corregedoria, ouvidoria e grupos cuja sigla não começa com GP/FP (ex.: GTMTI,
+// "Grupo Brasileiro do Parlatino") vazavam classificados como comissão — uma
+// afirmação falsa numa ferramenta de diligência (Comenda Zilda Arns ≠ comissão).
+//
+// É deny-list ancorada no INÍCIO do nome: comissões reais começam com
+// "Comissão"/"Subcomissão"/"Comitê"/"CPI"/"CPMI"; nenhuma começa com estas
+// palavras. Aplicada às duas casas, alinha a assimetria preexistente (a Câmara
+// já excluía Conselho via codTipoOrgao 11; o Senado não).
+const NOME_NAO_COMISSAO =
+  /^\s*(Conselho|Comenda|Procuradoria|Corregedoria|Ouvidoria|Grupo)\b/i
+
+export function ehNaoComissaoPorNome(nome: string): boolean {
+  return NOME_NAO_COMISSAO.test(nome)
+}
+
 // Normaliza datas para `date` (YYYY-MM-DD). A Câmara devolve datetime ISO
 // ("2026-03-03T00:00"); o Senado já devolve date, mas truncamos defensivamente.
 // Retorna null para entrada vazia/nula.

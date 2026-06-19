@@ -1,5 +1,5 @@
 import type { MembroComissaoRow } from '../shared/membro-comissao'
-import { truncarData } from '../shared/membro-comissao'
+import { ehNaoComissaoPorNome, truncarData } from '../shared/membro-comissao'
 import type {
   CamaraDeputadoOrgao,
   CamaraOrgaoDetalhe,
@@ -74,6 +74,9 @@ export function mapMembroComissaoCamara(
   parlamentarId: string,
 ): MembroComissaoRow | null {
   if (!isComissaoCamara(detalhe.codTipoOrgao)) return null
+  // Guarda cross-casa por nome (conselho honorífico/procuradoria/grupo etc.).
+  // Redundante com o filtro de codTipoOrgao na Câmara, mas mantém simetria.
+  if (ehNaoComissaoPorNome(orgao.nomeOrgao)) return null
 
   const dataInicio = truncarData(orgao.dataInicio)
   if (dataInicio === null) return null

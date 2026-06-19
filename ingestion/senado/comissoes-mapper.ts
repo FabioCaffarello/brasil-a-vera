@@ -1,4 +1,8 @@
-import { type MembroComissaoRow, truncarData } from '../shared/membro-comissao'
+import {
+  ehNaoComissaoPorNome,
+  type MembroComissaoRow,
+  truncarData,
+} from '../shared/membro-comissao'
 import type {
   SenadoColegiadoDetalhe,
   SenadoComissaoParticipacao,
@@ -74,6 +78,12 @@ export function mapMembroComissaoSenado(
   parlamentarId: string,
 ): MembroComissaoRow | null {
   const ident = participacao.IdentificacaoComissao
+  // Guarda por nome ANTES do tipo/sigla: pega conselhos honoríficos (Comenda/
+  // Prêmio/Diploma/Ordem), procuradorias, ouvidoria e grupos que escapam tanto
+  // do tipo 129/130 (extintos → detalhe vazio) quanto do prefixo GP/FP (ex.:
+  // GTMTI, "Grupo Brasileiro do Parlatino"). Auditoria do fallback, PR #491.
+  if (ehNaoComissaoPorNome(ident.NomeComissao)) return null
+
   const ehComissao =
     codigoTipo !== null
       ? isComissaoSenado(codigoTipo)

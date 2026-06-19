@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ehNaoComissaoPorNome } from '../shared/membro-comissao'
 import {
   extractCodigoTipoSenado,
   isComissaoSenado,
@@ -43,6 +44,71 @@ describe('mapTipoParticipacaoSenado', () => {
     expect(mapTipoParticipacaoSenado('Suplente')).toBe('SUPLENTE')
     expect(mapTipoParticipacaoSenado('Titular')).toBe('TITULAR')
     expect(mapTipoParticipacaoSenado(null)).toBe('TITULAR')
+  })
+})
+
+describe('ehNaoComissaoPorNome (guarda cross-casa)', () => {
+  it('exclui conselhos honoríficos, procuradoria, ouvidoria e grupos', () => {
+    expect(
+      ehNaoComissaoPorNome('Conselho da Ordem do Congresso Nacional'),
+    ).toBe(true)
+    expect(ehNaoComissaoPorNome('Comenda Zilda Arns')).toBe(true)
+    expect(ehNaoComissaoPorNome('Procuradoria Especial da Mulher')).toBe(true)
+    expect(ehNaoComissaoPorNome('Ouvidoria do Senado Federal')).toBe(true)
+    expect(ehNaoComissaoPorNome('Grupo Brasileiro do Parlatino')).toBe(true)
+    expect(ehNaoComissaoPorNome('Grupo de trabalho sobre mineração')).toBe(true)
+  })
+  it('mantém comissões, subcomissões, comitês e representações', () => {
+    expect(ehNaoComissaoPorNome('Comissão de Assuntos Econômicos')).toBe(false)
+    expect(ehNaoComissaoPorNome('Subcomissão Permanente de Mineração')).toBe(
+      false,
+    )
+    expect(
+      ehNaoComissaoPorNome('Comitê de Avaliação, Fiscalização e Controle'),
+    ).toBe(false)
+    expect(
+      ehNaoComissaoPorNome(
+        'Representação Brasileira no Parlamento do Mercosul',
+      ),
+    ).toBe(false)
+    expect(
+      ehNaoComissaoPorNome(
+        'Comissão Parlamentar Mista de Inquérito - "Fundos de Pensão"',
+      ),
+    ).toBe(false)
+  })
+})
+
+describe('mapMembroComissaoSenado exclui ruído por nome', () => {
+  it('exclui Comenda mesmo com tipo autoritativo presente', () => {
+    const row = mapMembroComissaoSenado(
+      {
+        ...participacao,
+        IdentificacaoComissao: {
+          ...participacao.IdentificacaoComissao,
+          SiglaComissao: 'CZA',
+          NomeComissao: 'Comenda Zilda Arns',
+        },
+      },
+      21,
+      'uuid-sen-1',
+    )
+    expect(row).toBeNull()
+  })
+  it('exclui Conselho mesmo via fallback (codigoTipo null)', () => {
+    const row = mapMembroComissaoSenado(
+      {
+        ...participacao,
+        IdentificacaoComissao: {
+          ...participacao.IdentificacaoComissao,
+          SiglaComissao: 'COCN',
+          NomeComissao: 'Conselho da Ordem do Congresso Nacional',
+        },
+      },
+      null,
+      'uuid-sen-1',
+    )
+    expect(row).toBeNull()
   })
 })
 
