@@ -1,7 +1,10 @@
 import { eq } from 'drizzle-orm'
 
 import { membroComissao, parlamentar } from '@/shared/db/schema'
-import { DATA_INICIO_JANELA_QUENTE } from '@/shared/legislatura'
+import {
+  DATA_FIM_LEGISLATURA_ATUAL,
+  DATA_INICIO_LEGISLATURA_ATUAL,
+} from '@/shared/legislatura'
 import { db } from '../shared/db'
 import { fetchJson, paginate } from './camara-client'
 import {
@@ -22,13 +25,16 @@ const CASA = 'CAMARA' as const
 const PACING_MS = 150
 const PROGRESS_EVERY = 50
 // Sem params de data, /deputados/{id}/orgaos só devolve vínculos ATIVOS agora —
-// a tabela virava snapshot do presente (2.603/2.747 linhas com data_fim NULL) e
-// perdia o histórico de comissões do mandato. Filtramos pela janela quente do
-// ADR-016 (legislaturas 56+57, 2019+), mesmo recorte de proposicao/votacao, p/
-// capturar os stints encerrados. O Senado já é histórico por natureza do
-// endpoint (/senador/{id}/comissoes devolve a carreira inteira). Confirmado
-// empiricamente: dataInicio sozinho basta e não vaza pré-2019.
-const JANELA_INICIO = DATA_INICIO_JANELA_QUENTE.toISOString().slice(0, 10)
+// a tabela virava snapshot do presente e perdia o histórico de comissões do
+// mandato. Escopamos à legislatura atual (57ª: 2023-02-01 a 2027-01-31, datas
+// oficiais da Câmara API /legislaturas/57) para capturar os stints encerrados
+// do mandato corrente. O Senado já é histórico por natureza do endpoint
+// (/senador/{id}/comissoes devolve a carreira inteira). Verificado: o range
+// preserva vínculos ativos (data_fim NULL) e exclui entradas fora da
+// legislatura (quirk SUBESTET data_inicio 2029).
+const isoDate = (d: Date): string => d.toISOString().slice(0, 10)
+const LEGISLATURA_INICIO = isoDate(DATA_INICIO_LEGISLATURA_ATUAL)
+const LEGISLATURA_FIM = isoDate(DATA_FIM_LEGISLATURA_ATUAL)
 // Afordância de validação local: COMISSOES_LIMIT=N processa só os N primeiros
 // deputados (amostra). Ausente em prod → processa todos.
 const LIMIT = Number(process.env.COMISSOES_LIMIT) || undefined
@@ -92,7 +98,8 @@ async function processDeputado(
   try {
     for await (const raw of paginate(`/deputados/${dep.sourceId}/orgaos`, {
       itens: 100,
-      dataInicio: JANELA_INICIO,
+      dataInicio: LEGISLATURA_INICIO,
+      dataFim: LEGISLATURA_FIM,
     })) {
       stats.orgaosFetched++
       const parsed = camaraDeputadoOrgaoSchema.safeParse(raw)
