@@ -134,6 +134,17 @@ export const membroComissao = parlamentaresSchema.table(
       .references(() => parlamentar.id, { onDelete: 'cascade' }),
     comissaoSourceId: text('comissao_source_id').notNull(),
     comissaoNome: text('comissao_nome').notNull(),
+    // Sigla da comissão na origem (CCJC, CAE…). Nullable: a presença foi vista
+    // em amostra por casa, não no conjunto completo — promover a NOT NULL fica
+    // para depois de rodar o universo inteiro e confirmar zero exceção, senão
+    // uma comissão atípica sem sigla derruba a ingestão inteira (princípio 13).
+    comissaoSigla: text('comissao_sigla'),
+    // Papel cru da origem (Câmara: `titulo`; Senado: `DescricaoParticipacao`).
+    // O enum tipo_participacao colapsa em TITULAR/SUPLENTE; esta coluna preserva
+    // o original (ex.: "Presidente", "1º Vice-Presidente") sem interpretação
+    // neste incremento — dado de graça cujo descarte forçaria re-ingestão p/ o
+    // confronto de diligência futuro (controle de pauta).
+    cargoOrigem: text('cargo_origem'),
     tipoParticipacao: tipoParticipacao('tipo_participacao').notNull(),
     dataInicio: date('data_inicio').notNull(),
     dataFim: date('data_fim'),
