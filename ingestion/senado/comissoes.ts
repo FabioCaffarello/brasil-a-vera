@@ -32,6 +32,10 @@ interface IngestionStats {
   // Classificadas pelo fallback de sigla porque o detalhe /comissao/{codigo}
   // não trouxe o tipo (colegiado extinto: CPIs/CPMIs encerradas etc.).
   classificadoPorSigla: number
+  // Siglas DISTINTAS mantidas via fallback (não pelo tipo autoritativo). Como o
+  // fallback é keep-by-default (fail-open), este conjunto é o ponto de auditoria:
+  // tudo aqui deveria ser CPI/CPMI/colegiado extinto — não ruído.
+  fallbackSiglas: Set<string>
   rejected: number
   tiposMantidos: Record<string, number>
   errors: Array<{ context: string; reason: string }>
@@ -118,6 +122,9 @@ async function processSenador(
       }
       if (codigoTipo === null) {
         stats.classificadoPorSigla++
+        stats.fallbackSiglas.add(
+          participacao.IdentificacaoComissao.SiglaComissao,
+        )
         stats.tiposMantidos['fallback:sigla'] =
           (stats.tiposMantidos['fallback:sigla'] ?? 0) + 1
       } else {
@@ -177,6 +184,7 @@ export async function ingestComissoesSenado(): Promise<IngestionStats> {
     comissoesUpserted: 0,
     naoComissaoSkipped: 0,
     classificadoPorSigla: 0,
+    fallbackSiglas: new Set(),
     rejected: 0,
     tiposMantidos: {},
     errors: [],
@@ -210,6 +218,7 @@ ingestComissoesSenado()
         comissoesUpserted: stats.comissoesUpserted,
         naoComissaoSkipped: stats.naoComissaoSkipped,
         classificadoPorSigla: stats.classificadoPorSigla,
+        fallbackSiglas: [...stats.fallbackSiglas].sort(),
         rejected: stats.rejected,
         tiposMantidos: stats.tiposMantidos,
         errorsCount: stats.errors.length,
