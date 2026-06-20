@@ -49,6 +49,8 @@
     "ingest:camara:gastos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/gastos.ts",
     "ingest:camara:comissoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/comissoes.ts",
     "ingest:senado:comissoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/comissoes.ts",
+    "ingest:camara:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/discursos.ts",
+    "ingest:senado:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/discursos.ts",
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",
     "seed:agregados:parlamentar": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-parlamentar.ts",
     "seed:agregados:proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-proposicao.ts",

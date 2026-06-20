@@ -181,6 +181,25 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 90,
     },
+    // Discursos (#504): metadados da legislatura atual. tier 0 (dependem só de
+    // parlamentar populado). Câmara é serial + pacing + paginado (timeout
+    // folgado); Senado uma chamada por senador na janela.
+    {
+      id: 'camara-discursos',
+      script: 'ingest:camara:discursos',
+      context: 'ingestion-camara-discursos',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 90,
+    },
+    {
+      id: 'senado-discursos',
+      script: 'ingest:senado:discursos',
+      context: 'ingestion-senado-discursos',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 30,
+    },
     // ── monthly ───────────────────────────────────────────────────────────
     // Filiação partidária (#502): histórico que muda poucas vezes/ano →
     // mensal. tier 0: dependem só de parlamentar populado (daily), como o
