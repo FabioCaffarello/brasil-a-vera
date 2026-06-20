@@ -17,6 +17,7 @@ import {
   Building2,
   FileText,
   Gavel,
+  GitBranch,
   Inbox,
   Landmark,
   Network,
@@ -33,6 +34,7 @@ import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
+import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
 import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
@@ -59,6 +61,11 @@ import {
   CursorProposicoesV1,
   CursorVotosV1,
 } from '@/lib/queries/cursor-schemas'
+import {
+  getFidelidadeBancada,
+  getFidelidadeOrientacao,
+  getTimelineMigracao,
+} from '@/lib/queries/fidelidade'
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
@@ -232,6 +239,9 @@ export default async function ParlamentarPerfilPage({
     evolucaoPatrimonial,
     grafoParticipacao,
     comissoes,
+    fidelidadeTimeline,
+    fidelidadeBancada,
+    fidelidadeOrientacao,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -265,6 +275,9 @@ export default async function ParlamentarPerfilPage({
     getEvolucaoPatrimonial(parlamentar.id),
     getGrafoParticipacao(parlamentar.id),
     getComissoesParlamentar(parlamentar.id),
+    getTimelineMigracao(parlamentar.id),
+    getFidelidadeBancada(parlamentar.id),
+    getFidelidadeOrientacao(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -479,6 +492,11 @@ export default async function ParlamentarPerfilPage({
             icon: <Landmark className="h-4 w-4" />,
           },
           {
+            id: 'voto-partido',
+            label: 'Trajetória',
+            icon: <GitBranch className="h-4 w-4" />,
+          },
+          {
             id: 'comissoes',
             label: 'Comissões',
             icon: <Gavel className="h-4 w-4" />,
@@ -588,6 +606,19 @@ export default async function ParlamentarPerfilPage({
             className: 'rounded-lg border-line-default bg-surface-base',
             triggerClassName: 'font-semibold text-base',
             content: alinhamentoBlocosContent,
+          },
+          {
+            id: 'voto-partido',
+            title: 'Voto e partido ao longo do mandato',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <FidelidadePartidaria
+                timeline={fidelidadeTimeline}
+                bancada={fidelidadeBancada}
+                orientacao={fidelidadeOrientacao}
+              />
+            ),
           },
           {
             id: 'comissoes',
@@ -732,6 +763,18 @@ export default async function ParlamentarPerfilPage({
           title="Alinhamento com Governo e Oposição"
         >
           {alinhamentoBlocosContent}
+        </SectionCard>
+
+        <SectionCard
+          id="voto-partido"
+          subtitle="Compara cada voto com duas referências do partido vigente na data do voto — a orientação da liderança e a maioria efetiva da bancada — considerando as trocas de partido. Referência factual, sem juízo de valor."
+          title="Voto e partido ao longo do mandato"
+        >
+          <FidelidadePartidaria
+            timeline={fidelidadeTimeline}
+            bancada={fidelidadeBancada}
+            orientacao={fidelidadeOrientacao}
+          />
         </SectionCard>
 
         <SectionCard
