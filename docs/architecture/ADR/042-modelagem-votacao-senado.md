@@ -44,9 +44,9 @@ de aceitação, **fail-closed** (não confirmar = reprovar):
 
 **Critério 1 — `(tipo,numero,ano)` é único em `proposicao`?** ✅ **PASSA.**
 A tabela tem `uniqueIndex('proposicao_tipo_numero_ano_unique')`; uma PEC
-45/2019 da Câmara e do Senado são a *mesma linha unificada* (`source_id_camara`
-+ `source_id_senado`). Verificação: **0 duplicatas** de `(tipo,numero,ano)` no
-banco (local, não-prod).
+45/2019 da Câmara e do Senado são a *mesma linha unificada*
+(`source_id_camara` + `source_id_senado`). Verificação: **0 duplicatas** de
+`(tipo,numero,ano)` no banco (local, não-prod).
 
 **Critério 2 — o mapa de siglas é total e determinístico?** ⚠️ **NÃO satisfeito.**
 - *Determinismo:* ✅ `SIGLA_TABLE` do Senado é determinística
