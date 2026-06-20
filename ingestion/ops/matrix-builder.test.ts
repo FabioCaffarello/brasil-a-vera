@@ -5,9 +5,9 @@ import { SOURCES } from '../registry'
 import { buildTierMatrices } from './matrix-builder'
 
 describe('buildTierMatrices', () => {
-  it('agrupa daily em 3 tiers preservando o DAG (votações consolidadas)', () => {
+  it('agrupa daily em 4 tiers preservando o DAG (votações consolidadas)', () => {
     const tiers = buildTierMatrices(SOURCES, 'daily')
-    expect(tiers).toHaveLength(3)
+    expect(tiers).toHaveLength(4)
     expect(tiers[0].map((e) => e.id).sort()).toEqual([
       'camara-deputados',
       'camara-votacoes',
@@ -22,6 +22,9 @@ describe('buildTierMatrices', () => {
     expect(tiers[2].map((e) => e.id).sort()).toEqual([
       'camara-backfill-votacao-proposicao',
       'senado-proposicoes',
+    ])
+    expect(tiers[3].map((e) => e.id).sort()).toEqual([
+      'senado-backfill-votacao-proposicao',
     ])
   })
 
