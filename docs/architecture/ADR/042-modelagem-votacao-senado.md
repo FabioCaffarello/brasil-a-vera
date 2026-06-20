@@ -2,9 +2,16 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-06-20
-> Status: proposed
+> Status: proposed (recomendação **revertida** para Alt 2 — ver [Emenda](#emenda-2026-06-20--reversão-para-alt-2-espinha-votacao))
 
 ---
+
+> ⚠️ **Emenda 2026-06-20:** uma segunda probe (votos + `aprovada` + chave de
+> conteúdo) falsificou a base da recomendação original (Alt 1, espinha
+> `orientacaoBancada`). A recomendação foi **revertida para Alt 2** (espinha
+> `/votacao` + orientação como overlay fail-closed). O corpo abaixo é o registro
+> da decisão original; a correção está na seção
+> [Emenda](#emenda-2026-06-20--reversão-para-alt-2-espinha-votacao).
 
 ## Contexto
 
@@ -75,6 +82,10 @@ validação em prod.
 
 ## Decisão
 
+> ⚠️ **Revertida pela [Emenda 2026-06-20](#emenda-2026-06-20--reversão-para-alt-2-espinha-votacao).**
+> O texto abaixo é o registro da decisão original (Alt 1); a probe de votos +
+> `aprovada` + chave de conteúdo a falsificou. Decisão vigente: **Alt 2**.
+
 **A espinha da votação do Senado é o `/plenario/votacao/orientacaoBancada/{data}`
 (date-driven).** Uma única ingestão de votação do Senado, keyed por
 `codigoVotacaoSve` (consistente *dentro* desse feed), serve **votos nominais +
@@ -101,7 +112,7 @@ junção frágil sobre a *própria orientação*, arriscando perdê-la em silên
 
 ## Alternativas Consideradas
 
-### Alternativa 1 — espinha = `orientacaoBancada` (RECOMENDADA)
+### Alternativa 1 — espinha = `orientacaoBancada` (~~RECOMENDADA~~ revertida — ver Emenda)
 - Votos + orientação unificados nativamente sob `codigoVotacaoSve`; **zero
   junção** entre eles. #500 fica trivial.
 - Contras: re-arquiteta `ingestion/senado/votacoes.ts`; muda a semântica de
@@ -109,7 +120,7 @@ junção frágil sobre a *própria orientação*, arriscando perdê-la em silên
   `codigoVotacaoSve`); **abre mão do `codigoMateria` limpo do `/votacao`** — o
   vínculo de #501 passa à chave natural fail-closed (C2 não garantido).
 
-### Alternativa 2 — espinha = `/votacao` atual + reconciliar orientação por chave de conteúdo
+### Alternativa 2 — espinha = `/votacao` atual + reconciliar orientação por chave de conteúdo (DECISÃO VIGENTE — ver Emenda)
 - Mantém `codigoMateria`/`idProcesso` (vínculo de #501 limpo). #501 fica trivial.
 - Contras: a orientação só casa com a votação por **(sessão + matéria + ordem
   temporal)** — junção de conteúdo (a "O2" já vetada como improviso), com
@@ -153,6 +164,99 @@ votações por matéria/sessão), é improviso. Rejeitada.
 - `Maioria`/`Minoria`/`Banc Fem` e demais blocos são ingeridos como orientação
   (`tipo_lideranca='B'` pela regra A1' denylist, decidida no #500); a copy neutra
   do ADR-040 §4 se aplica integralmente.
+
+## Emenda 2026-06-20 — Reversão para Alt 2 (espinha `/votacao`)
+
+A recomendação original (Alt 1, espinha `orientacaoBancada`) apoiou-se numa probe
+**incompleta**: ela testou só o critério do vínculo proposição
+(`tipo,numero,ano`), **não** testou se o `orientacaoBancada` entrega os outros
+dois campos que a espinha precisa — resolução de voto e resultado. Uma segunda
+probe os testou e **falsificou a base da recomendação**.
+
+### Probe 2 — votos e `aprovada` no `orientacaoBancada` (fail-closed)
+
+Verificado em votação **aberta** (não-secreta; `voto='SIM'`, Rogério Marinho):
+
+- **`votosParlamentar` não tem `codigoParlamentar`** — só `nomeParlamentar`,
+  `partido`, `uf`, `voto`. Sob a espinha `orientacaoBancada`, resolver
+  `parlamentar_id` viraria **name-match** (frágil: homônimos, acentos, variação
+  de nome parlamentar). O caminho `/votacao` resolve por `codigoParlamentar`.
+- **Sem campo de resultado/aprovação** — só placar (`qtdVotosSim/Nao/Abstencao`)
+  e quórum. `votacao.aprovada` (NOT NULL) ficaria **sem fonte oficial**; derivar
+  do placar é inferência (arriscado p/ maioria qualificada de PEC).
+
+### Probe 3 — não há feed completo (votos+`codigoParlamentar`+orientação)
+
+Bateria em `{data}=20231212`:
+
+| Endpoint | votos c/ `codigoParlamentar` | orientação |
+|---|---|---|
+| `/plenario/lista/votacao/{data}` | ✅ `CodigoParlamentar` | ❌ |
+| `/votacao?datainicio&datafim` | ✅ `codigoParlamentar` | ❌ |
+| `/plenario/votacao/{data}`, `/plenario/lista/votacaoNominal/{data}`, `/plenario/votacaoNominal/{data}` | 404 | 404 |
+| `/plenario/votacao/orientacaoBancada/{data}` | ❌ só nome | ✅ |
+
+A API **separa** votos (limpos, dois endpoints) de orientação (só
+`orientacaoBancada`, sem `codigoParlamentar`, sem resultado). Nenhum feed os une.
+
+### Probe 4 — chave de conteúdo para overlay de orientação colide
+
+Para anexar orientação a uma votação `/votacao` sem id compartilhado, a única
+chave é de conteúdo (matéria + sessão). Em 86 votações com orientação,
+**12 colidem** em `(matéria, numeroSessao)` — ex.: **PEC 186/2019 votada 7× numa
+sessão**, PEC 6/2019 4×, PEC 133/2019 4× (texto-base, destaques, emendas). Sem
+timestamp nem sequência compartilhados entre os feeds, **não há desempate
+confiável** → overlay fail-closed perde orientação em **até ~14%** das votações
+com orientação (os grupos em colisão).
+
+### Calculus corrigido (4 campos)
+
+| Campo | espinha `/votacao` | espinha `orientacaoBancada` |
+|---|---|---|
+| orientação | ❌ precisa overlay (~14% fail-closed) | ✅ nativa |
+| votos → `parlamentar_id` | ✅ `codigoParlamentar` | ❌ name-match (100%) |
+| `aprovada` | ✅ `resultadoVotacao` | ❌ sem campo (100%) |
+| vínculo proposição | ✅ `codigoMateria` | ⚠️ chave natural fail-closed |
+
+`/votacao` está limpo em 3 de 4; `orientacaoBancada` em 1 de 4. A assimetria do
+dano decide: a espinha `orientacaoBancada` degrada **votos + `aprovada` em 100%**
+das votações; a espinha `/votacao` + overlay degrada **só orientação, em ~14%**
+(fail-closed, logado). O menor dano — e o correto para um produto que preza
+correção — é manter `/votacao`.
+
+### Decisão vigente — Alt 2
+
+**A espinha da votação do Senado é o `/votacao` (mantém a ingestão atual):** votos
+por `codigoParlamentar`, `aprovada` por `resultadoVotacao`, `codigoMateria` para
+o vínculo proposição (#501) — todos limpos. **A orientação é um overlay
+fail-closed** do `orientacaoBancada`:
+
+1. Casada à votação `/votacao` por `(matéria sigla/nº/ano + numeroSessao)`. Isso
+   exige **persistir os campos latentes** que o `/votacao` já entrega e hoje
+   descartamos (matéria + `numeroSessao`) — mesmo padrão de "dado latente" do #501.
+2. Grupo `(matéria, sessão)` com **uma** votação → match único. Grupo com
+   múltiplas votações sem desempate confiável → **não anexa orientação**
+   (fail-closed; nunca uma orientação adivinhada). Contagem logada
+   (`warnings.ts`).
+3. As sub-decisões do #500 permanecem: regra A1' de `tipo_lideranca`, mapa de
+   voto `LIVRE→LIBERADO`, `voto=null` pula+loga.
+
+Isto **reativa a Alt 2** (antes rejeitada). A objeção original ("fail-closed
+perde orientação em silêncio") continua válida, mas seu custo (~14% de
+orientação) é menor que degradar votos+`aprovada` universalmente. O nó, os três
+endpoints e a Probe 1 (vínculo proposição) do corpo acima **permanecem válidos**;
+só a escolha de espinha inverte.
+
+### Consequências da reversão
+
+- **#500** (orientação): deixa de exigir re-arquitetura da ingestão de votação;
+  vira um passo aditivo (overlay) sobre o `/votacao` que já temos. Cobertura
+  ~86% das votações com orientação (fail-closed no resto).
+- **#501** (vínculo proposição): **volta a ser o caminho limpo via
+  `codigoMateria`** do `/votacao` (não mais a chave natural fail-closed). Recupera
+  o status "dado latente, custo baixo".
+- **`votacoes.ts` não é re-arquitetado**; ganha a persistência dos campos
+  latentes (matéria + `numeroSessao`) para habilitar o overlay e o #501.
 
 ## Invariante (regra durável)
 
