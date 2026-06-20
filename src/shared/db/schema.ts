@@ -3,6 +3,7 @@
 // tudo para o Drizzle Kit gerar migrations e para a instância `db` carregar
 // o relational schema completo.
 
+export * from '@/modules/discursos/domain/schema'
 export * from '@/modules/eleitoral/domain/schema'
 export * from '@/modules/gastos/domain/schema'
 export * from '@/modules/parlamentares/domain/schema'

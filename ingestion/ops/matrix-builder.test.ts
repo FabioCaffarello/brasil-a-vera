@@ -33,9 +33,11 @@ describe('buildTierMatrices', () => {
     expect(tiers).toHaveLength(1)
     expect(tiers[0].map((e) => e.id).sort()).toEqual([
       'camara-comissoes',
+      'camara-discursos',
       'camara-gastos',
       'camara-tramitacao',
       'senado-comissoes',
+      'senado-discursos',
       'senado-tramitacao',
     ])
   })
