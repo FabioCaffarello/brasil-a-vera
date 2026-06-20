@@ -19,6 +19,28 @@ interface StructuredLogEvent extends AtLimitWarning {
   timestamp: string
 }
 
+export interface SkippedWarning {
+  label: string
+  count: number
+  reason: string
+}
+
+// Warn estruturado para itens pulados intencionalmente (fail-closed) numa
+// ingestão — voto null, colisão de chave, votação não encontrada. Emite só
+// quando count > 0, com contagem visível nos logs (stderr → GitHub Actions).
+export function warnSkipped(args: SkippedWarning): void {
+  if (args.count <= 0) return
+  console.warn(
+    JSON.stringify({
+      event: 'warn_skipped',
+      label: args.label,
+      count: args.count,
+      reason: args.reason,
+      timestamp: new Date().toISOString(),
+    }),
+  )
+}
+
 export async function warnIfAtLimit(args: AtLimitWarning): Promise<void> {
   if (args.count < args.limit) return
 

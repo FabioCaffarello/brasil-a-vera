@@ -16,6 +16,7 @@ describe('buildTierMatrices', () => {
     expect(tiers[1].map((e) => e.id).sort()).toEqual([
       'camara-orientacoes',
       'camara-proposicoes',
+      'senado-orientacoes',
       'senado-senadores',
     ])
     expect(tiers[2].map((e) => e.id).sort()).toEqual([
