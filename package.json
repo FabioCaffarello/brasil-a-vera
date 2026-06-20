@@ -42,6 +42,7 @@
     "ingest:camara:tramitacao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/tramitacao.ts",
     "ingest:camara:orientacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/orientacoes.ts",
     "backfill:camara:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-votacao-proposicao.ts",
+    "backfill:senado:votacao-proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/backfill-votacao-proposicao.ts",
     "backfill:camara:cpf": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/backfill-cpf.ts",
     "ingest:camara:gastos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/gastos.ts",
     "ingest:camara:comissoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/comissoes.ts",

@@ -38,8 +38,9 @@ export const ingestionSourcesSchema = z.array(ingestionSourceSchema)
 
 // As unidades de ingestão atuais (Câmara + Senado). DAG preservado via tier:
 //   daily:  t0 deputados, votacoes-camara, votacoes-senado
-//           t1 senadores, proposicoes-camara, orientacoes
-//           t2 proposicoes-senado, backfill (votação→proposição no mesmo run)
+//           t1 senadores, proposicoes-camara, orientacoes-camara, orientacoes-senado
+//           t2 proposicoes-senado, backfill-camara (votação→proposição)
+//           t3 backfill-senado (votação→proposição, após proposicoes-senado)
 //   weekly: {gastos, tramitacao-camara, tramitacao-senado, comissoes-camara,
 //           comissoes-senado}  (independentes)
 export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
@@ -122,6 +123,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       cadence: 'daily',
       tier: 2,
       timeoutMin: 20,
+    },
+    {
+      // tier 3: vínculo votação→proposição do Senado (ADR-042, #501). Lookup
+      // local (sem fetch) codigo_materia → proposicao.source_id_senado; roda
+      // depois de senado-proposicoes (tier 2) para casar no mesmo run.
+      id: 'senado-backfill-votacao-proposicao',
+      script: 'backfill:senado:votacao-proposicao',
+      context: 'ingestion-backfill-votacao-proposicao-senado',
+      cadence: 'daily',
+      tier: 3,
+      timeoutMin: 10,
     },
     // ── weekly ──────────────────────────────────────────────────────────────
     {

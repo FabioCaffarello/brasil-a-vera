@@ -63,5 +63,6 @@ describe('SOURCES registry', () => {
       'camara-backfill-votacao-proposicao',
       'senado-proposicoes',
     ])
+    expect(byTier('daily', 3)).toEqual(['senado-backfill-votacao-proposicao'])
   })
 })
