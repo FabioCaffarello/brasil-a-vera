@@ -182,6 +182,26 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       timeoutMin: 90,
     },
     // ── monthly ───────────────────────────────────────────────────────────
+    // Filiação partidária (#502): histórico que muda poucas vezes/ano →
+    // mensal. tier 0: dependem só de parlamentar populado (daily), como o
+    // backfill-cpf. Câmara deriva períodos do /historico (serial + pacing);
+    // Senado lê períodos prontos de /filiacoes.
+    {
+      id: 'camara-filiacoes',
+      script: 'ingest:camara:filiacoes',
+      context: 'ingestion-camara-filiacoes',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 60,
+    },
+    {
+      id: 'senado-filiacoes',
+      script: 'ingest:senado:filiacoes',
+      context: 'ingestion-senado-filiacoes',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 20,
+    },
     // Eixo 2 / Inc 0 — Trilha Patrimonial. Dado histórico do TSE (2022) que só
     // muda quando o TSE reedita declarações: cadência mensal idempotente.
     // DAG via tier: o vínculo por CPF exige parlamentar.cpf preenchido, então
