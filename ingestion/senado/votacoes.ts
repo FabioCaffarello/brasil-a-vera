@@ -79,6 +79,21 @@ async function processVotacao(
     v.informeLegislativo?.nomeColegiado ??
     'SF'
 
+  // Matéria/sessão (ADR-042): chave de conteúdo p/ casar a orientação e o
+  // vínculo proposição. `numero` vem como string ("16", "1234A"); guardamos o
+  // inteiro base e descartamos sufixo, alinhado a parseIdentificacao.
+  const materiaNumeroParsed =
+    v.numero != null ? Number.parseInt(v.numero, 10) : Number.NaN
+  const materia = {
+    materiaSigla: v.sigla ?? null,
+    materiaNumero: Number.isNaN(materiaNumeroParsed)
+      ? null
+      : materiaNumeroParsed,
+    materiaAno: v.ano ?? null,
+    numeroSessao: v.numeroSessao ?? null,
+    codigoMateria: v.codigoMateria ?? null,
+  }
+
   await db.transaction(async (tx) => {
     const upserted = await tx
       .insert(votacao)
@@ -94,6 +109,7 @@ async function processVotacao(
         abstencoes,
         ausentes: null,
         aprovada,
+        ...materia,
         trustLevel: 'L1',
         sourceUrl: `https://legis.senado.leg.br/dadosabertos/votacao?codigoSessaoVotacao=${sourceId}`,
       })
@@ -107,6 +123,7 @@ async function processVotacao(
           votosNao,
           abstencoes,
           aprovada,
+          ...materia,
           ingestedAt: sql`now()`,
         },
       })

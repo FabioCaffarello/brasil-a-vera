@@ -31,6 +31,9 @@ export const senadoVotacaoSchema = z
     sigla: z.string().nullable().optional(),
     numero: z.string().nullable().optional(),
     ano: z.number().int().nullable().optional(),
+    // numeroSessao + matéria (sigla/numero/ano) formam a chave de conteúdo que
+    // casa a orientação do feed `orientacaoBancada` com esta votação (ADR-042).
+    numeroSessao: z.number().int().nullable().optional(),
     informeLegislativo: z
       .object({
         siglaColegiado: z.string().nullable().optional(),
