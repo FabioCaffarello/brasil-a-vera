@@ -103,6 +103,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       timeoutMin: 30,
     },
     {
+      // tier 1: overlay de orientação do Senado (ADR-042). Casa por chave de
+      // conteúdo (matéria+sessão) contra a `votacao` populada por
+      // senado-votacoes (tier 0) no mesmo run; por isso roda depois.
+      id: 'senado-orientacoes',
+      script: 'ingest:senado:orientacoes',
+      context: 'ingestion-senado-orientacoes',
+      cadence: 'daily',
+      tier: 1,
+      timeoutMin: 15,
+    },
+    {
       // tier 2: backfill liga votação→proposição; agora roda DEPOIS de
       // proposicoes-camara (t1) no mesmo run, não dependendo de run anterior.
       id: 'camara-backfill-votacao-proposicao',

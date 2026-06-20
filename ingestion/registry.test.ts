@@ -56,6 +56,7 @@ describe('SOURCES registry', () => {
     expect(byTier('daily', 1)).toEqual([
       'camara-orientacoes',
       'camara-proposicoes',
+      'senado-orientacoes',
       'senado-senadores',
     ])
     expect(byTier('daily', 2)).toEqual([

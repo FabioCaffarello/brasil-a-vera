@@ -34,6 +34,7 @@
     "ingest:camara:deputados": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/deputados.ts",
     "ingest:senado:senadores": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/senadores.ts",
     "ingest:senado:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/votacoes.ts",
+    "ingest:senado:orientacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/orientacoes.ts",
     "ingest:senado:proposicoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/proposicoes.ts",
     "ingest:senado:tramitacao": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/tramitacao.ts",
     "ingest:camara:votacoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/votacoes.ts",

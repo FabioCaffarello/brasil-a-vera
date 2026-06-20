@@ -51,6 +51,16 @@ export const votacao = votacoesSchema.table(
     abstencoes: integer('abstencoes').notNull(),
     ausentes: integer('ausentes'),
     aprovada: boolean('aprovada').notNull(),
+    // Metadados de matéria/sessão — preenchidos só para votações do Senado
+    // (ADR-042). A matéria + numeroSessao são a chave de conteúdo que casa a
+    // orientação (feed `orientacaoBancada`, que não compartilha id com
+    // `/votacao`) com esta votação; `codigoMateria` é o caminho limpo do
+    // vínculo votação→proposição (#501). Câmara deixa null (usa proposicoesAfetadas).
+    materiaSigla: text('materia_sigla'),
+    materiaNumero: integer('materia_numero'),
+    materiaAno: integer('materia_ano'),
+    numeroSessao: integer('numero_sessao'),
+    codigoMateria: integer('codigo_materia'),
     trustLevel: trustLevel('trust_level').notNull(),
     sourceUrl: text('source_url').notNull(),
     ingestedAt: timestamp('ingested_at', { withTimezone: true })
