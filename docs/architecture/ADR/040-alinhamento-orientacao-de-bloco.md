@@ -1,8 +1,14 @@
 # ADR-040: Alinhamento com orientação de bloco (Governo/Oposição)
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-18
-> Status: accepted
+> Última atualização: 2026-06-20
+> Status: accepted (emendado 2026-06-20 — ver [Emenda](#emenda-2026-06-20--premissa-senado-não-expõe-orientação-falsificada))
+
+> ⚠️ **Emenda 2026-06-20:** a premissa "Câmara-only / o Senado não expõe
+> orientação de bancada" (§Contexto, §Decisão item 5, §Consequências→Negativas,
+> ref. #83) foi **falsificada empiricamente**. Ver a seção
+> [Emenda](#emenda-2026-06-20--premissa-senado-não-expõe-orientação-falsificada)
+> no fim deste ADR. A invariante de copy neutra (§Decisão item 4) **permanece**.
 
 ## Contexto
 
@@ -39,7 +45,7 @@ Restrições assumidas para este incremento (escopo fechado):
 
 - **Câmara-only.** O Senado não expõe orientação de bancada nem de bloco em
   endpoint público (confirmado empiricamente; ver issue #83). Não inventamos
-  substituto.
+  substituto. _⚠️ Premissa falsificada em 2026-06-20 — ver [Emenda](#emenda-2026-06-20--premissa-senado-não-expõe-orientação-falsificada) e issue #500._
 - **Moldura neutra obrigatória.** A feature é cívica, não um juízo. Não
   ranqueamos parlamentares por "fidelidade".
 
@@ -91,7 +97,8 @@ Restrições assumidas para este incremento (escopo fechado):
    renderizam-se os blocos **Governo** e **Oposição** (Maioria/Minoria ficam
    persistidos mas não renderizados nesta versão). No perfil de senador,
    exibe-se nota explicando que a fonte do Senado não publica orientação — sem
-   substituto fabricado.
+   substituto fabricado. _⚠️ Esta nota tornou-se incorreta em 2026-06-20: o
+   Senado publica orientação (ver [Emenda](#emenda-2026-06-20--premissa-senado-não-expõe-orientação-falsificada)). A nota não deve ser exibida; a feature de senador é dívida de ingestão (#500)._
 
 ## Alternativas Consideradas
 
@@ -125,7 +132,8 @@ Restrições assumidas para este incremento (escopo fechado):
 
 ### Negativas
 - **Assimetria Câmara×Senado** permanece: senadores não têm a métrica. Mitigado
-  por nota explícita no perfil.
+  por nota explícita no perfil. _⚠️ Reclassificada em 2026-06-20: deixa de ser
+  intrínseca à fonte e passa a dívida de ingestão (#500) — ver [Emenda](#emenda-2026-06-20--premissa-senado-não-expõe-orientação-falsificada)._
 - **Cobertura degradada do alinhamento partidário por federação** (achado
   empírico, fora do escopo deste ADR): partidos federados (PT, PSOL, PP...)
   frequentemente publicam orientação **apenas** pela linha da federação
@@ -137,12 +145,65 @@ Restrições assumidas para este incremento (escopo fechado):
 - `Maioria` e `Minoria` são ingeridos e persistidos mas não renderizados nesta
   versão — disponíveis para uso futuro sem nova migration.
 
+## Emenda 2026-06-20 — Premissa "Senado não expõe orientação" falsificada
+
+> Status desta emenda: **proposta** (preparada na issue #500; o merge é ato do
+> owner). Enquanto não mergeada, o corpo histórico acima permanece como registro
+> da decisão original; esta emenda é a correção empírica.
+
+**O que cai.** Este ADR assumiu, como restrição de escopo, que *"o Senado não
+expõe orientação de bancada nem de bloco em endpoint público"* (§Contexto
+"Câmara-only"; §Decisão item 5; §Consequências→Negativas; Referências→#83). A
+**auditoria de cobertura de fontes** (2026-06-20,
+`docs/audits/2026-06-cobertura-fontes.md`) **falsificou empiricamente** essa
+premissa.
+
+**Probe empírico (anexado):**
+
+```
+GET https://legis.senado.leg.br/dadosabertos/plenario/votacao/orientacaoBancada/20231212
+  → HTTP 200, 88.697 bytes
+  votacoes[16] → orientacoesLideranca[]: { dataHora, partido, voto }   (50 linhas no dia)
+       {"partido":"PL","voto":"SIM"} · {"partido":"Republica","voto":"LIVRE"} · {"partido":"Banc Fem","voto":"SIM"}
+                 votosParlamentar[]:   { nomeParlamentar, partido, voto, uf }   (907 linhas no dia)
+GET .../orientacaoBancada/20250408 → HTTP 200 · orientacoesLideranca: 23 · votosParlamentar: 123
+```
+
+O Senado publica orientação de bancada — partidária (`PL`, `PSDB`...) **e** de
+bloco temático (ex. `Banc Fem`) — no **mesmo endpoint** que entrega os votos
+nominais. É **L1, determinístico**, sem inferência.
+
+**Consequência.** A "Assimetria Câmara×Senado" de §Consequências→Negativas deixa
+de ser **intrínseca à fonte** e passa a **dívida de ingestão**, rastreada na
+issue **#500**. A nota de UI prescrita no §Decisão item 5 ("a fonte do Senado não
+publica orientação") torna-se **incorreta** e não deve ser exibida; quando a
+ingestão existir, é substituível por dado real (decisão de UI fora do escopo de
+#500).
+
+**O que permanece.** A **invariante de copy neutra (§Decisão item 4)** vale
+integralmente para a futura métrica de senadores: termo canônico "alinhamento com
+a orientação" / "divergência da orientação"; **sem** score agregado, **sem** cor
+valorativa, **sem** "fidelidade/rebeldia/traição"; comparação determinística por
+igualdade de strings.
+
+**Ressalva de cobertura.** Nem toda deliberação do Senado é nominal/aberta —
+votações simbólicas e secretas não trazem orientação nem voto individual. A
+simetria é na **disponibilidade do endpoint**, não necessariamente no volume de
+votações cobertas; a métrica de senador terá cobertura proporcional às votações
+com painel eletrônico.
+
 ## Referências
 
 - API Câmara: `GET /votacoes/{id}/orientacoes` (probe empírico 2026-06-18,
   votações `2633410-8` e `2610975-23`).
+- API Senado: `GET /plenario/votacao/orientacaoBancada/{data}` (probe empírico
+  2026-06-20 — ver Emenda; falsifica a premissa da ref. #83).
 - ADR-018 — cache de edge para queries de server component.
-- Issue #83 — Senado não publica orientação de bancada.
+- Issue #83 — Senado não publica orientação de bancada. _⚠️ Conclusão revertida
+  pela Emenda 2026-06-20 (ver issue #500)._
 - Issue #480 — cobertura degradada do alinhamento partidário por federação.
+- Issue #500 — ingestão de orientação de bancada do Senado (origem desta emenda).
+- Auditoria: `docs/audits/2026-06-cobertura-fontes.md` (§2 achado nº1, §8
+  proposta de emenda).
 - Domínio: `src/modules/parlamentares/domain/alinhamento.ts`
   (`classifyAlinhamento`, `calcularAlinhamento`).
