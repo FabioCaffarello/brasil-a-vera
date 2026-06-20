@@ -2,12 +2,14 @@ import type { InferInsertModel } from 'drizzle-orm'
 import { uuidv7 } from 'uuidv7'
 
 import type {
+  filiacaoPartidaria,
   membroComissao,
   parlamentar,
 } from '@/modules/parlamentares/domain/schema'
 
 export type ParlamentarInsert = InferInsertModel<typeof parlamentar>
 export type MembroComissaoInsert = InferInsertModel<typeof membroComissao>
+export type FiliacaoInsert = InferInsertModel<typeof filiacaoPartidaria>
 
 export function buildParlamentar(
   overrides: Partial<ParlamentarInsert> = {},
@@ -26,6 +28,18 @@ export function buildParlamentar(
     trustLevel: 'L2',
     sourceUrl: `https://example.test/parlamentar/${id}`,
     ...overrides,
+  }
+}
+
+export function buildFiliacao(
+  args: { parlamentarId: string } & Partial<FiliacaoInsert>,
+): FiliacaoInsert {
+  return {
+    id: uuidv7(),
+    partidoSigla: 'PT',
+    dataInicio: '2023-02-01',
+    dataFim: null,
+    ...args,
   }
 }
 
