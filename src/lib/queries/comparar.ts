@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { getPresencaPlenarioBatch } from '@/lib/queries/presenca'
 import {
   type ConcordanciaPar,
   calcularConcordancias,
@@ -32,7 +33,7 @@ export interface CategoriaGasto {
 
 export interface MetricasParlamentar {
   parlamentarId: string
-  /** % de presença = voto_nominal não-AUSENTE / total voto_nominal. null se sem votos. */
+  /** % de presença em votações nominais de plenário (ADR-045). null se sem elegíveis. */
   presenca: {
     presente: number
     total: number
@@ -112,19 +113,11 @@ export async function getCompararParlamentares(
 
       const concordancia = calcularConcordancias(votosPorParlamentar)
 
-      // Presença em userland (mesma collection já carregada).
-      const presencaPorId = new Map<
-        string,
-        { presente: number; total: number }
-      >()
-      for (const id of uniqueIds)
-        presencaPorId.set(id, { presente: 0, total: 0 })
-      for (const v of votos) {
-        const cur = presencaPorId.get(v.parlamentarId)
-        if (!cur) continue
-        cur.total++
-        if (v.voto !== 'AUSENTE') cur.presente++
-      }
+      // Presença em votações nominais de PLENÁRIO (ADR-045). NÃO derivar de
+      // `votos` (todas as linhas): a Câmara não grava AUSENTE, então total =
+      // comparecidas → 100% sempre. Denominador correto = plenárias elegíveis na
+      // janela de mandato (getPresencaPlenarioBatch).
+      const presencaPorId = await getPresencaPlenarioBatch(uniqueIds)
 
       // Proposições autoria primária (AUTOR — não COAUTOR).
       const propsRows = await db
@@ -176,7 +169,7 @@ export async function getCompararParlamentares(
       }
 
       const metricas: MetricasParlamentar[] = uniqueIds.map((id) => {
-        const presenca = presencaPorId.get(id) ?? { presente: 0, total: 0 }
+        const presenca = presencaPorId.get(id)
         const categorias = gastosPorId.get(id) ?? []
         let totalGeralCents = 0
         let totalRegistros = 0
@@ -187,12 +180,9 @@ export async function getCompararParlamentares(
         return {
           parlamentarId: id,
           presenca: {
-            presente: presenca.presente,
-            total: presenca.total,
-            percentual:
-              presenca.total > 0
-                ? Math.round((presenca.presente / presenca.total) * 100)
-                : null,
+            presente: presenca?.presentes ?? 0,
+            total: presenca?.elegiveis ?? 0,
+            percentual: presenca?.percentual ?? null,
           },
           gastosTotalGeral: (totalGeralCents / 100).toFixed(2),
           gastosTotalRegistros: totalRegistros,
