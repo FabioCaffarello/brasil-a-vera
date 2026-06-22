@@ -88,8 +88,8 @@ describe('isNavLinkActive', () => {
 })
 
 describe('NAV_LINKS', () => {
-  it('exporta 4 entradas, todas sem flag brand', () => {
-    expect(NAV_LINKS).toHaveLength(4)
+  it('exporta 5 entradas, todas sem flag brand', () => {
+    expect(NAV_LINKS).toHaveLength(5)
     for (const link of NAV_LINKS) {
       expect(link).not.toHaveProperty('brand')
     }
@@ -105,10 +105,10 @@ describe('NavLinks com personalLink (Hotfix 10.3)', () => {
   it('quando personalLink é definido, renderiza-o como primeiro link', () => {
     render(<NavLinks personalLink={{ href: '/painel', label: 'Painel' }} />)
     const links = screen.getAllByRole('link')
-    expect(links).toHaveLength(5)
+    expect(links).toHaveLength(6)
     expect(links[0].textContent).toBe('Painel')
     expect(links[0].getAttribute('href')).toBe('/painel')
-    expect(links[1].textContent).toBe('Parlamentares')
+    expect(links[1].textContent).toBe('Quem me representa')
   })
 
   it('marca Painel active quando pathname é /painel ou sub-rota', () => {
@@ -121,7 +121,7 @@ describe('NavLinks com personalLink (Hotfix 10.3)', () => {
   it('quando personalLink é null, NÃO renderiza link extra (paridade anônima)', () => {
     render(<NavLinks personalLink={null} />)
     const links = screen.getAllByRole('link')
-    expect(links).toHaveLength(4)
+    expect(links).toHaveLength(5)
     expect(screen.queryByRole('link', { name: 'Painel' })).toBeNull()
   })
 })

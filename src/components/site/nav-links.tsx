@@ -11,6 +11,7 @@ export type NavLink = {
 }
 
 export const NAV_LINKS: NavLink[] = [
+  { href: '/quem-me-representa', label: 'Quem me representa' },
   { href: '/parlamentares', label: 'Parlamentares' },
   { href: '/proposicoes', label: 'Proposições' },
   { href: '/votacoes', label: 'Votações' },
