@@ -36,6 +36,7 @@ describe('buildTierMatrices', () => {
       'camara-discursos',
       'camara-gastos',
       'camara-relatorias',
+      'camara-sessoes',
       'camara-tramitacao',
       'senado-comissoes',
       'senado-discursos',

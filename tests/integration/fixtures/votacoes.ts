@@ -3,6 +3,8 @@ import { uuidv7 } from 'uuidv7'
 
 import type {
   orientacao,
+  presencaSessao,
+  sessao,
   votacao,
   votoNominal,
 } from '@/modules/votacoes/domain/schema'
@@ -10,6 +12,8 @@ import type {
 export type VotacaoInsert = InferInsertModel<typeof votacao>
 export type VotoNominalInsert = InferInsertModel<typeof votoNominal>
 export type OrientacaoInsert = InferInsertModel<typeof orientacao>
+export type SessaoInsert = InferInsertModel<typeof sessao>
+export type PresencaSessaoInsert = InferInsertModel<typeof presencaSessao>
 
 export function buildVotacao(
   overrides: Partial<VotacaoInsert> = {},
@@ -44,6 +48,29 @@ export function buildVotoNominal(
     voto: 'SIM',
     ...args,
   }
+}
+
+export function buildSessao(
+  overrides: Partial<SessaoInsert> = {},
+): SessaoInsert {
+  const id = uuidv7()
+  return {
+    id,
+    sourceId: `ev-${id.slice(-12)}`,
+    casa: 'CAMARA',
+    dataHora: new Date('2026-04-10T14:00:00Z'),
+    descricao: 'Sessão Deliberativa Ordinária',
+    trustLevel: 'L1',
+    sourceUrl: `https://example.test/evento/${id}`,
+    ...overrides,
+  }
+}
+
+export function buildPresencaSessao(args: {
+  sessaoId: string
+  parlamentarId: string
+}): PresencaSessaoInsert {
+  return { ...args }
 }
 
 export function buildOrientacao(

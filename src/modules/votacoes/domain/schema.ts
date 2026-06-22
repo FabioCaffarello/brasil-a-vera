@@ -120,3 +120,50 @@ export const orientacao = votacoesSchema.table(
     }),
   ],
 )
+
+// Sessão deliberativa de plenário (ADR-046) — fonte: API de eventos da Câmara
+// (/eventos). Entidade-raiz da fonte de eventos: carrega trust/source_url.
+// Câmara-only nesta fase.
+export const sessao = votacoesSchema.table(
+  'sessao',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    // id do evento na fonte (Câmara: id de /eventos).
+    sourceId: text('source_id').notNull(),
+    casa: casa('casa').notNull(),
+    dataHora: timestamp('data_hora', { withTimezone: true }).notNull(),
+    descricao: text('descricao').notNull(),
+    trustLevel: trustLevel('trust_level').notNull(),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('sessao_casa_source_unique').on(table.casa, table.sourceId),
+    index('sessao_data_hora_idx').on(table.dataHora),
+  ],
+)
+
+// Presença numa sessão (ADR-046). Tabela-filha da sessão — herda trust da raiz
+// (princípio 3). Substituição em massa por sessão na ingestão (princípio 5).
+export const presencaSessao = votacoesSchema.table(
+  'presenca_sessao',
+  {
+    sessaoId: uuid('sessao_id')
+      .notNull()
+      .references(() => sessao.id, { onDelete: 'cascade' }),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.sessaoId, table.parlamentarId],
+      name: 'presenca_sessao_pk',
+    }),
+    index('presenca_sessao_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
