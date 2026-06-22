@@ -21,7 +21,7 @@ export function buildVotacao(
     casa: 'CAMARA',
     dataHora: new Date('2026-04-10T14:00:00Z'),
     descricao: 'Votação simbólica do projeto',
-    orgao: 'PLENARIO',
+    orgao: 'PLEN',
     votosSim: 250,
     votosNao: 200,
     abstencoes: 5,
