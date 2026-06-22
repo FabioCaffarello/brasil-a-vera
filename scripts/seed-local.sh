@@ -30,26 +30,17 @@ export DIRECT_URL="${DIRECT_URL:-$DATABASE_URL}"
 
 STOP_ON_ERROR="${STOP_ON_ERROR:-0}"
 
-# Ordem importa: parlamentares → CPF → proposições → votações → vínculo
-# votação/proposição → tramitação → orientações → gastos → bens TSE →
-# agregados (que somam sobre tudo).
-STEPS="
-ingest:camara:deputados
-ingest:senado:senadores
-backfill:camara:cpf
-ingest:camara:proposicoes
-ingest:senado:proposicoes
-ingest:camara:votacoes
-ingest:senado:votacoes
-backfill:camara:votacao-proposicao
-ingest:camara:tramitacao
-ingest:senado:tramitacao
-ingest:camara:orientacoes
-ingest:camara:gastos
-ingest:tse:bens
-seed:agregados:parlamentar
-seed:agregados:proposicao
-"
+# A lista de steps é DERIVADA do registry (ingestion/registry.ts) — a mesma
+# fonte de verdade dos crons de prod (print-matrix.ts). Antes era hardcoded
+# aqui e divergiu: produtores novos (filiacoes, discursos, etc.) entravam no
+# registry mas não no seed. Agora todo produtor do registry entra automático,
+# na ordem de dependência (cadência + tier + hoist do backfill-cpf); ver
+# ingestion/ops/seed-order.ts. Agregados (não-ingestão) saem na cauda.
+STEPS="$(npx tsx ingestion/ops/print-seed-order.ts)"
+if [ -z "$STEPS" ]; then
+  echo "✗ falha ao derivar STEPS do registry (npx tsx print-seed-order.ts)" >&2
+  exit 1
+fi
 
 echo "================================================================"
 echo " Populando Postgres LOCAL (DB_DRIVER=node-postgres)"
