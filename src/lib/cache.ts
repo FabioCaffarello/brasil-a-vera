@@ -38,6 +38,8 @@ export const TTL = {
   patrimonioDeclarado: 86_400,
   // Relatorias (ADR-044): ingestão semanal → 24h de cache é folgado e barato.
   relatorias: 86_400,
+  // Discursos (ADR-048): ingestão semanal → 24h.
+  discursos: 86_400,
   listagemFiltrada: 300,
 } as const
 
