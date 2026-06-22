@@ -226,6 +226,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 30,
     },
+    // Presença física em sessões deliberativas de plenário (ADR-046).
+    // Câmara-only. tier 0 — depende de parlamentar já populado. Pagina /eventos
+    // + busca presença por sessão (detalhe throttla) → timeout folgado.
+    {
+      id: 'camara-sessoes',
+      script: 'ingest:camara:sessoes',
+      context: 'ingestion-camara-sessoes',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 60,
+    },
     // ── monthly ───────────────────────────────────────────────────────────
     // Filiação partidária (#502): histórico que muda poucas vezes/ano →
     // mensal. tier 0: dependem só de parlamentar populado (daily), como o
