@@ -26,6 +26,7 @@ import {
   ScrollText,
   TrendingDown,
   TrendingUp,
+  UserCheck,
   Users,
   Vote,
 } from 'lucide-react'
@@ -44,6 +45,7 @@ import { ParesContraditorios } from '@/components/parlamentar/pares-contraditori
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { Presenca } from '@/components/parlamentar/presenca'
+import { PresencaFisica } from '@/components/parlamentar/presenca-fisica'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
@@ -96,6 +98,7 @@ import {
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
 import { getPresencaPlenario } from '@/lib/queries/presenca'
+import { getPresencaFisica } from '@/lib/queries/presenca-fisica'
 import {
   getRelatorAutoria,
   getRelatoriasInfluencia,
@@ -254,6 +257,7 @@ export default async function ParlamentarPerfilPage({
     relatoriasInfluencia,
     relatorAutoria,
     presenca,
+    presencaFisica,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -295,6 +299,7 @@ export default async function ParlamentarPerfilPage({
     getRelatoriasInfluencia(parlamentar.id),
     getRelatorAutoria(parlamentar.id),
     getPresencaPlenario(parlamentar.id),
+    getPresencaFisica(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -500,8 +505,13 @@ export default async function ParlamentarPerfilPage({
           { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
           {
             id: 'presenca',
-            label: 'Presença',
+            label: 'Participação',
             icon: <CalendarCheck className="h-4 w-4" />,
+          },
+          {
+            id: 'presenca-sessoes',
+            label: 'Sessões',
+            icon: <UserCheck className="h-4 w-4" />,
           },
           {
             id: 'alinhamento',
@@ -616,10 +626,22 @@ export default async function ParlamentarPerfilPage({
           },
           {
             id: 'presenca',
-            title: 'Presença em plenário',
+            title: 'Participação em votações',
             className: 'rounded-lg border-line-default bg-surface-base',
             triggerClassName: 'font-semibold text-base',
             content: <Presenca presenca={presenca} casa={parlamentar.casa} />,
+          },
+          {
+            id: 'presenca-sessoes',
+            title: 'Presença em sessões',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <PresencaFisica
+                presenca={presencaFisica}
+                casa={parlamentar.casa}
+              />
+            ),
           },
           {
             id: 'alinhamento',
@@ -794,10 +816,18 @@ export default async function ParlamentarPerfilPage({
 
         <SectionCard
           id="presenca"
-          subtitle="Presença em votações nominais de plenário, no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra."
-          title="Presença em plenário"
+          subtitle="Quanto o parlamentar participa das votações nominais de plenário (votou em quantas), no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra."
+          title="Participação em votações"
         >
           <Presenca presenca={presenca} casa={parlamentar.casa} />
+        </SectionCard>
+
+        <SectionCard
+          id="presenca-sessoes"
+          subtitle="Frequência física às sessões deliberativas de plenário (compareceu a quantas), no período de mandato. Diferente de participar das votações: dá para comparecer e não votar numa votação específica. Câmara-only."
+          title="Presença em sessões"
+        >
+          <PresencaFisica presenca={presencaFisica} casa={parlamentar.casa} />
         </SectionCard>
 
         <SectionCard
