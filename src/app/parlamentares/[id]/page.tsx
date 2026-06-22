@@ -22,6 +22,7 @@ import {
   Landmark,
   Network,
   PieChart,
+  ScrollText,
   TrendingDown,
   TrendingUp,
   Users,
@@ -42,6 +43,7 @@ import { ParesContraditorios } from '@/components/parlamentar/pares-contraditori
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
+import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
@@ -91,6 +93,10 @@ import {
   getGrafoParticipacao,
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
+import {
+  getRelatorAutoria,
+  getRelatoriasInfluencia,
+} from '@/lib/queries/relatorias'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
@@ -242,6 +248,8 @@ export default async function ParlamentarPerfilPage({
     fidelidadeTimeline,
     fidelidadeBancada,
     fidelidadeOrientacao,
+    relatoriasInfluencia,
+    relatorAutoria,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -278,6 +286,14 @@ export default async function ParlamentarPerfilPage({
     getTimelineMigracao(parlamentar.id),
     getFidelidadeBancada(parlamentar.id),
     getFidelidadeOrientacao(parlamentar.id),
+    // Relatorias são Câmara-only (ADR-044); para senador resolve vazio e a UI
+    // mostra a nota de cobertura.
+    parlamentar.casa === 'CAMARA'
+      ? getRelatoriasInfluencia(parlamentar.id)
+      : Promise.resolve({ total: 0, recentes: [] }),
+    parlamentar.casa === 'CAMARA'
+      ? getRelatorAutoria(parlamentar.id)
+      : Promise.resolve({ total: 0, distribuicao: [] }),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -502,6 +518,11 @@ export default async function ParlamentarPerfilPage({
             icon: <Gavel className="h-4 w-4" />,
           },
           {
+            id: 'relatorias',
+            label: 'Relatorias',
+            icon: <ScrollText className="h-4 w-4" />,
+          },
+          {
             id: 'proposicoes',
             label: 'Proposições',
             icon: <Inbox className="h-4 w-4" />,
@@ -626,6 +647,19 @@ export default async function ParlamentarPerfilPage({
             className: 'rounded-lg border-line-default bg-surface-base',
             triggerClassName: 'font-semibold text-base',
             content: <ComissoesMembro {...comissoes} />,
+          },
+          {
+            id: 'relatorias',
+            title: 'Relatorias',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: (
+              <Relatorias
+                influencia={relatoriasInfluencia}
+                autoria={relatorAutoria}
+                casa={parlamentar.casa}
+              />
+            ),
           },
           {
             id: 'proposicoes',
@@ -783,6 +817,18 @@ export default async function ParlamentarPerfilPage({
           title="Comissões"
         >
           <ComissoesMembro {...comissoes} />
+        </SectionCard>
+
+        <SectionCard
+          id="relatorias"
+          subtitle="Proposições em que é o relator vigente/último (designação institucional, não escolha do parlamentar) e a distribuição partidária dos autores dessas proposições. Câmara-only; referência factual, sem juízo."
+          title="Relatorias"
+        >
+          <Relatorias
+            influencia={relatoriasInfluencia}
+            autoria={relatorAutoria}
+            casa={parlamentar.casa}
+          />
         </SectionCard>
 
         <SectionCard
