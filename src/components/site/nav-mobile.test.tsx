@@ -89,16 +89,16 @@ describe('NavMobile', () => {
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(5)
+    expect(links).toHaveLength(6)
     expect(links[0].textContent).toBe('Painel')
   })
 
-  it('sem personalLink, lista preserva 4 links públicos (paridade anônima)', () => {
+  it('sem personalLink, lista preserva 5 links públicos (paridade anônima)', () => {
     render(<NavMobile personalLink={null} />)
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(4)
+    expect(links).toHaveLength(5)
     expect(dialog.querySelector('a[href="/painel"]')).toBeNull()
   })
 })
