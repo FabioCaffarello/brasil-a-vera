@@ -48,6 +48,7 @@ import { Presenca } from '@/components/parlamentar/presenca'
 import { PresencaFisica } from '@/components/parlamentar/presenca-fisica'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { Relatorias } from '@/components/parlamentar/relatorias'
+import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patrimonial'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
@@ -103,6 +104,7 @@ import {
   getRelatorAutoria,
   getRelatoriasInfluencia,
 } from '@/lib/queries/relatorias'
+import { getVariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
@@ -258,6 +260,7 @@ export default async function ParlamentarPerfilPage({
     relatorAutoria,
     presenca,
     presencaFisica,
+    variacaoPatrimonial,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -300,6 +303,7 @@ export default async function ParlamentarPerfilPage({
     getRelatorAutoria(parlamentar.id),
     getPresencaPlenario(parlamentar.id),
     getPresencaFisica(parlamentar.id),
+    getVariacaoPatrimonial(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -566,6 +570,15 @@ export default async function ParlamentarPerfilPage({
                 },
               ]
             : []),
+          ...(variacaoPatrimonial
+            ? [
+                {
+                  id: 'variacao-patrimonio',
+                  label: 'Variação',
+                  icon: <TrendingUp className="h-4 w-4" />,
+                },
+              ]
+            : []),
           ...(mixComposicao
             ? [
                 {
@@ -743,6 +756,19 @@ export default async function ParlamentarPerfilPage({
                   triggerClassName: 'font-semibold text-base',
                   content: (
                     <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
+                  ),
+                },
+              ]
+            : []),
+          ...(variacaoPatrimonial
+            ? [
+                {
+                  id: 'variacao-patrimonio',
+                  title: 'Variação patrimonial no mandato',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
                   ),
                 },
               ]
@@ -926,6 +952,16 @@ export default async function ParlamentarPerfilPage({
             title="Evolução patrimonial entre pleitos"
           >
             <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
+          </SectionCard>
+        ) : null}
+
+        {variacaoPatrimonial ? (
+          <SectionCard
+            id="variacao-patrimonio"
+            subtitle="Variação real do patrimônio declarado durante o mandato (entre os dois pleitos mais recentes), com o percentil em relação aos pares. Declaração à Justiça Eleitoral — não é renda nem movimentação. Distinto dos gastos da cota (CEAP)."
+            title="Variação patrimonial no mandato"
+          >
+            <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
           </SectionCard>
         ) : null}
 
