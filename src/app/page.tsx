@@ -91,10 +91,13 @@ export default async function Home() {
         actions={
           <>
             <Button asChild>
-              <Link href="/parlamentares">
-                Explorar parlamentares
+              <Link href="/quem-me-representa">
+                Quem me representa?
                 <ArrowRight aria-hidden className="ml-2 size-4" />
               </Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link href="/parlamentares">Explorar parlamentares</Link>
             </Button>
             <Button asChild variant="ghost">
               <Link href="/proposicoes">Ver proposições</Link>
