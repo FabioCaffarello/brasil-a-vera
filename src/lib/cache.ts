@@ -36,6 +36,8 @@ export const TTL = {
   // ingestão é mensal — 24h é folgado, barato e bem acima do horizonte de
   // mudança real.
   patrimonioDeclarado: 86_400,
+  // Relatorias (ADR-044): ingestão semanal → 24h de cache é folgado e barato.
+  relatorias: 86_400,
   listagemFiltrada: 300,
 } as const
 
