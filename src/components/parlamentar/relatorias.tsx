@@ -24,16 +24,6 @@ interface Props {
 }
 
 export function Relatorias({ influencia, autoria, casa }: Props) {
-  if (casa === 'SENADO') {
-    return (
-      <p className="text-fg-tertiary text-sm">
-        Esta leitura cobre as relatorias da Câmara (via{' '}
-        <code className="text-xs">uriUltimoRelator</code>). As relatorias do
-        Senado ainda não são ingeridas nesta versão.
-      </p>
-    )
-  }
-
   if (influencia.total === 0) {
     return (
       <p className="text-fg-tertiary text-sm">
@@ -94,6 +84,9 @@ export function Relatorias({ influencia, autoria, casa }: Props) {
             {autoria.total === 1 ? 'autoria' : 'autorias'} com parlamentar
             identificado). Distribuição factual — autores externos (comissões,
             Mesa) não entram.
+            {casa === 'SENADO'
+              ? ' No Senado, autores de matérias de origem no próprio Senado ainda não mapeiam a um parlamentar, então esta distribuição reflete sobretudo matérias revisoras (origem na Câmara).'
+              : ''}
           </p>
           <ul className="space-y-2">
             {autoria.distribuicao.map((d) => (

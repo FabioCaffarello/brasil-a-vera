@@ -108,4 +108,32 @@ describe('queries/relatorias (integration)', () => {
     const d = await getRelatorAutoria('00000000-0000-7000-8000-000000000000')
     expect(d).toEqual({ total: 0, distribuicao: [] })
   })
+
+  it('bicameral: uma matéria tem relator na Câmara E no Senado (emenda 2026-06-21)', async () => {
+    const dep = buildParlamentar({ nome: 'Dep', casa: 'CAMARA' })
+    const sen = buildParlamentar({ nome: 'Sen', casa: 'SENADO' })
+    const p = buildProposicao({ numero: 7, ano: 2026 })
+    await db.insert(parlamentar).values([dep, sen])
+    await db.insert(proposicao).values(p)
+
+    // Mesma proposição, um relator por casa — não viola o único (proposicao,casa).
+    await db.insert(relatoria).values([
+      buildRelatoria({
+        proposicaoId: p.id as string,
+        casa: 'CAMARA',
+        parlamentarId: dep.id as string,
+      }),
+      buildRelatoria({
+        proposicaoId: p.id as string,
+        casa: 'SENADO',
+        parlamentarId: sen.id as string,
+        designadoEm: '2026-05-01',
+      }),
+    ])
+
+    const rDep = await getRelatoriasInfluencia(dep.id as string)
+    const rSen = await getRelatoriasInfluencia(sen.id as string)
+    expect(rDep.total).toBe(1)
+    expect(rSen.total).toBe(1)
+  })
 })

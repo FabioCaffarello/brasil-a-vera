@@ -1,0 +1,1 @@
+ALTER TABLE "proposicoes"."relatoria" ADD COLUMN "designado_em" date;

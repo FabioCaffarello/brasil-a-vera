@@ -95,12 +95,18 @@ async function processProposicao(
     if (parlamentarId === null) stats.relatorForaDaBase++
     else stats.mapeados++
 
-    // Upsert por proposicao_id (um último relator por matéria, ADR-044).
+    // Upsert por (proposicao_id, casa) — um relator por matéria por casa
+    // (ADR-044 emenda 2026-06-21).
     await db
       .insert(relatoria)
-      .values({ proposicaoId: prop.id, parlamentarId, relatorSourceId })
+      .values({
+        proposicaoId: prop.id,
+        casa: CASA,
+        parlamentarId,
+        relatorSourceId,
+      })
       .onConflictDoUpdate({
-        target: relatoria.proposicaoId,
+        target: [relatoria.proposicaoId, relatoria.casa],
         set: { parlamentarId, relatorSourceId, ingestedAt: sql`now()` },
       })
   } catch (err) {

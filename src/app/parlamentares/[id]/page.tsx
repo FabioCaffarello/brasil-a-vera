@@ -286,14 +286,10 @@ export default async function ParlamentarPerfilPage({
     getTimelineMigracao(parlamentar.id),
     getFidelidadeBancada(parlamentar.id),
     getFidelidadeOrientacao(parlamentar.id),
-    // Relatorias são Câmara-only (ADR-044); para senador resolve vazio e a UI
-    // mostra a nota de cobertura.
-    parlamentar.casa === 'CAMARA'
-      ? getRelatoriasInfluencia(parlamentar.id)
-      : Promise.resolve({ total: 0, recentes: [] }),
-    parlamentar.casa === 'CAMARA'
-      ? getRelatorAutoria(parlamentar.id)
-      : Promise.resolve({ total: 0, distribuicao: [] }),
+    // Relatorias: Câmara e Senado (ADR-044 emenda 2026-06-21). Casa-agnóstico —
+    // conta por parlamentar_id.
+    getRelatoriasInfluencia(parlamentar.id),
+    getRelatorAutoria(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
