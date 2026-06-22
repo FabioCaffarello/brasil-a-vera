@@ -39,6 +39,7 @@ describe('buildTierMatrices', () => {
       'camara-tramitacao',
       'senado-comissoes',
       'senado-discursos',
+      'senado-relatorias',
       'senado-tramitacao',
     ])
   })

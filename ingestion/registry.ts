@@ -214,6 +214,18 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 60,
     },
+    // Relatorias do Senado (ADR-044 emenda 2026-06-21): per-senador, casa
+    // 'SENADO'. tier 0 — depende de proposicao (source_id_senado) + parlamentar
+    // já populados. Fonte LEGADA e fail-soft (ver ingestion/senado/relatorias.ts):
+    // ~81 senadores, rápido; timeout enxuto.
+    {
+      id: 'senado-relatorias',
+      script: 'ingest:senado:relatorias',
+      context: 'ingestion-senado-relatorias',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 30,
+    },
     // ── monthly ───────────────────────────────────────────────────────────
     // Filiação partidária (#502): histórico que muda poucas vezes/ano →
     // mensal. tier 0: dependem só de parlamentar populado (daily), como o

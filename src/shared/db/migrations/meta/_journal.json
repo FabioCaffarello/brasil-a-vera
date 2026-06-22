@@ -162,6 +162,20 @@
       "when": 1782087581691,
       "tag": "0022_pale_mauler",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782093138190,
+      "tag": "0023_bouncy_enchantress",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782094419634,
+      "tag": "0024_quick_nehzno",
+      "breakpoints": true
     }
   ]
 }

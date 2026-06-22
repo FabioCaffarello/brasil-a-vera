@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import {
   boolean,
+  date,
   index,
   integer,
   pgSchema,
@@ -14,6 +15,7 @@ import { uuidv7 } from 'uuidv7'
 
 import { parlamentar } from '@/modules/parlamentares/domain/schema'
 import {
+  casa,
   situacaoProposicao,
   tipoAutoria,
   tipoProposicao,
@@ -124,7 +126,8 @@ export const proposicaoAutor = proposicoesSchema.table(
 
 // Relatoria (ADR-044): relator vigente/último da proposição. Tabela-filha da
 // proposicao — herda trust da raiz (princípio 3), não carrega trust_level
-// próprio. Câmara-only nesta fase (uriUltimoRelator).
+// próprio. Bicameral (emenda 2026-06-21): uma matéria pode ter um relator por
+// casa, então `casa` entra na chave natural.
 export const relatoria = proposicoesSchema.table(
   'relatoria',
   {
@@ -134,21 +137,33 @@ export const relatoria = proposicoesSchema.table(
     proposicaoId: uuid('proposicao_id')
       .notNull()
       .references(() => proposicao.id, { onDelete: 'cascade' }),
-    // Relator pode não estar na nossa base (ex.: ex-deputado fora da legislatura
-    // atual). SET NULL preserva o registro; o confronto filtra parlamentar_id
-    // não-nulo (fail-closed, ADR-044 D3).
+    // Câmara ('uriUltimoRelator') ou Senado ('/senador/{id}/relatorias'). Default
+    // 'CAMARA' faz backfill das linhas pré-existentes (#526); a ingestão grava a
+    // casa explícita.
+    casa: casa('casa').notNull().default('CAMARA'),
+    // Relator pode não estar na nossa base (ex.: ex-parlamentar fora da
+    // legislatura atual). SET NULL preserva o registro; o confronto filtra
+    // parlamentar_id não-nulo (fail-closed, ADR-044 D3).
     parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
       onDelete: 'set null',
     }),
-    // id do deputado na Câmara, extraído de statusProposicao.uriUltimoRelator.
+    // id do relator na fonte: deputado (Câmara) ou senador (Senado).
     relatorSourceId: text('relator_source_id').notNull(),
+    // Data de designação do relator (Senado: DataDesignacao). Null na Câmara
+    // (uriUltimoRelator não traz data). Desempata o "último relator" de forma
+    // determinística quando uma matéria teve vários relatores no tempo: vence a
+    // designação mais recente, independente da ordem de ingestão (ADR-044).
+    designadoEm: date('designado_em'),
     ingestedAt: timestamp('ingested_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
   },
   (table) => [
-    // Um último relator por proposição (ADR-044) — chave natural p/ upsert.
-    uniqueIndex('relatoria_proposicao_unique').on(table.proposicaoId),
+    // Um relator por proposição POR CASA (emenda 2026-06-21) — chave p/ upsert.
+    uniqueIndex('relatoria_proposicao_casa_unique').on(
+      table.proposicaoId,
+      table.casa,
+    ),
     index('relatoria_parlamentar_id_idx').on(table.parlamentarId),
   ],
 )
