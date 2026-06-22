@@ -2,7 +2,7 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-06-22
-> Status: proposed
+> Status: accepted (emendado 2026-06-22 — ver [Emenda](#emenda-2026-06-22--senado-parcial))
 
 > Evolução cívica de contexto. Respeita o trust em aggregate roots (princípio 3)
 > e a moldura de copy neutra do [ADR-040](040-alinhamento-orientacao-de-bloco.md) §4.
@@ -94,6 +94,32 @@ render/revalidate — não é armazenada.
 - **Verificação** dos dados autodeclarados.
 - **Juízo** a partir de escolaridade/profissão (D4).
 - **Afirmações de número** antes de reconfirmar contra prod (DB local; Neon 402).
+
+## Emenda 2026-06-22 — Senado (parcial)
+
+> Status desta emenda: **proposta** (o merge é ato do owner).
+
+**O que entra.** O não-objetivo "Senado (detalhe com forma própria — follow-up)"
+foi resolvido empiricamente. Probe (2026-06-22):
+
+```
+GET /senador/{codigo} → DetalheParlamentar.Parlamentar.DadosBasicosParlamentar:
+    DataNascimento ('1975-04-03'), Naturalidade ('Passo Fundo'), UfNaturalidade ('RS')
+```
+
+O detalhe do Senado expõe **nascimento e naturalidade** — porém **não**
+escolaridade nem profissão. Decisão:
+
+- Ingestão `senado-bio` (per-senador, como discursos/comissões) preenche
+  `data_nascimento`, `municipio_nascimento` (Naturalidade) e `uf_nascimento`
+  (UfNaturalidade). **Reusa as colunas já criadas** (sem schema novo).
+- Para senadores, `escolaridade` e `profissao` permanecem null — a UI já é
+  parcial-tolerante (só renderiza os campos presentes). A seção "Quem é" do
+  senador mostra **idade + naturalidade**.
+
+**O que permanece.** D3 (idade derivada), D4 (autodeclarado, point-in-time, sem
+juízo). A assimetria Câmara×Senado cai de total para parcial (escolaridade/
+profissão seguem Câmara-only — sem fonte confirmada no Senado).
 
 ## Referências
 
