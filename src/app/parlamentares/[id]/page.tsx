@@ -21,6 +21,7 @@ import {
   GitBranch,
   Inbox,
   Landmark,
+  MessageSquare,
   Network,
   PieChart,
   ScrollText,
@@ -36,6 +37,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
+import { Discursos } from '@/components/parlamentar/discursos'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
@@ -68,6 +70,7 @@ import {
   CursorProposicoesV1,
   CursorVotosV1,
 } from '@/lib/queries/cursor-schemas'
+import { getDiscursosParlamentar } from '@/lib/queries/discursos'
 import {
   getFidelidadeBancada,
   getFidelidadeOrientacao,
@@ -261,6 +264,7 @@ export default async function ParlamentarPerfilPage({
     presenca,
     presencaFisica,
     variacaoPatrimonial,
+    discursos,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -304,6 +308,7 @@ export default async function ParlamentarPerfilPage({
     getPresencaPlenario(parlamentar.id),
     getPresencaFisica(parlamentar.id),
     getVariacaoPatrimonial(parlamentar.id),
+    getDiscursosParlamentar(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -548,6 +553,11 @@ export default async function ParlamentarPerfilPage({
             icon: <Inbox className="h-4 w-4" />,
           },
           {
+            id: 'discursos',
+            label: 'Discursos',
+            icon: <MessageSquare className="h-4 w-4" />,
+          },
+          {
             id: 'gastos',
             label: 'Gastos',
             icon: <TrendingDown className="h-4 w-4" />,
@@ -722,6 +732,13 @@ export default async function ParlamentarPerfilPage({
                 proximaPaginaHref={proposicoesProximaPaginaHref}
               />
             ),
+          },
+          {
+            id: 'discursos',
+            title: 'Discursos',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <Discursos discursos={discursos} />,
           },
           {
             id: 'gastos',
@@ -919,6 +936,14 @@ export default async function ParlamentarPerfilPage({
             buildFiltroHref={buildProposicoesFiltroHref}
             proximaPaginaHref={proposicoesProximaPaginaHref}
           />
+        </SectionCard>
+
+        <SectionCard
+          id="discursos"
+          subtitle="O que o parlamentar fala em plenário e comissão: principais temas (indexação oficial da fonte) e discursos recentes com link ao inteiro teor. Discurso não é a posição oficial nem o voto."
+          title="Discursos"
+        >
+          <Discursos discursos={discursos} />
         </SectionCard>
 
         <SectionCard
