@@ -183,6 +183,13 @@
       "when": 1782096762639,
       "tag": "0025_fast_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782103821813,
+      "tag": "0026_fluffy_snowbird",
+      "breakpoints": true
     }
   ]
 }

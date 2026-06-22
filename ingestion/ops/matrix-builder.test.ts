@@ -50,6 +50,7 @@ describe('buildTierMatrices', () => {
     expect(tiers).toHaveLength(2)
     expect(tiers[0].map((e) => e.id)).toEqual([
       'camara-filiacoes',
+      'camara-backfill-bio',
       'senado-filiacoes',
       'camara-backfill-cpf',
     ])
