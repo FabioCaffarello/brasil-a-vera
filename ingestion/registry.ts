@@ -200,6 +200,20 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 30,
     },
+    // Relatorias (#525 / ADR-044): relator vigente por proposição da Câmara.
+    // Câmara-only. tier 0 — depende só de proposicao + parlamentar já populados
+    // (ingestão diária de runs anteriores), como comissoes/discursos. Serial +
+    // pacing + scan por proposição (detalhe throttla bursts, igual ao
+    // backfill-cpf) → timeout folgado. Semanal: o relator muda durante a
+    // tramitação.
+    {
+      id: 'camara-relatorias',
+      script: 'ingest:camara:relatorias',
+      context: 'ingestion-camara-relatorias',
+      cadence: 'weekly',
+      tier: 0,
+      timeoutMin: 60,
+    },
     // ── monthly ───────────────────────────────────────────────────────────
     // Filiação partidária (#502): histórico que muda poucas vezes/ano →
     // mensal. tier 0: dependem só de parlamentar populado (daily), como o

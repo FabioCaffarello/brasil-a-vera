@@ -155,6 +155,13 @@
       "when": 1781978144185,
       "tag": "0021_material_agent_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1782087581691,
+      "tag": "0022_pale_mauler",
+      "breakpoints": true
     }
   ]
 }

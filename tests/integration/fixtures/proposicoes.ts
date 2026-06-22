@@ -5,12 +5,14 @@ import type {
   proposicao,
   proposicaoAutor,
   proposicaoTema,
+  relatoria,
   tramitacao,
 } from '@/modules/proposicoes/domain/schema'
 
 export type ProposicaoInsert = InferInsertModel<typeof proposicao>
 export type ProposicaoAutorInsert = InferInsertModel<typeof proposicaoAutor>
 export type ProposicaoTemaInsert = InferInsertModel<typeof proposicaoTema>
+export type RelatoriaInsert = InferInsertModel<typeof relatoria>
 export type TramitacaoInsert = InferInsertModel<typeof tramitacao>
 
 export function buildProposicao(
@@ -42,6 +44,16 @@ export function buildProposicaoAutor(
   return {
     id,
     tipoAutoria: 'AUTOR',
+    ...args,
+  }
+}
+
+export function buildRelatoria(
+  args: { proposicaoId: string } & Partial<RelatoriaInsert>,
+): RelatoriaInsert {
+  return {
+    id: uuidv7(),
+    relatorSourceId: '99999',
     ...args,
   }
 }

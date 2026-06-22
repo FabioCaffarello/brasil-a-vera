@@ -122,6 +122,37 @@ export const proposicaoAutor = proposicoesSchema.table(
   ],
 )
 
+// Relatoria (ADR-044): relator vigente/último da proposição. Tabela-filha da
+// proposicao — herda trust da raiz (princípio 3), não carrega trust_level
+// próprio. Câmara-only nesta fase (uriUltimoRelator).
+export const relatoria = proposicoesSchema.table(
+  'relatoria',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    proposicaoId: uuid('proposicao_id')
+      .notNull()
+      .references(() => proposicao.id, { onDelete: 'cascade' }),
+    // Relator pode não estar na nossa base (ex.: ex-deputado fora da legislatura
+    // atual). SET NULL preserva o registro; o confronto filtra parlamentar_id
+    // não-nulo (fail-closed, ADR-044 D3).
+    parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
+      onDelete: 'set null',
+    }),
+    // id do deputado na Câmara, extraído de statusProposicao.uriUltimoRelator.
+    relatorSourceId: text('relator_source_id').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Um último relator por proposição (ADR-044) — chave natural p/ upsert.
+    uniqueIndex('relatoria_proposicao_unique').on(table.proposicaoId),
+    index('relatoria_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
 export const tramitacao = proposicoesSchema.table(
   'tramitacao',
   {
