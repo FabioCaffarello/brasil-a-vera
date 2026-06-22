@@ -1,8 +1,13 @@
 # ADR-044: Confronto de relatorias — influência e relator×autoria (sem relator×voto)
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-06-21
-> Status: proposed
+> Status: accepted (emendado 2026-06-21 — ver [Emenda](#emenda-2026-06-21--senado-confirmado-e-modelagem-bicameral))
+
+> ⚠️ **Emenda 2026-06-21:** o não-objetivo "relatorias do Senado — até confirmar
+> o endpoint" foi **resolvido empiricamente** (endpoint confirmado HTTP 200). O
+> Senado entra em escopo e a modelagem ganha a coluna `casa` (relatoria
+> bicameral). Ver a seção [Emenda](#emenda-2026-06-21--senado-confirmado-e-modelagem-bicameral).
 
 > Próximo confronto do Eixo 1 após a fidelidade partidária ([ADR-043](043-fidelidade-partidaria-duas-definicoes.md)).
 > Reusa a **moldura de copy neutra** do [ADR-040](040-alinhamento-orientacao-de-bloco.md) §4
@@ -153,6 +158,51 @@ Este ADR **registra a decisão**; explicitamente **não** faz nem autoriza:
 - **Score ou ranking** de parlamentares por volume de relatorias.
 - **Afirmações públicas de cobertura** antes de reconfirmar os números contra prod
   (DB local ≠ prod; Neon em 402; **[A CONFIRMAR]**).
+
+## Emenda 2026-06-21 — Senado confirmado e modelagem bicameral
+
+> Status desta emenda: **proposta** (o merge é ato do owner). Enquanto não
+> mergeada, o corpo acima permanece como a decisão original.
+
+**O que cai.** O não-objetivo *"relatorias do Senado — até confirmar o endpoint
+empiricamente"* e a restrição "Câmara-only nesta fase". Probe empírico
+(2026-06-21):
+
+```
+GET /senador/{id}/relatorias               → HTTP 200  (lista per-senador, aninhada:
+    MateriasRelatoriaParlamentar → Relatorias → Relatoria → Materia.Codigo)
+GET /processo?relator={id}                 → HTTP 200
+```
+
+O Senado **expõe relatorias** por um endpoint **per-senador** — caminho mais
+barato que o scan por proposição da Câmara (uma chamada por senador, como
+discursos/comissões/filiações). É **L1, determinístico**.
+
+**Modelagem bicameral (nova decisão).** Uma matéria que tramita nas duas casas
+tem **um relator em cada casa**. Medição: **14** proposições na base têm
+`source_id_camara` E `source_id_senado` — colidiriam no `unique(proposicao_id)`
+atual (o relator do Senado sobrescreveria o da Câmara). Decisão:
+
+- `proposicoes.relatoria` ganha a coluna **`casa`** (enum `casa`), e o índice
+  único passa a **`(proposicao_id, casa)`** — um relator por proposição **por
+  casa**. As linhas existentes (Câmara, #526) migram com `casa = 'CAMARA'`.
+- A ingestão do Senado grava `casa = 'SENADO'`, mapeando `Materia.Codigo` →
+  `proposicao.source_id_senado` (mesma chave do backfill-senado). Só matérias já
+  ingeridas como `proposicao` geram linha (fail-closed, igual à Câmara).
+
+**Cobertura dos dois ângulos no Senado.**
+
+- **Influência** (relatou N) — limpo. A query é casa-agnóstica (conta por
+  `parlamentar_id`); um senador-relator mapeia um `parlamentar` do Senado.
+- **Relator×autoria** — **degradado** no Senado: a `proposicao_autor` do Senado é
+  string sem `parlamentar_id` (achado do diagnóstico do ADR-043), então a
+  distribuição partidária só conta autores **mapeados** — tipicamente matérias
+  revisoras de origem na Câmara. Não se fabrica partido para autor não-mapeado
+  (fail-closed). A UI deve deixar essa parcialidade explícita.
+
+**O que permanece.** D2 (sem relator×voto — o confounder procedural vale para as
+duas casas), D4 (copy neutra — relatoria é designação institucional), o
+fail-closed e o trust herdado da proposição (princípio 3).
 
 ## Referências
 
