@@ -15,6 +15,7 @@ import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
   Building2,
+  CalendarCheck,
   FileText,
   Gavel,
   GitBranch,
@@ -42,6 +43,7 @@ import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
+import { Presenca } from '@/components/parlamentar/presenca'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
@@ -93,6 +95,7 @@ import {
   getGrafoParticipacao,
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
+import { getPresencaPlenario } from '@/lib/queries/presenca'
 import {
   getRelatorAutoria,
   getRelatoriasInfluencia,
@@ -250,6 +253,7 @@ export default async function ParlamentarPerfilPage({
     fidelidadeOrientacao,
     relatoriasInfluencia,
     relatorAutoria,
+    presenca,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -290,6 +294,7 @@ export default async function ParlamentarPerfilPage({
     // conta por parlamentar_id.
     getRelatoriasInfluencia(parlamentar.id),
     getRelatorAutoria(parlamentar.id),
+    getPresencaPlenario(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -494,6 +499,11 @@ export default async function ParlamentarPerfilPage({
         items={[
           { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
           {
+            id: 'presenca',
+            label: 'Presença',
+            icon: <CalendarCheck className="h-4 w-4" />,
+          },
+          {
             id: 'alinhamento',
             label: 'Alinhamento',
             icon: <Users className="h-4 w-4" />,
@@ -603,6 +613,13 @@ export default async function ParlamentarPerfilPage({
                 proximaPaginaHref={votosProximaPaginaHref}
               />
             ),
+          },
+          {
+            id: 'presenca',
+            title: 'Presença em plenário',
+            className: 'rounded-lg border-line-default bg-surface-base',
+            triggerClassName: 'font-semibold text-base',
+            content: <Presenca presenca={presenca} casa={parlamentar.casa} />,
           },
           {
             id: 'alinhamento',
@@ -773,6 +790,14 @@ export default async function ParlamentarPerfilPage({
             buildFiltroHref={buildVotosFiltroHref}
             proximaPaginaHref={votosProximaPaginaHref}
           />
+        </SectionCard>
+
+        <SectionCard
+          id="presenca"
+          subtitle="Presença em votações nominais de plenário, no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra."
+          title="Presença em plenário"
+        >
+          <Presenca presenca={presenca} casa={parlamentar.casa} />
         </SectionCard>
 
         <SectionCard
