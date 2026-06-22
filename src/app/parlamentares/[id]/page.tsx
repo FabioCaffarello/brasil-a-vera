@@ -832,7 +832,7 @@ export default async function ParlamentarPerfilPage({
 
         <SectionCard
           id="alinhamento"
-          subtitle="% de votos que coincidem com a orientação do partido. Mede a fidelidade prática à liderança partidária — não compromisso ideológico."
+          subtitle="% de votos que coincidem com a orientação do partido. Mede o alinhamento prático com a liderança partidária — não compromisso ideológico."
           title="Alinhamento à bancada"
         >
           <AlinhamentoBancada
