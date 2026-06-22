@@ -40,6 +40,13 @@ export const parlamentar = parlamentaresSchema.table(
     partidoNome: text('partido_nome').notNull(),
     uf: char('uf', { length: 2 }).notNull(),
     urlFoto: text('url_foto'),
+    // Perfil biográfico (ADR-049) — autodeclarado, Câmara-only, nullable
+    // (enriquecimento via backfill, não chave). Herda trust da raiz.
+    escolaridade: text('escolaridade'),
+    dataNascimento: date('data_nascimento'),
+    municipioNascimento: text('municipio_nascimento'),
+    ufNascimento: char('uf_nascimento', { length: 2 }),
+    profissao: text('profissao'),
     situacaoMandato: situacaoMandato('situacao_mandato').notNull(),
     legislatura: integer('legislatura').notNull(),
     trustLevel: trustLevel('trust_level').notNull(),

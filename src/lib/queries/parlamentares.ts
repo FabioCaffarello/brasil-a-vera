@@ -111,6 +111,12 @@ export async function getParlamentarById(id: string) {
         legislatura: parlamentar.legislatura,
         trustLevel: parlamentar.trustLevel,
         sourceUrl: parlamentar.sourceUrl,
+        // Perfil biográfico (ADR-049).
+        escolaridade: parlamentar.escolaridade,
+        dataNascimento: parlamentar.dataNascimento,
+        municipioNascimento: parlamentar.municipioNascimento,
+        ufNascimento: parlamentar.ufNascimento,
+        profissao: parlamentar.profissao,
       })
       .from(parlamentar)
       .where(eq(parlamentar.id, id))

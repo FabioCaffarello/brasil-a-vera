@@ -28,6 +28,7 @@ import {
   TrendingDown,
   TrendingUp,
   UserCheck,
+  UserCircle,
   Users,
   Vote,
 } from 'lucide-react'
@@ -49,6 +50,7 @@ import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { Presenca } from '@/components/parlamentar/presenca'
 import { PresencaFisica } from '@/components/parlamentar/presenca-fisica'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
+import { QuemE } from '@/components/parlamentar/quem-e'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patrimonial'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
@@ -314,6 +316,14 @@ export default async function ParlamentarPerfilPage({
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
   const mixComposicao = buildMixComposicao(evolucaoPatrimonial)
 
+  // Perfil biográfico (ADR-049) — seção só aparece com algum dado (Câmara).
+  const temBio = Boolean(
+    parlamentar.profissao ||
+      parlamentar.escolaridade ||
+      parlamentar.dataNascimento ||
+      parlamentar.municipioNascimento,
+  )
+
   const votos = votosPage.rows
   const votosFiltros = {
     periodo: periodoVotos ?? 'all',
@@ -511,6 +521,15 @@ export default async function ParlamentarPerfilPage({
       <SectionNav
         className="mt-6 hidden sm:block"
         items={[
+          ...(temBio
+            ? [
+                {
+                  id: 'quem-e',
+                  label: 'Quem é',
+                  icon: <UserCircle className="h-4 w-4" />,
+                },
+              ]
+            : []),
           { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
           {
             id: 'presenca',
@@ -632,6 +651,25 @@ export default async function ParlamentarPerfilPage({
         defaultOpen={['votos', 'alinhamento']}
         type="multiple"
         items={[
+          ...(temBio
+            ? [
+                {
+                  id: 'quem-e',
+                  title: 'Quem é',
+                  className: 'rounded-lg border-line-default bg-surface-base',
+                  triggerClassName: 'font-semibold text-base',
+                  content: (
+                    <QuemE
+                      escolaridade={parlamentar.escolaridade}
+                      dataNascimento={parlamentar.dataNascimento}
+                      municipioNascimento={parlamentar.municipioNascimento}
+                      ufNascimento={parlamentar.ufNascimento}
+                      profissao={parlamentar.profissao}
+                    />
+                  ),
+                },
+              ]
+            : []),
           {
             id: 'votos',
             title: 'Votos recentes',
@@ -843,6 +881,22 @@ export default async function ParlamentarPerfilPage({
           ver @/design-system/compositions/section-card.tsx). Anchors do scroll-spy
           preservados. */}
       <div className="mt-6 hidden space-y-5 sm:block">
+        {temBio ? (
+          <SectionCard
+            id="quem-e"
+            subtitle="Profissão, escolaridade e naturalidade autodeclaradas pelo parlamentar no registro oficial. Câmara-only nesta fase."
+            title="Quem é"
+          >
+            <QuemE
+              escolaridade={parlamentar.escolaridade}
+              dataNascimento={parlamentar.dataNascimento}
+              municipioNascimento={parlamentar.municipioNascimento}
+              ufNascimento={parlamentar.ufNascimento}
+              profissao={parlamentar.profissao}
+            />
+          </SectionCard>
+        ) : null}
+
         <SectionCard
           id="votos"
           subtitle="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."

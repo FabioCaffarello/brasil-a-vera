@@ -250,6 +250,18 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 60,
     },
+    // Perfil biográfico (ADR-049): escolaridade/nascimento/profissão dos
+    // deputados. Câmara-only, autodeclarado, quase imutável → mensal. tier 0
+    // (depende só de parlamentar populado). Serial + pacing (detalhe throttla,
+    // igual ao backfill-cpf) → timeout folgado.
+    {
+      id: 'camara-backfill-bio',
+      script: 'backfill:camara:bio',
+      context: 'ingestion-camara-backfill-bio',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 60,
+    },
     {
       id: 'senado-filiacoes',
       script: 'ingest:senado:filiacoes',

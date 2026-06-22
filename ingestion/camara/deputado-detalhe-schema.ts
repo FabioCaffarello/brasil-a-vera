@@ -14,9 +14,25 @@ export const camaraDeputadoDetalheSchema = z
         id: z.union([z.string(), z.number()]).transform(String),
         cpf: z.string().nullable().optional(),
         nomeCivil: z.string().nullable().optional(),
+        // Perfil biográfico (ADR-049) — autodeclarado.
+        escolaridade: z.string().nullable().optional(),
+        dataNascimento: z.string().nullable().optional(),
+        municipioNascimento: z.string().nullable().optional(),
+        ufNascimento: z.string().nullable().optional(),
       })
       .passthrough(),
   })
   .passthrough()
 
 export type CamaraDeputadoDetalhe = z.infer<typeof camaraDeputadoDetalheSchema>
+
+// GET /deputados/{id}/profissoes — lista; usamos só o título da primeira.
+export const camaraProfissoesSchema = z
+  .object({
+    dados: z.array(
+      z.object({ titulo: z.string().nullable().optional() }).passthrough(),
+    ),
+  })
+  .passthrough()
+
+export type CamaraProfissoes = z.infer<typeof camaraProfissoesSchema>
