@@ -6,16 +6,16 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { formatProposicaoRef } from '@/lib/format'
-import { getTema, getTemas } from '@/lib/queries/temas'
+import { getTema } from '@/lib/queries/temas'
 
 interface PageProps {
   params: Promise<{ codigo: string }>
 }
 
-export async function generateStaticParams() {
-  const temas = await getTemas()
-  return temas.map((t) => ({ codigo: String(t.codigo) }))
-}
+// Dynamic por necessidade do build (igual a /partidos/[sigla]): renderiza sob
+// demanda, sem prerender estático que tocaria o DB no build. Cache vive na
+// query (cached/ADR-018).
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: PageProps) {
   const { codigo } = await params

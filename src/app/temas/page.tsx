@@ -7,6 +7,11 @@ import Link from 'next/link'
 
 import { getTemas } from '@/lib/queries/temas'
 
+// Dynamic por necessidade do build (igual a /partidos/[sigla] e home): a página
+// consome query de DB e não é filtrada por searchParams; o cache vive na query
+// (cached/ADR-018), não no prerender estático.
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Temas — Brasil à Vera',
   description:
