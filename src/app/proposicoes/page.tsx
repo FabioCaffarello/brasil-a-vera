@@ -19,6 +19,7 @@ import {
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { FileText, SearchX } from 'lucide-react'
+import Link from 'next/link'
 import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
@@ -218,6 +219,12 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             value={formatNumeroAbreviado(stats.rejeitadasArquivadas12m)}
           />
         </StatGroup>
+
+        <div className="text-sm">
+          <Link className="text-fg-primary hover:underline" href="/temas">
+            Explorar por tema →
+          </Link>
+        </div>
 
         <FiltrosProposicao
           anos={anos}
