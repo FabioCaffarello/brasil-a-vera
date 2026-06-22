@@ -262,6 +262,16 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 60,
     },
+    // Bio do Senado (ADR-049 emenda): nascimento + naturalidade (sem
+    // escolaridade/profissão). Per-senador, mensal, tier 0.
+    {
+      id: 'senado-backfill-bio',
+      script: 'backfill:senado:bio',
+      context: 'ingestion-senado-backfill-bio',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 20,
+    },
     {
       id: 'senado-filiacoes',
       script: 'ingest:senado:filiacoes',
