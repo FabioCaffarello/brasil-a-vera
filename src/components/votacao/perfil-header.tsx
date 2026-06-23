@@ -1,11 +1,10 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { CompartilharVotacaoButton } from '@/components/votacao/compartilhar-button'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { formatDataHoraBR } from '@/lib/format'
 
 interface Props {
@@ -38,12 +37,12 @@ export function PerfilVotacaoHeader({ votacao: v }: Props) {
           <DataBadge
             label={v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}
             source={v.orgao}
-            tone="brand"
+            tone="primary"
           />
-          <DataBadge label={formatDataHoraBR(v.dataHora)} tone="default" />
+          <DataBadge label={formatDataHoraBR(v.dataHora)} tone="neutral" />
           <DataBadge
             label={v.aprovada ? 'Aprovada' : 'Rejeitada'}
-            tone={v.aprovada ? 'success' : 'destructive'}
+            tone={v.aprovada ? 'success' : 'error'}
           />
         </div>
 

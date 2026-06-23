@@ -6,7 +6,7 @@
 // `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 //
 // - HeroSection + Stat/StatGroup (cols=4, com hint) vêm do RDS /server.
-// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - DataBadge consolidado no RDS (ADR-038); tone data-viz = `dataviz`.
 // - FiltrosVotacao/VotacaoCard de @/components/votacao; EmptyState/Button de
 //   @/design-system; ExportCsvLink + auth/canExport preservados.
 // - Compat `?offset=` (ADR-028 §4, redirect 308) + cursor (ADR-026); alternates
@@ -14,6 +14,7 @@
 
 import {
   Button,
+  DataBadge,
   HeroSection,
   Stat,
   StatGroup,
@@ -28,7 +29,6 @@ import {
   VotacaoPreviewProvider,
 } from '@/components/votacao/preview-drawer'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
@@ -197,7 +197,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             icon={<Vote className="h-3 w-3" />}
             label="L1"
             source="Câmara + Senado"
-            tone="accent"
+            tone="dataviz"
           />
         }
         title="Votações"

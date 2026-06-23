@@ -8,6 +8,7 @@ import {
   CardSubtitle,
   CardTitle,
   Chip,
+  DataBadge,
   FilterChips,
   HeroSection,
   InputBase,
@@ -28,7 +29,6 @@ import {
   Users,
   Vote,
 } from 'lucide-react'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
@@ -410,7 +410,7 @@ export default function DesignSystemPage() {
                 <DataBadge
                   label="L2"
                   source="Câmara"
-                  tone="accent"
+                  tone="dataviz"
                   icon={<Sparkles className="h-3 w-3" />}
                 />
               }
@@ -483,7 +483,7 @@ export default function DesignSystemPage() {
                 icon={<Vote className="h-5 w-5" />}
                 title="Votos recentes"
                 subtitle="Últimas 10 votações nominais com cobertura de imprensa"
-                badge={<DataBadge label="L2" source="Câmara" tone="brand" />}
+                badge={<DataBadge label="L2" source="Câmara" tone="primary" />}
               >
                 <FilterChips label="Filtrar por sessão" className="mb-4">
                   <Chip selected>Todas</Chip>
@@ -501,7 +501,7 @@ export default function DesignSystemPage() {
                 icon={<TrendingUp className="h-5 w-5" />}
                 title="Alinhamento de bancada"
                 subtitle="% de votos no mesmo sentido que a orientação do partido"
-                badge={<DataBadge label="L3" source="análise" tone="accent" />}
+                badge={<DataBadge label="L3" source="análise" tone="dataviz" />}
               >
                 <StatGroup layout="grid" cols={3}>
                   <Stat value="87%" label="Alinhamento médio" />
@@ -568,7 +568,7 @@ export default function DesignSystemPage() {
                   icon={<Sparkles className="h-3 w-3" />}
                   label="Wave 6"
                   source="Frontend de Excelência"
-                  tone="accent"
+                  tone="dataviz"
                 />
               }
               title="Brasil à Vera"
@@ -609,7 +609,7 @@ export default function DesignSystemPage() {
                   icon={<Sparkles className="h-3 w-3" />}
                   label="Spike"
                   source="Hero gradient-glow"
-                  tone="accent"
+                  tone="dataviz"
                 />
               }
               title="Transparência política sem ruído."
@@ -678,7 +678,7 @@ export default function DesignSystemPage() {
                   icon={<Sparkles className="h-3 w-3" />}
                   label="Dados oficiais"
                   source="Câmara dos Deputados"
-                  tone="accent"
+                  tone="dataviz"
                 />
               }
               kpis={
@@ -826,13 +826,13 @@ export default function DesignSystemPage() {
                 value: '513',
               },
               {
-                hint: <DataBadge label="L2" source="análise" tone="brand" />,
+                hint: <DataBadge label="L2" source="análise" tone="primary" />,
                 icon: <TrendingUp className="h-6 w-6" />,
                 label: 'Alinhamento',
                 value: '87%',
               },
               {
-                hint: <DataBadge label="L3" source="modelo" tone="accent" />,
+                hint: <DataBadge label="L3" source="modelo" tone="dataviz" />,
                 icon: <Vote className="h-6 w-6" />,
                 label: 'Coerência',
                 value: '0,84',
@@ -1071,30 +1071,26 @@ export default function DesignSystemPage() {
 
           <div className="flex flex-wrap gap-2">
             <DataBadge label="L1" source="oficial" tone="success" />
-            <DataBadge label="L2" source="Câmara" tone="brand" />
-            <DataBadge label="L3" source="análise" tone="accent" />
+            <DataBadge label="L2" source="Câmara" tone="primary" />
+            <DataBadge label="L3" source="análise" tone="dataviz" />
             <DataBadge
               label="L4"
               source="curadoria"
               tone="warning"
               icon={<Sparkles className="h-3 w-3" />}
             />
-            <DataBadge label="default" tone="default" />
-            <DataBadge
-              label="destructive"
-              tone="destructive"
-              source="contradição"
-            />
+            <DataBadge label="default" tone="neutral" />
+            <DataBadge label="destructive" tone="error" source="contradição" />
           </div>
 
           <div className="flex flex-wrap gap-2">
             <DataBadge
               label="Wave 6"
               source="Sprint 6.0"
-              tone="accent"
+              tone="dataviz"
               icon={<Sparkles className="h-3 w-3" />}
             />
-            <DataBadge label="Sem source nem icon" tone="brand" />
+            <DataBadge label="Sem source nem icon" tone="primary" />
           </div>
         </div>
       </section>

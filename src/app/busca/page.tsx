@@ -8,13 +8,14 @@
 //
 // - HeroSection do RDS /server, 3 estados (entry / <2 chars / resultados).
 // - SectionCard (Card compound do RDS) + cards canônicos de @/components.
-// - SearchForm (form GET zero-JS) de @/components/busca. DataBadge local
-//   (resíduo accent, kicker do hero).
+// - SearchForm (form GET zero-JS) de @/components/busca. DataBadge do RDS
+//   (ADR-038; kicker do hero, tone data-viz = `dataviz`).
 // - Callout do match exato mantém `border-success/40 bg-success/10` (BaV
 //   neutralizado) + `text-fg-success`.
 
 import {
   Button,
+  DataBadge,
   HeroSection,
 } from '@fabio.caffarello/react-design-system/server'
 import { MapPin, Search } from 'lucide-react'
@@ -24,7 +25,6 @@ import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatProposicaoRef } from '@/lib/format'
 import { busca } from '@/lib/queries/busca'
@@ -53,7 +53,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
               icon={<Search className="h-3 w-3" />}
               label="Busca cruzada"
               source="L1 · 2 fontes"
-              tone="accent"
+              tone="dataviz"
             />
           }
           title="Buscar"
@@ -76,7 +76,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
               icon={<Search className="h-3 w-3" />}
               label="Busca cruzada"
               source="L1 · 2 fontes"
-              tone="accent"
+              tone="dataviz"
             />
           }
           title="Buscar"
@@ -107,7 +107,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
             icon={<Search className="h-3 w-3" />}
             label="Busca cruzada"
             source="L1 · 2 fontes"
-            tone="accent"
+            tone="dataviz"
           />
         }
         title={`Resultados para "${query}"`}

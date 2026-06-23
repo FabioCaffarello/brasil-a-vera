@@ -1,11 +1,10 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import Link from 'next/link'
-
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { TrustBadge } from '@/components/trust/trust-badge'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 
 interface Props {
@@ -67,11 +66,11 @@ export function PerfilHeader({ parlamentar }: Props) {
                 icon={<Building2 className="h-3 w-3" />}
                 label={cargoLabel}
                 source={casaLabel}
-                tone="brand"
+                tone="primary"
               />
               <DataBadge
                 label={`${parlamentar.legislatura}ª legislatura`}
-                tone="default"
+                tone="neutral"
               />
               {situacaoAtipica ? (
                 <DataBadge label={parlamentar.situacaoMandato} tone="warning" />

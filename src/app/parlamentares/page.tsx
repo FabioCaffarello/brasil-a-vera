@@ -6,7 +6,7 @@
 // `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 //
 // - HeroSection + Stat/StatGroup vêm do RDS /server (server-safe).
-// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - DataBadge consolidado no RDS (ADR-038); tone data-viz = `dataviz`.
 // - EmptyState/Button de @/design-system; Filtros/ParlamentarCard de
 //   @/components/parlamentar; ExportCsvLink/FollowButton/Combobox e
 //   auth/canExport/follows preservados.
@@ -14,6 +14,7 @@
 import { auth } from '@clerk/nextjs/server'
 import {
   Button,
+  DataBadge,
   HeroSection,
   Stat,
   StatGroup,
@@ -27,7 +28,6 @@ import {
   ParlamentarPreviewProvider,
 } from '@/components/parlamentar/preview-drawer'
 import { EmptyState } from '@/components/ui/empty-state'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { canExport } from '@/lib/auth-guards'
 import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
@@ -111,7 +111,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
             icon={<Users className="h-3 w-3" />}
             label="L1"
             source="Câmara + Senado"
-            tone="accent"
+            tone="dataviz"
           />
         }
         title="Parlamentares"
