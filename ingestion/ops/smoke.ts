@@ -8,7 +8,6 @@ import {
   findMissingAnchors,
   hasRssDiscovery,
   type ProbeResult,
-  validateDevRouteNoindex,
   validateOgImageCanonical,
   validateRssXml,
 } from './smoke-aggregator'
@@ -189,19 +188,6 @@ async function fetchPngHash(url: string): Promise<string | null> {
     if (res.status !== 200) return null
     const buf = new Uint8Array(await res.arrayBuffer())
     return createHash('sha256').update(buf).digest('hex')
-  } catch {
-    return null
-  }
-}
-
-async function fetchHtmlWithHeaders(
-  url: string,
-): Promise<{ html: string; headers: Headers } | null> {
-  try {
-    const res = await fetch(url, { redirect: 'manual' })
-    if (res.status !== 200) return null
-    const html = await res.text()
-    return { html, headers: res.headers }
   } catch {
     return null
   }
@@ -512,63 +498,6 @@ async function runDocsAnchorsProbe(
   }
 }
 
-/**
- * Probe Sprint 4.0 PR 7 — rotas internas em /dev/* (ex.: /dev/design) NÃO
- * podem ser indexáveis. Valida defense in depth:
- *
- * 1. Header HTTP `X-Robots-Tag: noindex` (next.config.ts `headers()`)
- * 2. Meta tag `<meta name="robots" content="noindex">` (layout
- *    src/app/dev/layout.tsx via Next metadata)
- *
- * Falha rígida — qualquer falha sinaliza regressão de SEO crítica
- * (rota interna sendo indexada por Googlebot etc.).
- */
-async function runDevRoutesNoindexProbe(
-  baseUrl: string,
-  paths: readonly string[],
-): Promise<
-  ProbeResult & { failures: Array<{ path: string; reason: string }> }
-> {
-  const failures: Array<{ path: string; reason: string }> = []
-  let expected = 0
-  let errors = 0
-
-  for (const path of paths) {
-    const result = await fetchHtmlWithHeaders(`${baseUrl}${path}`)
-    if (result === null) {
-      errors++
-      failures.push({ path, reason: 'fetch falhou (status != 200)' })
-      continue
-    }
-    const check = validateDevRouteNoindex(
-      result.headers.get('x-robots-tag'),
-      result.html,
-    )
-    if (check.ok) expected++
-    else failures.push({ path, reason: check.reason })
-  }
-
-  const total = paths.length
-  const unexpected = total - expected - errors
-  const successRate = total === 0 ? 0 : (expected / total) * 100
-  return {
-    name: 'dev-routes-noindex',
-    total,
-    expected,
-    unexpected,
-    errors,
-    successRate: Math.round(successRate * 100) / 100,
-    statuses: {
-      ok: expected,
-      ...(unexpected > 0 ? { missing_noindex: unexpected } : {}),
-      ...(errors > 0 ? { error: errors } : {}),
-    },
-    failures,
-  }
-}
-
-const DEV_NOINDEX_PATHS = ['/dev/design'] as const
-
 async function main() {
   const envResult = envSchema.safeParse(process.env)
   if (!envResult.success) {
@@ -585,9 +514,8 @@ async function main() {
       event: 'smoke_start',
       baseUrl,
       // status-HTTP + og-canonical + home-anchors + 4 do Sprint 3.2 Tarefa 4
-      // (og-hash-uniqueness, rss-xml-valid, rss-discovery, docs-anchors) +
-      // 1 do Sprint 4.0 PR 7 (dev-routes-noindex).
-      probes: PROBES.length + 7,
+      // (og-hash-uniqueness, rss-xml-valid, rss-discovery, docs-anchors).
+      probes: PROBES.length + 6,
     }),
   )
 
@@ -662,19 +590,6 @@ async function main() {
   totalExpected += docsAnchorsResult.expected
   const docsAnchorsFailed = docsAnchorsResult.failures.length > 0
 
-  // Sprint 4.0 PR 7 — rotas /dev/* não-indexáveis. Falha rígida: regressão
-  // de SEO crítica se /dev/design começar a ser indexado.
-  const devNoindexResult = await runDevRoutesNoindexProbe(
-    baseUrl,
-    DEV_NOINDEX_PATHS,
-  )
-  console.log(
-    JSON.stringify({ event: 'smoke_probe_result', ...devNoindexResult }),
-  )
-  totalRequests += devNoindexResult.total
-  totalExpected += devNoindexResult.expected
-  const devNoindexFailed = devNoindexResult.failures.length > 0
-
   const overallSuccessRate =
     totalRequests === 0 ? 0 : (totalExpected / totalRequests) * 100
   const passed =
@@ -684,8 +599,7 @@ async function main() {
     !ogHashFailed &&
     !rssValidFailed &&
     !rssDiscoveryFailed &&
-    !docsAnchorsFailed &&
-    !devNoindexFailed
+    !docsAnchorsFailed
 
   console.log(
     JSON.stringify({
@@ -700,7 +614,6 @@ async function main() {
       rssXmlValidFailed: rssValidFailed,
       rssDiscoveryFailed,
       docsAnchorsFailed,
-      devNoindexFailed,
       ...(ogFailed ? { ogFailures: ogResult.failures } : {}),
       ...(anchorsFailed ? { missingAnchors: anchorsResult.missing } : {}),
       ...(ogHashFailed ? { ogHashFailures: ogHashResult.failures } : {}),
@@ -710,9 +623,6 @@ async function main() {
         : {}),
       ...(docsAnchorsFailed
         ? { docsAnchorsFailures: docsAnchorsResult.failures }
-        : {}),
-      ...(devNoindexFailed
-        ? { devNoindexFailures: devNoindexResult.failures }
         : {}),
     }),
   )

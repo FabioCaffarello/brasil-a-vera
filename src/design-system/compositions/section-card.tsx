@@ -2,7 +2,7 @@
 // Card compound do RDS (@fabio.caffarello/react-design-system/server): asSection
 // + aria-labelledby + Card.Title(icon/badge). A API local
 // (title/subtitle/icon/badge/children/className/id) é PRESERVADA — todos os
-// consumidores (home, comparar, busca, 3 perfis, dev/design) seguem inalterados.
+// consumidores (home, comparar, busca, 3 perfis) seguem inalterados.
 //
 // scroll-mt-28 embutido (compensa navbar sticky no jump por anchor do SectionNav).
 

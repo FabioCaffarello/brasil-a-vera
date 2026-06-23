@@ -130,8 +130,11 @@ const FORBIDDEN: Forbidden[] = [
     use: 'import { Stat, StatGroup } from \'@fabio.caffarello/react-design-system/server\'. Cada item vira <Stat icon value label align="center" />; o wrapper vira <StatGroup layout="grid" cols={4} floatingBadge={...}> (use grid p/ colapso 2-up→4 no md)',
     ref: 'ADR-038 — KpiCard consolidado no StatGroup do RDS (v4.6, /server). Slot floatingBadge entregue na RDS #245 destravou o TrustBadge L1 flutuante',
   },
-  // Notas de deferimento (ficam locais):
-  //   - tabs: RDS só tem TabsAsLinks (sem tabs com estado interno).
+  {
+    path: '@/design-system/primitives/tabs',
+    use: 'se precisar de navegação por links, use TabsAsLinks do RDS; tabs com estado interno é gap do RDS — abrir issue/gap, NÃO recriar primitiva local',
+    ref: 'ADR-038 — tabs local removido como órfão (único consumer era o showroom /dev/design, eliminado). Zera a camada de primitivos locais',
+  },
 ]
 
 function walk(dir: string, exts: string[]): string[] {

@@ -3,7 +3,7 @@
 // Re-export wrapper de bundle (mesmo padrão de rds-accordion/rds-autocomplete):
 // importa o Dialog do barrel /granular DENTRO de um módulo client p/ o
 // tree-shaking ESM podar os re-exports não usados. Importar o barrel direto de
-// um Server Component (o showroom /dev/design é RSC) vaza o entry inteiro
+// um Server Component (RSC) vaza o entry inteiro
 // (+294KB medidos). O Dialog é client (estado open/close).
 //
 // O DialogContent do RDS ganhou `showCloseButton` no v4 (issue #221, default

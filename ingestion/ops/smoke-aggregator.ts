@@ -136,45 +136,6 @@ export function hasRssDiscovery(html: string): boolean {
   return patternA.test(html) || patternB.test(html)
 }
 
-/**
- * Validação noindex para rotas internas em /dev/* (introduzidas pela
- * Sprint 4.0 PR 7 — /dev/design). Cobre defense in depth:
- *
- * 1. Header HTTP `X-Robots-Tag` com `noindex` — para crawlers que só
- *    leem headers (e.g. Googlebot ao seguir links de outros sites).
- * 2. Meta tag `<meta name="robots" content="noindex...">` no HTML — para
- *    crawlers que respeitam meta tags.
- *
- * Ambas devem estar presentes. Falha se qualquer uma estiver ausente.
- */
-export function validateDevRouteNoindex(
-  xRobotsTagHeader: string | null,
-  html: string,
-): { ok: true } | { ok: false; reason: string } {
-  const headerNoindex = (xRobotsTagHeader ?? '')
-    .toLowerCase()
-    .includes('noindex')
-  if (!headerNoindex) {
-    return {
-      ok: false,
-      reason: `X-Robots-Tag header ausente ou sem "noindex": ${
-        xRobotsTagHeader ?? '(null)'
-      }`,
-    }
-  }
-  const metaPattern =
-    /<meta\s+name=["']robots["']\s+content=["'][^"']*noindex[^"']*["']/i
-  const metaPatternReverse =
-    /<meta\s+content=["'][^"']*noindex[^"']*["']\s+name=["']robots["']/i
-  if (!metaPattern.test(html) && !metaPatternReverse.test(html)) {
-    return {
-      ok: false,
-      reason: '<meta name="robots" content="noindex..."> ausente do HTML',
-    }
-  }
-  return { ok: true }
-}
-
 export function aggregateProbeResults(
   name: string,
   statuses: number[],

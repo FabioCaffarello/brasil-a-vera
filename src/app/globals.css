@@ -207,7 +207,7 @@
 /* ---------- 3. Tema dark (Wave 4 padrão) ----------
    Ativa em duas situações:
    (a) prefers-color-scheme: dark — usuário com tema dark do sistema
-   (b) classe .dark explícita — usada por /dev/design (PR 7) e shell 4.1+
+   (b) classe .dark explícita — usada pelo shell 4.1+
 
    Valores re-validados contra WCAG AA via .local/wcag-check.ts (culori).
    Resultado registrado em docs/architecture/WCAG-AUDIT.md.
