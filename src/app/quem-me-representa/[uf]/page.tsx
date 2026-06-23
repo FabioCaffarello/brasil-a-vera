@@ -8,6 +8,7 @@ import {
 import { Building2, Gauge, Landmark, Users } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
+import { ParlamentarFilter } from '@/components/parlamentar/parlamentar-filter'
 import { RepresentantesSection } from '@/components/parlamentar/representantes-section'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { getRepresentantesPorUf } from '@/lib/queries/representantes'
@@ -42,6 +43,9 @@ export default async function RepresentantesUfPage({ params }: PageProps) {
   const total = todos.length
   const comDado = todos.filter((p) => p.pctAlinhamento != null).length
   const pctComDado = total > 0 ? Math.round((comDado / total) * 100) : 0
+  const partidos = Array.from(new Set(todos.map((p) => p.partidoSigla))).sort(
+    (a, b) => a.localeCompare(b, 'pt-BR'),
+  )
 
   const secoes = (
     <>
@@ -108,7 +112,11 @@ export default async function RepresentantesUfPage({ params }: PageProps) {
           />
         ) : null}
 
-        {secoes}
+        {total > 0 ? (
+          <ParlamentarFilter partidos={partidos}>{secoes}</ParlamentarFilter>
+        ) : (
+          secoes
+        )}
 
         <p className="text-fg-tertiary text-xs">
           Parlamentares em exercício na legislatura atual, das fontes oficiais
