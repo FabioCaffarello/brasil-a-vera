@@ -158,6 +158,11 @@ export default function PrivacidadePage() {
             Personalizar recomendações de parlamentares com base na UF indicada.
           </li>
           <li>
+            Coletar métricas agregadas de acesso (página, referrer, país,
+            dispositivo) para avaliar a saúde e a adoção da plataforma, sem
+            identificar o titular.
+          </li>
+          <li>
             Manter prova auditável do consentimento prestado, atendendo ao
             princípio da responsabilização (LGPD art. 6º, X).
           </li>
@@ -211,11 +216,17 @@ export default function PrivacidadePage() {
             o código da aplicação, hospeda exports de dados solicitados pelo
             titular e roteia o endereço <ContactLink />.
           </li>
+          <li>
+            <strong>Cloudflare Web Analytics</strong> (métricas de acesso) —
+            coleta métricas agregadas de uso (página, referrer, país,
+            dispositivo), <strong>sem cookies</strong> e sem rastreamento
+            cruzado de usuário.
+          </li>
         </ul>
         <p>
           Não vendemos, alugamos nem compartilhamos dados para fins de
-          publicidade. Não há fornecedores de analytics, ad-tech ou
-          enriquecimento de perfil.
+          publicidade. As métricas de uso são agregadas e não identificáveis —
+          sem ad-tech nem enriquecimento de perfil.
         </p>
       </Section>
 
@@ -264,10 +275,12 @@ export default function PrivacidadePage() {
         <p>
           Usamos exclusivamente cookies estritamente necessários para
           autenticação (Clerk) e preferências de navegação (tema claro/escuro).
-          Não usamos cookies de marketing nem cookies de analytics de terceiros.
-          Por esse motivo, não exibimos banner de cookies — a LGPD dispensa o
-          opt-in para tratamentos necessários à execução do contrato com o
-          titular.
+          Não usamos cookies de marketing nem cookies de analytics — nossas
+          métricas de acesso (Cloudflare Web Analytics) são cookieless, sem
+          cookies de rastreamento. Por esse motivo, não exibimos banner de
+          cookies — a LGPD dispensa o opt-in para tratamentos necessários à
+          execução do contrato com o titular e para o legítimo interesse em
+          métricas agregadas não identificáveis.
         </p>
       </Section>
 
