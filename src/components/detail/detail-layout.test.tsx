@@ -49,6 +49,25 @@ describe('DetailLayout — casca de detalhe dirigida por sections (ADR-053)', ()
     )
   })
 
+  it('desktopGridIds: renderiza um grid 2-col no desktop', () => {
+    const { container } = render(
+      <DetailLayout
+        breadcrumb={null}
+        desktopGridIds={['a', 'b']}
+        header={null}
+        sections={SECTIONS}
+      />,
+    )
+    expect(container.querySelector('.md\\:grid-cols-2')).not.toBeNull()
+  })
+
+  it('sem desktopGridIds: sem grid (pilha linear)', () => {
+    const { container } = render(
+      <DetailLayout breadcrumb={null} header={null} sections={SECTIONS} />,
+    )
+    expect(container.querySelector('.md\\:grid-cols-2')).toBeNull()
+  })
+
   it('título do card/accordion usa `title` quando presente, senão `navLabel`', () => {
     render(<DetailLayout breadcrumb={null} header={null} sections={SECTIONS} />)
     // Seção 'b' tem title "Beta Longo" (card + accordion); o nav usa "Beta".
