@@ -1,10 +1,12 @@
 // src/components/partido/bancada-list.tsx — consome o RDS (tokens
 // traduzidos via docs/migration/token-map.md; promovido do staging /rds/).
-// Server Component puro. <img> cru + next/link preservados (zero-JS).
+// Server Component puro, zero-JS: foto via `ParlamentarAvatarBase` (AvatarBase
+// server-safe do RDS, #250/v4.8) + next/link.
 
 import { Text } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
+import { ParlamentarAvatarBase } from '@/components/parlamentar/parlamentar-avatar-base'
 import type { PartidoMembro } from '@/lib/queries/partidos'
 
 interface Props {
@@ -28,22 +30,13 @@ export function BancadaList({ membros }: Props) {
             className="flex items-center gap-3 rounded-lg border border-line-default bg-surface-base p-2.5 transition hover:border-line-emphasis hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
             href={`/parlamentares/${m.id}`}
           >
-            {m.urlFoto ? (
-              // biome-ignore lint/performance/noImgElement: foto remota; CLS evitado com width/height.
-              <img
-                alt=""
-                className="size-10 shrink-0 rounded-full object-cover"
-                height={40}
-                loading="lazy"
-                src={m.urlFoto}
-                width={40}
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="size-10 shrink-0 rounded-full bg-surface-raised"
-              />
-            )}
+            <ParlamentarAvatarBase
+              className="shrink-0"
+              loading="lazy"
+              nome={m.nome}
+              size="md"
+              urlFoto={m.urlFoto}
+            />
             <div className="min-w-0">
               <Text variant="label" className="truncate text-fg-primary">
                 {m.nome}

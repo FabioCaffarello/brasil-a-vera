@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { iniciais } from './parlamentar-avatar'
+import { iniciais } from './iniciais'
 
-describe('iniciais — fallback do ParlamentarAvatar (ADR-053)', () => {
+describe('iniciais — fallback de avatar (ADR-053)', () => {
   it('primeiro + último nome', () => {
     expect(iniciais('Maria Souza')).toBe('MS')
     expect(iniciais('Maria da Silva Souza')).toBe('MS')

@@ -1,3 +1,4 @@
+import { ParlamentarAvatarBase } from '@/components/parlamentar/parlamentar-avatar-base'
 import { formatBRL } from '@/lib/format'
 import type {
   MetricasParlamentar,
@@ -31,22 +32,13 @@ export function ParlamentaresGrid({ parlamentares, metricas, ano }: Props) {
             key={p.id}
           >
             <header className="flex items-center gap-3">
-              {p.urlFoto ? (
-                // biome-ignore lint/performance/noImgElement: foto remota; CLS evitado com width/height.
-                <img
-                  alt=""
-                  className="size-12 shrink-0 rounded-full object-cover"
-                  height={48}
-                  loading="lazy"
-                  src={p.urlFoto}
-                  width={48}
-                />
-              ) : (
-                <div
-                  aria-hidden="true"
-                  className="size-12 shrink-0 rounded-full bg-surface-raised"
-                />
-              )}
+              <ParlamentarAvatarBase
+                className="shrink-0"
+                loading="lazy"
+                nome={p.nome}
+                size="lg"
+                urlFoto={p.urlFoto}
+              />
               <div className="min-w-0">
                 <p className="truncate font-medium text-fg-primary text-sm">
                   {p.nome}
