@@ -192,17 +192,21 @@ export function getParesContraditoriosCached(
 }
 
 /**
- * Localiza um par específico pelos dois `votacaoId`, na ordem canônica
- * (voto1, voto2) em que foi produzido por {@link computePares}. Pura — usada
- * pela rota /contradicao para resolver o par codificado na URL (ADR-054).
+ * Localiza um par específico pelos dois `votacaoId`. Tolerante à ORDEM: casa
+ * tanto (voto1, voto2) quanto (voto2, voto1) — a ordem canônica do par depende
+ * do `ORDER BY dataHora` da query e pode mudar entre janelas de cache; um link
+ * compartilhado (ordem canônica) e um eventual link com a ordem trocada devem
+ * resolver para o mesmo fato. Pura — usada pela rota /contradicao (ADR-054).
  */
 export function findPar(
   pares: ParContraditorio[],
-  voto1Id: string,
-  voto2Id: string,
+  votoAId: string,
+  votoBId: string,
 ): ParContraditorio | undefined {
   return pares.find(
-    (p) => p.voto1.votacaoId === voto1Id && p.voto2.votacaoId === voto2Id,
+    (p) =>
+      (p.voto1.votacaoId === votoAId && p.voto2.votacaoId === votoBId) ||
+      (p.voto1.votacaoId === votoBId && p.voto2.votacaoId === votoAId),
   )
 }
 

@@ -173,11 +173,16 @@ export default async function OgContradicao({ params }: Props) {
           </span>
         </div>
 
-        {/* Enunciado factual do fato */}
-        <span style={{ fontSize: '26px', color: '#18181b' }}>
-          Votos em <b>direções opostas</b> sobre o mesmo tema:{' '}
-          <b>{truncate(par.tema, 40)}</b> — {diasLabel}.
-        </span>
+        {/* Enunciado factual do fato. Cada linha é UM nó de texto: satori não
+            flui `<b>`/`{' '}` inline entre nós (colidem). */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '27px', fontWeight: 700, color: '#18181b' }}>
+            Votos em direções opostas sobre o mesmo tema
+          </span>
+          <span style={{ fontSize: '22px', color: '#52525b' }}>
+            {`Tema: ${truncate(par.tema, 44)} · ${diasLabel}`}
+          </span>
+        </div>
 
         {/* Os dois votos */}
         <div style={{ display: 'flex', gap: '20px', flex: 1 }}>
