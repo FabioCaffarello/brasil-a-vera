@@ -13,12 +13,15 @@ Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ve
 
 - **PR #1** (#570, ✅ merged) — fonte única do badge de status sobre RDS `DataBadge`.
 - **PR #2** (#571, ✅ merged) — cards de listagem sobre o `Card` compound + `<article>`/`aria-label`.
-- **PR #3** (este) — **Breadcrumb** puxado da Fase 2 para a Fase 1: o `Avatar`
-  (PR #3 original) foi **adiado** por dois gaps do RDS — sem `loading="lazy"`
-  ([RDS #247](https://github.com/FabioCaffarello/react-design-system/issues/247),
-  bloqueia listagens) e escala tampa em 64px vs. 96-112px do PerfilHeader
+- **PR #3** (#572, ✅ merged) — **Breadcrumb** puxado da Fase 2 para a Fase 1: o
+  `Avatar` (PR #3 original) foi **adiado** por dois gaps do RDS — sem
+  `loading="lazy"` ([RDS #247](https://github.com/FabioCaffarello/react-design-system/issues/247))
+  e escala tampando em 64px vs. 96-112px do PerfilHeader
   ([RDS #248](https://github.com/FabioCaffarello/react-design-system/issues/248)).
-  Avatar retoma quando esses gaps forem entregues upstream.
+- **PR #4** (este) — **Avatar retomado**: RDS v4.7 entregou as duas issues
+  (#247 `loading` + #248 sizes `2xl`/`3xl`). `ParlamentarAvatar` (wrapper de
+  domínio sobre `Avatar` via `/granular`, padrão `rds-*`) no card (lazy) e no
+  PerfilHeader (96→112px). Loop consumidor↔RDS fechado em ~12h.
 
 ## Pré-leitura confirmada
 

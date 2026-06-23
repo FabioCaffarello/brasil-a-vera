@@ -67,7 +67,7 @@
   "dependencies": {
     "@clerk/nextjs": "^7.3.5",
     "@clerk/themes": "^2.4.57",
-    "@fabio.caffarello/react-design-system": "^4.6.0",
+    "@fabio.caffarello/react-design-system": "^4.7.0",
     "@neondatabase/serverless": "^1.1.0",
     "@t3-oss/env-nextjs": "^0.13.11",
     "@xyflow/react": "^12.11.0",
