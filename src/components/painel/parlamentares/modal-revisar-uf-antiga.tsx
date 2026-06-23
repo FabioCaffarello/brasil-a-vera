@@ -13,6 +13,7 @@
 import { Button } from '@fabio.caffarello/react-design-system/server'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import {
   Dialog,
   DialogContent,
@@ -113,22 +114,13 @@ export function ModalRevisarUfAntiga({
                     onChange={() => toggle(p.id)}
                     type="checkbox"
                   />
-                  {p.urlFoto ? (
-                    // biome-ignore lint/performance/noImgElement: foto remota; dimensões explícitas.
-                    <img
-                      alt=""
-                      className="size-10 shrink-0 rounded-full object-cover"
-                      height={40}
-                      loading="lazy"
-                      src={p.urlFoto}
-                      width={40}
-                    />
-                  ) : (
-                    <div
-                      aria-hidden="true"
-                      className="size-10 shrink-0 rounded-full bg-surface-raised"
-                    />
-                  )}
+                  <ParlamentarAvatar
+                    className="shrink-0"
+                    loading="lazy"
+                    nome={p.nome}
+                    size="md"
+                    urlFoto={p.urlFoto}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-fg-primary text-sm">
                       {p.nome}

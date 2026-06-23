@@ -26,8 +26,8 @@ Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ve
   o `<ol>` hand-rolled (rail + dots) de `tramitacao-timeline.tsx` vira
   `<Timeline orientation="vertical">`; filtros, paginação por cursor e empty
   states honestos preservados em volta.
-- **PR #6** (este) — **DetailLayout** (piloto em proposições). Dois ajustes de
-  rota vs. o plano original, validados na exploração:
+- **PR #6** (#577, ✅ merged) — **DetailLayout** (piloto em proposições). Dois
+  ajustes de rota vs. o plano original, validados na exploração:
   1. A premissa "votação não tem SectionNav" era **FALSA** — as 3 rotas já têm
      SectionNav. O valor real do DetailLayout é eliminar a **tríplice declaração
      por seção** (SectionNav + Accordion mobile + SectionCard desktop, com o
@@ -35,9 +35,17 @@ Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ve
   2. `Container`/`Stack` do RDS usam `max-w-screen-*` (≠ `max-w-4xl` do projeto)
      → **não adotados** (mudariam dimensões); a casca fica em divs. Adoção fica
      como issue futura (RDS precisa de `max-w-4xl` ou tamanho custom).
-  Piloto em proposições (4 seções, conteúdo desktop==mobile); votação (grid
-  2-col em resumo+proposição) e parlamentar (~20 seções condicionais) seguem em
-  follow-ups.
+- **PR #7** (#578, ✅ merged) — **DetailLayout na votação** + `desktopGridIds`
+  (grid 2-col resumo+proposição); seções condicionais (disciplina/divergências).
+- **PR #8** (#579, ✅ merged) — **DetailLayout na parlamentar** (19 seções, 6
+  condicionais; LeituraRapida no `beforeStats`). **DetailLayout completo nas 3
+  rotas de detalhe.**
+- **PR #9** (este) — **`ParlamentarAvatar` nos sítios client restantes**
+  (preview-drawer, modal de revisão de UF). Os 3 sítios **server zero-JS**
+  (bancada-list, afinidade-voto, comparar-grid) ficam em `<img>` cru — o `Avatar`
+  do RDS é client-only e injetaria JS no path anônimo (+0kb é valor do projeto).
+  Gap → [RDS #250](https://github.com/FabioCaffarello/react-design-system/issues/250)
+  (Avatar server-safe).
 
 > Achado empírico (PR #4): `/parlamentares` renderiza ~726 cards sem paginação
 > → `Pagination` do RDS é candidato forte, mas é a decisão **D3** (UX + custo de
