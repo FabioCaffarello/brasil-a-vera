@@ -11,7 +11,17 @@
 
 export type ShareSource = 'whatsapp' | 'twitter' | 'copy'
 
-export function buildShareUrl(rawUrl: string, source: ShareSource): string {
+// utm_campaign segmenta o ARTEFATO compartilhado (ADR-054): 'perfil' = card da
+// página do parlamentar; 'par-contraditorio' = card de um par de votos em
+// direções opostas. Permite comparar tráfego de retorno card-de-par vs
+// card-de-perfil no Cloudflare Web Analytics.
+export type ShareCampaign = 'perfil' | 'par-contraditorio'
+
+export function buildShareUrl(
+  rawUrl: string,
+  source: ShareSource,
+  campaign?: ShareCampaign,
+): string {
   let u: URL
   try {
     u = new URL(rawUrl)
@@ -24,5 +34,6 @@ export function buildShareUrl(rawUrl: string, source: ShareSource): string {
   u.hash = ''
   u.searchParams.set('utm_source', source)
   u.searchParams.set('utm_medium', 'share')
+  if (campaign) u.searchParams.set('utm_campaign', campaign)
   return u.toString()
 }
