@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { type FiltrosProposicao, proposicoesFiltrosKey } from './proposicoes'
+import type { FiltrosProposicao } from './proposicoes'
+import { proposicoesFiltrosKey } from './proposicoes-cache-key'
 
 // `proposicoesFiltrosKey` compõe o fragmento de filtros das cache keys de
 // `listProposicoes` e `countProposicoes` (ADR-018). A correção do cache

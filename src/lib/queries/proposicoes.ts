@@ -6,6 +6,7 @@ import type {
   CursorProposicoesV1Payload,
   CursorTramitacaoV1Payload,
 } from '@/lib/queries/cursor-schemas'
+import { proposicoesFiltrosKey } from '@/lib/queries/proposicoes-cache-key'
 import { db } from '@/shared/db'
 import {
   estatisticaProposicaoAgregada,
@@ -114,14 +115,6 @@ function buildProposicoesWhere(filtros: FiltrosProposicao): SQL[] {
   const qClause = whereForQ(filtros.q)
   if (qClause) where.push(qClause)
   return where
-}
-
-// Fragmento determinístico dos filtros para compor cache keys (ADR-018).
-// `q` é trimado para casar com o que `whereForQ` efetivamente aplica. Não
-// inclui cursor nem ordem — callers anexam o que for relevante à sua key.
-// Exportado para teste de determinismo/colisão (correção de cache).
-export function proposicoesFiltrosKey(filtros: FiltrosProposicao): string {
-  return `tipo=${filtros.tipo ?? '_'}:ano=${filtros.ano ?? '_'}:situacao=${filtros.situacao ?? '_'}:tema=${filtros.tema ?? '_'}:q=${filtros.q?.trim() || '_'}`
 }
 
 export interface ListProposicoesOpts {
