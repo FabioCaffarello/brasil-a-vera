@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { ParlamentarAvatarBase } from '@/components/parlamentar/parlamentar-avatar-base'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import {
   type AfinidadeVoto as AfinidadeRow,
@@ -56,22 +57,13 @@ export function Top5Afinidade({ afinidades }: Props) {
             >
               {i + 1}.
             </span>
-            {a.urlFoto ? (
-              // biome-ignore lint/performance/noImgElement: foto remota; dimensões explícitas evitam CLS.
-              <img
-                alt=""
-                className="size-10 shrink-0 rounded-full object-cover"
-                height={40}
-                loading="lazy"
-                src={a.urlFoto}
-                width={40}
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="size-10 shrink-0 rounded-full bg-surface-raised"
-              />
-            )}
+            <ParlamentarAvatarBase
+              className="shrink-0"
+              loading="lazy"
+              nome={a.nome}
+              size="md"
+              urlFoto={a.urlFoto}
+            />
             <div className="min-w-0 flex-1">
               <Link
                 className="block truncate font-medium text-fg-primary underline decoration-dotted underline-offset-2 hover:text-fg-tertiary"
