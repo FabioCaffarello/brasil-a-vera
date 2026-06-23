@@ -1,9 +1,11 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 import { CompartilharProposicaoButton } from '@/components/proposicao/compartilhar-button'
+import { situacaoStatus } from '@/components/proposicao/situacao'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { formatProposicaoRef } from '@/lib/format'
 
@@ -27,35 +29,12 @@ interface Props {
   } | null
 }
 
-const SITUACAO_LABELS: Record<string, string> = {
-  TRAMITANDO: 'Em tramitação',
-  APROVADA: 'Aprovada',
-  REJEITADA: 'Rejeitada',
-  ARQUIVADA: 'Arquivada',
-  TRANSFORMADA_EM_NORMA: 'Transformada em norma jurídica',
-}
-
-// Mesmo mapping do original (proposicao-card.tsx). Badge sólido de
-// TRANSFORMADA_EM_NORMA reforça hierarquia (virou lei = pinnacle) e usa o
-// par on-color do RDS `bg-success-solid` + `text-fg-on-success`
-// (emerald-700/branco, estável nos dois temas, ADR-039 / #230) — antes
-// `bg-success text-success-foreground` (par BaV theme-split, removido).
-const SITUACAO_CLASSES: Record<string, string> = {
-  TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
-  APROVADA: 'bg-success/20 text-fg-success',
-  REJEITADA: 'bg-error/20 text-fg-error',
-  ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
-  TRANSFORMADA_EM_NORMA: 'bg-success-solid text-fg-on-success',
-}
-
 export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
   const ref = formatProposicaoRef(
     proposicao.tipo,
     proposicao.numero,
     proposicao.ano,
   )
-  const situacaoClass =
-    SITUACAO_CLASSES[proposicao.situacao] ?? SITUACAO_CLASSES.ARQUIVADA
   return (
     <div>
       <Link
@@ -71,11 +50,7 @@ export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
           <h1 className="font-mono font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
             {ref}
           </h1>
-          <span
-            className={`inline-flex items-center rounded px-3 py-1 font-medium text-sm ${situacaoClass}`}
-          >
-            {SITUACAO_LABELS[proposicao.situacao] ?? proposicao.situacao}
-          </span>
+          <DataBadge {...situacaoStatus(proposicao.situacao)} />
         </div>
 
         <p className="text-fg-primary text-lg">

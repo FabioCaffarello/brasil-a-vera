@@ -4,9 +4,11 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  DataBadge,
 } from '@fabio.caffarello/react-design-system/server'
 import { Vote } from 'lucide-react'
 import Link from 'next/link'
+import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataBR } from '@/lib/format'
 import type { VotacaoRecente } from '@/lib/queries/votacoes'
 
@@ -61,15 +63,7 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
                     {v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}
                   </span>
                   <span aria-hidden>·</span>
-                  <span
-                    className={`inline-flex items-center rounded px-1.5 py-0.5 font-medium text-[10px] uppercase ${
-                      v.aprovada
-                        ? 'bg-success/20 text-fg-success'
-                        : 'bg-error/20 text-fg-error'
-                    }`}
-                  >
-                    {v.aprovada ? 'Aprovada' : 'Rejeitada'}
-                  </span>
+                  <DataBadge size="sm" {...resultadoStatus(v.aprovada)} />
                 </div>
                 <Link
                   className="line-clamp-2 text-fg-primary hover:text-fg-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"

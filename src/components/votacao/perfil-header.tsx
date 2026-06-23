@@ -5,6 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { CompartilharVotacaoButton } from '@/components/votacao/compartilhar-button'
+import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataHoraBR } from '@/lib/format'
 
 interface Props {
@@ -40,10 +41,7 @@ export function PerfilVotacaoHeader({ votacao: v }: Props) {
             tone="primary"
           />
           <DataBadge label={formatDataHoraBR(v.dataHora)} tone="neutral" />
-          <DataBadge
-            label={v.aprovada ? 'Aprovada' : 'Rejeitada'}
-            tone={v.aprovada ? 'success' : 'error'}
-          />
+          <DataBadge {...resultadoStatus(v.aprovada)} />
         </div>
 
         <h1 className="font-semibold text-2xl text-fg-primary tracking-tight sm:text-3xl">
