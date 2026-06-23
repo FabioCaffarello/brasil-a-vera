@@ -23,6 +23,7 @@ import { FileText, SearchX } from 'lucide-react'
 import Link from 'next/link'
 import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { MostrarMais } from '@/components/listagem/mostrar-mais'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
 import {
   ProposicaoPreviewDrawer,
@@ -33,6 +34,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
+import { buildListaHref, restantesPrimeiraPagina } from '@/lib/pagination'
 import { CursorProposicoesV1 } from '@/lib/queries/cursor-schemas'
 import {
   countProposicoes,
@@ -120,28 +122,21 @@ interface PageProps {
 // Constrói href preservando filtros e mudando apenas `after` (cursor).
 // Strip o param quando cursor é null (volta à primeira página) — usado
 // no permanentRedirect 308 para tokens inválidos (ADR-026 §5). Base /rds/.
+const PROPOSICOES_HREF_KEYS = [
+  'tipo',
+  'ano',
+  'situacao',
+  'tema',
+  'q',
+  'ordem',
+  'after',
+] as const
+
 function buildPageHref(
   params: Awaited<PageProps['searchParams']>,
   override: { after?: string | null },
 ): string {
-  const merged = { ...params, ...override }
-  const search = new URLSearchParams()
-  for (const key of [
-    'tipo',
-    'ano',
-    'situacao',
-    'tema',
-    'q',
-    'ordem',
-    'after',
-  ] as const) {
-    const value = merged[key]
-    if (value !== null && value !== undefined && value !== '') {
-      search.set(key, value)
-    }
-  }
-  const qs = search.toString()
-  return qs ? `/proposicoes?${qs}` : '/proposicoes'
+  return buildListaHref('/proposicoes', params, PROPOSICOES_HREF_KEYS, override)
 }
 
 export default async function ProposicoesPage({ searchParams }: PageProps) {
@@ -172,12 +167,11 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
       canExport(),
     ])
   const proposicoes = page.rows
-  // "Mostrar mais (N restantes)" só faz sentido na primeira página (cursor
-  // = undefined). Em páginas subsequentes não sabemos quantos itens já
-  // foram vistos sem rastrear page-N — então mostra só "Mostrar mais".
-  const restantesPrimeiraPagina = !cursor
-    ? Math.max(0, totalFiltrado - PROPOSICOES_LISTAGEM_PAGE_SIZE)
-    : null
+  const restantes = restantesPrimeiraPagina(
+    Boolean(cursor),
+    totalFiltrado,
+    PROPOSICOES_LISTAGEM_PAGE_SIZE,
+  )
 
   return (
     <>
@@ -293,15 +287,10 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             quando nextCursor existe (ordens 'recente'/'antiga' que suportam
             keyset). */}
         {page.nextCursor ? (
-          <div className="flex justify-center" id="mostrar-mais">
-            <Button asChild variant="outline">
-              <a href={buildPageHref(params, { after: page.nextCursor })}>
-                {restantesPrimeiraPagina !== null
-                  ? `Mostrar mais (${formatNumeroAbreviado(restantesPrimeiraPagina)} restantes)`
-                  : 'Mostrar mais'}
-              </a>
-            </Button>
-          </div>
+          <MostrarMais
+            href={buildPageHref(params, { after: page.nextCursor })}
+            restantes={restantes}
+          />
         ) : null}
       </div>
     </>
