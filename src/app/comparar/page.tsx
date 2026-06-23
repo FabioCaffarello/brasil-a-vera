@@ -7,15 +7,17 @@
 //
 // - HeroSection do RDS /server; SectionCard (Card compound do RDS);
 //   ConcordanciaMatrix/ParlamentaresGrid de @/components/comparar.
-// - DataBadge (resíduo accent) mantido. ErrorState é helper local inline.
+// - DataBadge consolidado no RDS (ADR-038). ErrorState é helper local inline.
 // - Caixa "comparativo indisponível" mantém `border-warning/40 bg-warning/10`
 //   (BaV neutralizado) + `text-fg-warning`.
 
-import { HeroSection } from '@fabio.caffarello/react-design-system/server'
+import {
+  DataBadge,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import { Columns3 } from 'lucide-react'
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
 
@@ -127,7 +129,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
             icon={<Columns3 className="h-3 w-3" />}
             label="Comparativo"
             source="L1 · oficial"
-            tone="accent"
+            tone="dataviz"
           />
         }
         title={`${result.parlamentares.length} parlamentares lado a lado`}

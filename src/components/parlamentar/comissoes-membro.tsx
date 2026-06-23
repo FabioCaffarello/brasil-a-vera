@@ -1,7 +1,6 @@
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { Landmark } from 'lucide-react'
-
 import { EmptyState } from '@/components/ui/empty-state'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import type { ComissoesView } from '@/modules/parlamentares/domain/comissoes-view'
 
 // 'YYYY-MM-DD' -> 'MM/YYYY' sem parse de Date (evita deslize de timezone).
@@ -35,7 +34,7 @@ export function ComissoesMembro({
               ) : null}
               <DataBadge
                 label={c.cargo}
-                tone={c.lideranca ? 'accent' : 'default'}
+                tone={c.lideranca ? 'dataviz' : 'neutral'}
               />
               <span className="text-fg-tertiary text-xs">
                 desde {formatMesAno(c.dataInicio)}
@@ -75,7 +74,7 @@ export function ComissoesMembro({
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {historicasSiglas.map((sigla) => (
               <li key={sigla}>
-                <DataBadge label={sigla} tone="default" />
+                <DataBadge label={sigla} tone="neutral" />
               </li>
             ))}
           </ul>

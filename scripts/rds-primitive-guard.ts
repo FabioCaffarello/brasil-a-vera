@@ -120,6 +120,11 @@ const FORBIDDEN: Forbidden[] = [
     use: "import { Card, CardHeader, CardTitle, CardSubtitle, CardBody, CardActions } from '@fabio.caffarello/react-design-system/server' (CardContent→CardBody, CardDescription→CardSubtitle, CardFooter→CardActions)",
     ref: 'ADR-038 — Card consolidado no Card compound do RDS (/server). Card/CardHeader/CardTitle iguais; renames de sub-componentes',
   },
+  {
+    path: '@/design-system/compositions/data-badge',
+    use: "import { DataBadge } from '@fabio.caffarello/react-design-system/server' (label/source/icon/tone; tones default→neutral, destructive→error, brand→primary, accent→dataviz [roxo data-viz, NÃO o accent ciano do RDS])",
+    ref: 'ADR-038 — DataBadge consolidado no RDS (v4.5, /server, superset RSC-safe). Vocabulário de tom remapeado',
+  },
   // Notas de deferimento (ficam locais):
   //   - kpi-card: RDS Stat não tem slot floatingBadge (TrustBadge L1 na home).
   //   - tabs: RDS só tem TabsAsLinks (sem tabs com estado interno).

@@ -6,7 +6,7 @@
 // `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 //
 // - HeroSection + Stat/StatGroup (cols=4, com hint) vêm do RDS /server.
-// - DataBadge mantido local (sem par RDS — resíduo accent).
+// - DataBadge consolidado no RDS (ADR-038); tone data-viz = `dataviz`.
 // - FiltrosProposicao/ProposicaoCard de @/components/proposicao; EmptyState/
 //   Button de @/design-system; ExportCsvLink + auth/canExport preservados.
 // - Cursor pagination (ADR-026): decodeCursor + permanentRedirect 308 em token
@@ -14,6 +14,7 @@
 
 import {
   Button,
+  DataBadge,
   HeroSection,
   Stat,
   StatGroup,
@@ -29,7 +30,6 @@ import {
 } from '@/components/proposicao/preview-drawer'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
@@ -189,7 +189,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             icon={<FileText className="h-3 w-3" />}
             label="L1"
             source="Câmara + Senado"
-            tone="accent"
+            tone="dataviz"
           />
         }
         title="Proposições"

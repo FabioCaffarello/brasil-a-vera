@@ -102,7 +102,7 @@ stats-grid 1`.
 | `kpi-card` | 2 | **G** | `Stat` (sem `floatingBadge`) | fica local — `Stat` não tem slot p/ o `floatingBadge` (TrustBadge L1 na home; "opção A") | médio | local |
 | `hero-section` | 1 | **R** | `HeroSection` (`./server`) | ✅ consolidado (#452; drop-in — mesmas variantes `plain`/`gradient`/`gradient-glow`) | baixo | ✓ |
 | `combobox` | 2 | **R** | `Autocomplete` (wrapper `rds-autocomplete`) | ✅ consolidado (#450; v4.1 ganhou `name`/form [#225](https://github.com/FabioCaffarello/react-design-system/issues/225)). Levou junto `command`+`popover` | alto | ✓ |
-| `data-badge` | 9 | **G** | RDS `DataBadge` (v4.3, [#228](https://github.com/FabioCaffarello/react-design-system/issues/228)) | server-safe entregue; consolida quando o tom `accent`/data-viz sair ([#232](https://github.com/FabioCaffarello/react-design-system/issues/232)) — fica local como carrier do `accent` (16×) até lá | médio | local |
+| `data-badge` | 9 | **R** | RDS `DataBadge` (v4.5, [#228](https://github.com/FabioCaffarello/react-design-system/issues/228) + [#232](https://github.com/FabioCaffarello/react-design-system/issues/232)) | ✅ consolidado — superset RSC-safe; tom data-viz entregue como `dataviz` ([#232](https://github.com/FabioCaffarello/react-design-system/issues/232)). Remapeamento de tom: default→neutral, destructive→error, brand→primary, accent→`dataviz` (roxo data-viz; **não** o `accent` ciano do RDS) | médio | ✓ |
 
 ### Dual-existência — resolvida
 
@@ -121,7 +121,7 @@ revogou parte da §Resíduos do ADR-038. Estado:
 | --- | --- | --- | --- |
 | Paleta de charts `--chart-1..5` | [#229](https://github.com/FabioCaffarello/react-design-system/issues/229) ✅ | migrou p/ `--color-chart-1..8` (Okabe‑Ito RDS, v4.3). single-hue→`chart-2` (azul preservado), mediana→`chart-1`, mix→`chart-1..5` | **#460 ✅** |
 | Par on-color `success-foreground` | [#230](https://github.com/FabioCaffarello/react-design-system/issues/230) ✅ | migrou p/ par sólido `bg-success-solid`+`text-fg-on-success` (emerald-700/branco, ≈5.48:1 AA) | **#461 ✅** |
-| `accent` roxo (DataBadge) | [#232](https://github.com/FabioCaffarello/react-design-system/issues/232) ⏳ | **gap-com-issue** — DataBadge fica local como carrier até o RDS expor o tom data-viz | ⏳ aguarda release |
+| `accent` roxo (DataBadge) | [#232](https://github.com/FabioCaffarello/react-design-system/issues/232) ✅ | RDS expôs o tom data-viz como `dataviz` (v4.5); DataBadge consolidado, `accent`→`dataviz` | **consolidação data-badge ✅** |
 | Cores cruas de `PartyBadge` | — | **segue ratificado** (D4 Wave 6, identidade oficial) — fora de escopo | — |
 
 ## Issues upstream (WS5) — TODAS resolvidas
@@ -149,14 +149,14 @@ server-safe por composição). Adotadas no BaV em `^4.2.0` (#448).
 
 5. ✅ [RDS #228](https://github.com/FabioCaffarello/react-design-system/issues/228)
    — `DataBadge` server-safe (`source` + `tone`). Entregue v4.3; consolidação local
-   aguarda o tom `accent` (#232).
+   destravada pelo tom data-viz (#232, v4.5) e concluída.
 6. ✅ [RDS #229](https://github.com/FabioCaffarello/react-design-system/issues/229)
    — paleta categórica Okabe‑Ito + `getChartColor`. Entregue v4.3, consumido (#460).
 7. ✅ [RDS #230](https://github.com/FabioCaffarello/react-design-system/issues/230)
    — par on-color `fg-on-success` + `success-solid`. Entregue v4.3, consumido (#461).
-8. ⏳ [RDS #232](https://github.com/FabioCaffarello/react-design-system/issues/232)
-   — tom `accent`/data-viz no `DataBadge` (par categórico, fora da escala de status).
-   **Aberta** — destrava a consolidação do `data-badge` local.
+8. ✅ [RDS #232](https://github.com/FabioCaffarello/react-design-system/issues/232)
+   — tom `dataviz` (par categórico data-viz, fora da escala de status) no `DataBadge`.
+   Entregue v4.5; destravou e concluiu a consolidação do `data-badge` local.
 
 ## Encerramento (2026-06-16)
 
@@ -187,18 +187,17 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
   4 wrappers de bundle sancionados `rds-accordion`/`rds-autocomplete`/`rds-dialog`/
   `rds-toast` (`'use client'` re-exportando `/granular` — evita vazar +294KB do
   barrel num RSC). `card` também foi consolidado (Card compound do RDS).
-- **Composições:** `data-badge`, `kpi-card`, `party-badge` (gaps/ratificados) +
+- **Composições:** `kpi-card`, `party-badge` (gaps/ratificados) +
   `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
+  `data-badge` consolidado no `DataBadge` do RDS (v4.5, /server) — cópia local removida.
 - **Zero duplicata local** de componente RDS. **Zero `@radix-ui/react-dialog`**
   direto (deps radix de 7 → 1: só `react-tabs`, #455).
 - **Resíduos de cor:** revisitados na fase ADR-039 (ver §"Resíduos de cor" acima) —
-  charts (#460) e on-success (#461) migraram p/ o RDS; `accent` aguarda RDS #232;
-  só `PartyBadge` segue ratificado.
+  charts (#460), on-success (#461) e o data-viz (`dataviz`, RDS #232, v4.5) migraram
+  p/ o RDS; só `PartyBadge` segue ratificado.
 
 **Guard anti-regressão** (`scripts/rds-primitive-guard.ts`, CI): trava reintrodução
 de qualquer primitiva consolidada. A camada local em deprecação ativa fica honesta.
 
-**Follow-up em aberto:** só a consolidação do `data-badge`, **bloqueada** pela
-[RDS #232](https://github.com/FabioCaffarello/react-design-system/issues/232) (tom
-`accent`/data-viz) — ainda aberta upstream; consome no próximo bump quando sair.
+**Follow-up:** `data-badge` consolidado (RDS #232 entregue na v4.5; `accent`→`dataviz`).
 `tabs` segue como único primitivo local por gap legítimo (RDS só tem `TabsAsLinks`).
