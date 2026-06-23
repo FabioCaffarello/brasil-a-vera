@@ -154,6 +154,12 @@ docs/
   Curadoria, tokens semânticos e import boundary do
   [ADR-021](docs/architecture/ADR/021-design-system-shadcn-curado.md) permanecem;
   bibliotecas de UI seguem critério leve (justificativa no PR), sem ADR por dep.
+  Consolidação de primitivas concluída ([ADR-038](docs/architecture/ADR/038-consolidacao-primitivas-no-rds.md));
+  a fase ativa é a adoção da **camada compositiva** do RDS
+  ([ADR-053](docs/architecture/ADR/053-adocao-camada-compositiva-rds.md)): componente
+  de domínio em `src/components/` é construído *sobre* as composições/patterns do RDS
+  (Card compound, Timeline, Breadcrumb, Avatar…), não reinventa layout que o RDS já
+  oferece.
 - Erros da API da Câmara são esperados. APIs públicas brasileiras são instáveis.
   Sempre retry com backoff, sempre log estruturado de falha, nunca crash silencioso.
 - Plan mode antes de mudanças amplas. Para qualquer task que toque mais de 3
