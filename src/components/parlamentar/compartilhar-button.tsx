@@ -11,7 +11,7 @@ import {
   DialogTrigger,
 } from '@/design-system/primitives/rds-dialog'
 import { useToast } from '@/design-system/primitives/rds-toast'
-import { buildShareUrl } from '@/lib/share-url'
+import { buildShareUrl, type ShareCampaign } from '@/lib/share-url'
 
 interface Props {
   parlamentar: {
@@ -20,6 +20,19 @@ interface Props {
     uf: string
     casa: string
   }
+  /**
+   * URL relativa a compartilhar (ex.: card de fato). Default = página atual
+   * (`window.location.href`), o comportamento original do botão de perfil.
+   */
+  path?: string
+  /** Segmento de UTM do artefato (ADR-054): 'perfil' | 'par-contraditorio'. */
+  campaign?: ShareCampaign
+  /**
+   * Variante "card de fato" (ADR-054): quando presente, o dialog e os textos
+   * pré-formatados afirmam o fato (factual, sem juízo) em vez do resumo do
+   * perfil. `mensagem` é a frase factual já montada pelo server.
+   */
+  fato?: { mensagem: string }
 }
 
 const TEXTAREA_CLASS =
@@ -28,15 +41,34 @@ const TEXTAREA_CLASS =
 const COPY_BUTTON_CLASS =
   'inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-2.5 py-1.5 font-medium text-fg-primary text-xs hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
-function buildWhatsApp(parlamentar: Props['parlamentar'], url: string): string {
+function buildWhatsApp(
+  parlamentar: Props['parlamentar'],
+  url: string,
+  fatoMensagem?: string,
+): string {
+  const ident = `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf})`
+  if (fatoMensagem) {
+    return `📊 ${ident}\n\n${fatoMensagem}\n\nVeja os fatos no Brasil à Vera 🗳️\n\n${url}`
+  }
   const cargo = parlamentar.casa === 'CAMARA' ? 'Deputado' : 'Senador'
-  return `📊 ${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — ${cargo}\n\nVeja como vota, propõe e gasta no Brasil à Vera 🗳️\n\n${url}`
+  return `📊 ${ident} — ${cargo}\n\nVeja como vota, propõe e gasta no Brasil à Vera 🗳️\n\n${url}`
 }
 
-function buildTwitter(parlamentar: Props['parlamentar'], url: string): string {
+function buildTwitter(
+  parlamentar: Props['parlamentar'],
+  url: string,
+  fatoMensagem?: string,
+): string {
+  const ident = `${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf})`
   // Twitter conta URL como 23 chars + emojis ~2 chars/glyph.
   // Mensagem base ~120 chars + nome variável. Cortamos só se exceder 280.
-  const base = `📊 ${parlamentar.nome} (${parlamentar.partidoSigla}/${parlamentar.uf}) — como vota, propõe e gasta no Brasil à Vera 🇧🇷\n\n${url}`
+  if (fatoMensagem) {
+    const base = `📊 ${ident}\n\n${fatoMensagem}\n\nVeja os fatos no Brasil à Vera 🇧🇷\n\n${url}`
+    if (base.length <= 280) return base
+    // Fallback compacto: descarta a identidade, preserva o fato + URL.
+    return `📊 ${parlamentar.partidoSigla}/${parlamentar.uf}\n\n${fatoMensagem}\n\nBrasil à Vera 🇧🇷\n\n${url}`
+  }
+  const base = `📊 ${ident} — como vota, propõe e gasta no Brasil à Vera 🇧🇷\n\n${url}`
   if (base.length <= 280) return base
   // Fallback compacto para nomes longos
   return `📊 ${parlamentar.partidoSigla}/${parlamentar.uf}: como vota, propõe e gasta no Brasil à Vera 🇧🇷\n\n${url}`
@@ -70,40 +102,59 @@ async function copyToClipboard(
  * Sem instrumentação de eventos — handoff aceita "sem dado de uso
  * até Wave 9".
  */
-export function CompartilharButton({ parlamentar }: Props) {
+export function CompartilharButton({
+  parlamentar,
+  path,
+  campaign,
+  fato,
+}: Props) {
   const toast = useToast()
   const [href, setHref] = useState('')
 
   useEffect(() => {
     // Resolved no client para pegar o canônico real (host + path);
-    // em SSR o componente não renderiza esses valores.
-    setHref(window.location.href)
-  }, [])
+    // em SSR o componente não renderiza esses valores. Com `path`, monta a
+    // URL do artefato (ex.: card de fato) a partir do origin atual.
+    setHref(path ? window.location.origin + path : window.location.href)
+  }, [path])
 
   // UTM por canal (item 0 / analytics): buildShareUrl canonicaliza (descarta
-  // cursor/filtro de quem compartilha) e anexa utm_source/medium.
-  const urlCopy = href ? buildShareUrl(href, 'copy') : ''
+  // cursor/filtro de quem compartilha) e anexa utm_source/medium (+ campaign).
+  const urlCopy = href ? buildShareUrl(href, 'copy', campaign) : ''
   const whatsAppText = href
-    ? buildWhatsApp(parlamentar, buildShareUrl(href, 'whatsapp'))
+    ? buildWhatsApp(
+        parlamentar,
+        buildShareUrl(href, 'whatsapp', campaign),
+        fato?.mensagem,
+      )
     : ''
   const twitterText = href
-    ? buildTwitter(parlamentar, buildShareUrl(href, 'twitter'))
+    ? buildTwitter(
+        parlamentar,
+        buildShareUrl(href, 'twitter', campaign),
+        fato?.mensagem,
+      )
     : ''
+
+  const isFato = Boolean(fato)
+  const triggerLabel = isFato ? 'Compartilhar' : 'Compartilhar resumo'
+  const triggerClass = isFato
+    ? 'inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-2.5 py-1.5 font-medium text-fg-tertiary text-xs hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
+    : 'inline-flex items-center gap-2 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button
-          className="inline-flex items-center gap-2 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-          type="button"
-        >
-          <Share2 aria-hidden className="h-4 w-4" />
-          Compartilhar resumo
+        <button className={triggerClass} type="button">
+          <Share2 aria-hidden className={isFato ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
+          {triggerLabel}
         </button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Compartilhar perfil</DialogTitle>
+          <DialogTitle>
+            {isFato ? 'Compartilhar fato' : 'Compartilhar perfil'}
+          </DialogTitle>
           <DialogDescription>
             {parlamentar.nome} ({parlamentar.partidoSigla}/{parlamentar.uf}) —
             copie o link ou um texto pré-formatado.

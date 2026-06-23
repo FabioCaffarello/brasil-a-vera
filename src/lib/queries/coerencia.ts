@@ -1,5 +1,5 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
-
+import { cached, TTL } from '@/lib/cache'
 import {
   classifyDirecao,
   type DirecaoProposicao,
@@ -169,6 +169,47 @@ export async function getParesContraditorios(
   return computePares(votos, limit)
 }
 
+/**
+ * Versão cacheada de {@link getParesContraditorios} (ADR-054 / disciplina de
+ * custo Neon, princípio 8/12). A query crua bate 2 vezes no banco; a rota
+ * /contradicao (page + OG) é martelada por scrapers, então edge-cache é
+ * obrigatório. Consumida também pelo perfil. TTL de 6h (`TTL.coerenciaPares`):
+ * pares só mudam com nova ingestão de votação (cron diário).
+ *
+ * Atenção: `cached()` faz JSON roundtrip → `dataHora` (Date | string) chega ao
+ * consumidor como string ISO. Os consumidores (`formatDataBR`, VotoCard) já
+ * aceitam `Date | string`; `diasEntreVotos` é pré-computado.
+ */
+export function getParesContraditoriosCached(
+  parlamentarId: string,
+  limit = 10,
+): Promise<ParContraditorio[]> {
+  return cached(
+    `coerencia:pares:${parlamentarId}:${limit}`,
+    TTL.coerenciaPares,
+    () => getParesContraditorios(parlamentarId, limit),
+  )
+}
+
+/**
+ * Localiza um par específico pelos dois `votacaoId`. Tolerante à ORDEM: casa
+ * tanto (voto1, voto2) quanto (voto2, voto1) — a ordem canônica do par depende
+ * do `ORDER BY dataHora` da query e pode mudar entre janelas de cache; um link
+ * compartilhado (ordem canônica) e um eventual link com a ordem trocada devem
+ * resolver para o mesmo fato. Pura — usada pela rota /contradicao (ADR-054).
+ */
+export function findPar(
+  pares: ParContraditorio[],
+  votoAId: string,
+  votoBId: string,
+): ParContraditorio | undefined {
+  return pares.find(
+    (p) =>
+      (p.voto1.votacaoId === votoAId && p.voto2.votacaoId === votoBId) ||
+      (p.voto1.votacaoId === votoBId && p.voto2.votacaoId === votoAId),
+  )
+}
+
 export interface CoerenciaStats {
   votosClassificados: number
   votosTotaisComProposicao: number
@@ -191,4 +232,14 @@ export async function getCoerenciaStats(
     paresContraditoriosDetectados: computePares(votos, Number.MAX_SAFE_INTEGER)
       .length,
   }
+}
+
+/** Versão cacheada de {@link getCoerenciaStats} (ADR-054, mesma disciplina de
+ *  custo que {@link getParesContraditoriosCached}). */
+export function getCoerenciaStatsCached(
+  parlamentarId: string,
+): Promise<CoerenciaStats> {
+  return cached(`coerencia:stats:${parlamentarId}`, TTL.coerenciaPares, () =>
+    getCoerenciaStats(parlamentarId),
+  )
 }

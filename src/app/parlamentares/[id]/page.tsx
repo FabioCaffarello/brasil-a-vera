@@ -71,7 +71,7 @@ import {
 } from '@/lib/queries/alinhamento'
 import {
   getCoerenciaStats,
-  getParesContraditorios,
+  getParesContraditoriosCached,
 } from '@/lib/queries/coerencia'
 import { getComissoesParlamentar } from '@/lib/queries/comissoes'
 import {
@@ -285,7 +285,7 @@ export default async function ParlamentarPerfilPage({
     getGastosMensalMedianaCasa(parlamentar.id, anoCorrente),
     getGastosTopFornecedores(parlamentar.id, anoCorrente, 5),
     getTop5Afinidade(parlamentar.id),
-    getParesContraditorios(parlamentar.id, 10),
+    getParesContraditoriosCached(parlamentar.id, 10),
     getCoerenciaStats(parlamentar.id),
     getAlinhamentoParlamentar(parlamentar.id),
     getAlinhamentoMensal(parlamentar.id, 12),
@@ -664,6 +664,13 @@ export default async function ParlamentarPerfilPage({
       content: (
         <ParesContraditorios
           pares={paresContraditorios}
+          parlamentar={{
+            id: parlamentar.id,
+            nome: parlamentar.nome,
+            partidoSigla: parlamentar.partidoSigla,
+            uf: parlamentar.uf,
+            casa: parlamentar.casa,
+          }}
           stats={coerenciaStats}
         />
       ),

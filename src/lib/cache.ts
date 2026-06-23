@@ -40,6 +40,10 @@ export const TTL = {
   relatorias: 86_400,
   // Discursos (ADR-048): ingestão semanal → 24h.
   discursos: 86_400,
+  // Pares de votos em direções opostas (coerência, ADR-054). Só mudam quando
+  // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
+  // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.
+  coerenciaPares: 21_600,
   listagemFiltrada: 300,
 } as const
 

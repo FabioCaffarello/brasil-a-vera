@@ -51,4 +51,29 @@ describe('buildShareUrl', () => {
   it('URL inválida volta como veio (sem quebrar em SSR)', () => {
     expect(buildShareUrl('', 'copy')).toBe('')
   })
+
+  it('anexa utm_campaign quando fornecido (segmenta o artefato — ADR-054)', () => {
+    expect(
+      buildShareUrl(
+        'https://brasilavera.org/parlamentares/abc',
+        'whatsapp',
+        'perfil',
+      ),
+    ).toBe(
+      'https://brasilavera.org/parlamentares/abc?utm_source=whatsapp&utm_medium=share&utm_campaign=perfil',
+    )
+    expect(
+      buildShareUrl(
+        'https://brasilavera.org/parlamentares/abc/contradicao/v1/v2',
+        'copy',
+        'par-contraditorio',
+      ),
+    ).toContain('utm_campaign=par-contraditorio')
+  })
+
+  it('omite utm_campaign quando não fornecido (comportamento anterior)', () => {
+    expect(buildShareUrl('https://brasilavera.org/p/x', 'copy')).not.toContain(
+      'utm_campaign',
+    )
+  })
 })

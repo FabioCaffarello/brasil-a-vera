@@ -101,6 +101,7 @@ export function PerfilHeader({ parlamentar }: Props) {
 
           <div className="pt-3">
             <CompartilharButton
+              campaign="perfil"
               parlamentar={{
                 nome: parlamentar.nome,
                 partidoSigla: parlamentar.partidoSigla,
