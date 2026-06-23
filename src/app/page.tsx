@@ -107,6 +107,7 @@ export default async function Home() {
         kpis={
           <StatGroup
             aria-label="Métricas do Brasil à Vera"
+            className="mx-auto max-w-5xl"
             cols={4}
             floatingBadge={<TrustBadge trustLevel="L1" />}
             layout="grid"
@@ -142,7 +143,13 @@ export default async function Home() {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">
+      {/* Container alinhado ao grid do shell (navbar/footer usam max-w-6xl px-4).
+          max-w-screen-xl do RDS Container = 1280px ≠ 1152px da navbar, então
+          inline Tailwind preserva o alinhamento correto. space-y-10 (40px)
+          substitui space-y-12 (48px): ritmo editorial sem "blocos soltos". */}
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-12 sm:py-16">
+        {/* ATO 1: EXPLORAR — ação primeiro */}
+
         {/* ENTRY POINTS — portas de entrada cívicas em grid (ação primeiro).
             Grid 1/2/3-up; EntryCard sobre o Card do RDS, equal-height. */}
         <section aria-labelledby="entry-points-titulo">
@@ -187,55 +194,60 @@ export default async function Home() {
           <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
         </section>
 
-        {/* FEATURES — credibilidade: por que confiar na plataforma. */}
-        <section aria-labelledby="features-titulo">
-          <h2
-            className="mb-6 font-semibold text-2xl tracking-tight"
-            id="features-titulo"
-          >
-            Por que confiar nesta plataforma?
-          </h2>
-          <FeaturesGrid />
-        </section>
-
-        {/* PIRÂMIDE DE CONFIANÇA — SectionCard único com lista compacta.
-            Mantém âncora #piramide-confianca para o link do TrustBadge. */}
-        <SectionCard
-          id="piramide-confianca"
-          subtitle="Todo dado exibido no Brasil à Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
-          title="Pirâmide de Confiança"
-        >
-          <ul className="space-y-4">
-            {trustExamples.map(({ level, example }) => (
-              <li
-                className="flex items-start gap-3 border-line-default border-b pb-4 last:border-0 last:pb-0"
-                key={level}
-              >
-                <div className="shrink-0">
-                  <TrustBadge trustLevel={level} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-fg-primary text-sm">
-                    {TRUST_LEVEL_DESCRIPTIONS[level]}
-                  </p>
-                  <p className="mt-1 text-fg-tertiary text-xs italic">
-                    Ex: {example}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 text-fg-quaternary text-xs">
-            Mais detalhes em{' '}
-            <Link
-              className="rounded text-fg-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-              href="/docs/piramide-de-confianca"
+        {/* ATO 2: CREDIBILIDADE — zona visual agrupada com borda + fundo sutil.
+            Separa "usar a plataforma" de "confiar na plataforma" sem criar
+            nível card-in-card (wrapper é composição de layout, não Card RDS). */}
+        <div className="space-y-8 rounded-xl border border-line-default bg-surface-base/50 p-6 sm:p-8">
+          {/* FEATURES — credibilidade: por que confiar na plataforma. */}
+          <section aria-labelledby="features-titulo">
+            <h2
+              className="mb-6 font-semibold text-2xl tracking-tight"
+              id="features-titulo"
             >
-              /docs/piramide-de-confianca
-            </Link>
-            .
-          </p>
-        </SectionCard>
+              Por que confiar nesta plataforma?
+            </h2>
+            <FeaturesGrid />
+          </section>
+
+          {/* PIRÂMIDE DE CONFIANÇA — SectionCard único com lista compacta.
+              Mantém âncora #piramide-confianca para o link do TrustBadge. */}
+          <SectionCard
+            id="piramide-confianca"
+            subtitle="Todo dado exibido no Brasil à Vera carrega um nível de confiança explícito. Nenhum número aparece sem que você saiba de onde veio."
+            title="Pirâmide de Confiança"
+          >
+            <ul className="space-y-4">
+              {trustExamples.map(({ level, example }) => (
+                <li
+                  className="flex items-start gap-3 border-line-default border-b pb-4 last:border-0 last:pb-0"
+                  key={level}
+                >
+                  <div className="shrink-0">
+                    <TrustBadge trustLevel={level} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-fg-primary text-sm">
+                      {TRUST_LEVEL_DESCRIPTIONS[level]}
+                    </p>
+                    <p className="mt-1 text-fg-tertiary text-xs italic">
+                      Ex: {example}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-fg-quaternary text-xs">
+              Mais detalhes em{' '}
+              <Link
+                className="rounded text-fg-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                href="/docs/piramide-de-confianca"
+              >
+                /docs/piramide-de-confianca
+              </Link>
+              .
+            </p>
+          </SectionCard>
+        </div>
       </div>
     </>
   )
