@@ -36,6 +36,16 @@ describe('buildSeedOrder', () => {
     // deputados primeiro de todos.
     expect(at('ingest:camara:deputados')).toBe(0)
 
+    // Roots de parlamentar antes das votações que os referenciam. Regressão do
+    // seed single-shot: senado-votacoes (registry daily/t0) NÃO pode rodar
+    // antes de senado-senadores (registry daily/t1), senão falha em DB frio.
+    expect(at('ingest:senado:senadores')).toBeLessThan(
+      at('ingest:senado:votacoes'),
+    )
+    expect(at('ingest:senado:senadores')).toBeLessThan(
+      at('ingest:camara:votacoes'),
+    )
+
     // backfill-cpf (hoisted) roda depois dos parlamentares e antes do tse-bens
     // (que depende dele) e dos blocos weekly/monthly.
     expect(at('backfill:camara:cpf')).toBeGreaterThan(
