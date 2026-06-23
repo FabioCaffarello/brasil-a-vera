@@ -26,8 +26,8 @@ export function SidebarNav() {
                 aria-current={isActive ? 'page' : undefined}
                 className={
                   isActive
-                    ? 'block rounded bg-brand/10 px-3 py-2 font-medium text-brand'
-                    : 'block rounded px-3 py-2 text-foreground transition-colors duration-150 hover:bg-surface-elevated hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+                    ? 'block rounded bg-fg-brand/10 px-3 py-2 font-medium text-fg-brand'
+                    : 'block rounded px-3 py-2 text-fg-primary transition-colors duration-150 hover:bg-surface-raised hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas'
                 }
                 href={href}
               >

@@ -2,11 +2,19 @@
 // dentro de `_components/` (prefixo `_` opcional do Next.js para excluir do
 // roteamento) por serem específicos do escopo /docs. Não generalizar para
 // `components/ui/` enquanto for usado só aqui.
+//
+// Tokens do design system @fabio.caffarello/react-design-system (famílias
+// fg-*/surface-*/line-*); tradução pela tabela canônica
+// docs/migration/token-map.md. Espelha o padrão de /privacidade (helper
+// local + `Text` do RDS); h1/h2 ficam HTML cru porque combinam 3 props de
+// typography (font + size + tracking) que nenhum `variant` cobre sem 2+
+// overrides.
 
+import { Text } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
 export const docsLinkClass =
-  'text-brand underline underline-offset-2 transition-colors duration-150 hover:text-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+  'text-fg-brand underline underline-offset-2 transition-colors duration-150 hover:text-fg-brand/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas'
 
 export function Section({
   title,
@@ -19,16 +27,20 @@ export function Section({
 }) {
   return (
     <section className="mb-12" id={id}>
-      <h2 className="mb-3 font-medium text-foreground-muted text-sm uppercase tracking-wide">
+      <h2 className="mb-3 font-medium text-fg-tertiary text-sm uppercase tracking-wide">
         {title}
       </h2>
-      <div className="space-y-4 text-base text-foreground">{children}</div>
+      <div className="space-y-4 text-base text-fg-primary">{children}</div>
     </section>
   )
 }
 
 export function P({ children }: { children: React.ReactNode }) {
-  return <p className="leading-relaxed">{children}</p>
+  return (
+    <Text variant="body" className="text-fg-primary leading-relaxed">
+      {children}
+    </Text>
+  )
 }
 
 export function Ul({ children }: { children: React.ReactNode }) {
@@ -81,10 +93,12 @@ export function DocsHeader({
 }) {
   return (
     <header className="mb-10">
-      <h1 className="font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
+      <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
         {title}
       </h1>
-      <p className="mt-2 text-foreground-muted text-lg">{subtitle}</p>
+      <Text variant="body" className="mt-2 text-fg-tertiary text-lg">
+        {subtitle}
+      </Text>
     </header>
   )
 }
