@@ -36,13 +36,19 @@ export type IngestionSource = z.infer<typeof ingestionSourceSchema>
 
 export const ingestionSourcesSchema = z.array(ingestionSourceSchema)
 
-// As unidades de ingestão atuais (Câmara + Senado). DAG preservado via tier:
-//   daily:  t0 deputados, votacoes-camara, votacoes-senado
-//           t1 senadores, proposicoes-camara, orientacoes-camara, orientacoes-senado
-//           t2 proposicoes-senado, backfill-camara (votação→proposição)
-//           t3 backfill-senado (votação→proposição, após proposicoes-senado)
+// As unidades de ingestão atuais (Câmara + Senado). DAG preservado via tier.
+// Os tiers seguem as dependências HARD reais (os guards que dão throw quando a
+// raiz está vazia), não estado cross-run — por isso votações ficam ACIMA dos
+// roots de parlamentar, e não no mesmo/abaixo (corrige #545):
+//   daily:  t0 deputados, senadores            (roots de parlamentar)
+//           t1 votacoes-{camara,senado}, proposicoes-{camara,senado}
+//                                              (dependem dos roots)
+//           t2 orientacoes-{camara,senado}, backfill-{camara,senado}
+//                                              (dependem das votações/proposições do t1)
 //   weekly: {gastos, tramitacao-camara, tramitacao-senado, comissoes-camara,
 //           comissoes-senado}  (independentes)
+// Nota: o workflow daily tem jobs tier0/tier1/tier2 — manter o máximo daily em
+// t2 (um t3 seria emitido pela matrix mas não teria job que o consumisse).
 export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
   [
     // ── daily ───────────────────────────────────────────────────────────────
@@ -59,7 +65,9 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       script: 'ingest:senado:senadores',
       context: 'ingestion-senado-senadores',
       cadence: 'daily',
-      tier: 1,
+      // Root de parlamentar do Senado. tier 0 junto com deputados: votações e
+      // proposições do Senado (t1) dependem dele já no banco — #545.
+      tier: 0,
       timeoutMin: 15,
     },
     {
@@ -75,43 +83,53 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       script: 'ingest:senado:proposicoes',
       context: 'ingestion-senado-proposicoes',
       cadence: 'daily',
-      tier: 2,
+      // tier 1: depende do root de parlamentar (autores). Pré-requisito do
+      // backfill votação→proposição do Senado (t2).
+      tier: 1,
       timeoutMin: 60,
     },
     // ── daily · votações e derivados (consolidados no daily — ADR-035) ────────
     {
+      // tier 1: o produtor dá throw sem deputados no banco (guard explícito).
+      // tier 0 (mesmo dos roots) era uma corrida — em prod achava os deputados
+      // do run anterior; em DB frio falhava. Agora depende do t0 — #545.
       id: 'camara-votacoes',
       script: 'ingest:camara:votacoes',
       context: 'ingestion-camara-votacoes',
       cadence: 'daily',
-      tier: 0,
+      tier: 1,
       timeoutMin: 30,
     },
     {
+      // tier 1: o produtor dá throw sem senadores no banco (guard explícito).
+      // Era t0 enquanto senado-senadores era t1 — inversão do DAG que falhava em
+      // DB frio (#545). Agora depende do root (t0).
       id: 'senado-votacoes',
       script: 'ingest:senado:votacoes',
       context: 'ingestion-senado-votacoes',
       cadence: 'daily',
-      tier: 0,
+      tier: 1,
       timeoutMin: 15,
     },
     {
+      // tier 2: overlay de orientação; casa contra a votação populada por
+      // camara-votacoes (t1) no mesmo run, por isso roda depois.
       id: 'camara-orientacoes',
       script: 'ingest:camara:orientacoes',
       context: 'ingestion-camara-orientacoes',
       cadence: 'daily',
-      tier: 1,
+      tier: 2,
       timeoutMin: 30,
     },
     {
-      // tier 1: overlay de orientação do Senado (ADR-042). Casa por chave de
+      // tier 2: overlay de orientação do Senado (ADR-042). Casa por chave de
       // conteúdo (matéria+sessão) contra a `votacao` populada por
-      // senado-votacoes (tier 0) no mesmo run; por isso roda depois.
+      // senado-votacoes (tier 1) no mesmo run; por isso roda depois.
       id: 'senado-orientacoes',
       script: 'ingest:senado:orientacoes',
       context: 'ingestion-senado-orientacoes',
       cadence: 'daily',
-      tier: 1,
+      tier: 2,
       timeoutMin: 15,
     },
     {
@@ -125,14 +143,16 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       timeoutMin: 20,
     },
     {
-      // tier 3: vínculo votação→proposição do Senado (ADR-042, #501). Lookup
+      // tier 2: vínculo votação→proposição do Senado (ADR-042, #501). Lookup
       // local (sem fetch) codigo_materia → proposicao.source_id_senado; roda
-      // depois de senado-proposicoes (tier 2) para casar no mesmo run.
+      // depois de senado-proposicoes E senado-votacoes (ambos tier 1) para casar
+      // no mesmo run. Era tier 3 — emitido pela matrix mas SEM job tier3 no
+      // workflow daily, então NUNCA rodava em prod (#545).
       id: 'senado-backfill-votacao-proposicao',
       script: 'backfill:senado:votacao-proposicao',
       context: 'ingestion-backfill-votacao-proposicao-senado',
       cadence: 'daily',
-      tier: 3,
+      tier: 2,
       timeoutMin: 10,
     },
     // ── weekly ──────────────────────────────────────────────────────────────

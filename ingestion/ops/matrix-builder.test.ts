@@ -5,26 +5,26 @@ import { SOURCES } from '../registry'
 import { buildTierMatrices } from './matrix-builder'
 
 describe('buildTierMatrices', () => {
-  it('agrupa daily em 4 tiers preservando o DAG (votações consolidadas)', () => {
+  it('agrupa daily em 3 tiers preservando o DAG (votações consolidadas)', () => {
     const tiers = buildTierMatrices(SOURCES, 'daily')
-    expect(tiers).toHaveLength(4)
+    // 3 tiers: roots (t0) → votações/proposições (t1) → orientações/backfills
+    // (t2). Cabe nos jobs tier0/tier1/tier2 do workflow daily — sem t3 órfão.
+    expect(tiers).toHaveLength(3)
     expect(tiers[0].map((e) => e.id).sort()).toEqual([
       'camara-deputados',
-      'camara-votacoes',
-      'senado-votacoes',
+      'senado-senadores',
     ])
     expect(tiers[1].map((e) => e.id).sort()).toEqual([
-      'camara-orientacoes',
       'camara-proposicoes',
-      'senado-orientacoes',
-      'senado-senadores',
+      'camara-votacoes',
+      'senado-proposicoes',
+      'senado-votacoes',
     ])
     expect(tiers[2].map((e) => e.id).sort()).toEqual([
       'camara-backfill-votacao-proposicao',
-      'senado-proposicoes',
-    ])
-    expect(tiers[3].map((e) => e.id).sort()).toEqual([
+      'camara-orientacoes',
       'senado-backfill-votacao-proposicao',
+      'senado-orientacoes',
     ])
   })
 

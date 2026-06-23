@@ -23,20 +23,17 @@ const CADENCE_RANK: Record<Cadence, number> = {
 // Hoists cirúrgicos — onde o (cadência, tier) do registry NÃO é uma ordem
 // válida para um seed single-shot (DB frio, sem estado de run anterior):
 //
-//   - Roots de parlamentar (deputados, senadores): votações/proposições
-//     referenciam parlamentar. O registry põe `senado-senadores` em daily/t1,
-//     enquanto `senado-votacoes` é daily/t0 — em PROD o votacoes-t0 acha os
-//     senadores do run ANTERIOR, mas num seed fresco senado-votacoes roda antes
-//     e falha ("nenhum parlamentar SENADO no banco"). Os dois roots vão para
-//     tier -1, antes de qualquer votação/proposição. (Gap latente do registry
-//     no cold-start de prod rastreado na issue #545.)
 //   - `backfill:camara:cpf`: monthly/t0 no registry, mas preenche
 //     parlamentar.cpf (depende só de deputados) e é pré-requisito do tse-bens
 //     (monthly/t1). Sem o hoist cairia no fim, longe dos parlamentares.
-//     Posição: daily, tier 1.5 (após os roots/proposições de t1, antes do t2).
+//     Posição: daily, tier 1.5 (após os roots/votações/proposições de t1,
+//     antes do t2).
+//
+// Nota: os roots de parlamentar (deputados/senadores) NÃO precisam mais de
+// hoist — o registry agora os põe em daily/t0, acima das votações/proposições
+// (daily/t1) que os referenciam, então a ordem derivada já é válida em DB frio
+// (#545 corrigido na fonte, não compensado aqui).
 const HOIST: ReadonlyMap<string, { cadence: Cadence; tier: number }> = new Map([
-  ['ingest:camara:deputados', { cadence: 'daily', tier: -1 }],
-  ['ingest:senado:senadores', { cadence: 'daily', tier: -1 }],
   ['backfill:camara:cpf', { cadence: 'daily', tier: 1.5 }],
 ])
 

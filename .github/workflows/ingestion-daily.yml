@@ -10,10 +10,13 @@ name: Ingestão diária
 # Config-driven (ADR-035): os jobs NÃO são hand-written. O job `discover` lê o
 # registry (ingestion/registry.ts, cadence=daily) e emite a matrix por tier;
 # cada `tierN` roda as entradas via fan-out. Adicionar fonte = 1 entrada no
-# registry. DAG via tier:
-#   t0: deputados, votacoes-camara, votacoes-senado
-#   t1: senadores, proposicoes-camara, orientacoes
-#   t2: proposicoes-senado, backfill (liga votação→proposição já no mesmo run)
+# registry. DAG via tier (dependência HARD — votações dependem dos roots de
+# parlamentar, então rodam ACIMA deles, não no mesmo tier — #545):
+#   t0: deputados, senadores                       (roots de parlamentar)
+#   t1: votacoes-{camara,senado}, proposicoes-{camara,senado}
+#   t2: orientacoes-{camara,senado}, backfill-{camara,senado} (votação→proposição)
+# Há jobs tier0/tier1/tier2 abaixo — o máximo daily no registry DEVE ser t2
+# (um t3 seria emitido pela matrix mas não teria job que o consumisse).
 # Ver docs/contributing/WORKFLOWS.md.
 #
 # Secrets necessários no repositório (configurar via gh secret set):

@@ -36,9 +36,10 @@ describe('buildSeedOrder', () => {
     // deputados primeiro de todos.
     expect(at('ingest:camara:deputados')).toBe(0)
 
-    // Roots de parlamentar antes das votações que os referenciam. Regressão do
-    // seed single-shot: senado-votacoes (registry daily/t0) NÃO pode rodar
-    // antes de senado-senadores (registry daily/t1), senão falha em DB frio.
+    // Roots de parlamentar antes das votações que os referenciam. Invariante de
+    // DB frio: senado-votacoes não pode rodar antes de senado-senadores, senão
+    // o produtor dá throw. Agora garantido pelo registry (senadores daily/t0,
+    // votacoes daily/t1 — #545), não por hoist no seed.
     expect(at('ingest:senado:senadores')).toBeLessThan(
       at('ingest:senado:votacoes'),
     )
