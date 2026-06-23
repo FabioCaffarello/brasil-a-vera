@@ -1,6 +1,12 @@
-// Rótulos + classes de token por situação de proposição. Extraído do
-// ProposicaoCard (Sprint 4.2 / Wave 6) para reuso pelo card de listagem e
-// pelo drawer de preview — o badge de situação aparece nos dois.
+// Fonte única do badge de situação de proposição (ADR-053).
+//
+// Antes de #569, o mapeamento situação→rótulo+cor estava duplicado e
+// divergente em proposicao-card, preview-drawer e perfil-header (rótulos
+// diferentes — 'Tramitando' vs 'Em tramitação' — e classes hardcoded). Agora
+// `situacaoStatus()` é a única fonte: mapeia a situação para o vocabulário de
+// `tone` do RDS `DataBadge`, consumido por card, drawer e header.
+
+import type { DataBadgeTone } from '@fabio.caffarello/react-design-system/server'
 
 export const SITUACAO_LABELS: Record<string, string> = {
   TRAMITANDO: 'Tramitando',
@@ -11,30 +17,41 @@ export const SITUACAO_LABELS: Record<string, string> = {
 }
 
 /**
- * Mapeamento situação → tokens semânticos (mantido vs Sprint 4.2).
+ * Situação → `tone` do RDS DataBadge (role semântico, soft-wash AA-verificado).
  *
- * - TRAMITANDO: active, em progresso → bg-fg-brand/20 + text-fg-brand (subtle)
- * - APROVADA: outcome positivo → bg-success/20 + text-fg-success (subtle)
- * - REJEITADA: outcome negativo → bg-error/20 + text-fg-error
- * - ARQUIVADA: inativo → bg-surface-raised + text-fg-tertiary
- * - TRANSFORMADA_EM_NORMA: pinnacle outcome (lei!) → par on-color sólido do
- *   RDS bg-success-solid + text-fg-on-success (emerald-700/branco, estável
- *   nos dois temas, ADR-039 / #230). Visual hierarchy: solid > subtle.
+ * - TRAMITANDO: em progresso → `primary` (brand)
+ * - APROVADA: outcome positivo → `success`
+ * - REJEITADA: outcome negativo → `error`
+ * - ARQUIVADA: inativo → `neutral`
+ * - TRANSFORMADA_EM_NORMA: virou lei (pinnacle) → `success`. Nota: o realce
+ *   sólido bespoke (`bg-success-solid`, ADR-039/#230) foi aposentado ao adotar
+ *   o vocabulário do RDS, que é uniformemente soft-wash; a distinção vs.
+ *   APROVADA fica no rótulo ("Virou norma"). Reabrir como issue upstream se um
+ *   estilo de alta ênfase for necessário (ADR-053 §gap→upstream).
  */
-export const SITUACAO_CLASSES: Record<string, string> = {
-  TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
-  APROVADA: 'bg-success/20 text-fg-success',
-  REJEITADA: 'bg-error/20 text-fg-error',
-  ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
-  TRANSFORMADA_EM_NORMA: 'bg-success-solid text-fg-on-success',
-}
-
-/** Classes do badge de situação, com fallback para ARQUIVADA (inativo). */
-export function situacaoClasses(situacao: string): string {
-  return SITUACAO_CLASSES[situacao] ?? SITUACAO_CLASSES.ARQUIVADA
+const SITUACAO_TONES: Record<string, DataBadgeTone> = {
+  TRAMITANDO: 'primary',
+  APROVADA: 'success',
+  REJEITADA: 'error',
+  ARQUIVADA: 'neutral',
+  TRANSFORMADA_EM_NORMA: 'success',
 }
 
 /** Rótulo legível da situação, com fallback para o valor cru. */
 export function situacaoLabel(situacao: string): string {
   return SITUACAO_LABELS[situacao] ?? situacao
+}
+
+/**
+ * Rótulo + tom do badge de situação, prontos para `<DataBadge {...} />`.
+ * Fallback `ARQUIVADA` (inativo/neutro) para situações desconhecidas.
+ */
+export function situacaoStatus(situacao: string): {
+  label: string
+  tone: DataBadgeTone
+} {
+  return {
+    label: situacaoLabel(situacao),
+    tone: SITUACAO_TONES[situacao] ?? SITUACAO_TONES.ARQUIVADA,
+  }
 }

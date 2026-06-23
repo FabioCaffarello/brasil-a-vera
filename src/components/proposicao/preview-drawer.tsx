@@ -1,13 +1,10 @@
 'use client'
 
-import { Button } from '@fabio.caffarello/react-design-system/server'
+import { Button, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
 import { createPreview } from '@/components/preview/create-preview'
-import {
-  situacaoClasses,
-  situacaoLabel,
-} from '@/components/proposicao/situacao'
+import { situacaoStatus } from '@/components/proposicao/situacao'
 import { TramitacaoStrip } from '@/components/proposicao/tramitacao-strip'
 import {
   Drawer,
@@ -93,11 +90,7 @@ function PreviewBody({
           >
             {formatProposicaoRef(tipo, numero, ano)}
           </span>
-          <span
-            className={`inline-flex items-center rounded px-2 py-0.5 font-medium text-xs ${situacaoClasses(situacao)}`}
-          >
-            {situacaoLabel(situacao)}
-          </span>
+          <DataBadge size="sm" {...situacaoStatus(situacao)} />
         </div>
       </DrawerHeader>
 

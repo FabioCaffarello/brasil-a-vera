@@ -1,8 +1,6 @@
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ProposicaoPreviewLink } from '@/components/proposicao/preview-drawer'
-import {
-  situacaoClasses,
-  situacaoLabel,
-} from '@/components/proposicao/situacao'
+import { situacaoStatus } from '@/components/proposicao/situacao'
 import { TramitacaoStrip } from '@/components/proposicao/tramitacao-strip'
 import { formatProposicaoRef } from '@/lib/format'
 import { classifyTramitacaoCard } from '@/modules/proposicoes/domain/tramitacao-card'
@@ -72,11 +70,7 @@ export function ProposicaoCard({ proposicao }: Props) {
           <span className="font-medium font-mono text-fg-tertiary text-sm">
             {formatProposicaoRef(tipo, numero, ano)}
           </span>
-          <span
-            className={`inline-flex items-center rounded px-2 py-0.5 font-medium text-xs ${situacaoClasses(situacao)}`}
-          >
-            {situacaoLabel(situacao)}
-          </span>
+          <DataBadge size="sm" {...situacaoStatus(situacao)} />
         </div>
         <p className="line-clamp-3 text-fg-primary text-sm">
           {ementa || (

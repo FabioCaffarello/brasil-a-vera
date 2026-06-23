@@ -1,4 +1,6 @@
+import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { VotacaoPreviewLink } from '@/components/votacao/preview-drawer'
+import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataBR } from '@/lib/format'
 
 interface Props {
@@ -54,15 +56,7 @@ export function VotacaoCard({ votacao: v }: Props) {
           <span aria-hidden>·</span>
           <span>{v.orgao}</span>
         </span>
-        <span
-          className={
-            v.aprovada
-              ? 'rounded bg-success/20 px-2 py-0.5 font-medium text-fg-success text-xs'
-              : 'rounded bg-error/20 px-2 py-0.5 font-medium text-fg-error text-xs'
-          }
-        >
-          {v.aprovada ? 'Aprovada' : 'Rejeitada'}
-        </span>
+        <DataBadge size="sm" {...resultadoStatus(v.aprovada)} />
       </div>
       <p className="line-clamp-3 text-fg-primary text-sm">{v.descricao}</p>
       {totalNominais > 0 && (
