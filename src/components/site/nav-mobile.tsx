@@ -80,8 +80,8 @@ export function NavMobile({ personalLink }: Props = {}) {
         aria-expanded={open}
         aria-label={open ? 'Fechar menu' : 'Abrir menu'}
         className={cn(
-          'inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground-muted transition-colors md:hidden',
-          'hover:bg-foreground/5 hover:text-foreground',
+          'inline-flex h-9 w-9 items-center justify-center rounded-md text-fg-tertiary transition-colors md:hidden',
+          'hover:bg-fg-primary/5 hover:text-fg-primary',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         )}
         onClick={() => setOpen((v) => !v)}
@@ -100,7 +100,7 @@ export function NavMobile({ personalLink }: Props = {}) {
       {open ? (
         <button
           aria-hidden="true"
-          className="fixed inset-x-0 top-16 bottom-0 z-20 cursor-default bg-background/80 backdrop-blur-sm md:hidden"
+          className="fixed inset-x-0 top-16 bottom-0 z-20 cursor-default bg-surface-canvas/80 backdrop-blur-sm md:hidden"
           onClick={() => setOpen(false)}
           tabIndex={-1}
           type="button"
@@ -137,8 +137,8 @@ export function NavMobile({ personalLink }: Props = {}) {
                       'flex items-center rounded-md px-3 py-2.5 font-medium transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       isActive
-                        ? 'bg-foreground/10 text-foreground ring-1 ring-foreground/10'
-                        : 'text-foreground-muted hover:bg-foreground/5 hover:text-foreground',
+                        ? 'bg-fg-primary/10 text-fg-primary ring-1 ring-fg-primary/10'
+                        : 'text-fg-tertiary hover:bg-fg-primary/5 hover:text-fg-primary',
                     )}
                     href={link.href}
                     tabIndex={open ? 0 : -1}

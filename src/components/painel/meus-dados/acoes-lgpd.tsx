@@ -162,7 +162,7 @@ export function AcoesLgpd() {
         </Button>
       </div>
 
-      <div className="rounded-md border border-red-500/40 bg-red-500/5 p-4">
+      <div className="rounded-md border border-error/40 bg-error/5 p-4">
         <h3 className="font-medium text-fg-primary text-sm">
           Eliminar sua conta
         </h3>

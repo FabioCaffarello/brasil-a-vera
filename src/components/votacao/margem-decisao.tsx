@@ -25,7 +25,7 @@ export function MargemDecisaoBar({ votosSim, votosNao, aprovada }: Props) {
 
   if (total === 0) {
     return (
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Votação simbólica — sem voto nominal registrado.
       </p>
     )
@@ -43,10 +43,10 @@ export function MargemDecisaoBar({ votosSim, votosNao, aprovada }: Props) {
       : `+${margem} votos contra`
 
   const labelTone = empate
-    ? 'text-foreground-muted'
+    ? 'text-fg-tertiary'
     : aprovada
-      ? 'text-success'
-      : 'text-destructive'
+      ? 'text-fg-success'
+      : 'text-fg-error'
 
   return (
     <div className="space-y-1.5">
@@ -60,16 +60,16 @@ export function MargemDecisaoBar({ votosSim, votosNao, aprovada }: Props) {
           style={{ width: `${pctSim}%` }}
         />
         <div
-          className="bg-destructive transition-[width] duration-300 ease-out"
+          className="bg-error transition-[width] duration-300 ease-out"
           style={{ width: `${pctNao}%` }}
         />
       </div>
       <div className="flex items-center justify-between text-xs tabular-nums">
-        <span className="font-medium text-success">
+        <span className="font-medium text-fg-success">
           SIM {votosSim.toLocaleString('pt-BR')}
         </span>
         <span className={`font-medium ${labelTone}`}>{label}</span>
-        <span className="font-medium text-destructive">
+        <span className="font-medium text-fg-error">
           {votosNao.toLocaleString('pt-BR')} NÃO
         </span>
       </div>

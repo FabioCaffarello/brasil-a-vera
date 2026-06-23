@@ -104,7 +104,7 @@ export function ModalRevisarUfAntiga({
             return (
               <li key={p.id}>
                 <label
-                  className="flex items-center gap-3 rounded-md border border-line-default bg-surface-base p-3 transition-colors hover:border-line-emphasis has-[input:checked]:border-error has-[input:checked]:bg-destructive/5"
+                  className="flex items-center gap-3 rounded-md border border-line-default bg-surface-base p-3 transition-colors hover:border-line-emphasis has-[input:checked]:border-error has-[input:checked]:bg-error/5"
                   htmlFor={`revisar-${p.id}`}
                 >
                   <input
