@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from '@/design-system/primitives/rds-dialog'
 import { useToast } from '@/design-system/primitives/rds-toast'
+import { buildShareUrl } from '@/lib/share-url'
 
 interface Props {
   parlamentar: {
@@ -71,16 +72,23 @@ async function copyToClipboard(
  */
 export function CompartilharButton({ parlamentar }: Props) {
   const toast = useToast()
-  const [url, setUrl] = useState('')
+  const [href, setHref] = useState('')
 
   useEffect(() => {
     // Resolved no client para pegar o canônico real (host + path);
     // em SSR o componente não renderiza esses valores.
-    setUrl(window.location.href)
+    setHref(window.location.href)
   }, [])
 
-  const whatsAppText = url ? buildWhatsApp(parlamentar, url) : ''
-  const twitterText = url ? buildTwitter(parlamentar, url) : ''
+  // UTM por canal (item 0 / analytics): buildShareUrl canonicaliza (descarta
+  // cursor/filtro de quem compartilha) e anexa utm_source/medium.
+  const urlCopy = href ? buildShareUrl(href, 'copy') : ''
+  const whatsAppText = href
+    ? buildWhatsApp(parlamentar, buildShareUrl(href, 'whatsapp'))
+    : ''
+  const twitterText = href
+    ? buildTwitter(parlamentar, buildShareUrl(href, 'twitter'))
+    : ''
 
   return (
     <Dialog>
@@ -106,8 +114,8 @@ export function CompartilharButton({ parlamentar }: Props) {
           <Field
             id="share-url"
             label="Link"
-            text={url}
-            onCopy={() => copyToClipboard(url, 'Link', toast)}
+            text={urlCopy}
+            onCopy={() => copyToClipboard(urlCopy, 'Link', toast)}
             rows={1}
           />
           <Field
