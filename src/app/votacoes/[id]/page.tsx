@@ -26,7 +26,10 @@ import {
   X,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
-
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@/components/detail/detail-layout'
 import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplina-chart-client'
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
@@ -40,9 +43,6 @@ import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
 import { VotosDrawer } from '@/components/votacao/votos-drawer'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
-import { SectionCard } from '@/design-system/compositions/section-card'
-import { SectionNav } from '@/design-system/compositions/section-nav'
-import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { canExport } from '@/lib/auth-guards'
 import { formatDataBR } from '@/lib/format'
 import {
@@ -147,9 +147,135 @@ export default async function VotacaoPage({ params }: PageProps) {
     disciplinas.map((d) => d.partido),
   )
 
+  const sections: DetailSection[] = [
+    {
+      id: 'resumo',
+      navLabel: 'Resumo',
+      icon: <CircleSlash className="h-4 w-4" />,
+      content: (
+        <div className="space-y-4">
+          <MargemDecisaoBar
+            aprovada={v.aprovada}
+            votosNao={v.votosNao}
+            votosSim={v.votosSim}
+          />
+          {/* D3 — Hemiciclo SVG em desktop (≥md), Donut em viewport
+              estreito. SVG puro server-rendered, zero JS. O switch
+              responsivo funciona igual no card desktop e no accordion mobile. */}
+          <div className="hidden md:block">
+            <VotacaoHemicicloChart votos={votos} />
+          </div>
+          <div className="md:hidden">
+            <VotacaoVotosConsolidadosChart
+              data={{
+                sim: v.votosSim,
+                nao: v.votosNao,
+                abstencao: v.abstencoes,
+                ausentes: v.ausentes ?? 0,
+              }}
+            />
+          </div>
+          <VotosResumo
+            totais={{
+              sim: v.votosSim,
+              nao: v.votosNao,
+              abstencoes: v.abstencoes,
+              ausentes: v.ausentes,
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      id: 'proposicao',
+      navLabel: 'Proposição',
+      title: 'Proposição vinculada',
+      icon: <FileText className="h-4 w-4" />,
+      content: proposicao ? (
+        <ProposicaoVinculada proposicao={proposicao} />
+      ) : (
+        <p className="text-fg-tertiary text-sm">
+          Nenhuma proposição foi vinculada a esta votação na base atual. O
+          backfill liga apenas votações cuja proposição já foi ingerida (o
+          conjunto de proposições é restrito ao período coberto até agora).
+        </p>
+      ),
+    },
+    {
+      id: 'partido',
+      navLabel: 'Por partido',
+      title: 'Por partido',
+      subtitle: 'Como cada bancada se posicionou (soma dos votos individuais).',
+      icon: <Users className="h-4 w-4" />,
+      content: (
+        <div className="space-y-3">
+          <VotacaoPorPartidoChart data={resumoPorPartido} />
+          <details className="text-sm">
+            <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
+              Ver tabela numérica
+            </summary>
+            <div className="mt-3">
+              <VotosPorPartido porPartido={resumoPorPartido} />
+            </div>
+          </details>
+        </div>
+      ),
+    },
+    ...(disciplinas.length > 0
+      ? [
+          {
+            id: 'disciplina',
+            navLabel: 'Disciplina',
+            title: 'Disciplina partidária',
+            subtitle:
+              '% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem.',
+            icon: <BarChart3 className="h-4 w-4" />,
+            content: (
+              <>
+                <DisciplinaPartidariaChart data={disciplinas} />
+                <FederacaoExclusaoNota siglas={federadasExcluidas} />
+              </>
+            ),
+          },
+          {
+            id: 'divergencias',
+            navLabel: 'Divergências',
+            title: 'Quem votou diferente da orientação',
+            subtitle:
+              'Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva.',
+            icon: <UserMinus className="h-4 w-4" />,
+            content: (
+              <>
+                <DivergenciasList
+                  divergencias={divergencias}
+                  partidosComOrientacao={disciplinas.length}
+                />
+                <FederacaoExclusaoNota siglas={federadasExcluidas} />
+              </>
+            ),
+          },
+        ]
+      : []),
+    {
+      id: 'individuais',
+      navLabel: 'Individuais',
+      title: 'Votos individuais',
+      subtitle:
+        'Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV.',
+      icon: <Users className="h-4 w-4" />,
+      content: (
+        <VotosDrawer
+          canExport={canExportData}
+          exportHref={`/api/export/votacoes/${v.id}/votos`}
+          votos={votos}
+        />
+      ),
+    },
+  ]
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="space-y-5">
+    <DetailLayout
+      breadcrumb={
         <Breadcrumb
           items={[
             { label: 'Início', href: '/' },
@@ -157,6 +283,11 @@ export default async function VotacaoPage({ params }: PageProps) {
             { label: formatDataBR(v.dataHora) },
           ]}
         />
+      }
+      defaultOpenMobile={['resumo', 'partido']}
+      desktopGridIds={['resumo', 'proposicao']}
+      footer={<VotacoesRelacionadasFooter votacoes={relacionadas} />}
+      header={
         <PerfilVotacaoHeader
           votacao={{
             casa: v.casa,
@@ -170,11 +301,17 @@ export default async function VotacaoPage({ params }: PageProps) {
             trustLevel: v.trustLevel,
           }}
         />
-
-        {/* StatGroup do RDS substitui o KpiStrip local (padrão piloto-2:
-            borda externa via className; StatGroup só traz dividers).
-            Tone map estabelecido: default/muted→neutral,
-            destructive→error. */}
+      }
+      mobileOrder={[
+        'resumo',
+        'partido',
+        'disciplina',
+        'divergencias',
+        'individuais',
+        'proposicao',
+      ]}
+      sections={sections}
+      stats={
         <StatGroup
           className="overflow-hidden rounded-lg border border-line-default"
           cols={4}
@@ -213,289 +350,7 @@ export default async function VotacaoPage({ params }: PageProps) {
             value={disciplinaValue}
           />
         </StatGroup>
-      </div>
-
-      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav.
-          Item "Disciplina" é condicional (D5 — só renderiza com
-          orientações). */}
-      <SectionNav
-        className="mt-6 hidden sm:block"
-        items={[
-          {
-            id: 'resumo',
-            label: 'Resumo',
-            icon: <CircleSlash className="h-4 w-4" />,
-          },
-          {
-            id: 'proposicao',
-            label: 'Proposição',
-            icon: <FileText className="h-4 w-4" />,
-          },
-          {
-            id: 'partido',
-            label: 'Por partido',
-            icon: <Users className="h-4 w-4" />,
-          },
-          ...(disciplinas.length > 0
-            ? [
-                {
-                  id: 'disciplina',
-                  label: 'Disciplina',
-                  icon: <BarChart3 className="h-4 w-4" />,
-                },
-                {
-                  id: 'divergencias',
-                  label: 'Divergências',
-                  icon: <UserMinus className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          {
-            id: 'individuais',
-            label: 'Individuais',
-            icon: <Users className="h-4 w-4" />,
-          },
-        ]}
-        stickyTop="3.5rem"
-      />
-
-      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
-          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
-          varredura). defaultOpen=['resumo','partido'] preservado (2
-          macros abertos). Itens de disciplina/divergências seguem
-          condicionais (D5) via spread. */}
-      <Accordion
-        className="mt-6 space-y-3 sm:hidden"
-        defaultOpen={['resumo', 'partido']}
-        type="multiple"
-        items={[
-          {
-            id: 'resumo',
-            title: 'Resumo',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <div className="space-y-4">
-                <MargemDecisaoBar
-                  aprovada={v.aprovada}
-                  votosNao={v.votosNao}
-                  votosSim={v.votosSim}
-                />
-                <VotacaoVotosConsolidadosChart
-                  data={{
-                    sim: v.votosSim,
-                    nao: v.votosNao,
-                    abstencao: v.abstencoes,
-                    ausentes: v.ausentes ?? 0,
-                  }}
-                />
-                <VotosResumo
-                  totais={{
-                    sim: v.votosSim,
-                    nao: v.votosNao,
-                    abstencoes: v.abstencoes,
-                    ausentes: v.ausentes,
-                  }}
-                />
-              </div>
-            ),
-          },
-          {
-            id: 'partido',
-            title: 'Por partido',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <div className="space-y-3">
-                <VotacaoPorPartidoChart data={resumoPorPartido} />
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
-                    Ver tabela numérica
-                  </summary>
-                  <div className="mt-3">
-                    <VotosPorPartido porPartido={resumoPorPartido} />
-                  </div>
-                </details>
-              </div>
-            ),
-          },
-          ...(disciplinas.length > 0
-            ? [
-                {
-                  id: 'disciplina',
-                  title: 'Disciplina partidária',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <>
-                      <DisciplinaPartidariaChart data={disciplinas} />
-                      <FederacaoExclusaoNota siglas={federadasExcluidas} />
-                    </>
-                  ),
-                },
-                {
-                  id: 'divergencias',
-                  title: 'Quem votou diferente da orientação',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <>
-                      <DivergenciasList
-                        divergencias={divergencias}
-                        partidosComOrientacao={disciplinas.length}
-                      />
-                      <FederacaoExclusaoNota siglas={federadasExcluidas} />
-                    </>
-                  ),
-                },
-              ]
-            : []),
-          {
-            id: 'individuais',
-            title: 'Individuais',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <VotosDrawer
-                canExport={canExportData}
-                exportHref={`/api/export/votacoes/${v.id}/votos`}
-                votos={votos}
-              />
-            ),
-          },
-          {
-            id: 'proposicao',
-            title: 'Proposição vinculada',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: proposicao ? (
-              <ProposicaoVinculada proposicao={proposicao} />
-            ) : (
-              <p className="text-fg-tertiary text-sm">
-                Nenhuma proposição foi vinculada a esta votação na base atual.
-              </p>
-            ),
-          },
-        ]}
-      />
-
-      {/* Desktop: stack linear de SectionCards (Card compound do RDS via
-          cópia local; scroll-mt-28 embutido). Ordem preserva grid 2-col
-          em resumo+proposição no md+, depois Por partido e Individuais
-          em largura total. */}
-      <div className="mt-6 hidden space-y-5 sm:block">
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <SectionCard id="resumo" title="Resumo">
-            <div className="space-y-4">
-              <MargemDecisaoBar
-                aprovada={v.aprovada}
-                votosNao={v.votosNao}
-                votosSim={v.votosSim}
-              />
-              {/* D3 — Hemiciclo SVG em desktop (≥md), Donut em viewport
-                  estreito. SVG puro server-rendered, zero JS. */}
-              <div className="hidden md:block">
-                <VotacaoHemicicloChart votos={votos} />
-              </div>
-              <div className="md:hidden">
-                <VotacaoVotosConsolidadosChart
-                  data={{
-                    sim: v.votosSim,
-                    nao: v.votosNao,
-                    abstencao: v.abstencoes,
-                    ausentes: v.ausentes ?? 0,
-                  }}
-                />
-              </div>
-              <VotosResumo
-                totais={{
-                  sim: v.votosSim,
-                  nao: v.votosNao,
-                  abstencoes: v.abstencoes,
-                  ausentes: v.ausentes,
-                }}
-              />
-            </div>
-          </SectionCard>
-
-          <SectionCard id="proposicao" title="Proposição vinculada">
-            {proposicao ? (
-              <ProposicaoVinculada proposicao={proposicao} />
-            ) : (
-              <p className="text-fg-tertiary text-sm">
-                Nenhuma proposição foi vinculada a esta votação na base atual. O
-                backfill liga apenas votações cuja proposição já foi ingerida (o
-                conjunto de proposições é restrito ao período coberto até
-                agora).
-              </p>
-            )}
-          </SectionCard>
-        </div>
-
-        <SectionCard
-          id="partido"
-          subtitle="Como cada bancada se posicionou (soma dos votos individuais)."
-          title="Por partido"
-        >
-          <div className="space-y-3">
-            <VotacaoPorPartidoChart data={resumoPorPartido} />
-            <details className="text-sm">
-              <summary className="cursor-pointer text-fg-tertiary hover:text-fg-primary">
-                Ver tabela numérica
-              </summary>
-              <div className="mt-3">
-                <VotosPorPartido porPartido={resumoPorPartido} />
-              </div>
-            </details>
-          </div>
-        </SectionCard>
-
-        {/* Disciplina partidária + Divergências — D5: condicionais, só
-            renderizam se há orientações de bancada registradas. Quando
-            ausentes, ambas as seções somem (sem placeholders vazios). */}
-        {disciplinas.length > 0 ? (
-          <>
-            <SectionCard
-              id="disciplina"
-              subtitle="% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem."
-              title="Disciplina partidária"
-            >
-              <DisciplinaPartidariaChart data={disciplinas} />
-              <FederacaoExclusaoNota siglas={federadasExcluidas} />
-            </SectionCard>
-
-            <SectionCard
-              id="divergencias"
-              subtitle="Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva."
-              title="Quem votou diferente da orientação"
-            >
-              <DivergenciasList
-                divergencias={divergencias}
-                partidosComOrientacao={disciplinas.length}
-              />
-              <FederacaoExclusaoNota siglas={federadasExcluidas} />
-            </SectionCard>
-          </>
-        ) : null}
-
-        <SectionCard
-          id="individuais"
-          subtitle="Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV."
-          title="Votos individuais"
-        >
-          <VotosDrawer
-            canExport={canExportData}
-            exportHref={`/api/export/votacoes/${v.id}/votos`}
-            votos={votos}
-          />
-        </SectionCard>
-      </div>
-
-      {/* Footer cross-links — renderiza fora dos containers
-          mobile/desktop porque é responsivo nativo (grid 1-col →
-          md:2-col). Empty state interno suprime quando não há
-          relacionadas. */}
-      <VotacoesRelacionadasFooter votacoes={relacionadas} />
-    </div>
+      }
+    />
   )
 }

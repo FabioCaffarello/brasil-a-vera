@@ -37,8 +37,14 @@ interface DetailLayoutProps {
   stats?: ReactNode
   sections: DetailSection[]
   /**
+   * Ids renderizados num grid 2-col no topo do desktop (resto fica em pilha
+   * linear). Mobile é sempre linear (Accordion). Default: tudo linear.
+   */
+  desktopGridIds?: string[]
+  /**
    * Ordem dos ids no Accordion mobile (narrativa). Default = ordem de
-   * `sections` (= ordem do SectionNav/SectionCards no desktop).
+   * `sections` (= ordem do SectionNav/SectionCards no desktop). Ids ausentes
+   * de `sections` (seções condicionais) são ignorados.
    */
   mobileOrder?: string[]
   /** Ids abertos por padrão no Accordion mobile. */
@@ -63,6 +69,7 @@ export function DetailLayout({
   beforeStats,
   stats,
   sections,
+  desktopGridIds,
   mobileOrder,
   defaultOpenMobile,
   footer,
@@ -75,6 +82,21 @@ export function DetailLayout({
         return s ? [s] : []
       })
     : sections
+
+  const gridSet = new Set(desktopGridIds ?? [])
+  const gridSections = sections.filter((s) => gridSet.has(s.id))
+  const linearSections = sections.filter((s) => !gridSet.has(s.id))
+
+  const renderCard = (s: DetailSection) => (
+    <SectionCard
+      id={s.id}
+      key={s.id}
+      subtitle={s.subtitle}
+      title={s.title ?? s.navLabel}
+    >
+      {s.content}
+    </SectionCard>
+  )
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -110,16 +132,12 @@ export function DetailLayout({
       />
 
       <div className="mt-6 hidden space-y-5 sm:block">
-        {sections.map((s) => (
-          <SectionCard
-            id={s.id}
-            key={s.id}
-            subtitle={s.subtitle}
-            title={s.title ?? s.navLabel}
-          >
-            {s.content}
-          </SectionCard>
-        ))}
+        {gridSections.length > 0 ? (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {gridSections.map(renderCard)}
+          </div>
+        ) : null}
+        {linearSections.map(renderCard)}
       </div>
 
       {footer}
