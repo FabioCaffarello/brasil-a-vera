@@ -43,6 +43,7 @@ import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patr
 import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
+import { LeituraRapida } from '@/components/parlamentar/leitura-rapida'
 import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
@@ -58,7 +59,7 @@ import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
-import { formatBRL } from '@/lib/format'
+import { formatBRL, formatPercentil } from '@/lib/format'
 import {
   getAlinhamentoBlocos,
   getAlinhamentoParlamentar,
@@ -113,13 +114,6 @@ import { getVariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
-
-function formatPercentil(p: number): string {
-  // 0-100 → "p1".."p99". Threshold para "p100" só com 100.0 exato (raro).
-  if (p >= 99.5) return 'p99'
-  if (p < 0.5) return 'p1'
-  return `p${Math.round(p)}`
-}
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -425,6 +419,22 @@ export default async function ParlamentarPerfilPage({
             sourceUrl: parlamentar.sourceUrl,
             trustLevel: parlamentar.trustLevel,
           }}
+        />
+
+        {/* "Veredito do Espelho" (ADR-051) — camada de leitura rápida acima da
+            dobra, em linguagem de cidadão. 4 fatos fixos e idênticos para todos.
+            Complementa o StatGroup numérico abaixo. Zero query nova (reusa o que
+            o Promise.all já buscou). Vem antes do split desktop/mobile → aparece
+            nos dois. */}
+        <LeituraRapida
+          alinhamento={alinhamento}
+          ano={anoCorrente}
+          casa={parlamentar.casa}
+          coerencia={coerenciaStats}
+          comparacoes={comparacoes}
+          gastos={gastos}
+          proposicoesCount={proposicoes.length}
+          proposicoesParcial={!!proposicoesPage.nextCursor}
         />
 
         {/* StatGroup do RDS substitui o KpiStrip local. Borda externa +
