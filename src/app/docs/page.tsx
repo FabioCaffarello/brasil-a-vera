@@ -76,15 +76,13 @@ export default function DocsHub() {
           {SUBPAGES.map((page) => (
             <li key={page.href}>
               <Link
-                className="block h-full rounded-lg border border-border bg-surface p-4 transition-colors duration-150 hover:border-brand/60 hover:bg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="block h-full rounded-lg border border-line-default bg-surface-base p-4 transition-colors duration-150 hover:border-fg-brand/60 hover:bg-fg-brand/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas"
                 href={page.href}
               >
-                <h3 className="mb-1 font-medium text-foreground">
+                <h3 className="mb-1 font-medium text-fg-primary">
                   {page.title}
                 </h3>
-                <p className="text-foreground-muted text-sm">
-                  {page.description}
-                </p>
+                <p className="text-fg-tertiary text-sm">{page.description}</p>
               </Link>
             </li>
           ))}
@@ -124,7 +122,7 @@ export default function DocsHub() {
         </Ul>
       </Section>
 
-      <p className="text-foreground-muted text-sm">
+      <p className="text-fg-tertiary text-sm">
         Toda a documentação completa vive no repositório no GitHub —{' '}
         <a
           className={docsLinkClass}

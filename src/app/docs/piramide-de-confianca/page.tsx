@@ -94,7 +94,7 @@ export default function PiramideDeConfianca() {
         <ul className="space-y-6">
           {LEVELS.map(({ level, whatIs, example, howToRead }) => (
             <li
-              className="rounded-lg border border-border bg-surface p-5"
+              className="rounded-lg border border-line-default bg-surface-base p-5"
               key={level}
             >
               <div className="mb-3">
@@ -102,16 +102,16 @@ export default function PiramideDeConfianca() {
               </div>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="font-medium text-foreground">O que é</dt>
-                  <dd className="mt-1 text-foreground">{whatIs}</dd>
+                  <dt className="font-medium text-fg-primary">O que é</dt>
+                  <dd className="mt-1 text-fg-primary">{whatIs}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">Exemplo</dt>
-                  <dd className="mt-1 text-foreground italic">{example}</dd>
+                  <dt className="font-medium text-fg-primary">Exemplo</dt>
+                  <dd className="mt-1 text-fg-primary italic">{example}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">Como ler</dt>
-                  <dd className="mt-1 text-foreground">{howToRead}</dd>
+                  <dt className="font-medium text-fg-primary">Como ler</dt>
+                  <dd className="mt-1 text-fg-primary">{howToRead}</dd>
                 </div>
               </dl>
             </li>
@@ -154,7 +154,7 @@ export default function PiramideDeConfianca() {
           </Li>
           <Li>
             <strong>Exports CSV</strong>: cada linha do CSV inclui a coluna{' '}
-            <code className="rounded bg-surface-elevated px-1.5 py-0.5 font-mono text-xs">
+            <code className="rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs">
               trust_level
             </code>{' '}
             — dado retirado do contexto da plataforma mantém a classificação.

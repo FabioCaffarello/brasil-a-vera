@@ -119,26 +119,26 @@ export default function FontesPage() {
         <div className="space-y-6">
           {SOURCES.map((source) => (
             <article
-              className="rounded-lg border border-border bg-surface p-5"
+              className="rounded-lg border border-line-default bg-surface-base p-5"
               key={source.name}
             >
               <header className="mb-3">
-                <h3 className="font-semibold text-foreground">{source.name}</h3>
-                <p className="text-foreground-muted text-sm">
+                <h3 className="font-semibold text-fg-primary">{source.name}</h3>
+                <p className="text-fg-tertiary text-sm">
                   <ExternalLink href={source.url}>{source.url}</ExternalLink>
                 </p>
               </header>
               <dl className="space-y-3 text-sm">
                 <div>
-                  <dt className="font-medium text-foreground">O que ingere</dt>
-                  <dd className="mt-1 text-foreground">{source.scope}</dd>
+                  <dt className="font-medium text-fg-primary">O que ingere</dt>
+                  <dd className="mt-1 text-fg-primary">{source.scope}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">
+                  <dt className="font-medium text-fg-primary">
                     Cadência de atualização
                   </dt>
                   <dd className="mt-1">
-                    <ul className="space-y-1 text-foreground">
+                    <ul className="space-y-1 text-fg-primary">
                       {source.cadence.map((row) => (
                         <li key={row.label}>
                           <strong>{row.label}</strong>: {row.value}
@@ -148,11 +148,11 @@ export default function FontesPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground">
+                  <dt className="font-medium text-fg-primary">
                     Particularidades
                   </dt>
                   <dd className="mt-1">
-                    <ul className="space-y-1 text-foreground">
+                    <ul className="space-y-1 text-fg-primary">
                       {source.caveats.map((c) => (
                         <li key={c}>— {c}</li>
                       ))}
@@ -193,12 +193,12 @@ export default function FontesPage() {
         <div className="space-y-4">
           {PLANNED.map((p) => (
             <div
-              className="rounded-lg border border-border border-dashed bg-surface/50 p-4"
+              className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-4"
               key={p.name}
             >
-              <h3 className="font-medium text-foreground">{p.name}</h3>
-              <p className="mt-1 text-foreground text-sm">{p.status}</p>
-              <p className="mt-1 text-foreground-muted text-xs">
+              <h3 className="font-medium text-fg-primary">{p.name}</h3>
+              <p className="mt-1 text-fg-primary text-sm">{p.status}</p>
+              <p className="mt-1 text-fg-tertiary text-xs">
                 Previsão: {p.targetWave}
               </p>
             </div>
