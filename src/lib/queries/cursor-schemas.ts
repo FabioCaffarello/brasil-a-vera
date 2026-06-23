@@ -118,3 +118,26 @@ export const CursorVotacoesV1 = z.object({
 })
 
 export type CursorVotacoesV1Payload = z.infer<typeof CursorVotacoesV1>
+
+/**
+ * Cursor de listagem de parlamentares em `/parlamentares?after=`.
+ *
+ * Só a ordem `nome` (ASC) é cursor-friendly — keyset lexicográfico estável.
+ * As ordens agregadas (alinhamento/gasto/proposicoes) ordenam por coluna
+ * nullable com `NULLS LAST` → cap por LIMIT fixo, sem cursor (mesmo padrão
+ * das ordens 'movimentada'/'parada' de proposições; ADR-026 §keyset+NULLs).
+ *
+ * ORDER BY: `parlamentar.nome ASC, parlamentar.id ASC`.
+ *
+ * Payload:
+ * - `v=1`: versão atual
+ * - `nome`: nome do último parlamentar da página
+ * - `id`: uuid de `parlamentar.id` do último item (tiebreaker)
+ */
+export const CursorParlamentaresV1 = z.object({
+  v: z.literal(1),
+  nome: z.string().min(1),
+  id: z.string().uuid(),
+})
+
+export type CursorParlamentaresV1Payload = z.infer<typeof CursorParlamentaresV1>
