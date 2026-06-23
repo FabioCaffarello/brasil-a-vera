@@ -5,31 +5,28 @@
 // O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
 // `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 //
-// - HeroSection do RDS /server (slot `kpis` recebe o KpiCard).
+// Arquitetura de informação action-first: Hero → portas de entrada (ação) →
+// Votações da semana (prova de vida) → Por que confiar + Pirâmide
+// (credibilidade).
+//
+// - HeroSection do RDS /server com variant `plain` + slots idiomáticos:
+//   `kicker`/`meta` como texto (não pill). O slot `kpis` recebe o KpiCard.
 // - KpiCard de @/design-system/compositions — mantido (NÃO migrou pro Stat do
 //   RDS: o Stat não tem slot p/ floatingBadge do TrustBadge L1; opção A).
-// - SectionCard (Card compound do RDS), CardParlamentares/CardVotacoesSemana/
-//   FeaturesGrid de @/components/home.
-// - DataBadge (resíduo accent) e TrustBadge (client island) mantidos.
+// - EntryCard (Card compound do RDS) para as portas de entrada;
+//   CardVotacoesSemana/FeaturesGrid de @/components/home.
+// - TrustBadge (client island) mantido.
 
 import {
   Button,
   HeroSection,
 } from '@fabio.caffarello/react-design-system/server'
-import {
-  ArrowRight,
-  Clock,
-  FileText,
-  Sparkles,
-  Users,
-  Vote,
-} from 'lucide-react'
+import { ArrowRight, Clock, FileText, MapPin, Users, Vote } from 'lucide-react'
 import Link from 'next/link'
-import { CardParlamentares } from '@/components/home/card-parlamentares'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
+import { EntryCard } from '@/components/home/entry-card'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
-import { DataBadge } from '@/design-system/compositions/data-badge'
 import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatNumeroAbreviado } from '@/lib/format-number'
@@ -84,9 +81,10 @@ export default async function Home() {
 
   return (
     <>
-      {/* HERO minimalista — variant `plain` (fundo escuro só, sem grid nem
-          blobs) + align `center` (slogan, CTAs e KpiCard centralizados).
-          KPIs reais via getPublicStats(); meta pills reforçam procedência. */}
+      {/* HERO — variant `plain` (fundo do shell, sem gradiente) + align
+          `center`. Slots idiomáticos: `kicker` como eyebrow (RDS renderiza
+          uppercase brand) e `meta` como linha de caption de baixa ênfase.
+          KPIs reais via getPublicStats(). */}
       <HeroSection
         actions={
           <>
@@ -106,14 +104,7 @@ export default async function Home() {
         }
         align="center"
         description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
-        kicker={
-          <DataBadge
-            icon={<Sparkles className="h-3 w-3" />}
-            label="Dados oficiais"
-            source=""
-            tone="accent"
-          />
-        }
+        kicker="Dados oficiais do Legislativo"
         kpis={
           <KpiCard
             aria-label="Métricas do Brasil à Vera"
@@ -142,19 +133,57 @@ export default async function Home() {
             ]}
           />
         }
-        meta={
-          <>
-            <DataBadge label="Dados oficiais" />
-            <DataBadge label="Atualização diária" />
-            <DataBadge label="API pública" />
-          </>
-        }
+        meta="Câmara · Senado · Portal da Transparência · API pública · Sem cadastro"
         title="Transparência política sem ruído."
         variant="plain"
       />
 
       <div className="mx-auto max-w-5xl space-y-12 px-6 py-12 sm:py-16">
-        {/* FEATURES — value props inspiracionais (Sprint 6.1 PR 3, D3). */}
+        {/* ENTRY POINTS — portas de entrada cívicas em grid (ação primeiro).
+            Grid 1/2/3-up; EntryCard sobre o Card do RDS, equal-height. */}
+        <section aria-labelledby="entry-points-titulo">
+          <h2
+            className="mb-6 font-semibold text-2xl tracking-tight"
+            id="entry-points-titulo"
+          >
+            Comece por aqui
+          </h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <EntryCard
+              cta="Buscar pelo CEP"
+              description="Descubra os deputados e senadores que representam o seu estado — comece pelo seu CEP."
+              href="/quem-me-representa"
+              icon={<MapPin className="size-5" />}
+              title="Quem me representa?"
+            />
+            <EntryCard
+              description="Explore deputados federais e senadores em exercício — filtre por casa, UF, partido e veja o perfil 360 de cada um."
+              href="/parlamentares"
+              icon={<Users className="size-5" />}
+              title="Quem está no Congresso"
+            />
+            <EntryCard
+              description="Acompanhe projetos de lei e a tramitação das proposições direto das fontes oficiais da Câmara e do Senado."
+              href="/proposicoes"
+              icon={<FileText className="size-5" />}
+              title="Proposições em tramitação"
+            />
+          </div>
+        </section>
+
+        {/* VOTAÇÕES DA SEMANA — prova de vida: dado real, atualizado pelo cron.
+            Bloco full-width próprio (fallback 7d→30d via prop diasJanela). */}
+        <section aria-labelledby="votacoes-semana-titulo">
+          <h2
+            className="mb-6 font-semibold text-2xl tracking-tight"
+            id="votacoes-semana-titulo"
+          >
+            O que o Congresso votou
+          </h2>
+          <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
+        </section>
+
+        {/* FEATURES — credibilidade: por que confiar na plataforma. */}
         <section aria-labelledby="features-titulo">
           <h2
             className="mb-6 font-semibold text-2xl tracking-tight"
@@ -163,20 +192,6 @@ export default async function Home() {
             Por que confiar nesta plataforma?
           </h2>
           <FeaturesGrid />
-        </section>
-
-        {/* ENTRY POINTS pragmáticos — portas de entrada cívicas. */}
-        <section aria-labelledby="entry-points-titulo">
-          <h2
-            className="mb-6 font-semibold text-2xl tracking-tight"
-            id="entry-points-titulo"
-          >
-            Comece por aqui
-          </h2>
-          <div className="flex flex-col gap-4">
-            <CardParlamentares />
-            <CardVotacoesSemana diasJanela={diasJanela} votacoes={votacoes} />
-          </div>
         </section>
 
         {/* PIRÂMIDE DE CONFIANÇA — SectionCard único com lista compacta.
