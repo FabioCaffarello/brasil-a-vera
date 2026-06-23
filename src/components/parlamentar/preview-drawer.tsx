@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { AlinhamentoStrip } from '@/components/parlamentar/alinhamento-strip'
 import { FollowButton } from '@/components/parlamentar/follow-button'
+import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import { createPreview } from '@/components/preview/create-preview'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import {
@@ -86,21 +87,12 @@ function PreviewBody({
     <>
       <DrawerHeader>
         <div className="flex items-start gap-3">
-          {data.urlFoto ? (
-            // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
-            <img
-              alt=""
-              className="size-20 shrink-0 rounded-full object-cover"
-              height={80}
-              src={data.urlFoto}
-              width={80}
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="size-20 shrink-0 rounded-full bg-surface-raised"
-            />
-          )}
+          <ParlamentarAvatar
+            className="size-20 shrink-0"
+            nome={data.nome}
+            size="2xl"
+            urlFoto={data.urlFoto}
+          />
           <div className="min-w-0 flex-1">
             <h2
               className="font-semibold text-fg-primary text-lg leading-snug"
