@@ -48,21 +48,23 @@ describe('SOURCES registry', () => {
       SOURCES.filter((s) => s.cadence === cadence && s.tier === tier)
         .map((s) => s.id)
         .sort()
-    expect(byTier('daily', 0)).toEqual([
-      'camara-deputados',
-      'camara-votacoes',
-      'senado-votacoes',
-    ])
+    // t0 = roots de parlamentar; t1 = votações/proposições (dependem dos roots);
+    // t2 = orientações/backfills (dependem do t1). DAG por dependência HARD —
+    // votações ACIMA dos roots, não no mesmo tier (#545). Máximo daily = t2
+    // (o workflow só tem jobs tier0/tier1/tier2).
+    expect(byTier('daily', 0)).toEqual(['camara-deputados', 'senado-senadores'])
     expect(byTier('daily', 1)).toEqual([
-      'camara-orientacoes',
       'camara-proposicoes',
-      'senado-orientacoes',
-      'senado-senadores',
+      'camara-votacoes',
+      'senado-proposicoes',
+      'senado-votacoes',
     ])
     expect(byTier('daily', 2)).toEqual([
       'camara-backfill-votacao-proposicao',
-      'senado-proposicoes',
+      'camara-orientacoes',
+      'senado-backfill-votacao-proposicao',
+      'senado-orientacoes',
     ])
-    expect(byTier('daily', 3)).toEqual(['senado-backfill-votacao-proposicao'])
+    expect(byTier('daily', 3)).toEqual([])
   })
 })
