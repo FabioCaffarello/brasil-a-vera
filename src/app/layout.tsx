@@ -148,6 +148,23 @@ export default function RootLayout({
             <Footer />
             <ToastContainer position="bottom-right" />
           </ToastProvider>
+          {/* Cloudflare Web Analytics — beacon cookieless, sem PII, sem
+              rastreamento cruzado (item 0 do plano de produto / METRICS.md).
+              Gated por env var: sem token, NADA é renderizado — o path anônimo
+              continua livre de terceiros e a política de privacidade
+              permanece fiel. `spa: true` captura navegações client-side do
+              App Router. Ativação (criar site CF + token + atualizar
+              /privacidade): docs/ops/web-analytics.md. */}
+          {env.NEXT_PUBLIC_CF_BEACON_TOKEN ? (
+            <script
+              data-cf-beacon={JSON.stringify({
+                token: env.NEXT_PUBLIC_CF_BEACON_TOKEN,
+                spa: true,
+              })}
+              defer
+              src="https://static.cloudflareinsights.com/beacon.min.js"
+            />
+          ) : null}
         </body>
       </html>
     </ClerkProvider>

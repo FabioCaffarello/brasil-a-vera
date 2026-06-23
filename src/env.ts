@@ -63,6 +63,11 @@ export const env = createEnv({
     // serve documentação + tipagem para qualquer app code que venha
     // a consumir a key direto.
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
+    // Token do Cloudflare Web Analytics (beacon cookieless). Optional: a
+    // instrumentação é opt-in por ambiente — ausente = beacon não renderiza
+    // (path anônimo permanece sem terceiros). Público por design (vai no HTML).
+    // Inlined no build (NEXT_PUBLIC_*), então precisa estar no env do cf:build.
+    NEXT_PUBLIC_CF_BEACON_TOKEN: z.string().min(1).optional(),
   },
   shared: {
     NODE_ENV: z
@@ -81,6 +86,7 @@ export const env = createEnv({
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CF_BEACON_TOKEN: process.env.NEXT_PUBLIC_CF_BEACON_TOKEN,
     NODE_ENV: process.env.NODE_ENV,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
