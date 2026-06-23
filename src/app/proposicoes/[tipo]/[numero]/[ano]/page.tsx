@@ -18,7 +18,10 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
-
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@/components/detail/detail-layout'
 import { ApoioPartidoChart } from '@/components/proposicao/apoio-partido-chart-client'
 import { AutoresList } from '@/components/proposicao/autores-list'
 import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
@@ -28,9 +31,6 @@ import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
 import { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart-client'
-import { SectionCard } from '@/design-system/compositions/section-card'
-import { SectionNav } from '@/design-system/compositions/section-nav'
-import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatProposicaoRef } from '@/lib/format'
 import { CursorTramitacaoV1 } from '@/lib/queries/cursor-schemas'
@@ -328,231 +328,144 @@ export default async function ProposicaoDetalhePage({
       : Promise.resolve([]),
   ])
 
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <Breadcrumb
-        className="mb-4"
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Proposições', href: '/proposicoes' },
-          {
-            label: formatProposicaoRef(
-              proposicao.tipo,
-              proposicao.numero,
-              proposicao.ano,
-            ),
-          },
-        ]}
-      />
-      <PerfilProposicaoHeader
-        proposicao={{
-          tipo: proposicao.tipo,
-          numero: proposicao.numero,
-          ano: proposicao.ano,
-          ementa: proposicao.ementa,
-          ementaDetalhada: proposicao.ementaDetalhada,
-          situacao: proposicao.situacao,
-          regime: proposicao.regime,
-          sourceUrl: proposicao.sourceUrl,
-          trustLevel: proposicao.trustLevel,
-        }}
-        stats={
-          stats
-            ? {
-                diasEmTramitacao: stats.diasEmTramitacao,
-                nAutores: stats.nAutores,
-              }
-            : null
-        }
-      />
-
-      {/* StatGroup do RDS substitui o KpiStrip local (padrão piloto-2:
-          borda externa via className; StatGroup só traz dividers). */}
-      <StatGroup
-        className="mt-6 overflow-hidden rounded-lg border border-line-default"
-        cols={4}
-        layout="grid"
-      >
-        {kpiSlots.map((slot) => (
-          <Stat
-            hint={slot.hint}
-            key={slot.label}
-            label={slot.label}
-            tone={STAT_TONE[slot.tone ?? 'default']}
-            value={slot.value}
+  const sections: DetailSection[] = [
+    {
+      id: 'temas',
+      navLabel: 'Temas',
+      icon: <Tag className="h-4 w-4" />,
+      content: <TemasList temas={temas} />,
+    },
+    {
+      id: 'autores',
+      navLabel: 'Autores',
+      subtitle:
+        'Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome.',
+      icon: <Users className="h-4 w-4" />,
+      content: (
+        <div className="space-y-4">
+          {apoioPartido.length > 0 ? (
+            <ApoioPartidoChart data={apoioPartido} />
+          ) : null}
+          <AutoresList autores={autores} />
+        </div>
+      ),
+    },
+    {
+      id: 'votacoes',
+      navLabel: 'Votações',
+      title: 'Votações vinculadas',
+      subtitle:
+        'Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente.',
+      icon: <FileText className="h-4 w-4" />,
+      content: (
+        <div className="space-y-4">
+          {votosConsolidados ? (
+            <VotosConsolidadosChart data={votosConsolidados} />
+          ) : null}
+          <VotacoesVinculadas
+            buildFiltroHref={buildVotacoesFiltroHref}
+            casa={votacoesCasa}
+            resultado={votacoesResultado}
+            votacoes={votacoes}
           />
-        ))}
-      </StatGroup>
-
-      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav. */}
-      <SectionNav
-        className="mt-6 hidden sm:block"
-        items={[
-          { id: 'temas', label: 'Temas', icon: <Tag className="h-4 w-4" /> },
-          {
-            id: 'autores',
-            label: 'Autores',
-            icon: <Users className="h-4 w-4" />,
-          },
-          {
-            id: 'votacoes',
-            label: 'Votações',
-            icon: <FileText className="h-4 w-4" />,
-          },
-          {
-            id: 'tramitacao',
-            label: 'Tramitação',
-            icon: <Clock className="h-4 w-4" />,
-          },
-        ]}
-        stickyTop="3.5rem"
-      />
-
-      {/* Mobile: Accordion do RDS via wrapper client de ./_components/
-          rds-accordion (entry /granular da 3.9.0; ver medição no PR da
-          varredura). defaultOpen narrativo preservado do original. */}
-      <Accordion
-        className="mt-6 space-y-3 sm:hidden"
-        defaultOpen={['tramitacao', 'autores']}
-        type="multiple"
-        items={[
-          {
-            id: 'tramitacao',
-            title: 'Tramitação',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <div className="space-y-4">
-                {barraMarcoAtual !== null && ultimoOrgao !== null ? (
-                  <BarraProgressoTramitacao
-                    ariaLabel={`Tramitação em ${ultimoOrgao}`}
-                    currentStep={barraMarcoAtual}
-                    terminalNegativo={barraTerminalNegativo}
-                    variant="full"
-                  />
-                ) : null}
-                <TramitacaoTimeline
-                  buildFiltroHref={buildTramitacaoFiltroHref}
-                  eventos={tramitacaoPage.rows}
-                  filtro={tramitacaoFiltro}
-                  mostrarMaisHref={tramitacaoMostrarMaisHref}
-                  restantes={tramitacaoRestantes}
-                />
-              </div>
-            ),
-          },
-          {
-            id: 'autores',
-            title: 'Autores',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <div className="space-y-4">
-                {apoioPartido.length > 0 ? (
-                  <ApoioPartidoChart data={apoioPartido} />
-                ) : null}
-                <AutoresList autores={autores} />
-              </div>
-            ),
-          },
-          {
-            id: 'votacoes',
-            title: 'Votações vinculadas',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <div className="space-y-4">
-                {votosConsolidados ? (
-                  <VotosConsolidadosChart data={votosConsolidados} />
-                ) : null}
-                <VotacoesVinculadas
-                  buildFiltroHref={buildVotacoesFiltroHref}
-                  casa={votacoesCasa}
-                  resultado={votacoesResultado}
-                  votacoes={votacoes}
-                />
-              </div>
-            ),
-          },
-          {
-            id: 'temas',
-            title: 'Temas',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: <TemasList temas={temas} />,
-          },
-        ]}
-      />
-
-      {/* Desktop: stack linear de SectionCards (Card compound do RDS via
-          cópia local; scroll-mt-28 embutido). Ordem das âncoras casa com
-          o SectionNav; no Accordion mobile a ordem é narrativa. */}
-      <div className="mt-6 hidden space-y-5 sm:block">
-        <SectionCard id="temas" title="Temas">
-          <TemasList temas={temas} />
-        </SectionCard>
-
-        <SectionCard
-          id="autores"
-          subtitle="Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome."
-          title="Autores"
-        >
-          <div className="space-y-4">
-            {apoioPartido.length > 0 ? (
-              <ApoioPartidoChart data={apoioPartido} />
-            ) : null}
-            <AutoresList autores={autores} />
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          id="votacoes"
-          subtitle="Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente."
-          title="Votações vinculadas"
-        >
-          <div className="space-y-4">
-            {votosConsolidados ? (
-              <VotosConsolidadosChart data={votosConsolidados} />
-            ) : null}
-            <VotacoesVinculadas
-              buildFiltroHref={buildVotacoesFiltroHref}
-              casa={votacoesCasa}
-              resultado={votacoesResultado}
-              votacoes={votacoes}
+        </div>
+      ),
+    },
+    {
+      id: 'tramitacao',
+      navLabel: 'Tramitação',
+      subtitle:
+        'Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto.',
+      icon: <Clock className="h-4 w-4" />,
+      content: (
+        <div className="space-y-4">
+          {barraMarcoAtual !== null && ultimoOrgao !== null ? (
+            <BarraProgressoTramitacao
+              ariaLabel={`Tramitação em ${ultimoOrgao}`}
+              currentStep={barraMarcoAtual}
+              terminalNegativo={barraTerminalNegativo}
+              variant="full"
             />
-          </div>
-        </SectionCard>
+          ) : null}
+          <TramitacaoTimeline
+            buildFiltroHref={buildTramitacaoFiltroHref}
+            eventos={tramitacaoPage.rows}
+            filtro={tramitacaoFiltro}
+            mostrarMaisHref={tramitacaoMostrarMaisHref}
+            restantes={tramitacaoRestantes}
+          />
+        </div>
+      ),
+    },
+  ]
 
-        <SectionCard
-          id="tramitacao"
-          subtitle="Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto."
-          title="Tramitação"
+  return (
+    <DetailLayout
+      breadcrumb={
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Proposições', href: '/proposicoes' },
+            {
+              label: formatProposicaoRef(
+                proposicao.tipo,
+                proposicao.numero,
+                proposicao.ano,
+              ),
+            },
+          ]}
+        />
+      }
+      defaultOpenMobile={['tramitacao', 'autores']}
+      footer={
+        <FooterCrossLinks
+          autorPrincipalNome={autorPrincipal?.nome ?? null}
+          mesmoAutor={mesmoAutor}
+          mesmoTema={mesmoTema}
+        />
+      }
+      header={
+        <PerfilProposicaoHeader
+          proposicao={{
+            tipo: proposicao.tipo,
+            numero: proposicao.numero,
+            ano: proposicao.ano,
+            ementa: proposicao.ementa,
+            ementaDetalhada: proposicao.ementaDetalhada,
+            situacao: proposicao.situacao,
+            regime: proposicao.regime,
+            sourceUrl: proposicao.sourceUrl,
+            trustLevel: proposicao.trustLevel,
+          }}
+          stats={
+            stats
+              ? {
+                  diasEmTramitacao: stats.diasEmTramitacao,
+                  nAutores: stats.nAutores,
+                }
+              : null
+          }
+        />
+      }
+      mobileOrder={['tramitacao', 'autores', 'votacoes', 'temas']}
+      sections={sections}
+      stats={
+        <StatGroup
+          className="overflow-hidden rounded-lg border border-line-default"
+          cols={4}
+          layout="grid"
         >
-          <div className="space-y-4">
-            {barraMarcoAtual !== null && ultimoOrgao !== null ? (
-              <BarraProgressoTramitacao
-                ariaLabel={`Tramitação em ${ultimoOrgao}`}
-                currentStep={barraMarcoAtual}
-                terminalNegativo={barraTerminalNegativo}
-                variant="full"
-              />
-            ) : null}
-            <TramitacaoTimeline
-              buildFiltroHref={buildTramitacaoFiltroHref}
-              eventos={tramitacaoPage.rows}
-              filtro={tramitacaoFiltro}
-              mostrarMaisHref={tramitacaoMostrarMaisHref}
-              restantes={tramitacaoRestantes}
+          {kpiSlots.map((slot) => (
+            <Stat
+              hint={slot.hint}
+              key={slot.label}
+              label={slot.label}
+              tone={STAT_TONE[slot.tone ?? 'default']}
+              value={slot.value}
             />
-          </div>
-        </SectionCard>
-      </div>
-
-      <FooterCrossLinks
-        autorPrincipalNome={autorPrincipal?.nome ?? null}
-        mesmoAutor={mesmoAutor}
-        mesmoTema={mesmoTema}
-      />
-    </div>
+          ))}
+        </StatGroup>
+      }
+    />
   )
 }

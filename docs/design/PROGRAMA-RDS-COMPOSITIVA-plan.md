@@ -22,10 +22,22 @@ Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ve
   issues (#247 `loading` + #248 sizes `2xl`/`3xl`). `ParlamentarAvatar` (wrapper
   de domínio sobre `Avatar` via `/granular`, padrão `rds-*`) no card (lazy) e no
   PerfilHeader (96→112px). Loop consumidor↔RDS fechado em ~12h.
-- **PR #5** (este) — **Timeline** do RDS na tramitação de proposição: o
-  `<ol>` hand-rolled (rail + dots) de `tramitacao-timeline.tsx` vira
+- **PR #5** (#576, ✅ merged) — **Timeline** do RDS na tramitação de proposição:
+  o `<ol>` hand-rolled (rail + dots) de `tramitacao-timeline.tsx` vira
   `<Timeline orientation="vertical">`; filtros, paginação por cursor e empty
   states honestos preservados em volta.
+- **PR #6** (este) — **DetailLayout** (piloto em proposições). Dois ajustes de
+  rota vs. o plano original, validados na exploração:
+  1. A premissa "votação não tem SectionNav" era **FALSA** — as 3 rotas já têm
+     SectionNav. O valor real do DetailLayout é eliminar a **tríplice declaração
+     por seção** (SectionNav + Accordion mobile + SectionCard desktop, com o
+     conteúdo duplicado) via um array `sections` único.
+  2. `Container`/`Stack` do RDS usam `max-w-screen-*` (≠ `max-w-4xl` do projeto)
+     → **não adotados** (mudariam dimensões); a casca fica em divs. Adoção fica
+     como issue futura (RDS precisa de `max-w-4xl` ou tamanho custom).
+  Piloto em proposições (4 seções, conteúdo desktop==mobile); votação (grid
+  2-col em resumo+proposição) e parlamentar (~20 seções condicionais) seguem em
+  follow-ups.
 
 > Achado empírico (PR #4): `/parlamentares` renderiza ~726 cards sem paginação
 > → `Pagination` do RDS é candidato forte, mas é a decisão **D3** (UX + custo de
