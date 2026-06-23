@@ -38,6 +38,10 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@/components/detail/detail-layout'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
@@ -59,9 +63,6 @@ import { QuemE } from '@/components/parlamentar/quem-e'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patrimonial'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
-import { SectionCard } from '@/design-system/compositions/section-card'
-import { SectionNav } from '@/design-system/compositions/section-nav'
-import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatPercentil } from '@/lib/format'
 import {
@@ -406,9 +407,284 @@ export default async function ParlamentarPerfilPage({
       <AlinhamentoBlocos blocos={alinhamentoBlocos} />
     )
 
+  const sections: DetailSection[] = [
+    ...(temBio
+      ? [
+          {
+            id: 'quem-e',
+            navLabel: 'Quem é',
+            title: 'Quem é',
+            subtitle:
+              'Profissão, escolaridade e naturalidade autodeclaradas pelo parlamentar no registro oficial. Câmara-only nesta fase.',
+            icon: <UserCircle className="h-4 w-4" />,
+            content: (
+              <QuemE
+                escolaridade={parlamentar.escolaridade}
+                dataNascimento={parlamentar.dataNascimento}
+                municipioNascimento={parlamentar.municipioNascimento}
+                ufNascimento={parlamentar.ufNascimento}
+                profissao={parlamentar.profissao}
+              />
+            ),
+          },
+        ]
+      : []),
+    {
+      id: 'votos',
+      navLabel: 'Votos',
+      title: 'Votos recentes',
+      subtitle:
+        'Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui.',
+      icon: <Vote className="h-4 w-4" />,
+      content: (
+        <VotosRecentes
+          votos={votos}
+          filtros={votosFiltros}
+          distribuicao={votosDistribuicao}
+          buildFiltroHref={buildVotosFiltroHref}
+          proximaPaginaHref={votosProximaPaginaHref}
+        />
+      ),
+    },
+    {
+      id: 'presenca',
+      navLabel: 'Participação',
+      title: 'Participação em votações',
+      subtitle:
+        'Quanto o parlamentar participa das votações nominais de plenário (votou em quantas), no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra.',
+      icon: <CalendarCheck className="h-4 w-4" />,
+      content: <Presenca presenca={presenca} casa={parlamentar.casa} />,
+    },
+    {
+      id: 'presenca-sessoes',
+      navLabel: 'Sessões',
+      title: 'Presença em sessões',
+      subtitle:
+        'Frequência física às sessões deliberativas de plenário (compareceu a quantas), no período de mandato. Diferente de participar das votações: dá para comparecer e não votar numa votação específica. Câmara-only.',
+      icon: <UserCheck className="h-4 w-4" />,
+      content: (
+        <PresencaFisica presenca={presencaFisica} casa={parlamentar.casa} />
+      ),
+    },
+    {
+      id: 'alinhamento',
+      navLabel: 'Alinhamento',
+      title: 'Alinhamento à bancada',
+      subtitle:
+        '% de votos que coincidem com a orientação do partido. Mede o alinhamento prático com a liderança partidária — não compromisso ideológico.',
+      icon: <Users className="h-4 w-4" />,
+      content: (
+        <AlinhamentoBancada
+          alinhamento={alinhamento}
+          casa={parlamentar.casa}
+          mensal={alinhamentoMensal}
+        />
+      ),
+    },
+    {
+      id: 'alinhamento-blocos',
+      navLabel: 'Gov/Oposição',
+      title: 'Alinhamento com Governo e Oposição',
+      subtitle:
+        'Comparação factual entre o voto individual e a orientação formalizada pelas lideranças do Governo e da Oposição na Câmara. Referência de leitura, não juízo de valor.',
+      icon: <Landmark className="h-4 w-4" />,
+      content: alinhamentoBlocosContent,
+    },
+    {
+      id: 'voto-partido',
+      navLabel: 'Trajetória',
+      title: 'Voto e partido ao longo do mandato',
+      subtitle:
+        'Compara cada voto com duas referências do partido vigente na data do voto — a orientação da liderança e a maioria efetiva da bancada — considerando as trocas de partido. Referência factual, sem juízo de valor.',
+      icon: <GitBranch className="h-4 w-4" />,
+      content: (
+        <FidelidadePartidaria
+          timeline={fidelidadeTimeline}
+          bancada={fidelidadeBancada}
+          orientacao={fidelidadeOrientacao}
+        />
+      ),
+    },
+    {
+      id: 'comissoes',
+      navLabel: 'Comissões',
+      title: 'Comissões',
+      subtitle:
+        "Comissões nesta legislatura (57ª). 'Atualmente' = vínculo ativo hoje; o histórico cobre só o mandato corrente.",
+      icon: <Gavel className="h-4 w-4" />,
+      content: <ComissoesMembro {...comissoes} />,
+    },
+    {
+      id: 'relatorias',
+      navLabel: 'Relatorias',
+      title: 'Relatorias',
+      subtitle:
+        'Proposições em que é o relator vigente/último (designação institucional, não escolha do parlamentar) e a distribuição partidária dos autores dessas proposições. Câmara-only; referência factual, sem juízo.',
+      icon: <ScrollText className="h-4 w-4" />,
+      content: (
+        <Relatorias
+          influencia={relatoriasInfluencia}
+          autoria={relatorAutoria}
+          casa={parlamentar.casa}
+        />
+      ),
+    },
+    {
+      id: 'proposicoes',
+      navLabel: 'Proposições',
+      title: 'Proposições onde é autor ou coautor',
+      subtitle:
+        'Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar.',
+      icon: <Inbox className="h-4 w-4" />,
+      content: (
+        <ProposicoesAutor
+          proposicoes={proposicoes}
+          filtros={proposicoesFiltros}
+          buildFiltroHref={buildProposicoesFiltroHref}
+          proximaPaginaHref={proposicoesProximaPaginaHref}
+        />
+      ),
+    },
+    {
+      id: 'discursos',
+      navLabel: 'Discursos',
+      title: 'Discursos',
+      subtitle:
+        'O que o parlamentar fala em plenário e comissão: principais temas (indexação oficial da fonte) e discursos recentes com link ao inteiro teor. Discurso não é a posição oficial nem o voto.',
+      icon: <MessageSquare className="h-4 w-4" />,
+      content: <Discursos discursos={discursos} />,
+    },
+    {
+      id: 'gastos',
+      navLabel: 'Gastos',
+      title: `Gastos parlamentares — ${anoCorrente}`,
+      subtitle:
+        'Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido.',
+      icon: <TrendingDown className="h-4 w-4" />,
+      content: (
+        <GastosResumoBlock
+          ano={anoCorrente}
+          mensal={gastosMensal}
+          parlamentarId={parlamentar.id}
+          resumo={gastos}
+          topFornecedores={gastosTopFornecedores}
+        />
+      ),
+    },
+    ...(patrimonio
+      ? [
+          {
+            id: 'patrimonio',
+            navLabel: 'Patrimônio',
+            title: 'Patrimônio declarado',
+            subtitle:
+              'Bens declarados ao TSE na candidatura de 2022. Vínculo por CPF exato — só aparece para parlamentares da Câmara identificados na base do TSE.',
+            icon: <Building2 className="h-4 w-4" />,
+            content: <PatrimonioBlock snapshot={patrimonio} />,
+          },
+        ]
+      : []),
+    ...(evolucaoPatrimonial
+      ? [
+          {
+            id: 'evolucao-patrimonio',
+            navLabel: 'Evolução',
+            title: 'Evolução patrimonial entre pleitos',
+            subtitle:
+              'Como o patrimônio declarado variou entre as candidaturas. Valores corrigidos pela inflação (IPCA) para comparação justa; pontos discretos — o intervalo entre pleitos é desconhecido.',
+            icon: <TrendingUp className="h-4 w-4" />,
+            content: (
+              <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
+            ),
+          },
+        ]
+      : []),
+    ...(variacaoPatrimonial
+      ? [
+          {
+            id: 'variacao-patrimonio',
+            navLabel: 'Variação',
+            title: 'Variação patrimonial no mandato',
+            subtitle:
+              'Variação real do patrimônio declarado durante o mandato (entre os dois pleitos mais recentes), com o percentil em relação aos pares. Declaração à Justiça Eleitoral — não é renda nem movimentação. Distinto dos gastos da cota (CEAP).',
+            icon: <TrendingUp className="h-4 w-4" />,
+            content: (
+              <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
+            ),
+          },
+        ]
+      : []),
+    ...(mixComposicao
+      ? [
+          {
+            id: 'mix-patrimonio',
+            navLabel: 'Composição',
+            title: 'Composição patrimonial ao longo do tempo',
+            subtitle:
+              'Para onde o patrimônio migrou entre as candidaturas. Composição em %, imune à inflação — isola a mudança de mix dos valores absolutos.',
+            icon: <PieChart className="h-4 w-4" />,
+            content: <MixComposicaoBlock mix={mixComposicao} />,
+          },
+        ]
+      : []),
+    ...(grafoParticipacao
+      ? [
+          {
+            id: 'grafo-participacao',
+            navLabel: 'Empresas',
+            title: 'Participação societária',
+            subtitle:
+              'Empresas em que o parlamentar declarou participação societária (quotas/ações). Extraído da descrição do TSE; só o que foi declarado, sem consulta externa.',
+            icon: <Network className="h-4 w-4" />,
+            content: (
+              <GrafoParticipacaoBlock
+                grafo={grafoParticipacao}
+                parlamentarNome={parlamentar.nome}
+              />
+            ),
+          },
+        ]
+      : []),
+    {
+      id: 'afinidade',
+      navLabel: 'Top 5',
+      title: 'Top 5 maior afinidade de voto',
+      subtitle:
+        'Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado.',
+      icon: <Users className="h-4 w-4" />,
+      content: <Top5Afinidade afinidades={afinidades} />,
+    },
+    {
+      id: 'pares',
+      navLabel: 'Pares',
+      title: 'Pares de votos em direções opostas',
+      subtitle:
+        'Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão.',
+      icon: <FileText className="h-4 w-4" />,
+      content: (
+        <ParesContraditorios
+          pares={paresContraditorios}
+          stats={coerenciaStats}
+        />
+      ),
+    },
+  ]
+
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="space-y-5">
+    <DetailLayout
+      beforeStats={
+        <LeituraRapida
+          alinhamento={alinhamento}
+          ano={anoCorrente}
+          casa={parlamentar.casa}
+          coerencia={coerenciaStats}
+          comparacoes={comparacoes}
+          gastos={gastos}
+          proposicoesCount={proposicoes.length}
+          proposicoesParcial={!!proposicoesPage.nextCursor}
+        />
+      }
+      breadcrumb={
         <Breadcrumb
           items={[
             { label: 'Início', href: '/' },
@@ -416,6 +692,32 @@ export default async function ParlamentarPerfilPage({
             { label: parlamentar.nome },
           ]}
         />
+      }
+      defaultOpenMobile={['votos', 'alinhamento']}
+      footer={
+        <footer className="mt-8 border-line-default border-t pt-6">
+          <p className="text-fg-tertiary text-sm">
+            Explorar mais parlamentares:
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link
+              className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+              href={`/parlamentares?partido=${encodeURIComponent(parlamentar.partidoSigla)}`}
+            >
+              Ver outros do {parlamentar.partidoSigla}
+              <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+              href={`/parlamentares?uf=${parlamentar.uf}`}
+            >
+              Ver outros de {parlamentar.uf}
+              <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </footer>
+      }
+      header={
         <PerfilHeader
           parlamentar={{
             nome: parlamentar.nome,
@@ -431,26 +733,9 @@ export default async function ParlamentarPerfilPage({
             trustLevel: parlamentar.trustLevel,
           }}
         />
-
-        {/* "Veredito do Espelho" (ADR-051) — camada de leitura rápida acima da
-            dobra, em linguagem de cidadão. 4 fatos fixos e idênticos para todos.
-            Complementa o StatGroup numérico abaixo. Zero query nova (reusa o que
-            o Promise.all já buscou). Vem antes do split desktop/mobile → aparece
-            nos dois. */}
-        <LeituraRapida
-          alinhamento={alinhamento}
-          ano={anoCorrente}
-          casa={parlamentar.casa}
-          coerencia={coerenciaStats}
-          comparacoes={comparacoes}
-          gastos={gastos}
-          proposicoesCount={proposicoes.length}
-          proposicoesParcial={!!proposicoesPage.nextCursor}
-        />
-
-        {/* StatGroup do RDS substitui o KpiStrip local. Borda externa +
-            rounded adicionados via className para paridade com o strip
-            original (StatGroup só traz os dividers internos). */}
+      }
+      sections={sections}
+      stats={
         <StatGroup
           className="overflow-hidden rounded-lg border border-line-default"
           cols={4}
@@ -536,599 +821,7 @@ export default async function ParlamentarPerfilPage({
             }
           />
         </StatGroup>
-      </div>
-
-      {/* SectionNav só desktop — no mobile o Accordion abaixo já é a nav. */}
-      <SectionNav
-        className="mt-6 hidden sm:block"
-        items={[
-          ...(temBio
-            ? [
-                {
-                  id: 'quem-e',
-                  label: 'Quem é',
-                  icon: <UserCircle className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          { id: 'votos', label: 'Votos', icon: <Vote className="h-4 w-4" /> },
-          {
-            id: 'presenca',
-            label: 'Participação',
-            icon: <CalendarCheck className="h-4 w-4" />,
-          },
-          {
-            id: 'presenca-sessoes',
-            label: 'Sessões',
-            icon: <UserCheck className="h-4 w-4" />,
-          },
-          {
-            id: 'alinhamento',
-            label: 'Alinhamento',
-            icon: <Users className="h-4 w-4" />,
-          },
-          {
-            id: 'alinhamento-blocos',
-            label: 'Gov/Oposição',
-            icon: <Landmark className="h-4 w-4" />,
-          },
-          {
-            id: 'voto-partido',
-            label: 'Trajetória',
-            icon: <GitBranch className="h-4 w-4" />,
-          },
-          {
-            id: 'comissoes',
-            label: 'Comissões',
-            icon: <Gavel className="h-4 w-4" />,
-          },
-          {
-            id: 'relatorias',
-            label: 'Relatorias',
-            icon: <ScrollText className="h-4 w-4" />,
-          },
-          {
-            id: 'proposicoes',
-            label: 'Proposições',
-            icon: <Inbox className="h-4 w-4" />,
-          },
-          {
-            id: 'discursos',
-            label: 'Discursos',
-            icon: <MessageSquare className="h-4 w-4" />,
-          },
-          {
-            id: 'gastos',
-            label: 'Gastos',
-            icon: <TrendingDown className="h-4 w-4" />,
-          },
-          ...(patrimonio
-            ? [
-                {
-                  id: 'patrimonio',
-                  label: 'Patrimônio',
-                  icon: <Building2 className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          ...(evolucaoPatrimonial
-            ? [
-                {
-                  id: 'evolucao-patrimonio',
-                  label: 'Evolução',
-                  icon: <TrendingUp className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          ...(variacaoPatrimonial
-            ? [
-                {
-                  id: 'variacao-patrimonio',
-                  label: 'Variação',
-                  icon: <TrendingUp className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          ...(mixComposicao
-            ? [
-                {
-                  id: 'mix-patrimonio',
-                  label: 'Composição',
-                  icon: <PieChart className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          ...(grafoParticipacao
-            ? [
-                {
-                  id: 'grafo-participacao',
-                  label: 'Empresas',
-                  icon: <Network className="h-4 w-4" />,
-                },
-              ]
-            : []),
-          {
-            id: 'afinidade',
-            label: 'Top 5',
-            icon: <Users className="h-4 w-4" />,
-          },
-          {
-            id: 'pares',
-            label: 'Pares',
-            icon: <FileText className="h-4 w-4" />,
-          },
-        ]}
-        stickyTop="3.5rem"
-      />
-
-      {/* Mobile: Accordion do RDS via entry /granular (3.9.0, #209 fecha
-          RDS #208 — preserveModules; só o módulo do Accordion atravessa o
-          client boundary). Componente do #204: painel sem clamp
-          (grid-template-rows 0fr→1fr) + className/triggerClassName por
-          item. Radix local aposentado nesta rota. Header + Votos +
-          Alinhamento default-expanded como no original. */}
-      <Accordion
-        className="mt-6 space-y-3 sm:hidden"
-        defaultOpen={['votos', 'alinhamento']}
-        type="multiple"
-        items={[
-          ...(temBio
-            ? [
-                {
-                  id: 'quem-e',
-                  title: 'Quem é',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <QuemE
-                      escolaridade={parlamentar.escolaridade}
-                      dataNascimento={parlamentar.dataNascimento}
-                      municipioNascimento={parlamentar.municipioNascimento}
-                      ufNascimento={parlamentar.ufNascimento}
-                      profissao={parlamentar.profissao}
-                    />
-                  ),
-                },
-              ]
-            : []),
-          {
-            id: 'votos',
-            title: 'Votos recentes',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <VotosRecentes
-                votos={votos}
-                filtros={votosFiltros}
-                distribuicao={votosDistribuicao}
-                buildFiltroHref={buildVotosFiltroHref}
-                proximaPaginaHref={votosProximaPaginaHref}
-              />
-            ),
-          },
-          {
-            id: 'presenca',
-            title: 'Participação em votações',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: <Presenca presenca={presenca} casa={parlamentar.casa} />,
-          },
-          {
-            id: 'presenca-sessoes',
-            title: 'Presença em sessões',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <PresencaFisica
-                presenca={presencaFisica}
-                casa={parlamentar.casa}
-              />
-            ),
-          },
-          {
-            id: 'alinhamento',
-            title: 'Alinhamento à bancada',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <AlinhamentoBancada
-                alinhamento={alinhamento}
-                casa={parlamentar.casa}
-                mensal={alinhamentoMensal}
-              />
-            ),
-          },
-          {
-            id: 'alinhamento-blocos',
-            title: 'Alinhamento com Governo e Oposição',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: alinhamentoBlocosContent,
-          },
-          {
-            id: 'voto-partido',
-            title: 'Voto e partido ao longo do mandato',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <FidelidadePartidaria
-                timeline={fidelidadeTimeline}
-                bancada={fidelidadeBancada}
-                orientacao={fidelidadeOrientacao}
-              />
-            ),
-          },
-          {
-            id: 'comissoes',
-            title: 'Comissões',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: <ComissoesMembro {...comissoes} />,
-          },
-          {
-            id: 'relatorias',
-            title: 'Relatorias',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <Relatorias
-                influencia={relatoriasInfluencia}
-                autoria={relatorAutoria}
-                casa={parlamentar.casa}
-              />
-            ),
-          },
-          {
-            id: 'proposicoes',
-            title: 'Proposições onde é autor ou coautor',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <ProposicoesAutor
-                proposicoes={proposicoes}
-                filtros={proposicoesFiltros}
-                buildFiltroHref={buildProposicoesFiltroHref}
-                proximaPaginaHref={proposicoesProximaPaginaHref}
-              />
-            ),
-          },
-          {
-            id: 'discursos',
-            title: 'Discursos',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: <Discursos discursos={discursos} />,
-          },
-          {
-            id: 'gastos',
-            title: `Gastos parlamentares — ${anoCorrente}`,
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <GastosResumoBlock
-                ano={anoCorrente}
-                mensal={gastosMensal}
-                resumo={gastos}
-              />
-            ),
-          },
-          ...(patrimonio
-            ? [
-                {
-                  id: 'patrimonio',
-                  title: 'Patrimônio declarado',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: <PatrimonioBlock snapshot={patrimonio} />,
-                },
-              ]
-            : []),
-          ...(evolucaoPatrimonial
-            ? [
-                {
-                  id: 'evolucao-patrimonio',
-                  title: 'Evolução patrimonial entre pleitos',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
-                  ),
-                },
-              ]
-            : []),
-          ...(variacaoPatrimonial
-            ? [
-                {
-                  id: 'variacao-patrimonio',
-                  title: 'Variação patrimonial no mandato',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
-                  ),
-                },
-              ]
-            : []),
-          ...(mixComposicao
-            ? [
-                {
-                  id: 'mix-patrimonio',
-                  title: 'Composição patrimonial ao longo do tempo',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: <MixComposicaoBlock mix={mixComposicao} />,
-                },
-              ]
-            : []),
-          ...(grafoParticipacao
-            ? [
-                {
-                  id: 'grafo-participacao',
-                  title: 'Participação societária',
-                  className: 'rounded-lg border-line-default bg-surface-base',
-                  triggerClassName: 'font-semibold text-base',
-                  content: (
-                    <GrafoParticipacaoBlock
-                      grafo={grafoParticipacao}
-                      parlamentarNome={parlamentar.nome}
-                    />
-                  ),
-                },
-              ]
-            : []),
-          {
-            id: 'afinidade',
-            title: 'Top 5 maior afinidade de voto',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: <Top5Afinidade afinidades={afinidades} />,
-          },
-          {
-            id: 'pares',
-            title: 'Pares de votos em direções opostas',
-            className: 'rounded-lg border-line-default bg-surface-base',
-            triggerClassName: 'font-semibold text-base',
-            content: (
-              <ParesContraditorios
-                pares={paresContraditorios}
-                stats={coerenciaStats}
-              />
-            ),
-          },
-        ]}
-      />
-
-      {/* Desktop: stack linear de SectionCards (Card compound do RDS —
-          ver @/design-system/compositions/section-card.tsx). Anchors do scroll-spy
-          preservados. */}
-      <div className="mt-6 hidden space-y-5 sm:block">
-        {temBio ? (
-          <SectionCard
-            id="quem-e"
-            subtitle="Profissão, escolaridade e naturalidade autodeclaradas pelo parlamentar no registro oficial. Câmara-only nesta fase."
-            title="Quem é"
-          >
-            <QuemE
-              escolaridade={parlamentar.escolaridade}
-              dataNascimento={parlamentar.dataNascimento}
-              municipioNascimento={parlamentar.municipioNascimento}
-              ufNascimento={parlamentar.ufNascimento}
-              profissao={parlamentar.profissao}
-            />
-          </SectionCard>
-        ) : null}
-
-        <SectionCard
-          id="votos"
-          subtitle="Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui."
-          title="Votos recentes"
-        >
-          <VotosRecentes
-            votos={votos}
-            filtros={votosFiltros}
-            distribuicao={votosDistribuicao}
-            buildFiltroHref={buildVotosFiltroHref}
-            proximaPaginaHref={votosProximaPaginaHref}
-          />
-        </SectionCard>
-
-        <SectionCard
-          id="presenca"
-          subtitle="Quanto o parlamentar participa das votações nominais de plenário (votou em quantas), no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra."
-          title="Participação em votações"
-        >
-          <Presenca presenca={presenca} casa={parlamentar.casa} />
-        </SectionCard>
-
-        <SectionCard
-          id="presenca-sessoes"
-          subtitle="Frequência física às sessões deliberativas de plenário (compareceu a quantas), no período de mandato. Diferente de participar das votações: dá para comparecer e não votar numa votação específica. Câmara-only."
-          title="Presença em sessões"
-        >
-          <PresencaFisica presenca={presencaFisica} casa={parlamentar.casa} />
-        </SectionCard>
-
-        <SectionCard
-          id="alinhamento"
-          subtitle="% de votos que coincidem com a orientação do partido. Mede o alinhamento prático com a liderança partidária — não compromisso ideológico."
-          title="Alinhamento à bancada"
-        >
-          <AlinhamentoBancada
-            alinhamento={alinhamento}
-            casa={parlamentar.casa}
-            mensal={alinhamentoMensal}
-          />
-        </SectionCard>
-
-        <SectionCard
-          id="alinhamento-blocos"
-          subtitle="Comparação factual entre o voto individual e a orientação formalizada pelas lideranças do Governo e da Oposição na Câmara. Referência de leitura, não juízo de valor."
-          title="Alinhamento com Governo e Oposição"
-        >
-          {alinhamentoBlocosContent}
-        </SectionCard>
-
-        <SectionCard
-          id="voto-partido"
-          subtitle="Compara cada voto com duas referências do partido vigente na data do voto — a orientação da liderança e a maioria efetiva da bancada — considerando as trocas de partido. Referência factual, sem juízo de valor."
-          title="Voto e partido ao longo do mandato"
-        >
-          <FidelidadePartidaria
-            timeline={fidelidadeTimeline}
-            bancada={fidelidadeBancada}
-            orientacao={fidelidadeOrientacao}
-          />
-        </SectionCard>
-
-        <SectionCard
-          id="comissoes"
-          subtitle="Comissões nesta legislatura (57ª). 'Atualmente' = vínculo ativo hoje; o histórico cobre só o mandato corrente."
-          title="Comissões"
-        >
-          <ComissoesMembro {...comissoes} />
-        </SectionCard>
-
-        <SectionCard
-          id="relatorias"
-          subtitle="Proposições em que é o relator vigente/último (designação institucional, não escolha do parlamentar) e a distribuição partidária dos autores dessas proposições. Câmara-only; referência factual, sem juízo."
-          title="Relatorias"
-        >
-          <Relatorias
-            influencia={relatoriasInfluencia}
-            autoria={relatorAutoria}
-            casa={parlamentar.casa}
-          />
-        </SectionCard>
-
-        <SectionCard
-          id="proposicoes"
-          subtitle="Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar."
-          title="Proposições onde é autor ou coautor"
-        >
-          <ProposicoesAutor
-            proposicoes={proposicoes}
-            filtros={proposicoesFiltros}
-            buildFiltroHref={buildProposicoesFiltroHref}
-            proximaPaginaHref={proposicoesProximaPaginaHref}
-          />
-        </SectionCard>
-
-        <SectionCard
-          id="discursos"
-          subtitle="O que o parlamentar fala em plenário e comissão: principais temas (indexação oficial da fonte) e discursos recentes com link ao inteiro teor. Discurso não é a posição oficial nem o voto."
-          title="Discursos"
-        >
-          <Discursos discursos={discursos} />
-        </SectionCard>
-
-        <SectionCard
-          id="gastos"
-          subtitle="Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido."
-          title={`Gastos parlamentares — ${anoCorrente}`}
-        >
-          <GastosResumoBlock
-            ano={anoCorrente}
-            mensal={gastosMensal}
-            parlamentarId={parlamentar.id}
-            resumo={gastos}
-            topFornecedores={gastosTopFornecedores}
-          />
-        </SectionCard>
-
-        {patrimonio ? (
-          <SectionCard
-            id="patrimonio"
-            subtitle="Bens declarados ao TSE na candidatura de 2022. Vínculo por CPF exato — só aparece para parlamentares da Câmara identificados na base do TSE."
-            title="Patrimônio declarado"
-          >
-            <PatrimonioBlock snapshot={patrimonio} />
-          </SectionCard>
-        ) : null}
-
-        {evolucaoPatrimonial ? (
-          <SectionCard
-            id="evolucao-patrimonio"
-            subtitle="Como o patrimônio declarado variou entre as candidaturas. Valores corrigidos pela inflação (IPCA) para comparação justa; pontos discretos — o intervalo entre pleitos é desconhecido."
-            title="Evolução patrimonial entre pleitos"
-          >
-            <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
-          </SectionCard>
-        ) : null}
-
-        {variacaoPatrimonial ? (
-          <SectionCard
-            id="variacao-patrimonio"
-            subtitle="Variação real do patrimônio declarado durante o mandato (entre os dois pleitos mais recentes), com o percentil em relação aos pares. Declaração à Justiça Eleitoral — não é renda nem movimentação. Distinto dos gastos da cota (CEAP)."
-            title="Variação patrimonial no mandato"
-          >
-            <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
-          </SectionCard>
-        ) : null}
-
-        {mixComposicao ? (
-          <SectionCard
-            id="mix-patrimonio"
-            subtitle="Para onde o patrimônio migrou entre as candidaturas. Composição em %, imune à inflação — isola a mudança de mix dos valores absolutos."
-            title="Composição patrimonial ao longo do tempo"
-          >
-            <MixComposicaoBlock mix={mixComposicao} />
-          </SectionCard>
-        ) : null}
-
-        {grafoParticipacao ? (
-          <SectionCard
-            id="grafo-participacao"
-            subtitle="Empresas em que o parlamentar declarou participação societária (quotas/ações). Extraído da descrição do TSE; só o que foi declarado, sem consulta externa."
-            title="Participação societária"
-          >
-            <GrafoParticipacaoBlock
-              grafo={grafoParticipacao}
-              parlamentarNome={parlamentar.nome}
-            />
-          </SectionCard>
-        ) : null}
-
-        <SectionCard
-          id="afinidade"
-          subtitle="Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado."
-          title="Top 5 maior afinidade de voto"
-        >
-          <Top5Afinidade afinidades={afinidades} />
-        </SectionCard>
-
-        <SectionCard
-          id="pares"
-          subtitle="Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão."
-          title="Pares de votos em direções opostas"
-        >
-          <ParesContraditorios
-            pares={paresContraditorios}
-            stats={coerenciaStats}
-          />
-        </SectionCard>
-      </div>
-
-      {/* Footer cross-links — fecha o cul-de-sac do perfil. Apontam para
-          as listagens de PRODUÇÃO (fora do escopo da staging). */}
-      <footer className="mt-8 border-line-default border-t pt-6">
-        <p className="text-fg-tertiary text-sm">Explorar mais parlamentares:</p>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <Link
-            className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-            href={`/parlamentares?partido=${encodeURIComponent(parlamentar.partidoSigla)}`}
-          >
-            Ver outros do {parlamentar.partidoSigla}
-            <ArrowRight aria-hidden className="h-3.5 w-3.5" />
-          </Link>
-          <Link
-            className="inline-flex items-center gap-1.5 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-            href={`/parlamentares?uf=${parlamentar.uf}`}
-          >
-            Ver outros de {parlamentar.uf}
-            <ArrowRight aria-hidden className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </footer>
-    </div>
+      }
+    />
   )
 }
