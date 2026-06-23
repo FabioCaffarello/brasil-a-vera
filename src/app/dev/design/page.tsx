@@ -29,7 +29,7 @@ import {
   Users,
   Vote,
 } from 'lucide-react'
-import { KpiCard } from '@/design-system/compositions/kpi-card'
+import { TrustBadge } from '@/components/trust/trust-badge'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
@@ -600,8 +600,8 @@ export default function DesignSystemPage() {
 
           {/* Variante 4: gradient-glow. Multi-glow + stagger reveal +
               accent line, 100% CSS (ADR-023, sem framer-motion).
-              Espelha o shape da home: KpiCard em surface elevated no
-              slot `kpis` + 3 pills narrativas no slot `meta`. */}
+              Espelha o shape da home: StatGroup (grid) no slot `kpis`
+              + 3 pills narrativas no slot `meta`. */}
           <div className="overflow-hidden rounded-lg border border-border">
             <HeroSection
               kicker={
@@ -621,31 +621,36 @@ export default function DesignSystemPage() {
                 </>
               }
               kpis={
-                <KpiCard
+                <StatGroup
                   aria-label="Métricas do Brasil à Vera (showcase)"
-                  items={[
-                    {
-                      icon: <Users className="h-6 w-6" />,
-                      label: 'Parlamentares',
-                      value: '513',
-                    },
-                    {
-                      icon: <FileText className="h-6 w-6" />,
-                      label: 'Proposições',
-                      value: '+250k',
-                    },
-                    {
-                      icon: <Vote className="h-6 w-6" />,
-                      label: 'Votações',
-                      value: '+30k',
-                    },
-                    {
-                      icon: <Clock className="h-6 w-6" />,
-                      label: 'Atualização',
-                      value: 'Diária',
-                    },
-                  ]}
-                />
+                  cols={4}
+                  layout="grid"
+                >
+                  <Stat
+                    align="center"
+                    icon={<Users className="h-6 w-6" />}
+                    label="Parlamentares"
+                    value="513"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<FileText className="h-6 w-6" />}
+                    label="Proposições"
+                    value="+250k"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<Vote className="h-6 w-6" />}
+                    label="Votações"
+                    value="+30k"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<Clock className="h-6 w-6" />}
+                    label="Atualização"
+                    value="Diária"
+                  />
+                </StatGroup>
               }
               meta={
                 <>
@@ -682,31 +687,37 @@ export default function DesignSystemPage() {
                 />
               }
               kpis={
-                <KpiCard
+                <StatGroup
                   aria-label="Métricas do Brasil à Vera (showcase plain+center)"
-                  items={[
-                    {
-                      icon: <Users className="h-6 w-6" />,
-                      label: 'Parlamentares',
-                      value: '513',
-                    },
-                    {
-                      icon: <FileText className="h-6 w-6" />,
-                      label: 'Proposições',
-                      value: '+250k',
-                    },
-                    {
-                      icon: <Vote className="h-6 w-6" />,
-                      label: 'Votações',
-                      value: '+30k',
-                    },
-                    {
-                      icon: <Clock className="h-6 w-6" />,
-                      label: 'Atualização',
-                      value: 'Diária',
-                    },
-                  ]}
-                />
+                  cols={4}
+                  floatingBadge={<TrustBadge trustLevel="L1" />}
+                  layout="grid"
+                >
+                  <Stat
+                    align="center"
+                    icon={<Users className="h-6 w-6" />}
+                    label="Parlamentares"
+                    value="513"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<FileText className="h-6 w-6" />}
+                    label="Proposições"
+                    value="+250k"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<Vote className="h-6 w-6" />}
+                    label="Votações"
+                    value="+30k"
+                  />
+                  <Stat
+                    align="center"
+                    icon={<Clock className="h-6 w-6" />}
+                    label="Atualização"
+                    value="Diária"
+                  />
+                </StatGroup>
               }
               meta={
                 <>
@@ -772,83 +783,85 @@ export default function DesignSystemPage() {
           </StatGroup>
         </div>
 
-        {/* ----- KpiCard ----- */}
+        {/* ----- StatGroup (grid + floatingBadge) ----- */}
         <div className="space-y-4">
-          <h3 className="font-medium text-foreground text-lg">KpiCard</h3>
+          <h3 className="font-medium text-foreground text-lg">
+            StatGroup — grid + floatingBadge
+          </h3>
           <p className="text-foreground-muted text-sm">
-            Card de KPIs em <code>surface-elevated</code>. Diferente do{' '}
-            <code>StatGroup</code> (strip): ícone top → value → label → hint em
-            vertical com ritmo uniforme, type scale calibrada para densidade
-            4-col (<code>text-2xl</code> → <code>text-3xl</code>), whitespace
-            gutters (sem <code>divide-x</code>). Props por item:{' '}
-            <code>icon?: ReactNode</code>, <code>label</code>,{' '}
-            <code>value</code>, <code>hint?: ReactNode</code>. Consumer
-            pré-formata <code>value</code>; composição não chama formatadores
-            nem conhece domínio.
+            Grade de KPIs do RDS (<code>StatGroup layout="grid"</code> +{' '}
+            <code>Stat align="center"</code>) que reflui (2-up no mobile →{' '}
+            <code>cols</code> no <code>md</code>). O slot{' '}
+            <code>floatingBadge</code> (RDS 4.6.0, issue #245) sobrepõe um selo
+            de procedência centralizado na borda superior — usado no hero da
+            home com o <code>TrustBadge</code> L1. Consolidou a composição local{' '}
+            <code>KpiCard</code> (ADR-038).
           </p>
 
-          {/* Variante 4 itens com ícones — espelha o hero da home */}
-          <KpiCard
+          {/* Variante 4 itens com ícones + floatingBadge — espelha o hero da home */}
+          <StatGroup
             aria-label="Métricas do Brasil à Vera (showcase 4 itens com ícones)"
-            items={[
-              {
-                icon: <Users className="h-6 w-6" />,
-                label: 'Parlamentares',
-                value: '513',
-              },
-              {
-                icon: <FileText className="h-6 w-6" />,
-                label: 'Proposições',
-                value: '+250k',
-              },
-              {
-                icon: <Vote className="h-6 w-6" />,
-                label: 'Votações',
-                value: '+30k',
-              },
-              {
-                icon: <Clock className="h-6 w-6" />,
-                label: 'Atualização',
-                value: 'Diária',
-              },
-            ]}
-          />
+            cols={4}
+            floatingBadge={<TrustBadge trustLevel="L1" />}
+            layout="grid"
+          >
+            <Stat
+              align="center"
+              icon={<Users className="h-6 w-6" />}
+              label="Parlamentares"
+              value="513"
+            />
+            <Stat
+              align="center"
+              icon={<FileText className="h-6 w-6" />}
+              label="Proposições"
+              value="+250k"
+            />
+            <Stat
+              align="center"
+              icon={<Vote className="h-6 w-6" />}
+              label="Votações"
+              value="+30k"
+            />
+            <Stat
+              align="center"
+              icon={<Clock className="h-6 w-6" />}
+              label="Atualização"
+              value="Diária"
+            />
+          </StatGroup>
 
-          {/* Variante 3 itens com hint como DataBadge — demonstra
-              ReactNode no slot hint (consumer escolhe o shape). */}
-          <KpiCard
-            aria-label="Métricas com hint DataBadge (trust level)"
-            items={[
-              {
-                hint: <DataBadge label="L1" source="Câmara" tone="success" />,
-                icon: <Users className="h-6 w-6" />,
-                label: 'Parlamentares',
-                value: '513',
-              },
-              {
-                hint: <DataBadge label="L2" source="análise" tone="primary" />,
-                icon: <TrendingUp className="h-6 w-6" />,
-                label: 'Alinhamento',
-                value: '87%',
-              },
-              {
-                hint: <DataBadge label="L3" source="modelo" tone="dataviz" />,
-                icon: <Vote className="h-6 w-6" />,
-                label: 'Coerência',
-                value: '0,84',
-              },
-            ]}
-          />
-
-          {/* Variante 2 itens com hint string — demonstra fallback ao
-              shape mais simples (string ainda é ReactNode válido). */}
-          <KpiCard
-            aria-label="Métricas com hint string"
-            items={[
-              { label: 'Alinhamento', value: '87%', hint: 'L3 · análise' },
-              { label: 'Votos analisados', value: '124', hint: 'últimos 30d' },
-            ]}
-          />
+          {/* Variante 3 itens com hint + tone — o hint do Stat aceita ReactNode
+              e o tone colore só o hint (contrato do RDS). */}
+          <StatGroup
+            aria-label="Métricas com hint + tone"
+            cols={3}
+            layout="grid"
+          >
+            <Stat
+              align="center"
+              hint="▲ dado oficial"
+              icon={<Users className="h-6 w-6" />}
+              label="Parlamentares"
+              tone="success"
+              value="513"
+            />
+            <Stat
+              align="center"
+              hint="últimos 12 m"
+              icon={<TrendingUp className="h-6 w-6" />}
+              label="Alinhamento"
+              value="87%"
+            />
+            <Stat
+              align="center"
+              hint="modelo (L4)"
+              icon={<Vote className="h-6 w-6" />}
+              label="Coerência"
+              tone="warning"
+              value="0,84"
+            />
+          </StatGroup>
         </div>
 
         {/* ----- SectionCard ----- */}

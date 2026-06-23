@@ -99,7 +99,7 @@ stats-grid 1`.
 | `section-card` | 7 | **D** | `Card` compound | manter — JÁ construído sobre o `Card` do RDS (wrapper sancionado) | — | — |
 | `section-nav` | 4 | **D** | wrapper sobre `useScrollSpy` | manter (composição sancionada) | — | — |
 | `party-badge` | 4 | **D** | — | manter (cores oficiais, D4 Wave 6) | — | — |
-| `kpi-card` | 2 | **G** | `Stat` (sem `floatingBadge`) | fica local — `Stat` não tem slot p/ o `floatingBadge` (TrustBadge L1 na home; "opção A") | médio | local |
+| `kpi-card` | 3 | **R** | `Stat`/`StatGroup` (v4.6, [#245](https://github.com/FabioCaffarello/react-design-system/issues/245)) | ✅ consolidado — `StatGroup` ganhou o slot `floatingBadge` (TrustBadge L1 na home) na RDS 4.6.0. Migrados home + `quem-me-representa/[uf]` + showcase; `<StatGroup layout="grid" cols={4}>` p/ preservar o colapso responsivo | médio | ✓ |
 | `hero-section` | 1 | **R** | `HeroSection` (`./server`) | ✅ consolidado (#452; drop-in — mesmas variantes `plain`/`gradient`/`gradient-glow`) | baixo | ✓ |
 | `combobox` | 2 | **R** | `Autocomplete` (wrapper `rds-autocomplete`) | ✅ consolidado (#450; v4.1 ganhou `name`/form [#225](https://github.com/FabioCaffarello/react-design-system/issues/225)). Levou junto `command`+`popover` | alto | ✓ |
 | `data-badge` | 9 | **R** | RDS `DataBadge` (v4.5, [#228](https://github.com/FabioCaffarello/react-design-system/issues/228) + [#232](https://github.com/FabioCaffarello/react-design-system/issues/232)) | ✅ consolidado — superset RSC-safe; tom data-viz entregue como `dataviz` ([#232](https://github.com/FabioCaffarello/react-design-system/issues/232)). Remapeamento de tom: default→neutral, destructive→error, brand→primary, accent→`dataviz` (roxo data-viz; **não** o `accent` ciano do RDS) | médio | ✓ |
@@ -187,9 +187,11 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
   4 wrappers de bundle sancionados `rds-accordion`/`rds-autocomplete`/`rds-dialog`/
   `rds-toast` (`'use client'` re-exportando `/granular` — evita vazar +294KB do
   barrel num RSC). `card` também foi consolidado (Card compound do RDS).
-- **Composições:** `kpi-card`, `party-badge` (gaps/ratificados) +
+- **Composições:** `party-badge` (ratificado, cores oficiais) +
   `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
   `data-badge` consolidado no `DataBadge` do RDS (v4.5, /server) — cópia local removida.
+  `kpi-card` consolidado no `Stat`/`StatGroup` do RDS (v4.6, slot `floatingBadge`
+  via [#245](https://github.com/FabioCaffarello/react-design-system/issues/245)) — cópia local removida.
 - **Zero duplicata local** de componente RDS. **Zero `@radix-ui/react-dialog`**
   direto (deps radix de 7 → 1: só `react-tabs`, #455).
 - **Resíduos de cor:** revisitados na fase ADR-039 (ver §"Resíduos de cor" acima) —
