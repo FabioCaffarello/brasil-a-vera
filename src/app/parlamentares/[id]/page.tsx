@@ -11,7 +11,11 @@
 //   @/design-system/primitives/rds-accordion — tree-shaking poda o barrel).
 // - Charts (GastosChart, recharts) sobem como resíduo BaV (ADR-034 §5).
 
-import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
   Building2,
@@ -405,6 +409,13 @@ export default async function ParlamentarPerfilPage({
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="space-y-5">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Parlamentares', href: '/parlamentares' },
+            { label: parlamentar.nome },
+          ]}
+        />
         <PerfilHeader
           parlamentar={{
             nome: parlamentar.nome,

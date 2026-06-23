@@ -9,6 +9,17 @@ nível acima: adotar a **camada compositiva** do RDS nos componentes de domínio
 Ratificado pelo [ADR-053](../architecture/ADR/053-adocao-camada-compositiva-rds.md).
 Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ver D1).
 
+## Progresso (2026-06-23)
+
+- **PR #1** (#570, ✅ merged) — fonte única do badge de status sobre RDS `DataBadge`.
+- **PR #2** (#571, ✅ merged) — cards de listagem sobre o `Card` compound + `<article>`/`aria-label`.
+- **PR #3** (este) — **Breadcrumb** puxado da Fase 2 para a Fase 1: o `Avatar`
+  (PR #3 original) foi **adiado** por dois gaps do RDS — sem `loading="lazy"`
+  ([RDS #247](https://github.com/FabioCaffarello/react-design-system/issues/247),
+  bloqueia listagens) e escala tampa em 64px vs. 96-112px do PerfilHeader
+  ([RDS #248](https://github.com/FabioCaffarello/react-design-system/issues/248)).
+  Avatar retoma quando esses gaps forem entregues upstream.
+
 ## Pré-leitura confirmada
 
 - [x] `docs/architecture/ADR/038-consolidacao-primitivas-no-rds.md` (fase anterior)
