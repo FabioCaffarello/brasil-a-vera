@@ -13,12 +13,16 @@
 // - Callout do match exato mantém `border-success/40 bg-success/10` (BaV
 //   neutralizado) + `text-fg-success`.
 
-import { HeroSection } from '@fabio.caffarello/react-design-system/server'
-import { Search } from 'lucide-react'
+import {
+  Button,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
+import { MapPin, Search } from 'lucide-react'
 import Link from 'next/link'
 import { SearchForm } from '@/components/busca/search-form'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { SectionCard } from '@/design-system/compositions/section-card'
@@ -133,10 +137,22 @@ export default async function BuscaPage({ searchParams }: PageProps) {
         )}
 
         {totalResultados === 0 ? (
-          <p className="rounded-lg border border-line-default bg-surface-base p-6 text-fg-tertiary text-sm">
-            Nenhum resultado encontrado. Tente termos mais curtos ou variantes
-            (sem acento, sem aspas).
-          </p>
+          // Pouso honesto (E1): serve quem errou o termo E quem buscou cargo
+          // MUNICIPAL (fora do escopo). Copy estritamente informativa — escopo
+          // factual + ponte para os representantes federais, sem call-to-action
+          // cívico (cuidado de período eleitoral).
+          <EmptyState
+            action={
+              <Button asChild size="sm" variant="outline">
+                <Link href="/quem-me-representa">
+                  Ver representantes por estado
+                </Link>
+              </Button>
+            }
+            description="Tente termos mais curtos ou sem acento. O Brasil à Vera cobre o Legislativo federal — a Câmara dos Deputados e o Senado. Não temos dados municipais (vereadores, prefeitos)."
+            icon={MapPin}
+            title="Nenhum resultado encontrado"
+          />
         ) : (
           <>
             {resultados.parlamentares.length > 0 && (
