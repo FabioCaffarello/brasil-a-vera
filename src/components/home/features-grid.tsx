@@ -6,6 +6,7 @@ import {
   Shield,
   UserCheck,
 } from 'lucide-react'
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/cn'
@@ -14,6 +15,12 @@ type Feature = {
   icon: ReactNode
   title: string
   description: string
+  /** Destino opcional — renderiza CTA "Saiba mais →" no rodapé do item. */
+  href?: string
+  /** Rótulo do CTA. Default: "Saiba mais". */
+  cta?: string
+  /** Se true, abre em nova aba (links externos). */
+  external?: boolean
 }
 
 const FEATURES: Feature[] = [
@@ -22,6 +29,8 @@ const FEATURES: Feature[] = [
     title: 'Dados oficiais',
     description:
       'Câmara, Senado e Portal da Transparência. Nenhum dado vem de inferência.',
+    href: '/docs/fontes',
+    cta: 'Ver fontes',
   },
   {
     icon: <RefreshCw className="h-5 w-5" />,
@@ -33,11 +42,16 @@ const FEATURES: Feature[] = [
     title: 'Open source',
     description:
       'Código aberto no GitHub. Auditável. Contribuições bem-vindas.',
+    href: 'https://github.com/FabioCaffarello/brasil-a-vera',
+    cta: 'Ver repositório',
+    external: true,
   },
   {
     icon: <Layers className="h-5 w-5" />,
     title: 'Pirâmide de Confiança',
     description: 'Todo dado tem nível L1-L4 explícito com origem visível.',
+    href: '/docs/piramide-de-confianca',
+    cta: 'Entender os níveis',
   },
   {
     icon: <UserCheck className="h-5 w-5" />,
@@ -52,18 +66,6 @@ const FEATURES: Feature[] = [
   },
 ]
 
-/**
- * FeaturesGrid — Sprint 6.1 PR 3 (Wave 6, reskin home).
- *
- * Grid de 6 features/value props da plataforma. Server Component.
- * Layout responsivo: 1 col mobile, 2 sm, 3 lg+. Hover suave via CSS
- * (ADR-023 — sem framer-motion).
- *
- * Mistura propósito cívico (Dados oficiais, Pirâmide de Confiança,
- * Sem cadastro) + features práticas (Atualizado diariamente, Open
- * source, Custo zero) — sinaliza tanto "por que confiar" quanto "como
- * sustentamos". Ícones lucide-react.
- */
 export function FeaturesGrid({ className }: { className?: string }) {
   return (
     <ul
@@ -74,7 +76,7 @@ export function FeaturesGrid({ className }: { className?: string }) {
     >
       {FEATURES.map((feature) => (
         <li
-          className="rounded-lg border border-line-default bg-surface-base p-5 transition-colors duration-150 hover:border-line-emphasis hover:bg-surface-raised"
+          className="flex flex-col rounded-lg border border-line-default bg-surface-base p-5 transition-colors duration-150 hover:border-line-emphasis hover:bg-surface-raised"
           key={feature.title}
         >
           <div
@@ -87,6 +89,20 @@ export function FeaturesGrid({ className }: { className?: string }) {
             {feature.title}
           </h3>
           <p className="text-fg-tertiary text-sm">{feature.description}</p>
+          {feature.href && (
+            <Link
+              className="mt-3 inline-flex items-center font-medium text-fg-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+              href={feature.href}
+              {...(feature.external
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              {feature.cta ?? 'Saiba mais'}{' '}
+              <span aria-hidden className="ml-1">
+                →
+              </span>
+            </Link>
+          )}
         </li>
       ))}
     </ul>
