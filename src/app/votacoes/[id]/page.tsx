@@ -11,7 +11,11 @@
 // - Data-viz (VotacaoHemicicloChart SVG, MargemDecisaoBar CSS, 3 charts recharts)
 //   sobem como resíduo BaV (ADR-034 §5 — sem paleta de chart upstream).
 
-import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import {
   BarChart3,
   Check,
@@ -40,6 +44,7 @@ import { SectionCard } from '@/design-system/compositions/section-card'
 import { SectionNav } from '@/design-system/compositions/section-nav'
 import { Accordion } from '@/design-system/primitives/rds-accordion'
 import { canExport } from '@/lib/auth-guards'
+import { formatDataBR } from '@/lib/format'
 import {
   getDisciplinaPartidariaPorVotacao,
   getDivergenciasByVotacao,
@@ -145,6 +150,13 @@ export default async function VotacaoPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="space-y-5">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Votações', href: '/votacoes' },
+            { label: formatDataBR(v.dataHora) },
+          ]}
+        />
         <PerfilVotacaoHeader
           votacao={{
             casa: v.casa,

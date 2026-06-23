@@ -1,8 +1,6 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
 import { DataBadge } from '@fabio.caffarello/react-design-system/server'
-import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
 
 import { CompartilharProposicaoButton } from '@/components/proposicao/compartilhar-button'
 import { situacaoStatus } from '@/components/proposicao/situacao'
@@ -36,73 +34,63 @@ export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
     proposicao.ano,
   )
   return (
-    <div>
-      <Link
-        className="mb-3 inline-flex items-center gap-1 rounded text-fg-tertiary text-sm hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-        href="/proposicoes"
-      >
-        <ArrowLeft aria-hidden className="h-3.5 w-3.5" />
-        Proposições
-      </Link>
+    <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <h1 className="font-mono font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
+          {ref}
+        </h1>
+        <DataBadge {...situacaoStatus(proposicao.situacao)} />
+      </div>
 
-      <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          <h1 className="font-mono font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
-            {ref}
-          </h1>
-          <DataBadge {...situacaoStatus(proposicao.situacao)} />
-        </div>
+      <p className="text-fg-primary text-lg">
+        {proposicao.ementa || (
+          <span className="text-fg-quaternary italic">(sem ementa)</span>
+        )}
+      </p>
 
-        <p className="text-fg-primary text-lg">
-          {proposicao.ementa || (
-            <span className="text-fg-quaternary italic">(sem ementa)</span>
-          )}
-        </p>
+      {proposicao.ementaDetalhada &&
+        proposicao.ementaDetalhada !== proposicao.ementa && (
+          <details className="mt-3">
+            <summary className="cursor-pointer text-fg-tertiary text-sm hover:text-fg-primary">
+              Ementa detalhada
+            </summary>
+            <p className="mt-2 whitespace-pre-line text-fg-primary text-sm">
+              {proposicao.ementaDetalhada}
+            </p>
+          </details>
+        )}
 
-        {proposicao.ementaDetalhada &&
-          proposicao.ementaDetalhada !== proposicao.ementa && (
-            <details className="mt-3">
-              <summary className="cursor-pointer text-fg-tertiary text-sm hover:text-fg-primary">
-                Ementa detalhada
-              </summary>
-              <p className="mt-2 whitespace-pre-line text-fg-primary text-sm">
-                {proposicao.ementaDetalhada}
-              </p>
-            </details>
-          )}
+      {proposicao.regime ? (
+        <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 text-fg-primary text-sm sm:grid-cols-2">
+          <div>
+            <dt className="inline font-medium">Regime: </dt>
+            <dd className="inline">{proposicao.regime}</dd>
+          </div>
+        </dl>
+      ) : null}
 
-        {proposicao.regime ? (
-          <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 text-fg-primary text-sm sm:grid-cols-2">
-            <div>
-              <dt className="inline font-medium">Regime: </dt>
-              <dd className="inline">{proposicao.regime}</dd>
-            </div>
-          </dl>
-        ) : null}
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+        <TrustBadge trustLevel={proposicao.trustLevel} />
+        <a
+          className="rounded text-fg-tertiary underline decoration-dotted underline-offset-2 hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+          href={proposicao.sourceUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Ver na fonte oficial ↗
+        </a>
+      </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-          <TrustBadge trustLevel={proposicao.trustLevel} />
-          <a
-            className="rounded text-fg-tertiary underline decoration-dotted underline-offset-2 hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-            href={proposicao.sourceUrl}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Ver na fonte oficial ↗
-          </a>
-        </div>
-
-        <div className="mt-4 pt-3">
-          <CompartilharProposicaoButton
-            proposicao={{
-              ref,
-              ementa: proposicao.ementa,
-              diasEmTramitacao: stats?.diasEmTramitacao ?? null,
-              nAutores: stats?.nAutores ?? null,
-            }}
-          />
-        </div>
-      </header>
-    </div>
+      <div className="mt-4 pt-3">
+        <CompartilharProposicaoButton
+          proposicao={{
+            ref,
+            ementa: proposicao.ementa,
+            diasEmTramitacao: stats?.diasEmTramitacao ?? null,
+            nAutores: stats?.nAutores ?? null,
+          }}
+        />
+      </div>
+    </header>
   )
 }

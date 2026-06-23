@@ -11,7 +11,11 @@
 // - Charts (ApoioPartidoChart, VotosConsolidadosChart — recharts) sobem como
 //   resíduo BaV (ADR-034 §5; o donut teve o fix #303/#304 na Fase C, #408).
 
-import { Stat, StatGroup } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  Stat,
+  StatGroup,
+} from '@fabio.caffarello/react-design-system/server'
 import { Clock, FileText, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 
@@ -326,6 +330,20 @@ export default async function ProposicaoDetalhePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
+      <Breadcrumb
+        className="mb-4"
+        items={[
+          { label: 'Início', href: '/' },
+          { label: 'Proposições', href: '/proposicoes' },
+          {
+            label: formatProposicaoRef(
+              proposicao.tipo,
+              proposicao.numero,
+              proposicao.ano,
+            ),
+          },
+        ]}
+      />
       <PerfilProposicaoHeader
         proposicao={{
           tipo: proposicao.tipo,

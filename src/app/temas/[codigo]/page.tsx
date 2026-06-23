@@ -1,7 +1,9 @@
 // Tema (ADR-050) — proposições do assunto + quem mais as autora. SSG por tema.
 
-import { HeroSection } from '@fabio.caffarello/react-design-system/server'
-import { ArrowLeft } from 'lucide-react'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -43,12 +45,13 @@ export default async function TemaPage({ params }: PageProps) {
       />
 
       <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-        <Link
-          className="inline-flex items-center gap-1 text-fg-tertiary text-sm hover:text-fg-primary"
-          href="/temas"
-        >
-          <ArrowLeft className="h-4 w-4" /> Todos os temas
-        </Link>
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Temas', href: '/temas' },
+            { label: tema.nome },
+          ]}
+        />
 
         <section className="space-y-3">
           <h2 className="font-semibold text-fg-primary text-lg">
