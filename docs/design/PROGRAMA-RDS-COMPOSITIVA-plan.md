@@ -18,10 +18,18 @@ Não é uma sprint numerada de wave — encaixa na wave que o owner preferir (ve
   `loading="lazy"` ([RDS #247](https://github.com/FabioCaffarello/react-design-system/issues/247))
   e escala tampando em 64px vs. 96-112px do PerfilHeader
   ([RDS #248](https://github.com/FabioCaffarello/react-design-system/issues/248)).
-- **PR #4** (este) — **Avatar retomado**: RDS v4.7 entregou as duas issues
-  (#247 `loading` + #248 sizes `2xl`/`3xl`). `ParlamentarAvatar` (wrapper de
-  domínio sobre `Avatar` via `/granular`, padrão `rds-*`) no card (lazy) e no
+- **PR #4** (#575, ✅ merged) — **Avatar retomado**: RDS v4.7 entregou as duas
+  issues (#247 `loading` + #248 sizes `2xl`/`3xl`). `ParlamentarAvatar` (wrapper
+  de domínio sobre `Avatar` via `/granular`, padrão `rds-*`) no card (lazy) e no
   PerfilHeader (96→112px). Loop consumidor↔RDS fechado em ~12h.
+- **PR #5** (este) — **Timeline** do RDS na tramitação de proposição: o
+  `<ol>` hand-rolled (rail + dots) de `tramitacao-timeline.tsx` vira
+  `<Timeline orientation="vertical">`; filtros, paginação por cursor e empty
+  states honestos preservados em volta.
+
+> Achado empírico (PR #4): `/parlamentares` renderiza ~726 cards sem paginação
+> → `Pagination` do RDS é candidato forte, mas é a decisão **D3** (UX + custo de
+> query Neon, princípio 12) — aguarda chamada do owner.
 
 ## Pré-leitura confirmada
 

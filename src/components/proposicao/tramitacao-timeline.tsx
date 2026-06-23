@@ -1,6 +1,10 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
+import {
+  Chip,
+  FilterChips,
+  Timeline,
+} from '@fabio.caffarello/react-design-system/server'
 import { ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 import { formatDataBR } from '@/lib/format'
@@ -64,42 +68,27 @@ export function TramitacaoTimeline({
       {mostrarFiltros ? (
         <FilterChipsHeader filtro={filtro} buildFiltroHref={buildFiltroHref} />
       ) : null}
-      <ol className="relative space-y-3 border-line-default border-l-2 pl-5">
-        {eventos.map((e) => (
-          <li className="relative" key={e.id}>
-            <span
-              aria-hidden
-              className="-left-[26px] absolute top-1.5 h-2.5 w-2.5 rounded-full border-2 border-line-default bg-surface-base"
-            />
-            <div className="flex flex-wrap items-center gap-2 text-fg-tertiary text-xs">
-              <span className="font-medium tabular-nums">
-                {formatDataBR(e.data)}
-              </span>
-              <span aria-hidden>·</span>
-              <span>{e.orgao}</span>
-              {e.situacaoResultante && (
-                <>
-                  <span aria-hidden>·</span>
-                  <span className="italic">{e.situacaoResultante}</span>
-                </>
-              )}
-            </div>
-            <p className="mt-1 text-fg-primary text-sm">
-              {e.descricaoResumida}
-            </p>
-            {e.descricaoCompleta && (
-              <details className="mt-1">
-                <summary className="cursor-pointer text-fg-tertiary text-xs hover:text-fg-primary">
-                  Ver despacho completo
-                </summary>
-                <p className="mt-1.5 whitespace-pre-line text-fg-primary text-sm">
-                  {e.descricaoCompleta}
-                </p>
-              </details>
-            )}
-          </li>
-        ))}
-      </ol>
+      <Timeline
+        items={eventos.map((e) => ({
+          id: e.id,
+          timestamp: formatDataBR(e.data),
+          title: e.descricaoResumida,
+          description: e.situacaoResultante
+            ? `${e.orgao} · ${e.situacaoResultante}`
+            : e.orgao,
+          content: e.descricaoCompleta ? (
+            <details>
+              <summary className="cursor-pointer text-fg-tertiary text-xs hover:text-fg-primary">
+                Ver despacho completo
+              </summary>
+              <p className="mt-1.5 whitespace-pre-line text-fg-primary text-sm">
+                {e.descricaoCompleta}
+              </p>
+            </details>
+          ) : undefined,
+        }))}
+        orientation="vertical"
+      />
 
       {/* Cursor pagination: link <a> puro com anchor #tramitacao mantém
           o scroll na seção após paginar (ADR-026 §4). Sem JS. */}
