@@ -6,8 +6,22 @@ import { FeaturesGrid } from './features-grid'
 describe('FeaturesGrid', () => {
   it('renderiza os 6 cards de features', () => {
     render(<FeaturesGrid />)
-    const items = screen.getAllByRole('listitem')
-    expect(items).toHaveLength(6)
+    // FeaturesGrid usa Card compound do RDS (ADR-053 PR B) — container é div,
+    // não ul/li. Contagem via descrições únicas de cada feature.
+    expect(
+      screen.getByText(
+        'Câmara, Senado e Portal da Transparência. Nenhum dado vem de inferência.',
+      ),
+    ).toBeDefined()
+    expect(
+      screen.getByText(
+        'Crons no GitHub Actions sincronizam dados ao longo do dia.',
+      ),
+    ).toBeDefined()
+    expect(screen.getByText(/Código aberto no GitHub/)).toBeDefined()
+    expect(screen.getByText(/Todo dado tem nível L1-L4/)).toBeDefined()
+    expect(screen.getByText(/sem precisar criar conta/)).toBeDefined()
+    expect(screen.getByText(/Mantido por doação/)).toBeDefined()
   })
 
   it('renderiza títulos esperados', () => {
