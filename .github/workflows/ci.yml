@@ -29,7 +29,7 @@ jobs:
     name: Lint & Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Matriz determinística dos hooks do .claude/ (shell + jq, ~5s).
       # Roda SEMPRE, sem path filter: a suíte ficou vermelha por ~3
@@ -70,7 +70,7 @@ jobs:
     name: Contrast / WCAG
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - run: npm run wcag:check
 
@@ -83,7 +83,7 @@ jobs:
     name: RDS Primitive Guard
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - run: npm run guard:rds-primitive
 
@@ -91,7 +91,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - run: npm run test:coverage
 
@@ -99,7 +99,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       # Linux runners têm Docker pré-instalado e daemon rodando;
       # testcontainers sobe postgres:17-alpine e aplica migrations.

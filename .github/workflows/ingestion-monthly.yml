@@ -37,7 +37,7 @@ jobs:
       tier0: ${{ steps.matrix.outputs.tier0 }}
       tier1: ${{ steps.matrix.outputs.tier1 }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - id: matrix
         run: npm run ingest:print-matrix
@@ -55,7 +55,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.discover.outputs.tier0) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - uses: ./.github/actions/run-ingestion
         with:
@@ -80,7 +80,7 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.discover.outputs.tier1) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - uses: ./.github/actions/run-ingestion
         with:
