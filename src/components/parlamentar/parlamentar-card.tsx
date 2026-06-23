@@ -1,3 +1,4 @@
+import { Card } from '@fabio.caffarello/react-design-system/server'
 import { AlinhamentoStrip } from '@/components/parlamentar/alinhamento-strip'
 import { FollowButton } from '@/components/parlamentar/follow-button'
 import { ParlamentarPreviewLink } from '@/components/parlamentar/preview-drawer'
@@ -70,72 +71,82 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
     casa,
   )
 
+  const cargo = casa === 'CAMARA' ? 'Deputado' : 'Senador'
   return (
-    <article className="group flex h-full flex-col rounded-lg border border-line-default bg-surface-base transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis">
-      <ParlamentarPreviewLink
-        className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
-        data={{
-          id,
-          nome,
-          casa,
-          partidoSigla,
-          uf,
-          urlFoto,
-          pctAlinhamento,
-          votacoesAnalisadas,
-          proposicoesCount: parlamentar.proposicoesCount,
-          gastoTotalAno: parlamentar.gastoTotalAno,
-          percentilGastoCasa: parlamentar.percentilGastoCasa,
-          follow,
-        }}
-        href={`/parlamentares/${id}`}
+    <article
+      aria-label={`${nome} — ${cargo} ${partidoSigla}-${uf}`}
+      className="h-full"
+    >
+      <Card
+        className="flex h-full flex-col transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis"
+        padding="none"
+        variant="default"
       >
-        <div className="flex items-start gap-3">
-          {urlFoto ? (
-            // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
-            <img
-              alt=""
-              className="size-14 shrink-0 rounded-full object-cover"
-              height={56}
-              loading="lazy"
-              src={urlFoto}
-              width={56}
-            />
-          ) : (
-            <div
-              aria-hidden="true"
-              className="size-14 shrink-0 rounded-full bg-surface-raised"
-            />
-          )}
-          <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-medium text-fg-primary leading-snug">
-              {nome}
-            </h3>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-fg-tertiary text-sm">
-              <span>{casa === 'CAMARA' ? 'Deputado' : 'Senador'}</span>
-              <PartyBadge sigla={partidoSigla} size="sm" />
-              <span aria-hidden>·</span>
-              <span>{uf}</span>
+        <ParlamentarPreviewLink
+          className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
+          data={{
+            id,
+            nome,
+            casa,
+            partidoSigla,
+            uf,
+            urlFoto,
+            pctAlinhamento,
+            votacoesAnalisadas,
+            proposicoesCount: parlamentar.proposicoesCount,
+            gastoTotalAno: parlamentar.gastoTotalAno,
+            percentilGastoCasa: parlamentar.percentilGastoCasa,
+            follow,
+          }}
+          href={`/parlamentares/${id}`}
+        >
+          <div className="flex items-start gap-3">
+            {urlFoto ? (
+              // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
+              <img
+                alt=""
+                className="size-14 shrink-0 rounded-full object-cover"
+                height={56}
+                loading="lazy"
+                src={urlFoto}
+                width={56}
+              />
+            ) : (
+              <div
+                aria-hidden="true"
+                className="size-14 shrink-0 rounded-full bg-surface-raised"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <h3 className="line-clamp-2 font-medium text-fg-primary leading-snug">
+                {nome}
+              </h3>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-fg-tertiary text-sm">
+                <span>{cargo}</span>
+                <PartyBadge sigla={partidoSigla} size="sm" />
+                <span aria-hidden>·</span>
+                <span>{uf}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <AlinhamentoStrip state={state} />
-      </ParlamentarPreviewLink>
-      {follow ? (
-        <>
-          <div
-            aria-hidden="true"
-            className="mx-4 border-line-default border-t"
-          />
-          <div className="flex justify-end px-2 py-1">
-            <FollowButton
-              initialIsFollowing={follow.isFollowing}
-              parlamentarId={id}
-              parlamentarNome={nome}
+          <AlinhamentoStrip state={state} />
+        </ParlamentarPreviewLink>
+        {follow ? (
+          <>
+            <div
+              aria-hidden="true"
+              className="mx-4 border-line-default border-t"
             />
-          </div>
-        </>
-      ) : null}
+            <div className="flex justify-end px-2 py-1">
+              <FollowButton
+                initialIsFollowing={follow.isFollowing}
+                parlamentarId={id}
+                parlamentarNome={nome}
+              />
+            </div>
+          </>
+        ) : null}
+      </Card>
     </article>
   )
 }

@@ -36,6 +36,15 @@ describe('ProposicaoCard — badge de situação via DataBadge (ADR-053)', () =>
     expect(screen.getByText('Virou norma')).toBeInTheDocument()
   })
 
+  it('expõe aria-label de listagem (ref + situação) no <article> raiz', () => {
+    render(<ProposicaoCard proposicao={{ ...BASE, situacao: 'APROVADA' }} />)
+    expect(
+      screen.getByRole('article', {
+        name: 'Proposição PL 1234/2025 — Aprovada',
+      }),
+    ).toBeInTheDocument()
+  })
+
   it('não reintroduz o badge-span legado (bg-success/20 hardcoded)', () => {
     const { container } = render(
       <ProposicaoCard proposicao={{ ...BASE, situacao: 'APROVADA' }} />,

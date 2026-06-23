@@ -31,6 +31,13 @@ describe('VotacaoCard — badge de resultado via DataBadge (ADR-053)', () => {
     expect(container.querySelector('.bg-error-bg')).not.toBeNull()
   })
 
+  it('expõe aria-label de listagem (data + resultado) no <article> raiz', () => {
+    render(<VotacaoCard votacao={{ ...BASE, aprovada: true }} />)
+    expect(
+      screen.getByRole('article', { name: /^Votação de .+ — Aprovada$/ }),
+    ).toBeInTheDocument()
+  })
+
   it('não reintroduz o ternário de classes legado (bg-error/20 hardcoded)', () => {
     const { container } = render(
       <VotacaoCard votacao={{ ...BASE, aprovada: false }} />,

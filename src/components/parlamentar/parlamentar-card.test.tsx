@@ -137,4 +137,11 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
     )
     expect(screen.getByText(/100 votações/)).toBeDefined()
   })
+
+  it('expõe aria-label de listagem (nome + cargo + partido-UF) no <article>', () => {
+    render(<ParlamentarCard parlamentar={BASE} />)
+    expect(
+      screen.getByRole('article', { name: 'Maria Souza — Deputado PT-SP' }),
+    ).toBeInTheDocument()
+  })
 })

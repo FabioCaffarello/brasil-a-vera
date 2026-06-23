@@ -1,4 +1,4 @@
-import { DataBadge } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ProposicaoPreviewLink } from '@/components/proposicao/preview-drawer'
 import { situacaoStatus } from '@/components/proposicao/situacao'
 import { TramitacaoStrip } from '@/components/proposicao/tramitacao-strip'
@@ -41,6 +41,8 @@ interface Props {
 export function ProposicaoCard({ proposicao }: Props) {
   const { tipo, numero, ano, ementa, situacao } = proposicao
   const href = `/proposicoes/${tipo}/${numero}/${ano}`
+  const ref = formatProposicaoRef(tipo, numero, ano)
+  const status = situacaoStatus(situacao)
   const estado = classifyTramitacaoCard({
     nEventosTramitacao: proposicao.nEventosTramitacao,
     ultimoOrgao: proposicao.ultimoOrgao,
@@ -48,42 +50,53 @@ export function ProposicaoCard({ proposicao }: Props) {
     diasDesdeUltimaTramitacao: proposicao.diasDesdeUltimaTramitacao,
   })
   return (
-    <article className="group h-full rounded-lg border border-line-default bg-surface-base transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis">
-      <ProposicaoPreviewLink
-        className="block rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
-        data={{
-          tipo,
-          numero,
-          ano,
-          ementa,
-          situacao,
-          nEventosTramitacao: proposicao.nEventosTramitacao,
-          nAutores: proposicao.nAutores,
-          nVotacoes: proposicao.nVotacoes,
-          diasEmTramitacao: proposicao.diasEmTramitacao,
-          diasDesdeUltimaTramitacao: proposicao.diasDesdeUltimaTramitacao,
-          ultimoOrgao: proposicao.ultimoOrgao,
-        }}
-        href={href}
+    <article
+      aria-label={`Proposição ${ref} — ${status.label}`}
+      className="h-full"
+    >
+      {/* variant="default" + hover flat preservado (identidade institucional
+          do BaV). Trocar p/ variant="hover" adota o shadow-lift do RDS. */}
+      <Card
+        className="h-full transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis"
+        padding="none"
+        variant="default"
       >
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-medium font-mono text-fg-tertiary text-sm">
-            {formatProposicaoRef(tipo, numero, ano)}
-          </span>
-          <DataBadge size="sm" {...situacaoStatus(situacao)} />
-        </div>
-        <p className="line-clamp-3 text-fg-primary text-sm">
-          {ementa || (
-            <span className="text-fg-quaternary italic">(sem ementa)</span>
-          )}
-        </p>
-        <TramitacaoStrip estado={estado} situacao={situacao} />
-        <CardFooter
-          nAutores={proposicao.nAutores}
-          nVotacoes={proposicao.nVotacoes}
-          diasEmTramitacao={proposicao.diasEmTramitacao}
-        />
-      </ProposicaoPreviewLink>
+        <ProposicaoPreviewLink
+          className="block rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
+          data={{
+            tipo,
+            numero,
+            ano,
+            ementa,
+            situacao,
+            nEventosTramitacao: proposicao.nEventosTramitacao,
+            nAutores: proposicao.nAutores,
+            nVotacoes: proposicao.nVotacoes,
+            diasEmTramitacao: proposicao.diasEmTramitacao,
+            diasDesdeUltimaTramitacao: proposicao.diasDesdeUltimaTramitacao,
+            ultimoOrgao: proposicao.ultimoOrgao,
+          }}
+          href={href}
+        >
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium font-mono text-fg-tertiary text-sm">
+              {ref}
+            </span>
+            <DataBadge size="sm" {...status} />
+          </div>
+          <p className="line-clamp-3 text-fg-primary text-sm">
+            {ementa || (
+              <span className="text-fg-quaternary italic">(sem ementa)</span>
+            )}
+          </p>
+          <TramitacaoStrip estado={estado} situacao={situacao} />
+          <CardFooter
+            nAutores={proposicao.nAutores}
+            nVotacoes={proposicao.nVotacoes}
+            diasEmTramitacao={proposicao.diasEmTramitacao}
+          />
+        </ProposicaoPreviewLink>
+      </Card>
     </article>
   )
 }
