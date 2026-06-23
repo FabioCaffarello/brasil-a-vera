@@ -13,13 +13,13 @@
 // (nova finalidade, novo terceiro, mudança de retenção) requer bump.
 // Correção tipográfica não requer.
 
-export const PRIVACY_POLICY_VERSION = '2026-05-19'
+export const PRIVACY_POLICY_VERSION = '2026-06-23'
 
 /**
  * Data de vigência da versão corrente. Aparece no header da página
  * `/privacidade` e é usada para textos como "vigente desde X".
  */
-export const PRIVACY_POLICY_EFFECTIVE_AT = new Date('2026-05-19T00:00:00Z')
+export const PRIVACY_POLICY_EFFECTIVE_AT = new Date('2026-06-23T00:00:00Z')
 
 /**
  * Endereço para titular exercer direitos LGPD (acesso, retificação,
