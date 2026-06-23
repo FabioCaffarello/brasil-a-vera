@@ -254,13 +254,24 @@ export async function countVotacoes(
   })
 }
 
+// Anos distintos com votação, para o select do filtro da listagem. Alimenta
+// `/votacoes` a cada load — sem cache fazia um DISTINCT + extract(year) bater
+// no Neon em toda navegação. O conjunto só muda na virada de ano ou após
+// ingestão, então TTL de 6 h (= cadência do cron) é folgado. Fecha o único gap
+// de cache em votações (ADR-018, princípio 8).
 export async function getAnosVotacaoDistintos(): Promise<number[]> {
-  const rows = await db.execute(sql`
-    SELECT DISTINCT extract(year from ${votacao.dataHora})::int AS ano
-    FROM ${votacao}
-    ORDER BY ano DESC
-  `)
-  return rows.rows.map((r) => Number(r.ano))
+  return cached(
+    'votacoes:anos-distintos',
+    TTL.votacoesStatsGlobais,
+    async () => {
+      const rows = await db.execute(sql`
+        SELECT DISTINCT extract(year from ${votacao.dataHora})::int AS ano
+        FROM ${votacao}
+        ORDER BY ano DESC
+      `)
+      return rows.rows.map((r) => Number(r.ano))
+    },
+  )
 }
 
 export interface VotacaoRecente {

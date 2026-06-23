@@ -97,6 +97,13 @@ export const votoNominal = votacoesSchema.table(
       table.votacaoId,
       table.parlamentarId,
     ),
+    // Acesso por parlamentar_id (todos os votos de um parlamentar, sem
+    // filtro de votação). O unique acima tem votacao_id como coluna líder,
+    // então não serve predicados só em parlamentar_id — queries de perfil
+    // (alinhamento, fidelidade, presença, comparar, votos recentes) caíam em
+    // Parallel Seq Scan. EXPLAIN local (262k linhas): count por parlamentar
+    // 7,4ms→0,35ms (~21×); ver PR. Espelha presenca_sessao_parlamentar_id_idx.
+    index('voto_nominal_parlamentar_id_idx').on(table.parlamentarId),
   ],
 )
 

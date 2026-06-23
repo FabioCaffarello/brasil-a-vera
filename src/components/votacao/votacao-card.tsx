@@ -1,5 +1,4 @@
-import Link from 'next/link'
-
+import { VotacaoPreviewLink } from '@/components/votacao/preview-drawer'
 import { formatDataBR } from '@/lib/format'
 
 interface Props {
@@ -32,8 +31,19 @@ interface Props {
 export function VotacaoCard({ votacao: v }: Props) {
   const totalNominais = v.votosSim + v.votosNao + v.abstencoes
   return (
-    <Link
+    <VotacaoPreviewLink
       className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+      data={{
+        id: v.id,
+        casa: v.casa,
+        dataHora: v.dataHora,
+        descricao: v.descricao,
+        orgao: v.orgao,
+        aprovada: v.aprovada,
+        votosSim: v.votosSim,
+        votosNao: v.votosNao,
+        abstencoes: v.abstencoes,
+      }}
       href={`/votacoes/${v.id}`}
     >
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-xs">
@@ -60,6 +70,6 @@ export function VotacaoCard({ votacao: v }: Props) {
           Sim: {v.votosSim} · Não: {v.votosNao} · Abstenção: {v.abstencoes}
         </p>
       )}
-    </Link>
+    </VotacaoPreviewLink>
   )
 }

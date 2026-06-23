@@ -23,6 +23,10 @@ import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
+import {
+  VotacaoPreviewDrawer,
+  VotacaoPreviewProvider,
+} from '@/components/votacao/preview-drawer'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { canExport } from '@/lib/auth-guards'
@@ -275,13 +279,16 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             title="Nenhuma votação corresponde aos filtros"
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {votacoes.map((v) => (
-              <li key={v.id}>
-                <VotacaoCard votacao={v} />
-              </li>
-            ))}
-          </ul>
+          <VotacaoPreviewProvider>
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {votacoes.map((v) => (
+                <li key={v.id}>
+                  <VotacaoCard votacao={v} />
+                </li>
+              ))}
+            </ul>
+            <VotacaoPreviewDrawer />
+          </VotacaoPreviewProvider>
         )}
 
         {/* Cursor pagination (ADR-026 §4 + ADR-028). Link <a> puro, sem JS,
