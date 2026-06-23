@@ -1,4 +1,11 @@
 import {
+  Card,
+  CardActions,
+  CardHeader,
+  CardSubtitle,
+  CardTitle,
+} from '@fabio.caffarello/react-design-system/server'
+import {
   Code2,
   HandCoins,
   Layers,
@@ -68,43 +75,45 @@ const FEATURES: Feature[] = [
 
 export function FeaturesGrid({ className }: { className?: string }) {
   return (
-    <ul
+    <div
       className={cn(
         'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3',
         className,
       )}
     >
       {FEATURES.map((feature) => (
-        <li
-          className="flex flex-col rounded-lg border border-line-default bg-surface-base p-5 transition-colors duration-150 hover:border-line-emphasis hover:bg-surface-raised"
+        <Card
+          className="flex h-full flex-col transition-colors hover:border-line-emphasis"
           key={feature.title}
         >
-          <div
-            aria-hidden="true"
-            className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-md bg-fg-brand/10 text-fg-brand"
-          >
-            {feature.icon}
-          </div>
-          <h3 className="mb-1 font-semibold text-fg-primary">
-            {feature.title}
-          </h3>
-          <p className="text-fg-tertiary text-sm">{feature.description}</p>
-          {feature.href && (
-            <Link
-              className="mt-3 inline-flex items-center font-medium text-fg-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-              href={feature.href}
-              {...(feature.external
-                ? { target: '_blank', rel: 'noopener noreferrer' }
-                : {})}
+          <CardHeader>
+            <div
+              aria-hidden="true"
+              className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-md bg-fg-brand/10 text-fg-brand"
             >
-              {feature.cta ?? 'Saiba mais'}{' '}
-              <span aria-hidden className="ml-1">
-                →
-              </span>
-            </Link>
+              {feature.icon}
+            </div>
+            <CardTitle as="h3">{feature.title}</CardTitle>
+            <CardSubtitle>{feature.description}</CardSubtitle>
+          </CardHeader>
+          {feature.href && (
+            <CardActions className="mt-auto">
+              <Link
+                className="inline-flex items-center font-medium text-fg-brand text-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                href={feature.href}
+                {...(feature.external
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                {feature.cta ?? 'Saiba mais'}{' '}
+                <span aria-hidden className="ml-1">
+                  →
+                </span>
+              </Link>
+            </CardActions>
           )}
-        </li>
+        </Card>
       ))}
-    </ul>
+    </div>
   )
 }

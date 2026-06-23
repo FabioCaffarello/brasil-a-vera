@@ -8,6 +8,7 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { Vote } from 'lucide-react'
 import Link from 'next/link'
+import { EmptyState } from '@/components/ui/empty-state'
 import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataBR } from '@/lib/format'
 import type { VotacaoRecente } from '@/lib/queries/votacoes'
@@ -43,10 +44,11 @@ export function CardVotacoesSemana({ votacoes, diasJanela }: Props) {
 
       <CardBody className="flex-1">
         {votacoes.length === 0 ? (
-          <p className="text-fg-tertiary text-sm leading-relaxed">
-            Nenhuma votação registrada nos últimos {diasJanela} dias. Atualize
-            em alguns dias — o cron ingere 4×/dia.
-          </p>
+          <EmptyState
+            description={`Nenhuma votação registrada nos últimos ${diasJanela} dias. O cron ingere 4×/dia.`}
+            icon={Vote}
+            title="Nenhuma votação recente"
+          />
         ) : (
           <ol className="space-y-3 text-sm">
             {votacoes.map((v) => (
