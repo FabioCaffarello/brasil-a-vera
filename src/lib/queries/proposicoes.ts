@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, or, type SQL, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
@@ -99,6 +99,31 @@ function whereForQ(q: string | undefined) {
   return ilike(proposicao.ementa, `%${trimmed}%`)
 }
 
+// Cláusulas WHERE compartilhadas por `listProposicoes` e `countProposicoes`
+// (filtros de tipo/ano/situação/tema/busca). Extraído para garantir que list
+// e count apliquem EXATAMENTE o mesmo recorte — antes o bloco era duplicado
+// literalmente nas duas funções e divergir era questão de tempo. A cláusula
+// keyset do cursor NÃO entra aqui: é específica da listagem ordenada.
+function buildProposicoesWhere(filtros: FiltrosProposicao): SQL[] {
+  const where: SQL[] = []
+  if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
+  if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
+  if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
+  const temaClause = whereForTema(filtros.tema)
+  if (temaClause) where.push(temaClause)
+  const qClause = whereForQ(filtros.q)
+  if (qClause) where.push(qClause)
+  return where
+}
+
+// Fragmento determinístico dos filtros para compor cache keys (ADR-018).
+// `q` é trimado para casar com o que `whereForQ` efetivamente aplica. Não
+// inclui cursor nem ordem — callers anexam o que for relevante à sua key.
+// Exportado para teste de determinismo/colisão (correção de cache).
+export function proposicoesFiltrosKey(filtros: FiltrosProposicao): string {
+  return `tipo=${filtros.tipo ?? '_'}:ano=${filtros.ano ?? '_'}:situacao=${filtros.situacao ?? '_'}:tema=${filtros.tema ?? '_'}:q=${filtros.q?.trim() || '_'}`
+}
+
 export interface ListProposicoesOpts {
   /** Cursor versionado (ADR-026). Aplica WHERE keyset; ignorado quando a
    * ordem é 'movimentada'/'parada' (chave não-determinística por requerer
@@ -143,63 +168,94 @@ export async function listProposicoes(
   // no MVP. Para essas ordens: limit fixo, sem "Mostrar mais".
   const cursorFriendly = ordem === 'recente' || ordem === 'antiga'
 
-  const where = []
-  if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
-  if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
-  if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
-  const temaClause = whereForTema(filtros.tema)
-  if (temaClause) where.push(temaClause)
-  const qClause = whereForQ(filtros.q)
-  if (qClause) where.push(qClause)
+  // Cache de edge (ADR-018, princípio 8). Key inclui filtros + ordem + limit
+  // + cursor: a primeira página de cada recorte usa `:cursor=p1` (key estável),
+  // páginas seguintes derivam da tupla keyset. TTL curto (listagemFiltrada,
+  // 300s) cobre staleness de ingestão; SCHEMA/BUILD_VERSION invalidam em
+  // migration/deploy. No-op em dev (caches.default ausente).
+  const cursorPart =
+    cursorFriendly && opts.cursor
+      ? `${opts.cursor.a}_${opts.cursor.n}_${opts.cursor.id}`
+      : 'p1'
+  const cacheKey = `proposicoes:list:${proposicoesFiltrosKey(filtros)}:ordem=${ordem}:limit=${limit}:cursor=${cursorPart}`
 
-  // Keyset pagination (ADR-026 §1+§4). Tuple compare em (ano, numero, id):
-  // continuar onde parou na ordem (DESC para 'recente', ASC para 'antiga').
-  if (cursorFriendly && opts.cursor) {
-    const c = opts.cursor
-    if (ordem === 'recente') {
-      where.push(
-        sql`(${proposicao.ano} < ${c.a}
+  return cached(cacheKey, TTL.listagemFiltrada, async () => {
+    const where = buildProposicoesWhere(filtros)
+
+    // Keyset pagination (ADR-026 §1+§4). Tuple compare em (ano, numero, id):
+    // continuar onde parou na ordem (DESC para 'recente', ASC para 'antiga').
+    if (cursorFriendly && opts.cursor) {
+      const c = opts.cursor
+      if (ordem === 'recente') {
+        where.push(
+          sql`(${proposicao.ano} < ${c.a}
           OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} < ${c.n})
           OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} = ${c.n} AND ${proposicao.id} < ${c.id}))`,
-      )
-    } else {
-      where.push(
-        sql`(${proposicao.ano} > ${c.a}
+        )
+      } else {
+        where.push(
+          sql`(${proposicao.ano} > ${c.a}
           OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} > ${c.n})
           OR (${proposicao.ano} = ${c.a} AND ${proposicao.numero} = ${c.n} AND ${proposicao.id} > ${c.id}))`,
-      )
+        )
+      }
     }
-  }
 
-  // Wave 8 Sprint 8.1 PR4 — select inclui campos agregados consumidos
-  // pelo ProposicaoCard v2 (mini-barra + footer). LEFT JOIN sempre.
-  const baseSelect = {
-    id: proposicao.id,
-    tipo: proposicao.tipo,
-    numero: proposicao.numero,
-    ano: proposicao.ano,
-    ementa: proposicao.ementa,
-    situacao: proposicao.situacao,
-    sourceUrl: proposicao.sourceUrl,
-    nEventosTramitacao: estatisticaProposicaoAgregada.nEventosTramitacao,
-    nAutores: estatisticaProposicaoAgregada.nAutores,
-    nVotacoes: estatisticaProposicaoAgregada.nVotacoes,
-    diasEmTramitacao: estatisticaProposicaoAgregada.diasEmTramitacao,
-    diasDesdeUltimaTramitacao:
-      estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao,
-    ultimoOrgao: estatisticaProposicaoAgregada.ultimoOrgao,
-  }
+    // Wave 8 Sprint 8.1 PR4 — select inclui campos agregados consumidos
+    // pelo ProposicaoCard v2 (mini-barra + footer). LEFT JOIN sempre.
+    const baseSelect = {
+      id: proposicao.id,
+      tipo: proposicao.tipo,
+      numero: proposicao.numero,
+      ano: proposicao.ano,
+      ementa: proposicao.ementa,
+      situacao: proposicao.situacao,
+      sourceUrl: proposicao.sourceUrl,
+      nEventosTramitacao: estatisticaProposicaoAgregada.nEventosTramitacao,
+      nAutores: estatisticaProposicaoAgregada.nAutores,
+      nVotacoes: estatisticaProposicaoAgregada.nVotacoes,
+      diasEmTramitacao: estatisticaProposicaoAgregada.diasEmTramitacao,
+      diasDesdeUltimaTramitacao:
+        estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao,
+      ultimoOrgao: estatisticaProposicaoAgregada.ultimoOrgao,
+    }
 
-  // LIMIT N+1 para detectar hasMore (e gerar nextCursor a partir do
-  // último item da página).
-  const limitPlusOne = limit + 1
+    // LIMIT N+1 para detectar hasMore (e gerar nextCursor a partir do
+    // último item da página).
+    const limitPlusOne = limit + 1
 
-  let rows: ListProposicoesResult['rows']
-  if (ordem === 'movimentada' || ordem === 'parada') {
-    const orderExpr =
-      ordem === 'movimentada'
-        ? sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} ASC NULLS LAST`
-        : sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} DESC NULLS LAST`
+    let rows: ListProposicoesResult['rows']
+    if (ordem === 'movimentada' || ordem === 'parada') {
+      const orderExpr =
+        ordem === 'movimentada'
+          ? sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} ASC NULLS LAST`
+          : sql`${estatisticaProposicaoAgregada.diasDesdeUltimaTramitacao} DESC NULLS LAST`
+      rows = (await db
+        .select(baseSelect)
+        .from(proposicao)
+        .leftJoin(
+          estatisticaProposicaoAgregada,
+          eq(estatisticaProposicaoAgregada.proposicaoId, proposicao.id),
+        )
+        .where(where.length > 0 ? and(...where) : undefined)
+        .orderBy(
+          orderExpr,
+          desc(proposicao.ano),
+          desc(proposicao.numero),
+          desc(proposicao.id),
+        )
+        .limit(limit)) as ListProposicoesResult['rows']
+      // Sem cursor nessas ordens (ver comentário acima).
+      return { rows, nextCursor: null }
+    }
+
+    // Ordens lexicográficas — id DESC/ASC como tiebreaker estável (chave
+    // keyset). N+1 para detectar hasMore.
+    const ordenacao =
+      ordem === 'antiga'
+        ? [asc(proposicao.ano), asc(proposicao.numero), asc(proposicao.id)]
+        : [desc(proposicao.ano), desc(proposicao.numero), desc(proposicao.id)]
+
     rows = (await db
       .select(baseSelect)
       .from(proposicao)
@@ -208,50 +264,25 @@ export async function listProposicoes(
         eq(estatisticaProposicaoAgregada.proposicaoId, proposicao.id),
       )
       .where(where.length > 0 ? and(...where) : undefined)
-      .orderBy(
-        orderExpr,
-        desc(proposicao.ano),
-        desc(proposicao.numero),
-        desc(proposicao.id),
-      )
-      .limit(limit)) as ListProposicoesResult['rows']
-    // Sem cursor nessas ordens (ver comentário acima).
-    return { rows, nextCursor: null }
-  }
+      .orderBy(...ordenacao)
+      .limit(limitPlusOne)) as ListProposicoesResult['rows']
 
-  // Ordens lexicográficas — id DESC/ASC como tiebreaker estável (chave
-  // keyset). N+1 para detectar hasMore.
-  const ordenacao =
-    ordem === 'antiga'
-      ? [asc(proposicao.ano), asc(proposicao.numero), asc(proposicao.id)]
-      : [desc(proposicao.ano), desc(proposicao.numero), desc(proposicao.id)]
-
-  rows = (await db
-    .select(baseSelect)
-    .from(proposicao)
-    .leftJoin(
-      estatisticaProposicaoAgregada,
-      eq(estatisticaProposicaoAgregada.proposicaoId, proposicao.id),
-    )
-    .where(where.length > 0 ? and(...where) : undefined)
-    .orderBy(...ordenacao)
-    .limit(limitPlusOne)) as ListProposicoesResult['rows']
-
-  const hasMore = rows.length > limit
-  const pageRows = hasMore ? rows.slice(0, limit) : rows
-  let nextCursor: string | null = null
-  if (hasMore) {
-    const last = pageRows[pageRows.length - 1]
-    if (last) {
-      nextCursor = encodeCursor({
-        v: 1 as const,
-        a: last.ano,
-        n: last.numero,
-        id: last.id,
-      })
+    const hasMore = rows.length > limit
+    const pageRows = hasMore ? rows.slice(0, limit) : rows
+    let nextCursor: string | null = null
+    if (hasMore) {
+      const last = pageRows[pageRows.length - 1]
+      if (last) {
+        nextCursor = encodeCursor({
+          v: 1 as const,
+          a: last.ano,
+          n: last.numero,
+          id: last.id,
+        })
+      }
     }
-  }
-  return { rows: pageRows, nextCursor }
+    return { rows: pageRows, nextCursor }
+  })
 }
 
 export async function getProposicaoByChave(
@@ -679,34 +710,40 @@ export async function getTramitacaoByProposicao(
   })
 }
 
-// Counter para honestidade de truncagem no export CSV (Sprint 3.0). Mesmas
-// cláusulas WHERE de `listProposicoes` — manter sincronizado quando filtros
-// mudarem. Ordenação não conta aqui (COUNT(*) ignora ORDER BY).
+// Counter para honestidade de truncagem no export CSV (Sprint 3.0). Reusa
+// `buildProposicoesWhere` — mesmo recorte de `listProposicoes`, sem risco de
+// divergir. Cache (ADR-018) com key SEM cursor nem ordem: COUNT(*) ignora
+// ORDER BY/LIMIT, então todas as páginas de um mesmo recorte de filtros
+// compartilham o count cacheado (melhor hit rate que listProposicoes).
 export async function countProposicoes(
   filtros: FiltrosProposicao = {},
 ): Promise<number> {
-  const where = []
-  if (filtros.tipo) where.push(eq(proposicao.tipo, filtros.tipo))
-  if (filtros.ano) where.push(eq(proposicao.ano, filtros.ano))
-  if (filtros.situacao) where.push(eq(proposicao.situacao, filtros.situacao))
-  const temaClause = whereForTema(filtros.tema)
-  if (temaClause) where.push(temaClause)
-  const qClause = whereForQ(filtros.q)
-  if (qClause) where.push(qClause)
-
-  const rows = await db
-    .select({ total: sql<number>`count(*)::int` })
-    .from(proposicao)
-    .where(where.length > 0 ? and(...where) : undefined)
-  return rows[0]?.total ?? 0
+  const cacheKey = `proposicoes:count:${proposicoesFiltrosKey(filtros)}`
+  return cached(cacheKey, TTL.listagemFiltrada, async () => {
+    const where = buildProposicoesWhere(filtros)
+    const rows = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(proposicao)
+      .where(where.length > 0 ? and(...where) : undefined)
+    return rows[0]?.total ?? 0
+  })
 }
 
+// Catálogo de anos distintos para o select da listagem. Muda no máximo uma
+// vez por ano civil; TTL longo (proposicoesStatsGlobais, 6h) é folgado e
+// barato — mesma cadência do catálogo de temas (getTemasDistintos).
 export async function getAnosDistintos(): Promise<number[]> {
-  const rows = await db
-    .selectDistinct({ ano: proposicao.ano })
-    .from(proposicao)
-    .orderBy(desc(proposicao.ano))
-  return rows.map((r) => r.ano)
+  return cached(
+    'proposicoes:anos_distintos',
+    TTL.proposicoesStatsGlobais,
+    async () => {
+      const rows = await db
+        .selectDistinct({ ano: proposicao.ano })
+        .from(proposicao)
+        .orderBy(desc(proposicao.ano))
+      return rows.map((r) => r.ano)
+    },
+  )
 }
 
 export interface TemaDistinto {

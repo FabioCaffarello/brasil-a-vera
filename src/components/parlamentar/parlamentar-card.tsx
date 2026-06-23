@@ -1,8 +1,8 @@
-import Link from 'next/link'
-
+import { AlinhamentoStrip } from '@/components/parlamentar/alinhamento-strip'
 import { FollowButton } from '@/components/parlamentar/follow-button'
+import { ParlamentarPreviewLink } from '@/components/parlamentar/preview-drawer'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
-import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinhamento'
+import { classifyAlinhamentoCard } from '@/modules/parlamentares/domain/alinhamento-card'
 
 interface Props {
   parlamentar: {
@@ -16,6 +16,10 @@ interface Props {
     pctAlinhamento?: string | null
     /** Integer do DB; 0 quando nunca votou ou agregado não rodou ainda. */
     votacoesAnalisadas?: number | null
+    /** Agregados extras — usados só pelo drawer de preview (não pelo card). */
+    proposicoesCount?: number | null
+    gastoTotalAno?: string | null
+    percentilGastoCasa?: string | null
   }
   /**
    * Wave 10 Hotfix 10.1 — gating server-side.
@@ -30,38 +34,6 @@ interface Props {
   follow?: {
     isFollowing: boolean
   }
-}
-
-type AlinhamentoState =
-  | { kind: 'com_amostra'; percentual: number; votacoes: number }
-  | { kind: 'amostra_insuficiente'; votacoes: number }
-  | { kind: 'sem_dado'; senadoLegacy: boolean }
-
-/**
- * Classifica o estado de exibição do alinhamento (Wave 7 Sprint 7.1 PR4).
- *
- * Matriz canônica no handoff `docs/design/WAVE-7-PLAN-HANDOFF.md`
- * §Contrato de fallback. Threshold usa
- * `ALINHAMENTO_AMOSTRA_MINIMA` (= 50) para manter consistência com
- * `src/lib/queries/alinhamento.ts` que já flagra "amostra insuficiente"
- * com o mesmo valor.
- *
- * P2 — honestidade do dado: barra cheia em parlamentar sem dado
- * quebra a tese do produto inteiro.
- */
-function classifyAlinhamento(
-  votacoes: number | null | undefined,
-  pct: string | null | undefined,
-  casa: string,
-): AlinhamentoState {
-  const v = votacoes ?? 0
-  if (v === 0) {
-    return { kind: 'sem_dado', senadoLegacy: casa === 'SENADO' }
-  }
-  if (v < ALINHAMENTO_AMOSTRA_MINIMA || pct === null || pct === undefined) {
-    return { kind: 'amostra_insuficiente', votacoes: v }
-  }
-  return { kind: 'com_amostra', percentual: Number(pct), votacoes: v }
 }
 
 /**
@@ -92,12 +64,30 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
     votacoesAnalisadas,
   } = parlamentar
 
-  const state = classifyAlinhamento(votacoesAnalisadas, pctAlinhamento, casa)
+  const state = classifyAlinhamentoCard(
+    votacoesAnalisadas,
+    pctAlinhamento,
+    casa,
+  )
 
   return (
     <article className="group flex h-full flex-col rounded-lg border border-line-default bg-surface-base transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis">
-      <Link
+      <ParlamentarPreviewLink
         className="flex flex-1 flex-col gap-3 rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
+        data={{
+          id,
+          nome,
+          casa,
+          partidoSigla,
+          uf,
+          urlFoto,
+          pctAlinhamento,
+          votacoesAnalisadas,
+          proposicoesCount: parlamentar.proposicoesCount,
+          gastoTotalAno: parlamentar.gastoTotalAno,
+          percentilGastoCasa: parlamentar.percentilGastoCasa,
+          follow,
+        }}
         href={`/parlamentares/${id}`}
       >
         <div className="flex items-start gap-3">
@@ -130,7 +120,7 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
           </div>
         </div>
         <AlinhamentoStrip state={state} />
-      </Link>
+      </ParlamentarPreviewLink>
       {follow ? (
         <>
           <div
@@ -147,52 +137,5 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
         </>
       ) : null}
     </article>
-  )
-}
-
-function AlinhamentoStrip({ state }: { state: AlinhamentoState }) {
-  if (state.kind === 'com_amostra') {
-    return (
-      <div>
-        <div
-          aria-hidden
-          className="h-1.5 w-full overflow-hidden rounded-full bg-accent/15"
-        >
-          <div
-            className="h-full rounded-full bg-accent/60"
-            style={{ width: `${state.percentual}%` }}
-          />
-        </div>
-        <p className="mt-1 text-fg-tertiary text-xs">
-          <span className="font-medium text-fg-primary">
-            {state.percentual}% alinhado
-          </span>{' '}
-          · {state.votacoes} {state.votacoes === 1 ? 'votação' : 'votações'}
-        </p>
-      </div>
-    )
-  }
-
-  if (state.kind === 'amostra_insuficiente') {
-    return (
-      <p className="text-fg-quaternary text-xs">
-        Amostra insuficiente · {state.votacoes}{' '}
-        {state.votacoes === 1 ? 'votação' : 'votações'} no período
-      </p>
-    )
-  }
-
-  // sem_dado
-  return (
-    <p
-      className="text-fg-quaternary text-xs"
-      title={
-        state.senadoLegacy
-          ? 'Senado: cobertura parcial de orientação partidária'
-          : undefined
-      }
-    >
-      Sem votações nominais registradas
-    </p>
   )
 }

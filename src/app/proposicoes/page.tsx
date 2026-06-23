@@ -23,6 +23,10 @@ import Link from 'next/link'
 import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { FiltrosProposicao } from '@/components/proposicao/filtros'
+import {
+  ProposicaoPreviewDrawer,
+  ProposicaoPreviewProvider,
+} from '@/components/proposicao/preview-drawer'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
@@ -272,13 +276,16 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
             title="Nenhuma proposição corresponde aos filtros"
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {proposicoes.map((p) => (
-              <li key={p.id}>
-                <ProposicaoCard proposicao={p} />
-              </li>
-            ))}
-          </ul>
+          <ProposicaoPreviewProvider>
+            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {proposicoes.map((p) => (
+                <li key={p.id}>
+                  <ProposicaoCard proposicao={p} />
+                </li>
+              ))}
+            </ul>
+            <ProposicaoPreviewDrawer />
+          </ProposicaoPreviewProvider>
         )}
 
         {/* Cursor pagination (ADR-026 §4). Link <a> puro, sem JS, com anchor
