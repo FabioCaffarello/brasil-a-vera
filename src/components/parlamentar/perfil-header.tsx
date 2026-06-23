@@ -3,6 +3,7 @@
 import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { Building2 } from 'lucide-react'
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
+import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 
@@ -34,21 +35,12 @@ export function PerfilHeader({ parlamentar }: Props) {
   return (
     <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-        {parlamentar.urlFoto ? (
-          // biome-ignore lint/performance/noImgElement: foto vem de domínio externo (camara.leg.br / senado.leg.br); Next/Image exige config de remote patterns. Largura/altura explícitas reservam espaço e evitam CLS.
-          <img
-            alt={`Foto oficial de ${parlamentar.nome}`}
-            className="size-24 shrink-0 rounded-full object-cover sm:size-28"
-            height={112}
-            src={parlamentar.urlFoto}
-            width={112}
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="size-24 shrink-0 rounded-full bg-surface-raised sm:size-28"
-          />
-        )}
+        <ParlamentarAvatar
+          className="shrink-0 sm:size-28"
+          nome={parlamentar.nome}
+          size="2xl"
+          urlFoto={parlamentar.urlFoto}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">

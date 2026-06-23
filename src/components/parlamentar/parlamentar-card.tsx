@@ -1,6 +1,7 @@
 import { Card } from '@fabio.caffarello/react-design-system/server'
 import { AlinhamentoStrip } from '@/components/parlamentar/alinhamento-strip'
 import { FollowButton } from '@/components/parlamentar/follow-button'
+import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import { ParlamentarPreviewLink } from '@/components/parlamentar/preview-drawer'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 import { classifyAlinhamentoCard } from '@/modules/parlamentares/domain/alinhamento-card'
@@ -101,22 +102,13 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
           href={`/parlamentares/${id}`}
         >
           <div className="flex items-start gap-3">
-            {urlFoto ? (
-              // biome-ignore lint/performance/noImgElement: foto remota (camara.leg.br / senado.leg.br); dimensões explícitas evitam CLS.
-              <img
-                alt=""
-                className="size-14 shrink-0 rounded-full object-cover"
-                height={56}
-                loading="lazy"
-                src={urlFoto}
-                width={56}
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="size-14 shrink-0 rounded-full bg-surface-raised"
-              />
-            )}
+            <ParlamentarAvatar
+              className="size-14 shrink-0"
+              loading="lazy"
+              nome={nome}
+              size="lg"
+              urlFoto={urlFoto}
+            />
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-2 font-medium text-fg-primary leading-snug">
                 {nome}

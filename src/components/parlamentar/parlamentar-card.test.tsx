@@ -144,4 +144,23 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
       screen.getByRole('article', { name: 'Maria Souza — Deputado PT-SP' }),
     ).toBeInTheDocument()
   })
+
+  it('avatar: foto remota com loading="lazy" (RDS #247); null → iniciais', () => {
+    const { container, rerender } = render(
+      <ParlamentarCard
+        parlamentar={{
+          ...BASE,
+          urlFoto: 'https://www.camara.leg.br/foto/123.jpg',
+        }}
+      />,
+    )
+    const img = container.querySelector('img')
+    expect(img?.getAttribute('loading')).toBe('lazy')
+    expect(img?.getAttribute('src')).toContain('camara.leg.br')
+
+    // Sem foto → fallback de iniciais do Avatar, sem <img>.
+    rerender(<ParlamentarCard parlamentar={{ ...BASE, urlFoto: null }} />)
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByText('MS')).toBeInTheDocument()
+  })
 })
