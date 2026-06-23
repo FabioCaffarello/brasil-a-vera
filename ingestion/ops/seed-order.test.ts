@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import type { IngestionSource } from '../registry'
@@ -128,4 +131,22 @@ describe('buildSeedOrder', () => {
       ...AGGREGATE_STEPS,
     ])
   })
+})
+
+describe('cron weekly · pós-processamento de agregados', () => {
+  // Guard anti-drift simétrico ao seed-local: as agregadas (AGGREGATE_STEPS)
+  // não vivem no registry (não são ingestão), então o cron de prod não as pega
+  // pela matrix. O job dedicado `aggregates` do ingestion-weekly.yml roda essa
+  // cauda — e ESTE teste garante que ela roda TODOS os AGGREGATE_STEPS. Sem
+  // isso, adicionar um agregado novo à cauda não o agendaria em produção (as
+  // agregadas ficariam stale, como antes deste fix).
+  const yml = readFileSync(
+    resolve(process.cwd(), '.github/workflows/ingestion-weekly.yml'),
+    'utf-8',
+  )
+  for (const step of AGGREGATE_STEPS) {
+    it(`o workflow weekly roda ${step}`, () => {
+      expect(yml).toContain(`script: ${step}`)
+    })
+  }
 })

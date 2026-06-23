@@ -7,6 +7,12 @@ name: Ingestão semanal
 # Config-driven (ADR-035): `discover` lê o registry (cadence=weekly) e emite a
 # matrix. Tier único (jobs independentes): gastos + tramitação Câmara/Senado.
 # Ver docs/contributing/WORKFLOWS.md.
+#
+# Pós-processamento (job `aggregates`): após o tier0, recalcula as agregadas L2
+# (estatistica_{parlamentar,proposicao}_agregada) que as listagens, cards e o
+# drawer de preview leem. NÃO são fontes de ingestão (não vivem no registry —
+# ver ingestion/ops/seed-order.ts AGGREGATE_STEPS); são a "cauda que soma sobre
+# tudo". Sem este job elas só eram populadas pelo seed local → stale em prod.
 
 on:
   schedule:
@@ -55,6 +61,39 @@ jobs:
         with:
           script: ${{ matrix.script }}
           context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Cauda de pós-processamento — recalcula as agregadas L2 sobre TUDO que já
+  # está no banco (dados diários + os do tier0 deste run). Espelha o que o
+  # seed-local roda no fim (AGGREGATE_STEPS). Idempotente (INSERT … ON CONFLICT).
+  # needs:tier0 + !cancelled(): roda após o tier0 sem exigir que ele tenha tido
+  # sucesso — uma fonte flaky (ex.: gastos) não bloqueia o recompute, só o faz
+  # sobre dados ligeiramente mais antigos. As duas agregações são independentes;
+  # rodam em sequência no mesmo job (passos baratos: ~0.2-0.5s cada).
+  aggregates:
+    name: agregados
+    needs: tier0
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: seed:agregados:parlamentar
+          context: ingestion-agregados-parlamentar
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: seed:agregados:proposicao
+          context: ingestion-agregados-proposicao
           database-url: ${{ secrets.DATABASE_URL }}
           direct-url: ${{ secrets.DIRECT_URL }}
           webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
