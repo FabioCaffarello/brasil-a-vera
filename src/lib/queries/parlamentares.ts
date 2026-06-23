@@ -855,6 +855,10 @@ export interface ComparacoesCasa {
   /** Percentil já calculado no agregado (Sprint 7.0 PR1). Null quando
    * agregado não tem gasto_total_ano para este parlamentar. */
   percentilGastoCasa: number | null
+  /** Contagem total de proposições de autoria (do agregado). Null se o
+   * parlamentar não está no agregado. Usado pelo card OG (C1) como fonte
+   * cacheada da contagem — evita query não-cacheada no opengraph-image. */
+  proposicoesCount: number | null
 }
 
 // Comparações intra-casa para hints do KpiStrip v2 (Wave 7 Sprint 7.2 PR1).
@@ -878,12 +882,14 @@ export async function getComparacoesCasa(
         mediana_alinhamento: string | null
         percentil_proposicoes: string | null
         percentil_gasto: string | null
+        proposicoes_count: string | null
       }
       const result = await db.execute(sql`
         WITH alvo AS (
           SELECT
             p.casa,
-            e.percentil_gasto_casa
+            e.percentil_gasto_casa,
+            e.proposicoes_count
           FROM parlamentares.parlamentar p
           LEFT JOIN parlamentares.estatistica_parlamentar_agregada e
             ON e.parlamentar_id = p.id
@@ -910,7 +916,8 @@ export async function getComparacoesCasa(
         SELECT
           mac.mediana::text AS mediana_alinhamento,
           ppc.percentil::text AS percentil_proposicoes,
-          a.percentil_gasto_casa::text AS percentil_gasto
+          a.percentil_gasto_casa::text AS percentil_gasto,
+          a.proposicoes_count::text AS proposicoes_count
         FROM alvo a
         LEFT JOIN mediana_alinhamento_casa mac ON TRUE
         LEFT JOIN percentil_propos_casa ppc ON ppc.id = ${parlamentarId}
@@ -927,6 +934,7 @@ export async function getComparacoesCasa(
           medianaAlinhamentoCasa: null,
           percentilProposicoesCasa: null,
           percentilGastoCasa: null,
+          proposicoesCount: null,
         }
       }
       return {
@@ -940,6 +948,8 @@ export async function getComparacoesCasa(
             : Number(row.percentil_proposicoes),
         percentilGastoCasa:
           row.percentil_gasto == null ? null : Number(row.percentil_gasto),
+        proposicoesCount:
+          row.proposicoes_count == null ? null : Number(row.proposicoes_count),
       }
     },
   )

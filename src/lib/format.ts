@@ -32,6 +32,17 @@ export function formatBRL(value: string | number | null | undefined): string {
   return FORMATADOR_BRL.format(n)
 }
 
+/**
+ * Percentil 0-100 → "p1".."p99" (posição factual na distribuição da casa).
+ * "p100" só com 100.0 exato (raro); "p1" como piso. Usado nas comparações
+ * intra-casa (gasto, proposições) — é FATO de posição, não juízo (ADR-040).
+ */
+export function formatPercentil(p: number): string {
+  if (p >= 99.5) return 'p99'
+  if (p < 0.5) return 'p1'
+  return `p${Math.round(p)}`
+}
+
 export function formatDataBR(value: Date | string | null | undefined): string {
   if (!value) return '—'
   const d = value instanceof Date ? value : new Date(value)
