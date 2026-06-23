@@ -1,13 +1,11 @@
-import Link from 'next/link'
-
-import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
-import { formatProposicaoRef } from '@/lib/format'
+import { ProposicaoPreviewLink } from '@/components/proposicao/preview-drawer'
 import {
-  classifyTramitacaoCard,
-  type EstadoTramitacaoCard,
-  inferirMarcoAtual,
-  isSituacaoTerminalNegativa,
-} from '@/modules/proposicoes/domain/tramitacao-card'
+  situacaoClasses,
+  situacaoLabel,
+} from '@/components/proposicao/situacao'
+import { TramitacaoStrip } from '@/components/proposicao/tramitacao-strip'
+import { formatProposicaoRef } from '@/lib/format'
+import { classifyTramitacaoCard } from '@/modules/proposicoes/domain/tramitacao-card'
 
 interface Props {
   proposicao: {
@@ -28,33 +26,6 @@ interface Props {
   }
 }
 
-const SITUACAO_LABELS: Record<string, string> = {
-  TRAMITANDO: 'Tramitando',
-  APROVADA: 'Aprovada',
-  REJEITADA: 'Rejeitada',
-  ARQUIVADA: 'Arquivada',
-  TRANSFORMADA_EM_NORMA: 'Virou norma',
-}
-
-/**
- * Mapeamento situação → tokens semânticos (mantido vs Sprint 4.2).
- *
- * - TRAMITANDO: active, em progresso → bg-fg-brand/20 + text-fg-brand (subtle)
- * - APROVADA: outcome positivo → bg-success/20 + text-fg-success (subtle)
- * - REJEITADA: outcome negativo → bg-error/20 + text-fg-error
- * - ARQUIVADA: inativo → bg-surface-raised + text-fg-tertiary
- * - TRANSFORMADA_EM_NORMA: pinnacle outcome (lei!) → par on-color sólido do
- *   RDS bg-success-solid + text-fg-on-success (emerald-700/branco, estável
- *   nos dois temas, ADR-039 / #230). Visual hierarchy: solid > subtle.
- */
-const SITUACAO_CLASSES: Record<string, string> = {
-  TRAMITANDO: 'bg-fg-brand/20 text-fg-brand',
-  APROVADA: 'bg-success/20 text-fg-success',
-  REJEITADA: 'bg-error/20 text-fg-error',
-  ARQUIVADA: 'bg-surface-raised text-fg-tertiary',
-  TRANSFORMADA_EM_NORMA: 'bg-success-solid text-fg-on-success',
-}
-
 /**
  * Card de listagem de proposição — Sprint 6.2 PR 2 (Wave 6) +
  * Wave 8 Sprint 8.1 PR4 (v2: mini-barra de progresso + footer compacto).
@@ -72,8 +43,6 @@ const SITUACAO_CLASSES: Record<string, string> = {
 export function ProposicaoCard({ proposicao }: Props) {
   const { tipo, numero, ano, ementa, situacao } = proposicao
   const href = `/proposicoes/${tipo}/${numero}/${ano}`
-  const situacaoClasses =
-    SITUACAO_CLASSES[situacao] ?? SITUACAO_CLASSES.ARQUIVADA
   const estado = classifyTramitacaoCard({
     nEventosTramitacao: proposicao.nEventosTramitacao,
     ultimoOrgao: proposicao.ultimoOrgao,
@@ -81,87 +50,47 @@ export function ProposicaoCard({ proposicao }: Props) {
     diasDesdeUltimaTramitacao: proposicao.diasDesdeUltimaTramitacao,
   })
   return (
-    <Link
-      className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-      href={href}
-    >
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium font-mono text-fg-tertiary text-sm">
-          {formatProposicaoRef(tipo, numero, ano)}
-        </span>
-        <span
-          className={`inline-flex items-center rounded px-2 py-0.5 font-medium text-xs ${situacaoClasses}`}
-        >
-          {SITUACAO_LABELS[situacao] ?? situacao}
-        </span>
-      </div>
-      <p className="line-clamp-3 text-fg-primary text-sm">
-        {ementa || (
-          <span className="text-fg-quaternary italic">(sem ementa)</span>
-        )}
-      </p>
-      <TramitacaoStrip estado={estado} situacao={situacao} />
-      <CardFooter
-        nAutores={proposicao.nAutores}
-        nVotacoes={proposicao.nVotacoes}
-        diasEmTramitacao={proposicao.diasEmTramitacao}
-      />
-    </Link>
-  )
-}
-
-function TramitacaoStrip({
-  estado,
-  situacao,
-}: {
-  estado: EstadoTramitacaoCard
-  situacao: string
-}) {
-  if (estado.kind === 'sem_tramitacao_registrada') {
-    return (
-      <p className="mt-3 text-fg-quaternary text-xs">
-        Sem tramitação registrada
-      </p>
-    )
-  }
-
-  if (estado.kind === 'sem_marcos_relevantes') {
-    return (
-      <p className="mt-3 text-fg-quaternary text-xs">
-        Apresentada há {estado.diasEmTramitacao}{' '}
-        {estado.diasEmTramitacao === 1 ? 'dia' : 'dias'}
-      </p>
-    )
-  }
-
-  // com_marcos — render barra de 5 segmentos + label "Em {orgao}".
-  // Wave 8 Sprint 8.3 PR4: barra extraída para BarraProgressoTramitacao
-  // (compartilhada com SectionCard do detalhe em variant=full).
-  const marcoAtual = inferirMarcoAtual(estado.ultimoOrgao, situacao)
-  const terminalNegativo = isSituacaoTerminalNegativa(situacao)
-  return (
-    <div className="mt-3">
-      <BarraProgressoTramitacao
-        ariaLabel={`Tramitação em ${estado.ultimoOrgao}`}
-        currentStep={marcoAtual}
-        terminalNegativo={terminalNegativo}
-        variant="compact"
-      />
-      <p
-        className="mt-1.5 text-fg-tertiary text-xs"
-        title={
-          estado.obsoleto ? 'Sem movimentação há mais de 1 ano' : undefined
-        }
+    <article className="group h-full rounded-lg border border-line-default bg-surface-base transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis">
+      <ProposicaoPreviewLink
+        className="block rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base"
+        data={{
+          tipo,
+          numero,
+          ano,
+          ementa,
+          situacao,
+          nEventosTramitacao: proposicao.nEventosTramitacao,
+          nAutores: proposicao.nAutores,
+          nVotacoes: proposicao.nVotacoes,
+          diasEmTramitacao: proposicao.diasEmTramitacao,
+          diasDesdeUltimaTramitacao: proposicao.diasDesdeUltimaTramitacao,
+          ultimoOrgao: proposicao.ultimoOrgao,
+        }}
+        href={href}
       >
-        Em{' '}
-        <span className="font-medium text-fg-primary">
-          {estado.ultimoOrgao}
-        </span>
-        {estado.obsoleto ? (
-          <span className="ml-1 text-fg-warning">· parada há &gt;1 ano</span>
-        ) : null}
-      </p>
-    </div>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <span className="font-medium font-mono text-fg-tertiary text-sm">
+            {formatProposicaoRef(tipo, numero, ano)}
+          </span>
+          <span
+            className={`inline-flex items-center rounded px-2 py-0.5 font-medium text-xs ${situacaoClasses(situacao)}`}
+          >
+            {situacaoLabel(situacao)}
+          </span>
+        </div>
+        <p className="line-clamp-3 text-fg-primary text-sm">
+          {ementa || (
+            <span className="text-fg-quaternary italic">(sem ementa)</span>
+          )}
+        </p>
+        <TramitacaoStrip estado={estado} situacao={situacao} />
+        <CardFooter
+          nAutores={proposicao.nAutores}
+          nVotacoes={proposicao.nVotacoes}
+          diasEmTramitacao={proposicao.diasEmTramitacao}
+        />
+      </ProposicaoPreviewLink>
+    </article>
   )
 }
 

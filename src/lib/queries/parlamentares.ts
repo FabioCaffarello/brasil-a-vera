@@ -84,6 +84,12 @@ export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
         // Pode ser null quando ainda não rodou o seed para esta linha.
         pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
         votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
+        // Colunas extras da MESMA agregada (já no LEFT JOIN — custo zero):
+        // alimentam o drawer de preview com "partes importantes" do perfil
+        // (proposições, gasto no ano, percentil de gasto na casa) sem 2ª query.
+        proposicoesCount: estatisticaParlamentarAgregada.proposicoesCount,
+        gastoTotalAno: estatisticaParlamentarAgregada.gastoTotalAno,
+        percentilGastoCasa: estatisticaParlamentarAgregada.percentilGastoCasa,
       })
       .from(parlamentar)
       .leftJoin(
@@ -555,20 +561,35 @@ export async function getTop5Afinidade(
   })
 }
 
+// Catálogos para os autocompletes da listagem. Cacheados (ADR-018,
+// princípio 8) com TTL.listagemFiltrada (300s) — mesma cadência da listagem
+// e de getListagemStats, que já computa estes mesmos DISTINCTs. No-op em dev.
 export async function getPartidosDistintos(): Promise<string[]> {
-  const rows = await db
-    .selectDistinct({ partidoSigla: parlamentar.partidoSigla })
-    .from(parlamentar)
-    .orderBy(parlamentar.partidoSigla)
-  return rows.map((r) => r.partidoSigla)
+  return cached(
+    'parlamentares:partidos_distintos',
+    TTL.listagemFiltrada,
+    async () => {
+      const rows = await db
+        .selectDistinct({ partidoSigla: parlamentar.partidoSigla })
+        .from(parlamentar)
+        .orderBy(parlamentar.partidoSigla)
+      return rows.map((r) => r.partidoSigla)
+    },
+  )
 }
 
 export async function getUfsDistintos(): Promise<string[]> {
-  const rows = await db
-    .selectDistinct({ uf: parlamentar.uf })
-    .from(parlamentar)
-    .orderBy(parlamentar.uf)
-  return rows.map((r) => r.uf)
+  return cached(
+    'parlamentares:ufs_distintos',
+    TTL.listagemFiltrada,
+    async () => {
+      const rows = await db
+        .selectDistinct({ uf: parlamentar.uf })
+        .from(parlamentar)
+        .orderBy(parlamentar.uf)
+      return rows.map((r) => r.uf)
+    },
+  )
 }
 
 export interface AlinhamentoMensalPoint {

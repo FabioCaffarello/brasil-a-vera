@@ -22,6 +22,10 @@ import { SearchX, Users } from 'lucide-react'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
+import {
+  ParlamentarPreviewDrawer,
+  ParlamentarPreviewProvider,
+} from '@/components/parlamentar/preview-drawer'
 import { EmptyState } from '@/components/ui/empty-state'
 import { DataBadge } from '@/design-system/compositions/data-badge'
 import { canExport } from '@/lib/auth-guards'
@@ -153,20 +157,23 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
             title="Nenhum parlamentar corresponde aos filtros"
           />
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {parlamentares.map((p) => (
-              <li key={p.id}>
-                <ParlamentarCard
-                  follow={
-                    clerkUserId
-                      ? { isFollowing: followingIds.has(p.id) }
-                      : undefined
-                  }
-                  parlamentar={p}
-                />
-              </li>
-            ))}
-          </ul>
+          <ParlamentarPreviewProvider>
+            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {parlamentares.map((p) => (
+                <li key={p.id}>
+                  <ParlamentarCard
+                    follow={
+                      clerkUserId
+                        ? { isFollowing: followingIds.has(p.id) }
+                        : undefined
+                    }
+                    parlamentar={p}
+                  />
+                </li>
+              ))}
+            </ul>
+            <ParlamentarPreviewDrawer />
+          </ParlamentarPreviewProvider>
         )}
       </div>
     </>
