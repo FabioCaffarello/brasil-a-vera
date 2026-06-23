@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 
+import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import {
   formatDataBR,
@@ -10,9 +11,33 @@ import {
 } from '@/lib/format'
 import type { CoerenciaStats, ParContraditorio } from '@/lib/queries/coerencia'
 
+interface ParlamentarIdentidade {
+  id: string
+  nome: string
+  partidoSigla: string
+  uf: string
+  casa: string
+}
+
 interface Props {
   pares: ParContraditorio[]
   stats: CoerenciaStats
+  /** Identidade do parlamentar — usada pela afordância de compartilhar por par
+   *  (ADR-054): monta a URL do card de fato e o texto factual. */
+  parlamentar: ParlamentarIdentidade
+}
+
+const direcaoLabelMinuscula = (
+  direcao: ParContraditorio['voto1']['direcao'],
+) => (direcao === 'RESTRITIVA' ? 'restritiva' : 'permissiva')
+
+// Frase factual do fato (texto do compartilhamento, fora da imagem). Espelha o
+// vocabulário neutro da página ("direções opostas, mesmo tema"); NUNCA
+// adjetivo-veredito (ADR-054 / ADR-040 §4).
+function buildFatoMensagem(par: ParContraditorio): string {
+  const v1 = getTipoVotoStyle(par.voto1.voto).label
+  const v2 = getTipoVotoStyle(par.voto2.voto).label
+  return `Em ${par.tema}: votou ${v1} (${direcaoLabelMinuscula(par.voto1.direcao)}) e ${v2} (${direcaoLabelMinuscula(par.voto2.direcao)}) — direções opostas sobre o mesmo tema.`
 }
 
 function VotoCard({ voto }: { voto: ParContraditorio['voto1'] }) {
@@ -58,7 +83,7 @@ function VotoCard({ voto }: { voto: ParContraditorio['voto1'] }) {
   )
 }
 
-export function ParesContraditorios({ pares, stats }: Props) {
+export function ParesContraditorios({ pares, stats, parlamentar }: Props) {
   if (pares.length === 0) {
     return (
       <div className="space-y-3">
@@ -171,6 +196,16 @@ export function ParesContraditorios({ pares, stats }: Props) {
                 </>
               )}
             </p>
+            {/* Afordância de compartilhar POR PAR (ADR-054): o cidadão escolhe
+                o par; a URL encoda o par pelos dois votacaoId. */}
+            <div className="flex justify-end pt-1">
+              <CompartilharButton
+                campaign="par-contraditorio"
+                fato={{ mensagem: buildFatoMensagem(par) }}
+                parlamentar={parlamentar}
+                path={`/parlamentares/${parlamentar.id}/contradicao/${par.voto1.votacaoId}/${par.voto2.votacaoId}`}
+              />
+            </div>
           </li>
         ))}
       </ul>

@@ -664,6 +664,13 @@ export default async function ParlamentarPerfilPage({
       content: (
         <ParesContraditorios
           pares={paresContraditorios}
+          parlamentar={{
+            id: parlamentar.id,
+            nome: parlamentar.nome,
+            partidoSigla: parlamentar.partidoSigla,
+            uf: parlamentar.uf,
+            casa: parlamentar.casa,
+          }}
           stats={coerenciaStats}
         />
       ),
