@@ -5,16 +5,19 @@
 // agregado (parlamentares com mais dado primeiro) e excluindo os que
 // o usuário já acompanha.
 //
+// Reusa a lista-base cacheada por UF (parlamentares-por-uf) — a mesma fonte da
+// porta pública "Quem me representa" — e faz o recorte por usuário (excluir
+// já-seguidos + limit) em memória. O conjunto de exclusão é pequeno (um user
+// segue poucos), então filtrar ~70 linhas é grátis e evita uma chave de cache
+// por usuário; ambos os fluxos compartilham a entrada quente por UF.
+//
 // Quando `uf` é null/undefined ou nenhum match: retorna []. UI decide
 // o que mostrar (estado novo sem UF pede UF inline antes).
 
-import { and, desc, eq, isNotNull, notInArray, sql } from 'drizzle-orm'
-
 import {
-  estatisticaParlamentarAgregada,
-  parlamentar,
-} from '@/modules/parlamentares/domain/schema'
-import { db } from '@/shared/db'
+  getParlamentaresEmExercicioPorUf,
+  type ParlamentarUfRow,
+} from './parlamentares-por-uf'
 
 interface ListRecomendacoesInput {
   uf: string | null | undefined
@@ -22,44 +25,13 @@ interface ListRecomendacoesInput {
   limit?: number
 }
 
-export async function listRecomendacoesByUf(input: ListRecomendacoesInput) {
+export async function listRecomendacoesByUf(
+  input: ListRecomendacoesInput,
+): Promise<ParlamentarUfRow[]> {
   if (!input.uf) return []
 
   const limit = input.limit ?? 4
-  const rows = await db
-    .select({
-      id: parlamentar.id,
-      nome: parlamentar.nome,
-      casa: parlamentar.casa,
-      partidoSigla: parlamentar.partidoSigla,
-      uf: parlamentar.uf,
-      urlFoto: parlamentar.urlFoto,
-      pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
-      votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
-    })
-    .from(parlamentar)
-    .leftJoin(
-      estatisticaParlamentarAgregada,
-      eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
-    )
-    .where(
-      and(
-        eq(parlamentar.uf, input.uf),
-        eq(parlamentar.situacaoMandato, 'EXERCICIO'),
-        // Exclui já acompanhados. Drizzle vazio array → vira `NOT IN ()` que
-        // o Postgres rejeita; guardamos com early branch.
-        input.excludeParlamentarIds.length > 0
-          ? notInArray(parlamentar.id, input.excludeParlamentarIds)
-          : undefined,
-      ),
-    )
-    .orderBy(
-      // Parlamentares com agregado primeiro (têm `pct_alinhamento != null`),
-      // depois ordem alfabética estável.
-      desc(isNotNull(estatisticaParlamentarAgregada.pctAlinhamento)),
-      sql`${parlamentar.nome} ASC`,
-    )
-    .limit(limit)
-
-  return rows
+  const exclude = new Set(input.excludeParlamentarIds)
+  const base = await getParlamentaresEmExercicioPorUf(input.uf)
+  return base.filter((p) => !exclude.has(p.id)).slice(0, limit)
 }
