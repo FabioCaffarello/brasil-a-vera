@@ -24,7 +24,7 @@ import {
   Stat,
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
-import { ArrowRight, Clock, FileText, MapPin, Users, Vote } from 'lucide-react'
+import { ArrowRight, Clock, FileText, Tags, Users, Vote } from 'lucide-react'
 import Link from 'next/link'
 import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { EntryCard } from '@/components/home/entry-card'
@@ -97,10 +97,7 @@ export default async function Home() {
               </Link>
             </Button>
             <Button asChild variant="ghost">
-              <Link href="/parlamentares">Explorar parlamentares</Link>
-            </Button>
-            <Button asChild variant="ghost">
-              <Link href="/proposicoes">Ver proposições</Link>
+              <Link href="/votacoes">Ver votações</Link>
             </Button>
           </>
         }
@@ -157,13 +154,6 @@ export default async function Home() {
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <EntryCard
-              cta="Buscar pelo CEP"
-              description="Descubra os deputados e senadores que representam o seu estado — comece pelo seu CEP."
-              href="/quem-me-representa"
-              icon={<MapPin className="size-5" />}
-              title="Quem me representa?"
-            />
-            <EntryCard
               description="Explore deputados federais e senadores em exercício — filtre por casa, UF, partido e veja o perfil 360 de cada um."
               href="/parlamentares"
               icon={<Users className="size-5" />}
@@ -174,6 +164,13 @@ export default async function Home() {
               href="/proposicoes"
               icon={<FileText className="size-5" />}
               title="Proposições em tramitação"
+            />
+            <EntryCard
+              cta="Ver temas"
+              description="Entre por assunto: saúde, educação, segurança e mais. Cada tema reúne as proposições classificadas pela própria Câmara."
+              href="/temas"
+              icon={<Tags className="size-5" />}
+              title="Explorar por tema"
             />
           </div>
         </section>
