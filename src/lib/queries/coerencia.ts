@@ -1,5 +1,5 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
-
+import { cached, TTL } from '@/lib/cache'
 import {
   classifyDirecao,
   type DirecaoProposicao,
@@ -167,6 +167,43 @@ export async function getParesContraditorios(
 ): Promise<ParContraditorio[]> {
   const votos = await loadVotosComProposicao(parlamentarId)
   return computePares(votos, limit)
+}
+
+/**
+ * Versão cacheada de {@link getParesContraditorios} (ADR-054 / disciplina de
+ * custo Neon, princípio 8/12). A query crua bate 2 vezes no banco; a rota
+ * /contradicao (page + OG) é martelada por scrapers, então edge-cache é
+ * obrigatório. Consumida também pelo perfil. TTL de 6h (`TTL.coerenciaPares`):
+ * pares só mudam com nova ingestão de votação (cron diário).
+ *
+ * Atenção: `cached()` faz JSON roundtrip → `dataHora` (Date | string) chega ao
+ * consumidor como string ISO. Os consumidores (`formatDataBR`, VotoCard) já
+ * aceitam `Date | string`; `diasEntreVotos` é pré-computado.
+ */
+export function getParesContraditoriosCached(
+  parlamentarId: string,
+  limit = 10,
+): Promise<ParContraditorio[]> {
+  return cached(
+    `coerencia:pares:${parlamentarId}:${limit}`,
+    TTL.coerenciaPares,
+    () => getParesContraditorios(parlamentarId, limit),
+  )
+}
+
+/**
+ * Localiza um par específico pelos dois `votacaoId`, na ordem canônica
+ * (voto1, voto2) em que foi produzido por {@link computePares}. Pura — usada
+ * pela rota /contradicao para resolver o par codificado na URL (ADR-054).
+ */
+export function findPar(
+  pares: ParContraditorio[],
+  voto1Id: string,
+  voto2Id: string,
+): ParContraditorio | undefined {
+  return pares.find(
+    (p) => p.voto1.votacaoId === voto1Id && p.voto2.votacaoId === voto2Id,
+  )
 }
 
 export interface CoerenciaStats {
