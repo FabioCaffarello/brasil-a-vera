@@ -1,12 +1,14 @@
 'use client'
 
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
-// Client island da rota (useSearchParams); pill invertido usa text-fg-inverse;
-// getTipoVotoStyle traduzido na Fase B.
+// Filtro client-side por estado local (D7, ADR-052): a lista vive dentro do
+// VotosDrawer, então o filtro deixou de ser ?voto= na URL e passou a useState.
+// `initialFiltro` semeia o estado uma vez (deep-link /votacoes/[id]?voto=X que
+// o drawer lê no mount). pill invertido usa text-fg-inverse; getTipoVotoStyle
+// traduzido na Fase B.
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
+import { useState } from 'react'
 
 import { getTipoVotoStyle } from '@/lib/format'
 import type { VotoIndividual } from '@/lib/queries/votacoes'
@@ -16,7 +18,8 @@ interface Props {
    * (~513 deputados ou ~81 senadores) cabe em memória cliente sem
    * impacto perceptível de payload. */
   votos: VotoIndividual[]
-  votacaoId: string
+  /** Filtro inicial (deep-link semeado pelo drawer). '' = todos. */
+  initialFiltro?: string
 }
 
 const TIPOS = [
@@ -28,14 +31,12 @@ const TIPOS = [
   { value: 'OBSTRUCAO', label: 'Obstrução' },
 ]
 
-export function VotosIndividuais({ votos, votacaoId }: Props) {
-  const searchParams = useSearchParams()
-  const filtroAtual = searchParams.get('voto') ?? ''
+export function VotosIndividuais({ votos, initialFiltro = '' }: Props) {
+  const [filtroAtual, setFiltroAtual] = useState(initialFiltro)
 
-  const votosFiltrados = useMemo(() => {
-    if (!filtroAtual) return votos
-    return votos.filter((v) => v.voto === filtroAtual)
-  }, [votos, filtroAtual])
+  const votosFiltrados = filtroAtual
+    ? votos.filter((v) => v.voto === filtroAtual)
+    : votos
 
   const totalSemFiltro = votos.length
   const showCounter = filtroAtual && votosFiltrados.length !== totalSemFiltro
@@ -48,11 +49,9 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
       >
         {TIPOS.map((t) => {
           const isAtivo = filtroAtual === t.value
-          const href = t.value
-            ? `/votacoes/${votacaoId}?voto=${t.value}`
-            : `/votacoes/${votacaoId}`
           return (
-            <Link
+            <button
+              aria-pressed={isAtivo}
               className={
                 isAtivo
                   ? // Pill invertido — extensão piloto-4 do token-map
@@ -64,12 +63,12 @@ export function VotosIndividuais({ votos, votacaoId }: Props) {
                     'rounded bg-fg-primary px-2.5 py-1 font-medium text-fg-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
                   : 'rounded border border-line-emphasis px-2.5 py-1 text-fg-primary hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2'
               }
-              href={href}
               key={t.value}
-              scroll={false}
+              onClick={() => setFiltroAtual(t.value)}
+              type="button"
             >
               {t.label}
-            </Link>
+            </button>
           )
         })}
       </nav>

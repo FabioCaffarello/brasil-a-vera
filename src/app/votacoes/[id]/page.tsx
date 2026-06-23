@@ -23,7 +23,6 @@ import {
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
-import { ExportCsvLink } from '@/components/export-csv-link'
 import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplina-chart-client'
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
@@ -34,7 +33,7 @@ import { VotacoesRelacionadasFooter } from '@/components/votacao/footer-relacion
 import { MargemDecisaoBar } from '@/components/votacao/margem-decisao'
 import { PerfilVotacaoHeader } from '@/components/votacao/perfil-header'
 import { ProposicaoVinculada } from '@/components/votacao/proposicao-vinculada'
-import { VotosIndividuais } from '@/components/votacao/votos-individuais'
+import { VotosDrawer } from '@/components/votacao/votos-drawer'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
 import { SectionCard } from '@/design-system/compositions/section-card'
@@ -345,17 +344,11 @@ export default async function VotacaoPage({ params }: PageProps) {
             className: 'rounded-lg border-line-default bg-surface-base',
             triggerClassName: 'font-semibold text-base',
             content: (
-              <div className="space-y-3">
-                {canExportData && (
-                  <div className="flex justify-end">
-                    <ExportCsvLink
-                      href={`/api/export/votacoes/${v.id}/votos`}
-                      label="Exportar todos os votos (CSV)"
-                    />
-                  </div>
-                )}
-                <VotosIndividuais votacaoId={v.id} votos={votos} />
-              </div>
+              <VotosDrawer
+                canExport={canExportData}
+                exportHref={`/api/export/votacoes/${v.id}/votos`}
+                votos={votos}
+              />
             ),
           },
           {
@@ -475,18 +468,14 @@ export default async function VotacaoPage({ params }: PageProps) {
 
         <SectionCard
           id="individuais"
-          subtitle="Clique no nome para ver o perfil 360° do parlamentar. Use os filtros para ver só uma direção."
+          subtitle="Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV."
           title="Votos individuais"
         >
-          {canExportData && (
-            <div className="mb-3 flex justify-end">
-              <ExportCsvLink
-                href={`/api/export/votacoes/${v.id}/votos`}
-                label="Exportar todos os votos (CSV)"
-              />
-            </div>
-          )}
-          <VotosIndividuais votacaoId={v.id} votos={votos} />
+          <VotosDrawer
+            canExport={canExportData}
+            exportHref={`/api/export/votacoes/${v.id}/votos`}
+            votos={votos}
+          />
         </SectionCard>
       </div>
 

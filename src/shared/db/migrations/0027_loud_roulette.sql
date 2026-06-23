@@ -1,0 +1,1 @@
+CREATE INDEX "voto_nominal_parlamentar_id_idx" ON "votacoes"."voto_nominal" USING btree ("parlamentar_id");
