@@ -138,6 +138,11 @@ jobs:
           # falha ao inicializar quando usuário autenticado renderiza
           # `<UserButton />`. Não é secret — `pk_*` é público por design.
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          # Cloudflare Web Analytics — inlined no build (NEXT_PUBLIC_*). Secret
+          # ausente = string vazia → emptyStringAsUndefined → beacon não
+          # renderiza (instrumentação inerte até ser ativada). Ativação:
+          # docs/ops/web-analytics.md. Público por design (token vai no HTML).
+          NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ secrets.NEXT_PUBLIC_CF_BEACON_TOKEN }}
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
