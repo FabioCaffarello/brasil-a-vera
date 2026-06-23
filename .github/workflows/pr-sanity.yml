@@ -30,7 +30,7 @@ jobs:
     # Guard contra ruído de edited sem mudança de body.
     if: github.event.action != 'edited' || github.event.changes.body != null
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Check PR description is non-empty
         env:

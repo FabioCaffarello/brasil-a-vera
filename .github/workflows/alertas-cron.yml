@@ -36,7 +36,7 @@ jobs:
     steps:
       # checkout é obrigatório: trigger-cron e notify-failure são actions
       # locais (./.github/actions/*) e só resolvem com o repo no disco.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/trigger-cron
         with:
           endpoint: https://brasilavera.org/api/cron/alertas/run
