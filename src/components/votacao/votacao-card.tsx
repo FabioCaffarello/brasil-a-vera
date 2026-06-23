@@ -1,4 +1,4 @@
-import { DataBadge } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { VotacaoPreviewLink } from '@/components/votacao/preview-drawer'
 import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataBR } from '@/lib/format'
@@ -32,38 +32,50 @@ interface Props {
  */
 export function VotacaoCard({ votacao: v }: Props) {
   const totalNominais = v.votosSim + v.votosNao + v.abstencoes
+  const status = resultadoStatus(v.aprovada)
   return (
-    <VotacaoPreviewLink
-      className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-      data={{
-        id: v.id,
-        casa: v.casa,
-        dataHora: v.dataHora,
-        descricao: v.descricao,
-        orgao: v.orgao,
-        aprovada: v.aprovada,
-        votosSim: v.votosSim,
-        votosNao: v.votosNao,
-        abstencoes: v.abstencoes,
-      }}
-      href={`/votacoes/${v.id}`}
+    <article
+      aria-label={`Votação de ${formatDataBR(v.dataHora)} — ${status.label}`}
+      className="h-full"
     >
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-xs">
-        <span className="flex items-center gap-2">
-          <span>{formatDataBR(v.dataHora)}</span>
-          <span aria-hidden>·</span>
-          <span>{v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}</span>
-          <span aria-hidden>·</span>
-          <span>{v.orgao}</span>
-        </span>
-        <DataBadge size="sm" {...resultadoStatus(v.aprovada)} />
-      </div>
-      <p className="line-clamp-3 text-fg-primary text-sm">{v.descricao}</p>
-      {totalNominais > 0 && (
-        <p className="mt-2 tabular-nums text-fg-tertiary text-xs">
-          Sim: {v.votosSim} · Não: {v.votosNao} · Abstenção: {v.abstencoes}
-        </p>
-      )}
-    </VotacaoPreviewLink>
+      <Card
+        className="h-full transition-colors hover:border-line-emphasis hover:bg-surface-raised focus-within:border-line-emphasis"
+        padding="none"
+        variant="default"
+      >
+        <VotacaoPreviewLink
+          className="block rounded-lg p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+          data={{
+            id: v.id,
+            casa: v.casa,
+            dataHora: v.dataHora,
+            descricao: v.descricao,
+            orgao: v.orgao,
+            aprovada: v.aprovada,
+            votosSim: v.votosSim,
+            votosNao: v.votosNao,
+            abstencoes: v.abstencoes,
+          }}
+          href={`/votacoes/${v.id}`}
+        >
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-xs">
+            <span className="flex items-center gap-2">
+              <span>{formatDataBR(v.dataHora)}</span>
+              <span aria-hidden>·</span>
+              <span>{v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}</span>
+              <span aria-hidden>·</span>
+              <span>{v.orgao}</span>
+            </span>
+            <DataBadge size="sm" {...status} />
+          </div>
+          <p className="line-clamp-3 text-fg-primary text-sm">{v.descricao}</p>
+          {totalNominais > 0 && (
+            <p className="mt-2 tabular-nums text-fg-tertiary text-xs">
+              Sim: {v.votosSim} · Não: {v.votosNao} · Abstenção: {v.abstencoes}
+            </p>
+          )}
+        </VotacaoPreviewLink>
+      </Card>
+    </article>
   )
 }
