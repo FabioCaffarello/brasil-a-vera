@@ -229,3 +229,13 @@ export async function getCoerenciaStats(
       .length,
   }
 }
+
+/** Versão cacheada de {@link getCoerenciaStats} (ADR-054, mesma disciplina de
+ *  custo que {@link getParesContraditoriosCached}). */
+export function getCoerenciaStatsCached(
+  parlamentarId: string,
+): Promise<CoerenciaStats> {
+  return cached(`coerencia:stats:${parlamentarId}`, TTL.coerenciaPares, () =>
+    getCoerenciaStats(parlamentarId),
+  )
+}
