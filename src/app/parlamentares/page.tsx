@@ -20,7 +20,9 @@ import {
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Users } from 'lucide-react'
+import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { MostrarMais } from '@/components/listagem/mostrar-mais'
 import { Filtros } from '@/components/parlamentar/filtros'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import {
@@ -29,15 +31,20 @@ import {
 } from '@/components/parlamentar/preview-drawer'
 import { EmptyState } from '@/components/ui/empty-state'
 import { canExport } from '@/lib/auth-guards'
+import { decodeCursor } from '@/lib/cursor'
+import { buildListaHref, restantesPrimeiraPagina } from '@/lib/pagination'
+import { CursorParlamentaresV1 } from '@/lib/queries/cursor-schemas'
 import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
   type Casa,
+  countParlamentares,
   getListagemStats,
   getPartidosDistintos,
   getUfsDistintos,
-  listParlamentares,
+  listParlamentaresPaginado,
   ORDENS_LISTAGEM,
   type OrdemListagem,
+  PARLAMENTARES_LISTAGEM_PAGE_SIZE,
 } from '@/lib/queries/parlamentares'
 import { getOrCreateUserProfileId } from '@/lib/queries/user-profile'
 
@@ -54,7 +61,31 @@ interface PageProps {
     uf?: string
     q?: string
     ordem?: string
+    after?: string
   }>
+}
+
+const PARLAMENTARES_HREF_KEYS = [
+  'casa',
+  'partido',
+  'uf',
+  'q',
+  'ordem',
+  'after',
+] as const
+
+// Href da listagem preservando filtros, sobrescrevendo só `after` (cursor).
+// Usado pelo "Mostrar mais" e pelo redirect 308 de cursor inválido (ADR-026 §5).
+function buildPageHref(
+  params: Awaited<PageProps['searchParams']>,
+  override: { after?: string | null },
+): string {
+  return buildListaHref(
+    '/parlamentares',
+    params,
+    PARLAMENTARES_HREF_KEYS,
+    override,
+  )
 }
 
 function normalizeCasa(value: string | undefined): Casa | undefined {
@@ -79,14 +110,29 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     ordem: normalizeOrdem(params.ordem),
   }
 
-  const [parlamentares, partidos, ufs, stats, canExportData] =
+  // Cursor (ADR-026): null = token inválido → redirect 308 strip do param,
+  // preservando os filtros. undefined = primeira página.
+  const cursor = decodeCursor(params.after, CursorParlamentaresV1)
+  if (cursor === null) {
+    permanentRedirect(buildPageHref(params, { after: null }))
+  }
+
+  const [page, partidos, ufs, stats, totalFiltrado, canExportData] =
     await Promise.all([
-      listParlamentares(filtros),
+      listParlamentaresPaginado(filtros, { cursor }),
       getPartidosDistintos(),
       getUfsDistintos(),
       getListagemStats(),
+      countParlamentares(filtros),
       canExport(),
     ])
+  const parlamentares = page.rows
+  // "N restantes" só na 1ª página (sem cursor).
+  const restantes = restantesPrimeiraPagina(
+    Boolean(cursor),
+    totalFiltrado,
+    PARLAMENTARES_LISTAGEM_PAGE_SIZE,
+  )
 
   // Gating server-side do FollowButton (Wave 10 Hotfix 10.1, preservado):
   // anônimos não disparam getFollowsByUserId e o card recebe
@@ -129,10 +175,9 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-sm">
           <span>
-            {parlamentares.length}{' '}
-            {parlamentares.length === 1 ? 'resultado' : 'resultados'}
+            {totalFiltrado} {totalFiltrado === 1 ? 'resultado' : 'resultados'}
           </span>
-          {canExportData && parlamentares.length > 0 && (
+          {canExportData && totalFiltrado > 0 && (
             <ExportCsvLink
               href={`/api/export/parlamentares?${new URLSearchParams(
                 Object.entries({
@@ -175,6 +220,16 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
             <ParlamentarPreviewDrawer />
           </ParlamentarPreviewProvider>
         )}
+
+        {/* Cursor pagination (ADR-026 §4). `<a>` puro, sem JS, anchor
+            #mostrar-mais. Só na ordem `nome` (keyset); ordens agregadas
+            capam por LIMIT sem nextCursor. */}
+        {page.nextCursor ? (
+          <MostrarMais
+            href={buildPageHref(params, { after: page.nextCursor })}
+            restantes={restantes}
+          />
+        ) : null}
       </div>
     </>
   )

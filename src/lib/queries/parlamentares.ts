@@ -4,6 +4,7 @@ import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
 import type {
   CursorGastosV1Payload,
+  CursorParlamentaresV1Payload,
   CursorProposicoesV1Payload,
   CursorVotosV1Payload,
 } from '@/lib/queries/cursor-schemas'
@@ -39,65 +40,183 @@ export interface FiltrosParlamentar {
   ordem?: OrdemListagem
 }
 
+export const PARLAMENTARES_LISTAGEM_PAGE_SIZE = 24
+
+// Projeção compartilhada entre o fetch-all (export) e o paginado (listagem) —
+// consumida pelo ParlamentarCard v2 (barra de alinhamento) + drawer de preview
+// (proposições/gasto/percentil, já no LEFT JOIN, custo zero).
+const parlamentarListSelect = {
+  id: parlamentar.id,
+  nome: parlamentar.nome,
+  casa: parlamentar.casa,
+  partidoSigla: parlamentar.partidoSigla,
+  uf: parlamentar.uf,
+  urlFoto: parlamentar.urlFoto,
+  legislatura: parlamentar.legislatura,
+  sourceUrl: parlamentar.sourceUrl,
+  pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
+  votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
+  proposicoesCount: estatisticaParlamentarAgregada.proposicoesCount,
+  gastoTotalAno: estatisticaParlamentarAgregada.gastoTotalAno,
+  percentilGastoCasa: estatisticaParlamentarAgregada.percentilGastoCasa,
+}
+
+function buildParlamentaresWhere(
+  filtros: FiltrosParlamentar,
+  q: string | undefined,
+) {
+  const whereClauses = []
+  if (filtros.casa) whereClauses.push(eq(parlamentar.casa, filtros.casa))
+  if (filtros.partido)
+    whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
+  if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
+  if (q) whereClauses.push(ilike(parlamentar.nome, `%${q}%`))
+  return whereClauses
+}
+
+// Ordens não-nome dependem da tabela agregada (Sprint 7.0 PR1). LEFT JOIN
+// preserva parlamentares sem agregado (recém-empossados, suplência atípica) —
+// caem no fim via NULLS LAST + tiebreak por nome ASC. A ordem `nome` ganha
+// `id ASC` como tiebreaker para o keyset ser determinístico (nomes repetem).
+function parlamentaresOrderBy(ordem: OrdemListagem) {
+  switch (ordem) {
+    case 'alinhamento':
+      return sql`${estatisticaParlamentarAgregada.pctAlinhamento} DESC NULLS LAST, ${parlamentar.nome} ASC`
+    case 'gasto':
+      return sql`${estatisticaParlamentarAgregada.gastoTotalAno} DESC NULLS LAST, ${parlamentar.nome} ASC`
+    case 'proposicoes':
+      return sql`${estatisticaParlamentarAgregada.proposicoesCount} DESC NULLS LAST, ${parlamentar.nome} ASC`
+    default:
+      return sql`${parlamentar.nome} ASC, ${parlamentar.id} ASC`
+  }
+}
+
+// Fetch-all (sem limite) — consumido pelo export CSV, que precisa de TODAS as
+// linhas do recorte. A listagem usa `listParlamentaresPaginado`.
 export async function listParlamentares(filtros: FiltrosParlamentar = {}) {
   const q = filtros.q?.trim()
   const ordem = filtros.ordem ?? 'nome'
 
   const key = `parlamentares:list:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}:q=${q ?? '_'}:ordem=${ordem}`
   return cached(key, TTL.listagemFiltrada, async () => {
-    const whereClauses = []
-    if (filtros.casa) whereClauses.push(eq(parlamentar.casa, filtros.casa))
-    if (filtros.partido)
-      whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
-    if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
-    if (q) whereClauses.push(ilike(parlamentar.nome, `%${q}%`))
-
-    // Ordens não-nome dependem da tabela agregada (Sprint 7.0 PR1).
-    // LEFT JOIN preserva parlamentares sem agregado (recém-empossados,
-    // suplência atípica) — eles caem no fim via NULLS LAST + tiebreak
-    // por nome ASC para determinismo.
-    const orderBy = (() => {
-      switch (ordem) {
-        case 'alinhamento':
-          return sql`${estatisticaParlamentarAgregada.pctAlinhamento} DESC NULLS LAST, ${parlamentar.nome} ASC`
-        case 'gasto':
-          return sql`${estatisticaParlamentarAgregada.gastoTotalAno} DESC NULLS LAST, ${parlamentar.nome} ASC`
-        case 'proposicoes':
-          return sql`${estatisticaParlamentarAgregada.proposicoesCount} DESC NULLS LAST, ${parlamentar.nome} ASC`
-        default:
-          return asc(parlamentar.nome)
-      }
-    })()
-
+    const where = buildParlamentaresWhere(filtros, q)
     return db
-      .select({
-        id: parlamentar.id,
-        nome: parlamentar.nome,
-        casa: parlamentar.casa,
-        partidoSigla: parlamentar.partidoSigla,
-        uf: parlamentar.uf,
-        urlFoto: parlamentar.urlFoto,
-        legislatura: parlamentar.legislatura,
-        sourceUrl: parlamentar.sourceUrl,
-        // Agregado (Sprint 7.0 PR1 / 7.1 PR4) — consumido pelo
-        // ParlamentarCard v2 para barra de alinhamento + texto de amostra.
-        // Pode ser null quando ainda não rodou o seed para esta linha.
-        pctAlinhamento: estatisticaParlamentarAgregada.pctAlinhamento,
-        votacoesAnalisadas: estatisticaParlamentarAgregada.votacoesAnalisadas,
-        // Colunas extras da MESMA agregada (já no LEFT JOIN — custo zero):
-        // alimentam o drawer de preview com "partes importantes" do perfil
-        // (proposições, gasto no ano, percentil de gasto na casa) sem 2ª query.
-        proposicoesCount: estatisticaParlamentarAgregada.proposicoesCount,
-        gastoTotalAno: estatisticaParlamentarAgregada.gastoTotalAno,
-        percentilGastoCasa: estatisticaParlamentarAgregada.percentilGastoCasa,
-      })
+      .select(parlamentarListSelect)
       .from(parlamentar)
       .leftJoin(
         estatisticaParlamentarAgregada,
         eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
       )
-      .where(whereClauses.length > 0 ? and(...whereClauses) : undefined)
-      .orderBy(orderBy)
+      .where(where.length > 0 ? and(...where) : undefined)
+      .orderBy(parlamentaresOrderBy(ordem))
+  })
+}
+
+export type ParlamentarListRow = Awaited<
+  ReturnType<typeof listParlamentares>
+>[number]
+
+export interface ListParlamentaresOpts {
+  limit?: number
+  cursor?: CursorParlamentaresV1Payload
+}
+
+export interface ListParlamentaresPage {
+  rows: ParlamentarListRow[]
+  nextCursor: string | null
+}
+
+/**
+ * Listagem paginada por cursor (ADR-026). Só a ordem `nome` cursoriza
+ * (keyset `nome ASC, id ASC`). As ordens agregadas (alinhamento/gasto/
+ * proposicoes) ordenam por coluna nullable com NULLS LAST → cap por LIMIT
+ * fixo, sem cursor (precedente das ordens 'movimentada'/'parada' de
+ * proposições). Em todos os casos lê no máximo `limit`(+1) linhas — fim do
+ * fetch-all de ~513 cards.
+ */
+export async function listParlamentaresPaginado(
+  filtros: FiltrosParlamentar = {},
+  opts: ListParlamentaresOpts = {},
+): Promise<ListParlamentaresPage> {
+  const q = filtros.q?.trim()
+  const ordem = filtros.ordem ?? 'nome'
+  const limit = opts.limit ?? PARLAMENTARES_LISTAGEM_PAGE_SIZE
+  const cursorFriendly = ordem === 'nome'
+
+  const cursorPart =
+    cursorFriendly && opts.cursor
+      ? `${opts.cursor.nome}_${opts.cursor.id}`
+      : 'p1'
+  const key = `parlamentares:page:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}:q=${q ?? '_'}:ordem=${ordem}:limit=${limit}:cursor=${cursorPart}`
+
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const where = buildParlamentaresWhere(filtros, q)
+
+    // Ordens agregadas (nullable + NULLS LAST): cap por LIMIT, sem cursor.
+    if (!cursorFriendly) {
+      const rows = (await db
+        .select(parlamentarListSelect)
+        .from(parlamentar)
+        .leftJoin(
+          estatisticaParlamentarAgregada,
+          eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+        )
+        .where(where.length > 0 ? and(...where) : undefined)
+        .orderBy(parlamentaresOrderBy(ordem))
+        .limit(limit)) as ParlamentarListRow[]
+      return { rows, nextCursor: null }
+    }
+
+    // Keyset (nome ASC, id ASC) — tuple compare: continuar onde parou.
+    if (opts.cursor) {
+      const c = opts.cursor
+      where.push(
+        sql`(${parlamentar.nome} > ${c.nome}
+        OR (${parlamentar.nome} = ${c.nome} AND ${parlamentar.id} > ${c.id}))`,
+      )
+    }
+
+    const limitPlusOne = limit + 1
+    const rows = (await db
+      .select(parlamentarListSelect)
+      .from(parlamentar)
+      .leftJoin(
+        estatisticaParlamentarAgregada,
+        eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+      )
+      .where(where.length > 0 ? and(...where) : undefined)
+      .orderBy(asc(parlamentar.nome), asc(parlamentar.id))
+      .limit(limitPlusOne)) as ParlamentarListRow[]
+
+    const hasMore = rows.length > limit
+    const pageRows = hasMore ? rows.slice(0, limit) : rows
+    let nextCursor: string | null = null
+    if (hasMore) {
+      const last = pageRows[pageRows.length - 1]
+      if (last) {
+        nextCursor = encodeCursor({
+          v: 1 as const,
+          nome: last.nome,
+          id: last.id,
+        })
+      }
+    }
+    return { rows: pageRows, nextCursor }
+  })
+}
+
+export async function countParlamentares(
+  filtros: FiltrosParlamentar = {},
+): Promise<number> {
+  const q = filtros.q?.trim()
+  const key = `parlamentares:count:casa=${filtros.casa ?? '_'}:partido=${filtros.partido ?? '_'}:uf=${filtros.uf ?? '_'}:q=${q ?? '_'}`
+  return cached(key, TTL.listagemFiltrada, async () => {
+    const where = buildParlamentaresWhere(filtros, q)
+    const rows = await db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(parlamentar)
+      .where(where.length > 0 ? and(...where) : undefined)
+    return rows[0]?.total ?? 0
   })
 }
 
