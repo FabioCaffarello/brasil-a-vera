@@ -22,6 +22,7 @@ import {
 import { SearchX, Vote } from 'lucide-react'
 import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
+import { MostrarMais } from '@/components/listagem/mostrar-mais'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FiltrosVotacao } from '@/components/votacao/filtros'
 import {
@@ -32,6 +33,7 @@ import { VotacaoCard } from '@/components/votacao/votacao-card'
 import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatNumeroAbreviado } from '@/lib/format-number'
+import { buildListaHref, restantesPrimeiraPagina } from '@/lib/pagination'
 import { CursorVotacoesV1 } from '@/lib/queries/cursor-schemas'
 import {
   type Casa,
@@ -89,29 +91,19 @@ interface PageProps {
 // Strip de `after` quando override é null — usado no permanentRedirect 308
 // para tokens inválidos (ADR-026 §5) e no strip do `offset` (compat
 // ADR-028 §4). Base /rds/.
+const VOTACOES_HREF_KEYS = [
+  'casa',
+  'ano',
+  'resultado',
+  'somenteNominais',
+  'after',
+] as const
+
 function buildPageHref(
   params: Awaited<PageProps['searchParams']>,
   override: { after?: string | null; offset?: null },
 ): string {
-  const merged: Record<string, string | null | undefined> = {
-    ...params,
-    ...override,
-  }
-  const search = new URLSearchParams()
-  for (const key of [
-    'casa',
-    'ano',
-    'resultado',
-    'somenteNominais',
-    'after',
-  ] as const) {
-    const value = merged[key]
-    if (value !== null && value !== undefined && value !== '') {
-      search.set(key, value)
-    }
-  }
-  const qs = search.toString()
-  return qs ? `/votacoes?${qs}` : '/votacoes'
+  return buildListaHref('/votacoes', params, VOTACOES_HREF_KEYS, override)
 }
 
 // Stat "Última votação": narrativa de recência ("há N dias") em primeiro
@@ -172,12 +164,11 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     canExport(),
   ])
   const votacoes = page.rows
-  // "Mostrar mais (N restantes)" só faz sentido na primeira página (sem
-  // cursor). Em páginas subsequentes mostra só "Mostrar mais" — não
-  // rastreamos page-N para calcular restantes sem ginástica adicional.
-  const restantesPrimeiraPagina = !cursor
-    ? Math.max(0, totalFiltrado - VOTACOES_LISTAGEM_PAGE_SIZE)
-    : null
+  const restantes = restantesPrimeiraPagina(
+    Boolean(cursor),
+    totalFiltrado,
+    VOTACOES_LISTAGEM_PAGE_SIZE,
+  )
 
   // Volume narrativo no hero — N votações desde AAAA quando há cobertura
   // histórica conhecida; cai em fallback honesto quando o banco está vazio
@@ -294,15 +285,10 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
         {/* Cursor pagination (ADR-026 §4 + ADR-028). Link <a> puro, sem JS,
             com anchor #mostrar-mais que mantém scroll visual após paginar. */}
         {page.nextCursor ? (
-          <div className="flex justify-center" id="mostrar-mais">
-            <Button asChild variant="outline">
-              <a href={buildPageHref(params, { after: page.nextCursor })}>
-                {restantesPrimeiraPagina !== null
-                  ? `Mostrar mais (${formatNumeroAbreviado(restantesPrimeiraPagina)} restantes)`
-                  : 'Mostrar mais'}
-              </a>
-            </Button>
-          </div>
+          <MostrarMais
+            href={buildPageHref(params, { after: page.nextCursor })}
+            restantes={restantes}
+          />
         ) : null}
       </div>
     </>
