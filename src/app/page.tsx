@@ -10,9 +10,10 @@
 // (credibilidade).
 //
 // - HeroSection do RDS /server com variant `plain` + slots idiomáticos:
-//   `kicker`/`meta` como texto (não pill). O slot `kpis` recebe o KpiCard.
-// - KpiCard de @/design-system/compositions — mantido (NÃO migrou pro Stat do
-//   RDS: o Stat não tem slot p/ floatingBadge do TrustBadge L1; opção A).
+//   `kicker`/`meta` como texto (não pill). O slot `kpis` recebe um StatGroup.
+// - StatGroup + Stat do RDS para os KPIs do hero, com `floatingBadge` para o
+//   TrustBadge L1 (slot entregue na RDS 4.6.0 / issue #245 — destravou aposentar
+//   a composição local KpiCard, ADR-038).
 // - EntryCard (Card compound do RDS) para as portas de entrada;
 //   CardVotacoesSemana/FeaturesGrid de @/components/home.
 // - TrustBadge (client island) mantido.
@@ -20,6 +21,8 @@
 import {
   Button,
   HeroSection,
+  Stat,
+  StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { ArrowRight, Clock, FileText, MapPin, Users, Vote } from 'lucide-react'
 import Link from 'next/link'
@@ -27,7 +30,6 @@ import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { EntryCard } from '@/components/home/entry-card'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
-import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { getPublicStats } from '@/lib/queries/stats-public'
@@ -106,32 +108,37 @@ export default async function Home() {
         description="Acompanhe deputados, votações, gastos parlamentares e a tramitação de proposições — direto das fontes oficiais."
         kicker="Dados oficiais do Legislativo"
         kpis={
-          <KpiCard
+          <StatGroup
             aria-label="Métricas do Brasil à Vera"
+            cols={4}
             floatingBadge={<TrustBadge trustLevel="L1" />}
-            items={[
-              {
-                icon: <Users className="h-6 w-6" />,
-                label: 'Parlamentares',
-                value: formatNumeroAbreviado(stats.totalParlamentares),
-              },
-              {
-                icon: <FileText className="h-6 w-6" />,
-                label: 'Proposições',
-                value: formatNumeroAbreviado(stats.totalProposicoes),
-              },
-              {
-                icon: <Vote className="h-6 w-6" />,
-                label: 'Votações',
-                value: formatNumeroAbreviado(stats.totalVotacoes),
-              },
-              {
-                icon: <Clock className="h-6 w-6" />,
-                label: 'Atualização',
-                value: 'Diária',
-              },
-            ]}
-          />
+            layout="grid"
+          >
+            <Stat
+              align="center"
+              icon={<Users className="h-6 w-6" />}
+              label="Parlamentares"
+              value={formatNumeroAbreviado(stats.totalParlamentares)}
+            />
+            <Stat
+              align="center"
+              icon={<FileText className="h-6 w-6" />}
+              label="Proposições"
+              value={formatNumeroAbreviado(stats.totalProposicoes)}
+            />
+            <Stat
+              align="center"
+              icon={<Vote className="h-6 w-6" />}
+              label="Votações"
+              value={formatNumeroAbreviado(stats.totalVotacoes)}
+            />
+            <Stat
+              align="center"
+              icon={<Clock className="h-6 w-6" />}
+              label="Atualização"
+              value="Diária"
+            />
+          </StatGroup>
         }
         meta="Câmara · Senado · Portal da Transparência · API pública · Sem cadastro"
         title="Transparência política sem ruído."

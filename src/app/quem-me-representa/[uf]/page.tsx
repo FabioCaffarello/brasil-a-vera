@@ -4,13 +4,14 @@
 import {
   Breadcrumb,
   HeroSection,
+  Stat,
+  StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { Building2, Gauge, Landmark, Users } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 import { ParlamentarFilter } from '@/components/parlamentar/parlamentar-filter'
 import { RepresentantesSection } from '@/components/parlamentar/representantes-section'
-import { KpiCard } from '@/design-system/compositions/kpi-card'
 import { getRepresentantesPorUf } from '@/lib/queries/representantes'
 import { isUfValida, nomeUf, UFS } from '@/lib/ufs'
 
@@ -85,31 +86,36 @@ export default async function RepresentantesUfPage({ params }: PageProps) {
         />
 
         {total > 0 ? (
-          <KpiCard
+          <StatGroup
             aria-label={`Resumo da representação de ${nome}`}
-            items={[
-              {
-                icon: <Users className="h-5 w-5" />,
-                label: 'Representantes',
-                value: String(total),
-              },
-              {
-                icon: <Landmark className="h-5 w-5" />,
-                label: 'Senadores',
-                value: String(senadores.length),
-              },
-              {
-                icon: <Building2 className="h-5 w-5" />,
-                label: 'Deputados',
-                value: String(deputados.length),
-              },
-              {
-                icon: <Gauge className="h-5 w-5" />,
-                label: 'Com dado de alinhamento',
-                value: `${pctComDado}%`,
-              },
-            ]}
-          />
+            cols={4}
+            layout="grid"
+          >
+            <Stat
+              align="center"
+              icon={<Users className="h-5 w-5" />}
+              label="Representantes"
+              value={String(total)}
+            />
+            <Stat
+              align="center"
+              icon={<Landmark className="h-5 w-5" />}
+              label="Senadores"
+              value={String(senadores.length)}
+            />
+            <Stat
+              align="center"
+              icon={<Building2 className="h-5 w-5" />}
+              label="Deputados"
+              value={String(deputados.length)}
+            />
+            <Stat
+              align="center"
+              icon={<Gauge className="h-5 w-5" />}
+              label="Com dado de alinhamento"
+              value={`${pctComDado}%`}
+            />
+          </StatGroup>
         ) : null}
 
         {total > 0 ? (
