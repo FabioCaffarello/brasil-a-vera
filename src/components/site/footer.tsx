@@ -21,7 +21,7 @@ import Link from 'next/link'
 export function Footer() {
   return (
     <footer className="border-border border-t bg-surface">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-foreground-muted text-sm">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-fg-tertiary text-sm">
         <div className="flex items-center gap-6">
           <Link
             className="group flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -33,7 +33,7 @@ export function Footer() {
             >
               <Eye className="h-3 w-3 text-white" />
             </span>
-            <span className="font-medium text-foreground">Brasil à Vera</span>
+            <span className="font-medium text-fg-primary">Brasil à Vera</span>
           </Link>
           <p className="hidden md:block">
             Dados oficiais da Câmara dos Deputados e do Senado Federal.
@@ -41,13 +41,13 @@ export function Footer() {
         </div>
         <nav aria-label="Footer" className="flex items-center gap-4">
           <Link
-            className="rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             href="/docs"
           >
             Como ler os dados
           </Link>
           <a
-            className="rounded transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             href="https://github.com/FabioCaffarello/brasil-a-vera"
             rel="noopener noreferrer"
             target="_blank"
@@ -55,7 +55,7 @@ export function Footer() {
             Código no GitHub ↗
           </a>
         </nav>
-        <p className="basis-full text-foreground-subtle md:hidden">
+        <p className="basis-full text-fg-quaternary md:hidden">
           Dados oficiais da Câmara dos Deputados e do Senado Federal.
         </p>
       </div>

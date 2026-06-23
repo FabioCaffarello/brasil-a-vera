@@ -128,11 +128,11 @@ export default function RootLayout({
             é bug nosso. Padrão React 19 recomendado para isolar a injeção
             ao nível em que ocorre (não cobre descendentes). */}
         <body
-          className="min-h-full bg-background text-foreground"
+          className="min-h-full bg-surface-canvas text-fg-primary"
           suppressHydrationWarning
         >
           <a
-            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-surface focus:px-3 focus:py-2 focus:font-medium focus:text-foreground focus:text-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-surface focus:px-3 focus:py-2 focus:font-medium focus:text-fg-primary focus:text-sm focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             href="#conteudo"
           >
             Pular para o conteúdo

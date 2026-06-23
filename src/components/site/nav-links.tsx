@@ -72,8 +72,8 @@ export function NavLinks({ personalLink }: Props = {}) {
                 'inline-flex items-center rounded-md px-3 py-1.5 font-medium transition-colors duration-150',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 isActive
-                  ? 'bg-foreground/10 text-foreground ring-1 ring-foreground/10'
-                  : 'text-foreground-muted hover:bg-foreground/5 hover:text-foreground',
+                  ? 'bg-fg-primary/10 text-fg-primary ring-1 ring-fg-primary/10'
+                  : 'text-fg-tertiary hover:bg-fg-primary/5 hover:text-fg-primary',
               )}
               href={link.href}
             >

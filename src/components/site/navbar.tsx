@@ -80,7 +80,7 @@ export async function Navbar() {
           >
             <Eye className="h-[18px] w-[18px] text-white" />
           </span>
-          <span className="-tracking-tight font-semibold text-[15px] text-foreground">
+          <span className="-tracking-tight font-semibold text-[15px] text-fg-primary">
             Brasil à Vera
           </span>
         </Link>

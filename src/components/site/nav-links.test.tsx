@@ -40,22 +40,22 @@ describe('NavLinks', () => {
     }
   })
 
-  it('todos os links idle têm tratamento neutro (text-foreground-muted, sem text-brand)', () => {
+  it('todos os links idle têm tratamento neutro (text-fg-tertiary, sem text-brand)', () => {
     mockedPathname.mockReturnValue('/votacoes')
     render(<NavLinks />)
     const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
     const docs = screen.getByRole('link', { name: 'Docs' })
-    expect(parlamentares.className).toContain('text-foreground-muted')
+    expect(parlamentares.className).toContain('text-fg-tertiary')
     expect(parlamentares.className).not.toContain('text-brand')
-    expect(docs.className).toContain('text-foreground-muted')
+    expect(docs.className).toContain('text-fg-tertiary')
   })
 
-  it('link active tem bg-foreground/10 + ring-foreground/10 (uniforme para todos)', () => {
+  it('link active tem bg-fg-primary/10 + ring-fg-primary/10 (uniforme para todos)', () => {
     mockedPathname.mockReturnValue('/parlamentares')
     render(<NavLinks />)
     const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
-    expect(parlamentares.className).toContain('bg-foreground/10')
-    expect(parlamentares.className).toContain('ring-foreground/10')
+    expect(parlamentares.className).toContain('bg-fg-primary/10')
+    expect(parlamentares.className).toContain('ring-fg-primary/10')
   })
 
   it('todos os links têm focus ring via token --ring', () => {

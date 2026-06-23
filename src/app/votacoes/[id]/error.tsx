@@ -36,21 +36,21 @@ export default function VotacaoError({ error, reset }: Props) {
     <div className="mx-auto max-w-2xl px-4 py-16">
       <div className="rounded-lg border border-border bg-surface p-8 text-center">
         <div className="mb-4 flex justify-center">
-          <AlertTriangle aria-hidden className="h-12 w-12 text-destructive" />
+          <AlertTriangle aria-hidden className="h-12 w-12 text-fg-error" />
         </div>
 
-        <h1 className="mb-2 font-semibold text-2xl text-foreground">
+        <h1 className="mb-2 font-semibold text-2xl text-fg-primary">
           Não foi possível carregar esta votação
         </h1>
 
-        <p className="mb-6 text-foreground-muted">
+        <p className="mb-6 text-fg-tertiary">
           Algo deu errado ao buscar os dados. Pode ser uma interrupção
           temporária na API oficial ou no nosso banco. Tente novamente em alguns
           segundos.
         </p>
 
         {error.digest ? (
-          <p className="mb-6 font-mono text-foreground-subtle text-xs">
+          <p className="mb-6 font-mono text-fg-quaternary text-xs">
             Código do erro: {error.digest}
           </p>
         ) : null}

@@ -94,11 +94,11 @@ function BarTooltip(props: CustomTooltipProps & { total: number }) {
   const pct = total > 0 ? Math.round((valor / total) * 100) : 0
   return (
     <div className="rounded-md border border-border bg-surface-elevated px-3 py-2 text-xs shadow-md">
-      <p className="font-medium text-foreground">
+      <p className="font-medium text-fg-primary">
         {String(item.payload?.categoria ?? '')}
       </p>
-      <p className="mt-0.5 tabular-nums text-foreground">{brl.format(valor)}</p>
-      <p className="text-foreground-muted">{pct}% do total CEAP no ano</p>
+      <p className="mt-0.5 tabular-nums text-fg-primary">{brl.format(valor)}</p>
+      <p className="text-fg-tertiary">{pct}% do total CEAP no ano</p>
     </div>
   )
 }
@@ -120,12 +120,12 @@ function LineTooltip({ active, payload, label }: CustomTooltipProps) {
           : 'igual à mediana'
   return (
     <div className="rounded-md border border-border bg-surface-elevated px-3 py-2 text-xs shadow-md">
-      <p className="font-medium text-foreground">{String(label ?? '')}</p>
+      <p className="font-medium text-fg-primary">{String(label ?? '')}</p>
       <div className="mt-1 space-y-0.5 tabular-nums">
         <p className="text-[var(--color-chart-2)]">
           Parlamentar: {brl.format(parlValue)}
         </p>
-        <p className="text-foreground-muted">
+        <p className="text-fg-tertiary">
           Mediana da casa: {brl.format(medValue)}
         </p>
         {deltaLabel ? (
@@ -134,8 +134,8 @@ function LineTooltip({ active, payload, label }: CustomTooltipProps) {
               delta > 0
                 ? 'text-warning'
                 : delta < 0
-                  ? 'text-success'
-                  : 'text-foreground-muted'
+                  ? 'text-fg-success'
+                  : 'text-fg-tertiary'
             }
           >
             {deltaLabel}
@@ -190,14 +190,14 @@ export function GastosChart({ categorias, mensal }: Props) {
         <section aria-labelledby="gastos-bar-titulo">
           <header className="mb-2">
             <h3
-              className="font-medium text-foreground text-sm"
+              className="font-medium text-fg-primary text-sm"
               id="gastos-bar-titulo"
             >
               Onde foi gasto
             </h3>
-            <p className="text-foreground-muted text-xs">
+            <p className="text-fg-tertiary text-xs">
               {barData.length} principais categorias · total{' '}
-              <span className="tabular-nums text-foreground">
+              <span className="tabular-nums text-fg-primary">
                 {brl.format(totalBar)}
               </span>
             </p>
@@ -279,24 +279,24 @@ export function GastosChart({ categorias, mensal }: Props) {
         <section aria-labelledby="gastos-line-titulo">
           <header className="mb-2">
             <h3
-              className="font-medium text-foreground text-sm"
+              className="font-medium text-fg-primary text-sm"
               id="gastos-line-titulo"
             >
               Quanto por mês vs casa
             </h3>
-            <p className="text-foreground-muted text-xs">
+            <p className="text-fg-tertiary text-xs">
               Comparação com a mediana mensal da casa do parlamentar
             </p>
           </header>
           <p className="mb-2 flex flex-wrap items-center gap-4 text-xs">
-            <span className="inline-flex items-center gap-1.5 text-foreground">
+            <span className="inline-flex items-center gap-1.5 text-fg-primary">
               <span
                 aria-hidden
                 className="h-0.5 w-5 rounded-full bg-[var(--color-chart-2)]"
               />
               <span className="font-medium">Parlamentar</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 text-foreground-muted">
+            <span className="inline-flex items-center gap-1.5 text-fg-tertiary">
               <span
                 aria-hidden
                 className="h-0.5 w-5 rounded-full border-[var(--color-chart-1)] border-t-2 border-dashed"
