@@ -148,7 +148,8 @@ escopo e sugira invocar Claude Code sem subagent restritivo.
 Após commit, sugira ao usuário:
 
 1. Rodar `npm run dev`.
-2. Abrir `/dev/design` (rota interna noindex).
+2. Conferir variantes do primitivo no **Storybook do RDS**; a integração
+   no app valida-se numa **rota de produto real** que o consome.
 3. Confirmar visualmente: variantes renderizam, focus ring visível,
    dark mode coerente.
 4. Tirar screenshot antes/depois e anexar ao PR.

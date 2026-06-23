@@ -89,8 +89,10 @@ Cada componente shadcn copiado segue o ciclo:
    em variantes-chave sem warnings.
 6. **Commit isolado**: mensagem `feat(ds): add <componente> primitive` para
    facilitar revert seletivo.
-7. **Revisão visual**: componente novo aparece em `/dev/design` (rota
-   interna, `noindex`, criada na Sprint 4.0) para QA visual manual.
+7. **Revisão visual**: primitivos no **Storybook do RDS**; a integração no
+   shell do app é validada em uma **rota de produto real**. (A rota interna
+   `/dev/design` da Sprint 4.0 foi eliminada — showroom redundante após a
+   consolidação no RDS, ADR-038, que zerou a camada de primitivos locais.)
 
 ### 4. Princípio 14 (implícito, descrito aqui)
 

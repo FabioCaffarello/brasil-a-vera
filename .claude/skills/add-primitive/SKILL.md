@@ -81,8 +81,8 @@ Após o subagent terminar, lembre o usuário de:
 - [ ] `npm run test` (incluindo a primitiva nova) passa local
 - [ ] Anexar bundle delta antes/depois no corpo do PR
 - [ ] Abrir o PR com label `area:design-system`
-- [ ] Confirmar visualmente em `/dev/design` se a primitiva estiver
-      em uso já (`npm run dev`)
+- [ ] Confirmar visualmente numa rota de produto real que consome a
+      primitiva, se já houver consumer (`npm run dev`)
 - [ ] Screenshot antes/depois no corpo do PR se houver consumer
       renderizando
 

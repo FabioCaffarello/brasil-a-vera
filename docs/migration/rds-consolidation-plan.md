@@ -87,7 +87,7 @@ stats-grid 1`.
 | `popover` | 1 | **X** | `Popover` | ✅ removido com o `Combobox` (#450) | médio | ✓ |
 | `rds-dialog` / `rds-toast` / `rds-autocomplete` | — | **D** | wrappers de bundle | manter — re-export `/granular` (razão de bundle, como `rds-accordion`) | — | — |
 | `card` | 3 | **R** | `Card` compound (`./server`) | ✅ consolidado (#456-follow; `CardContent`→`CardBody`, `CardDescription`→`CardSubtitle`, `CardFooter`→`CardActions`; spacer vazio da home virou `<div flex-1>` pois `CardBody` exige children) | médio | ✓ |
-| `tabs` (stateful) | 1 | **G** | só `TabsAsLinks` | FICA LOCAL: RDS só tem `TabsAsLinks` (sem tabs com estado interno) — único primitivo local restante | baixo | local |
+| `tabs` (stateful) | 0 | **R** | só `TabsAsLinks` | ✅ removido como órfão — o único consumer era o showroom `/dev/design`, eliminado. Levou junto a dep `@radix-ui/react-tabs` (última radix → **zero**). Tabs com estado segue gap do RDS; se surgir necessidade real, abrir issue (guard proíbe recriar local) | baixo | ✓ |
 
 ### Composições
 
@@ -183,17 +183,18 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
 
 **Estado final da `src/design-system/`:**
 
-- **Primitivas:** só `tabs` (único gap ratificado — RDS só tem `TabsAsLinks`) +
-  4 wrappers de bundle sancionados `rds-accordion`/`rds-autocomplete`/`rds-dialog`/
-  `rds-toast` (`'use client'` re-exportando `/granular` — evita vazar +294KB do
-  barrel num RSC). `card` também foi consolidado (Card compound do RDS).
+- **Primitivas:** **zero primitiva local** — só os 4 wrappers de bundle sancionados
+  `rds-accordion`/`rds-autocomplete`/`rds-dialog`/`rds-toast` (`'use client'`
+  re-exportando `/granular` — evita vazar +294KB do barrel num RSC). `card` foi
+  consolidado (Card compound do RDS); `tabs` foi removido como órfão (único consumer
+  era o showroom `/dev/design`, eliminado).
 - **Composições:** `party-badge` (ratificado, cores oficiais) +
   `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
   `data-badge` consolidado no `DataBadge` do RDS (v4.5, /server) — cópia local removida.
   `kpi-card` consolidado no `Stat`/`StatGroup` do RDS (v4.6, slot `floatingBadge`
   via [#245](https://github.com/FabioCaffarello/react-design-system/issues/245)) — cópia local removida.
-- **Zero duplicata local** de componente RDS. **Zero `@radix-ui/react-dialog`**
-  direto (deps radix de 7 → 1: só `react-tabs`, #455).
+- **Zero duplicata local** de componente RDS. **Zero deps `@radix-ui`** diretas
+  (de 7 → 0: a última, `react-tabs`, saiu com a remoção do `tabs` local).
 - **Resíduos de cor:** revisitados na fase ADR-039 (ver §"Resíduos de cor" acima) —
   charts (#460), on-success (#461) e o data-viz (`dataviz`, RDS #232, v4.5) migraram
   p/ o RDS; só `PartyBadge` segue ratificado.
@@ -202,4 +203,5 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
 de qualquer primitiva consolidada. A camada local em deprecação ativa fica honesta.
 
 **Follow-up:** `data-badge` consolidado (RDS #232 entregue na v4.5; `accent`→`dataviz`).
-`tabs` segue como único primitivo local por gap legítimo (RDS só tem `TabsAsLinks`).
+`kpi-card` consolidado no `StatGroup` (RDS #245, v4.6). `tabs` removido como órfão com
+a eliminação do showroom `/dev/design` — **camada de primitivos locais zerada**.

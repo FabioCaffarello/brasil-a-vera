@@ -60,9 +60,10 @@ as cores ficaram com tokens semânticos corretos.
 
 ### `/visual-qa`
 
-Roteiro interativo de QA visual antes de abrir PR. Te guia por
-`/dev/design`, rotas-amostra, mobile 360px, `prefers-reduced-motion`.
-Tipo de checklist que evita "mas funcionava na minha máquina".
+Roteiro interativo de QA visual antes de abrir PR. Te guia pelo
+Storybook do RDS (primitivos), rotas de produto reais, mobile 360px e
+`prefers-reduced-motion`. Tipo de checklist que evita "mas funcionava na
+minha máquina".
 
 ### `/plan-sprint <nome>` e `/new-adr <título>`
 
