@@ -84,7 +84,9 @@ npx shadcn@latest add <componente>
 #    - Antes/depois com `npm run build`. Registrar no corpo do PR.
 # 6. Commit isolado:
 #    git commit -m "feat(ds): add <componente> primitive"
-# 7. QA visual em /dev/design (rota interna, PR 7 da Sprint 4.0).
+# 7. QA visual: Storybook do RDS (primitivos) + rota de produto real
+#    (integração no shell do app). A rota /dev/design foi eliminada
+#    (showroom redundante pós-ADR-038).
 ```
 
 ## Tokens dispobíveis

@@ -2,9 +2,10 @@
 name: visual-qa
 description: |
   Roteiro interativo de QA visual antes de abrir um PR com mudanças
-  de UI. Caminha pelo /dev/design e por rotas-amostra em diferentes
-  viewports e media features. Use quando o usuário tiver acabado de
-  alterar componentes em src/design-system/** ou src/components/**.
+  de UI. Confere os primitivos no Storybook do RDS e caminha por
+  rotas de produto reais em diferentes viewports e media features.
+  Use quando o usuário tiver acabado de alterar componentes em
+  src/design-system/** ou src/components/**.
 ---
 
 Execute o roteiro abaixo passo a passo. A cada etapa, **espere
@@ -21,17 +22,17 @@ Confirme que:
 
 Se algum falhar, pare e peça correção antes do QA visual.
 
-## Passo 1 — `/dev/design`
+## Passo 1 — Primitivos no Storybook do RDS
+
+Os primitivos genéricos vivem no `@fabio.caffarello/react-design-system`
+(o BaV não tem mais primitiva local — ADR-038). Variantes de
+primitivo se conferem no **Storybook do RDS**, não numa rota do app.
 
 Pergunte ao usuário:
 
-> Abra http://localhost:3000/dev/design no navegador. A página tem
-> índice de todas as primitivas do design system. Confirme:
->
-> 1. Página renderiza sem erros no console
-> 2. Cada primitiva mostra suas variantes (default, secondary,
->    destructive etc. para Button; Tier 1 + Tier 2 que existirem)
-> 3. Focus ring aparece em Tab navigation (use Tab para percorrer)
+> Se a mudança envolve um primitivo do RDS, confira as variantes no
+> Storybook do RDS (repo do design system). Aqui no BaV o foco do QA
+> é a **integração** no shell do app — siga para o Passo 2.
 >
 > ✓ ok / ✗ problema?
 

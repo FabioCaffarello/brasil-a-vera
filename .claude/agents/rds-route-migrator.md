@@ -64,9 +64,10 @@ este arquivo precisa de PR de correção.
 
 - `npm run check` + `npm run build` (tempo é canário) + `npx vitest run`.
 - `npm run guard:rds-noop` + `npm run guard:rds-primitive` (os dois verdes).
-- QA visual lado a lado em `next start`: `/dev/design` + uma rota-amostra que
-  consome o componente, **desktop e mobile** (atento ao bug #416: `layer(rds)`
+- QA visual em `next start`: uma **rota de produto real** que consome o
+  componente, **desktop e mobile** (atento ao bug #416: `layer(rds)`
   no import do CSS — `hidden sm:block` não pode colapsar no desktop).
+  Primitivos do RDS se conferem no Storybook do RDS.
 - **Delta de JS medido** quando a troca toca o path client: esperado ~neutro;
   chunk novo do RDS no client → PARE e meça antes de aceitar.
 - Os testes locais da primitiva removida saem/migram junto no mesmo PR.

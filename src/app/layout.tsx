@@ -24,7 +24,7 @@ const inter = Inter({
 })
 
 // Geist Mono preservada como --font-mono para código/diagnósticos
-// (ex.: WCAG audit display, tokens output em /dev/design).
+// (ex.: WCAG audit display, output de tokens em páginas de docs).
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
