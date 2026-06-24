@@ -1,4 +1,6 @@
+import { EmptyStateBase } from '@fabio.caffarello/react-design-system/server'
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 interface Props {
   /** Ícone Lucide opcional, decorativo (aria-hidden). */
@@ -6,32 +8,31 @@ interface Props {
   title: string
   description?: string
   /** Ação opcional — geralmente um link "Limpar filtros" ou similar. */
-  action?: React.ReactNode
+  action?: ReactNode
 }
 
-// Empty state visualmente refinado para listagens. Não substitui os
-// empty states densos com copy honesto (Top 5, Pares, Alinhamento, etc)
-// — apenas para casos onde a ausência é por filtro/contexto, não por
-// limitação estrutural do dado.
+// Empty state de listagem, consolidado sobre o `EmptyStateBase` server-safe do
+// RDS (ADR-053; issue #252, v4.9). O layout (title/message/illustration/action)
+// vem do core do design system; este wrapper só mapeia a API do projeto
+// (icon→illustration em círculo, description→message) e preserva a borda
+// dashed. Zero-JS — o slot `action` aceita um `<a href>` server-rendered.
 //
-// Sprint 3.1 Tarefa 4.B — refinement aplicado.
-// Sprint 4.2 PR 3 — migrado para tokens semânticos OKLCH.
-// Fase B (ADR-034) — tokens RDS via token-map.md.
+// Não substitui os empty states densos com copy honesto (Top 5, Pares,
+// Alinhamento, etc) — apenas casos onde a ausência é por filtro/contexto.
 export function EmptyState({ icon: Icon, title, description, action }: Props) {
   return (
-    <div className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-8 text-center">
-      {Icon && (
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-surface-raised text-fg-tertiary">
-          <Icon aria-hidden className="size-6" />
-        </div>
-      )}
-      <p className="font-medium text-fg-primary text-sm">{title}</p>
-      {description && (
-        <p className="mx-auto mt-1 max-w-md text-fg-tertiary text-sm">
-          {description}
-        </p>
-      )}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
+    <EmptyStateBase
+      action={action}
+      className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-8 text-center"
+      illustration={
+        Icon ? (
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-surface-raised text-fg-tertiary">
+            <Icon aria-hidden className="size-6" />
+          </div>
+        ) : undefined
+      }
+      message={description}
+      title={title}
+    />
   )
 }
