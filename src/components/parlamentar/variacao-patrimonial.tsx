@@ -5,6 +5,7 @@
 // sem cor de juízo. Nota de fonte obrigatória — é a DECLARAÇÃO de bens à Justiça
 // Eleitoral, não renda nem movimentação. Distinto de gastos (CEAP) — D4.
 
+import Link from 'next/link'
 import { formatBRL } from '@/lib/format'
 import type { VariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
 
@@ -44,6 +45,13 @@ export function VariacaoPatrimonialBlock({ variacao }: Props) {
         de {variacao.pleitoDe} e {variacao.pleitoAte} — não é renda nem
         movimentação bancária, e reflete o que foi declarado em cada eleição.
       </p>
+
+      <Link
+        className="text-fg-tertiary text-xs underline decoration-dotted underline-offset-2 hover:text-fg-primary"
+        href="/rankings/patrimonio"
+      >
+        Ver ranking de variação patrimonial →
+      </Link>
     </div>
   )
 }
