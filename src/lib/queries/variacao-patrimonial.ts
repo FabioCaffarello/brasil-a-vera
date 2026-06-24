@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, sql } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import {
@@ -76,4 +76,56 @@ export async function getVariacaoPatrimonial(
 ): Promise<VariacaoPatrimonial | null> {
   const ranking = await getVariacaoPatrimonialRanking()
   return ranking[parlamentarId] ?? null
+}
+
+export interface LeaderboardPatrimonioEntry {
+  id: string
+  nome: string
+  partidoSigla: string | null
+  uf: string
+  urlFoto: string | null
+  casa: 'CAMARA' | 'SENADO'
+  variacao: VariacaoPatrimonial
+}
+
+// Retorna todos os parlamentares com variação patrimonial calculada, ordenados
+// por deltaRealAbs decrescente (maiores ganhos primeiro). Reusa o ranking
+// cacheado — custo marginal zero quando cache está quente.
+export async function getLeaderboardPatrimonio(): Promise<
+  LeaderboardPatrimonioEntry[]
+> {
+  return cached('patrimonio:leaderboard', TTL.patrimonioDeclarado, async () => {
+    const ranking = await getVariacaoPatrimonialRanking()
+    const ids = Object.keys(ranking)
+    if (ids.length === 0) return []
+
+    const parlamentares = await db
+      .select({
+        id: parlamentar.id,
+        nome: parlamentar.nome,
+        partidoSigla: parlamentar.partidoSigla,
+        uf: parlamentar.uf,
+        urlFoto: parlamentar.urlFoto,
+        casa: parlamentar.casa,
+      })
+      .from(parlamentar)
+      .where(inArray(parlamentar.id, ids))
+
+    return parlamentares
+      .filter((p) => ranking[p.id] !== undefined)
+      .map((p) => ({
+        id: p.id,
+        nome: p.nome,
+        partidoSigla: p.partidoSigla,
+        uf: p.uf,
+        urlFoto: p.urlFoto,
+        casa: p.casa as 'CAMARA' | 'SENADO',
+        variacao: ranking[p.id],
+      }))
+      .sort(
+        (a, b) =>
+          parseFloat(b.variacao.deltaRealAbs) -
+          parseFloat(a.variacao.deltaRealAbs),
+      )
+  })
 }
