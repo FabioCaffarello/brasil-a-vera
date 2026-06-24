@@ -426,5 +426,18 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 2,
       timeoutMin: 5,
     },
+    // Vetos presidenciais e votos nominais do Senado (Sprint 13.2, ADR-059).
+    // Chain 3-níveis: lista vetos por ano → dispositivos → votos CN.
+    // Janela 2023..ano_corrente (~4 anos × ~50 vetos × ~3 disps = ~600 calls).
+    // tier 0: depende apenas de parlamentar populado (ingestão diária de runs
+    // anteriores) para o match nome+UF → parlamentar_id.
+    {
+      id: 'senado-vetos',
+      script: 'ingest:senado:vetos',
+      context: 'ingestion-senado-vetos',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 30,
+    },
   ],
 )
