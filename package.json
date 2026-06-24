@@ -60,6 +60,7 @@
     "ingest:camara:blocos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/blocos.ts",
     "ingest:senado:blocos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/blocos.ts",
     "ingest:camara:frentes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/frentes.ts",
+    "ingest:camara:mesa-diretora": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/mesa-diretora.ts",
     "ingest:camara:sessoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/sessoes.ts",
     "ingest:senado:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/discursos.ts",
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",
