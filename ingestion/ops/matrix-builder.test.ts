@@ -64,6 +64,7 @@ describe('buildTierMatrices', () => {
     expect(tiers[1].map((e) => e.id)).toEqual([
       'tse-bens',
       'camara-mesa-diretora',
+      'senado-afastamentos',
     ])
     expect(tiers[2].map((e) => e.id)).toEqual(['senado-backfill-cpf'])
   })
