@@ -235,6 +235,38 @@ export const frenteMembro = parlamentaresSchema.table(
   ],
 )
 
+// Sprint 13.0 — G10: afastamentos e licenças de senadores (ADR-058).
+// Explica votos AUSENTE — senador pode estar em licença médica, exercendo
+// cargo no Executivo, etc. Fonte: /senador/{id}/licencas. Trust L1, mensal.
+export const afastamentoSenador = parlamentaresSchema.table(
+  'afastamento_senador',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    motivoSigla: text('motivo_sigla').notNull(),
+    motivoDescricao: text('motivo_descricao'),
+    dataInicio: date('data_inicio').notNull(),
+    dataFim: date('data_fim'),
+    trustLevel: trustLevel('trust_level').notNull().default('L1'),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('afastamento_senador_natural_key').on(
+      table.parlamentarId,
+      table.motivoSigla,
+      table.dataInicio,
+    ),
+    index('afastamento_senador_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
 export const membroComissao = parlamentaresSchema.table(
   'membro_comissao',
   {

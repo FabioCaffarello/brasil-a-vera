@@ -402,6 +402,18 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 1,
       timeoutMin: 5,
     },
+    // Afastamentos e licenças de senadores (Sprint 13.0, ADR-058).
+    // Loop por ~80 senadores, GET /senador/{id}/licencas por senador.
+    // Explica votos AUSENTE — senador pode estar em licença médica,
+    // cargo no Executivo, etc. Depende de senado-senadores (tier 0).
+    {
+      id: 'senado-afastamentos',
+      script: 'ingest:senado:afastamentos',
+      context: 'ingestion-senado-afastamentos',
+      cadence: 'monthly',
+      tier: 1,
+      timeoutMin: 15,
+    },
     // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
     // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
     // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
