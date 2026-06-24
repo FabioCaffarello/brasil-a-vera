@@ -267,6 +267,37 @@ export const afastamentoSenador = parlamentaresSchema.table(
   ],
 )
 
+// Sprint 14.0 — G11: carreira política pré-mandato (Câmara).
+// Fonte: GET /deputados/{id}/mandatosExternos — verificado via TSE, não autodeclarado.
+// Câmara-only; Senado não expõe endpoint equivalente. Trust L1, mensal.
+export const mandatoExterno = parlamentaresSchema.table(
+  'mandato_externo',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    cargo: text('cargo').notNull(),
+    siglaUf: text('sigla_uf'),
+    municipio: text('municipio'),
+    anoInicio: integer('ano_inicio'),
+    anoFim: integer('ano_fim'),
+    siglaPartidoEleicao: text('sigla_partido_eleicao'),
+    trustLevel: trustLevel('trust_level').notNull().default('L1'),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    // Sem unique constraint: anoInicio e siglaUf são nullable (cargo federal não
+    // tem UF). Ingestão usa DELETE-by-parlamentar_id + INSERT (princípio 5).
+    index('mandato_externo_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
 export const membroComissao = parlamentaresSchema.table(
   'membro_comissao',
   {
