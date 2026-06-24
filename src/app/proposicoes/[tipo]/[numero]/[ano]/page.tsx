@@ -16,7 +16,7 @@ import {
   Stat,
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
-import { Clock, FileText, Tag, Users } from 'lucide-react'
+import { Clock, FileText, Gavel, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
 import {
   DetailLayout,
@@ -27,6 +27,7 @@ import { AutoresList } from '@/components/proposicao/autores-list'
 import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
 import { FooterCrossLinks } from '@/components/proposicao/footer-cross-links'
 import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
+import { RelatoriasList } from '@/components/proposicao/relatorias-list'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
@@ -56,6 +57,7 @@ import {
   getProposicoesMesmoTema,
 } from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
+import { getRelatoresByProposicao } from '@/lib/queries/relatorias'
 import {
   buildKpiSlotsDetalhe,
   type KpiTone,
@@ -221,6 +223,7 @@ export default async function ProposicaoDetalhePage({
     stats,
     apoioPartido,
     votosConsolidados,
+    relatorias,
   ] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
@@ -235,6 +238,7 @@ export default async function ProposicaoDetalhePage({
     getProposicaoStats(proposicao.id),
     getApoioPorPartido(proposicao.id),
     getVotosConsolidados(proposicao.id),
+    getRelatoresByProposicao(proposicao.id),
   ])
 
   // 4 slots narrativos do KpiStrip do detalhe (módulo de domínio puro).
@@ -336,6 +340,12 @@ export default async function ProposicaoDetalhePage({
       content: <TemasList temas={temas} />,
     },
     {
+      id: 'relator',
+      navLabel: 'Relator',
+      icon: <Gavel className="h-4 w-4" />,
+      content: <RelatoriasList relatorias={relatorias} />,
+    },
+    {
       id: 'autores',
       navLabel: 'Autores',
       subtitle:
@@ -416,7 +426,7 @@ export default async function ProposicaoDetalhePage({
           ]}
         />
       }
-      defaultOpenMobile={['tramitacao', 'autores']}
+      defaultOpenMobile={['tramitacao', 'relator', 'autores']}
       footer={
         <FooterCrossLinks
           autorPrincipalNome={autorPrincipal?.nome ?? null}
@@ -447,7 +457,7 @@ export default async function ProposicaoDetalhePage({
           }
         />
       }
-      mobileOrder={['tramitacao', 'autores', 'votacoes', 'temas']}
+      mobileOrder={['tramitacao', 'relator', 'autores', 'votacoes', 'temas']}
       sections={sections}
       stats={
         <StatGroup

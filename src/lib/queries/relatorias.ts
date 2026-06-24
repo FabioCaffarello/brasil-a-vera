@@ -13,6 +13,54 @@ import {
   relatoria,
 } from '@/shared/db/schema'
 
+export interface RelatorProposicao {
+  id: string
+  casa: 'CAMARA' | 'SENADO'
+  parlamentarId: string | null
+  relatorSourceId: string
+  designadoEm: string | null
+  parlamentarNome: string | null
+  parlamentarPartidoSigla: string | null
+  parlamentarUf: string | null
+}
+
+export async function getRelatoresByProposicao(
+  proposicaoId: string,
+): Promise<RelatorProposicao[]> {
+  return cached(
+    `proposicao:relatorias:${proposicaoId}`,
+    TTL.relatorias,
+    async () => {
+      const rows = await db
+        .select({
+          id: relatoria.id,
+          casa: relatoria.casa,
+          parlamentarId: relatoria.parlamentarId,
+          relatorSourceId: relatoria.relatorSourceId,
+          designadoEm: relatoria.designadoEm,
+          parlamentarNome: parlamentar.nome,
+          parlamentarPartidoSigla: parlamentar.partidoSigla,
+          parlamentarUf: parlamentar.uf,
+        })
+        .from(relatoria)
+        .leftJoin(parlamentar, eq(parlamentar.id, relatoria.parlamentarId))
+        .where(eq(relatoria.proposicaoId, proposicaoId))
+        .orderBy(relatoria.casa)
+
+      return rows.map((r) => ({
+        id: r.id,
+        casa: r.casa,
+        parlamentarId: r.parlamentarId,
+        relatorSourceId: r.relatorSourceId,
+        designadoEm: r.designadoEm,
+        parlamentarNome: r.parlamentarNome ?? null,
+        parlamentarPartidoSigla: r.parlamentarPartidoSigla ?? null,
+        parlamentarUf: r.parlamentarUf ?? null,
+      }))
+    },
+  )
+}
+
 // Camada de dados do confronto de relatorias (ADR-044). Dois ângulos
 // determinísticos, em funções separadas:
 //   - getRelatoriasInfluencia → "relatou N proposições" (L2);
