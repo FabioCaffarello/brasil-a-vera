@@ -41,10 +41,11 @@ async function processDeputado(
   dep: { id: string; sourceId: string },
   stats: MandatosStats,
 ): Promise<void> {
-  const sourceUrl = `${BASE_URL}/deputados/${dep.sourceId}/mandatosExternos`
+  const apiPath = `/deputados/${dep.sourceId}/mandatosExternos`
+  const sourceUrl = `${BASE_URL}${apiPath}`
   let raw: unknown
   try {
-    raw = await fetchJson(sourceUrl)
+    raw = await fetchJson(apiPath)
   } catch (err) {
     stats.errors.push({
       context: `dep:${dep.sourceId}:fetch`,
