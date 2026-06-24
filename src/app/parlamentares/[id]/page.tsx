@@ -64,6 +64,7 @@ import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { QuemE } from '@/components/parlamentar/quem-e'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patrimonial'
+import { VotacoesComissao } from '@/components/parlamentar/votacoes-comissao'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatPercentil } from '@/lib/format'
@@ -122,6 +123,7 @@ import {
   getRelatoriasInfluencia,
 } from '@/lib/queries/relatorias'
 import { getVariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
+import { getVotacoesComissaoByParlamentar } from '@/lib/queries/votacoes-comissao'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
 const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
@@ -274,6 +276,7 @@ export default async function ParlamentarPerfilPage({
     discursos,
     liderancas,
     frentes,
+    votacoesComissao,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -320,6 +323,13 @@ export default async function ParlamentarPerfilPage({
     getDiscursosParlamentar(parlamentar.id),
     getLiderancasByParlamentar(parlamentar.id),
     getFrentesByParlamentar(parlamentar.id),
+    // Votações em comissão: Senado-only (ADR-057). Para deputados retorna []
+    // imediatamente (parlamentar_id não existe na tabela Senado-only).
+    parlamentar.casa === 'SENADO'
+      ? getVotacoesComissaoByParlamentar(parlamentar.id)
+      : Promise.resolve(
+          [] as Awaited<ReturnType<typeof getVotacoesComissaoByParlamentar>>,
+        ),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -524,6 +534,19 @@ export default async function ParlamentarPerfilPage({
       icon: <Gavel className="h-4 w-4" />,
       content: <ComissoesMembro {...comissoes} />,
     },
+    ...(parlamentar.casa === 'SENADO'
+      ? [
+          {
+            id: 'votacoes-comissao',
+            navLabel: 'Comissão (votos)',
+            title: 'Votações em comissão',
+            subtitle:
+              'Votações nominais do senador em comissões do Senado (ADR-057). Apenas votos individuais registrados — votações simbólicas sem roll call não aparecem.',
+            icon: <Gavel className="h-4 w-4" />,
+            content: <VotacoesComissao votacoes={votacoesComissao} />,
+          },
+        ]
+      : []),
     {
       id: 'liderancas',
       navLabel: 'Cargos',

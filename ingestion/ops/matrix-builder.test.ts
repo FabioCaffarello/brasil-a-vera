@@ -19,6 +19,7 @@ describe('buildTierMatrices', () => {
       'camara-votacoes',
       'senado-proposicoes',
       'senado-votacoes',
+      'senado-votacoes-comissao',
     ])
     expect(tiers[2].map((e) => e.id).sort()).toEqual([
       'camara-backfill-votacao-proposicao',

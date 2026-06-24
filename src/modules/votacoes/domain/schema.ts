@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import {
   boolean,
   char,
+  date,
   index,
   integer,
   pgSchema,
@@ -177,5 +178,69 @@ export const presencaSessao = votacoesSchema.table(
       name: 'presenca_sessao_pk',
     }),
     index('presenca_sessao_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
+// Votação nominal em comissão do Senado (ADR-057).
+// Tabela separada de `votacao`: sem `aprovada` (resultado é texto livre),
+// sem coluna `casa` (Senado-only), com `comissao_sigla` como identificador
+// do colegiado deliberante.
+export const votacaoComissaoSenado = votacoesSchema.table(
+  'votacao_comissao_senado',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    sourceId: text('source_id').notNull(),
+    comissaoSigla: text('comissao_sigla').notNull(),
+    dataSessao: date('data_sessao').notNull(),
+    descricao: text('descricao').notNull(),
+    resultado: text('resultado'),
+    // codigoMateria como text — backfill para proposicao_id em sprint futura.
+    materiaSourceId: text('materia_source_id'),
+    votosSim: integer('votos_sim').notNull(),
+    votosNao: integer('votos_nao').notNull(),
+    abstencoes: integer('abstencoes').notNull(),
+    trustLevel: trustLevel('trust_level').notNull(),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('votacao_comissao_senado_source_id_unique').on(table.sourceId),
+    index('votacao_comissao_senado_comissao_sigla_idx').on(table.comissaoSigla),
+    index('votacao_comissao_senado_data_sessao_idx').on(table.dataSessao),
+  ],
+)
+
+// Voto nominal em comissão do Senado — filha de votacao_comissao_senado.
+// `parlamentar_id` nullable: senadores fora do lookup (mandatos anteriores,
+// suplências) são registrados via `senador_source_id` sem FK resolvida.
+export const votoNominalComissaoSenado = votacoesSchema.table(
+  'voto_nominal_comissao_senado',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    votacaoId: uuid('votacao_id')
+      .notNull()
+      .references(() => votacaoComissaoSenado.id, { onDelete: 'cascade' }),
+    parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
+      onDelete: 'set null',
+    }),
+    senadorSourceId: text('senador_source_id').notNull(),
+    voto: tipoVoto('voto').notNull(),
+    partidoSiglaVoto: text('partido_sigla_voto'),
+    ufVoto: char('uf_voto', { length: 2 }),
+  },
+  (table) => [
+    uniqueIndex('voto_nominal_comissao_senado_votacao_senador_unique').on(
+      table.votacaoId,
+      table.senadorSourceId,
+    ),
+    index('voto_nominal_comissao_senado_parlamentar_id_idx').on(
+      table.parlamentarId,
+    ),
   ],
 )
