@@ -624,13 +624,32 @@ export default async function ParlamentarPerfilPage({
         'Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido.',
       icon: <TrendingDown className="h-4 w-4" />,
       content: (
-        <GastosResumoBlock
-          ano={anoCorrente}
-          mensal={gastosMensal}
-          parlamentarId={parlamentar.id}
-          resumo={gastos}
-          topFornecedores={gastosTopFornecedores}
-        />
+        <div className="space-y-4">
+          <GastosResumoBlock
+            ano={anoCorrente}
+            mensal={gastosMensal}
+            parlamentarId={parlamentar.id}
+            resumo={gastos}
+            topFornecedores={gastosTopFornecedores}
+          />
+          {parlamentar.casa === 'CAMARA' && gastos.totalRegistros > 0 && (
+            <div className="flex justify-end">
+              <CompartilharButton
+                campaign="gasto"
+                fato={{
+                  mensagem: `Gastou ${formatBRL(gastos.totalGeral)} em cota parlamentar (CEAP) em ${anoCorrente}${comparacoes.percentilGastoCasa !== null ? ` — ${formatPercentil(comparacoes.percentilGastoCasa)} entre os deputados federais` : ''}.`,
+                }}
+                parlamentar={{
+                  nome: parlamentar.nome,
+                  partidoSigla: parlamentar.partidoSigla ?? '',
+                  uf: parlamentar.uf,
+                  casa: parlamentar.casa,
+                }}
+                path={`/parlamentares/${parlamentar.id}/fato/gasto`}
+              />
+            </div>
+          )}
+        </div>
       ),
     },
     ...(patrimonio
