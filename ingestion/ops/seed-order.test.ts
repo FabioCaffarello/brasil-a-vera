@@ -71,9 +71,9 @@ describe('buildSeedOrder', () => {
       at('ingest:senado:votacoes'),
     )
 
-    // tse-bens é a última ingestão, antes só dos agregados.
+    // backfill:senado:cpf é a última ingestão (monthly/t2, após tse-bens/t1).
     const ingestion = order.filter((s) => !AGGREGATE_STEPS.includes(s))
-    expect(ingestion.at(-1)).toBe('ingest:tse:bens')
+    expect(ingestion.at(-1)).toBe('backfill:senado:cpf')
   })
 
   it('mantém daily → weekly → monthly (salvo o hoist do cpf)', () => {

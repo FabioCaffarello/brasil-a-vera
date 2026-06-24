@@ -326,5 +326,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 1,
       timeoutMin: 30,
     },
+    // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
+    // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
+    // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
+    // rodar. No-op idempotente após preenchimento inicial.
+    {
+      id: 'senado-backfill-cpf',
+      script: 'backfill:senado:cpf',
+      context: 'ingestion-senado-backfill-cpf',
+      cadence: 'monthly',
+      tier: 2,
+      timeoutMin: 5,
+    },
   ],
 )
