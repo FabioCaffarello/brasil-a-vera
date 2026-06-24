@@ -19,6 +19,7 @@ import {
 import {
   ArrowRight,
   Award,
+  Briefcase,
   Building2,
   CalendarCheck,
   FileText,
@@ -55,6 +56,7 @@ import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
 import { LeituraRapida } from '@/components/parlamentar/leitura-rapida'
 import { LiderancasCargos } from '@/components/parlamentar/liderancas-cargos'
+import { MandatosExternos } from '@/components/parlamentar/mandatos-externos'
 import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
@@ -94,6 +96,7 @@ import {
   getFrentesByParlamentar,
   getLiderancasByParlamentar,
 } from '@/lib/queries/liderancas'
+import { getMandatosExternosByParlamentar } from '@/lib/queries/mandatos-externos'
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
@@ -283,6 +286,7 @@ export default async function ParlamentarPerfilPage({
     votacoesComissao,
     afastamentosAtivos,
     votosParlamentarVetos,
+    mandatosExternos,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -345,6 +349,13 @@ export default async function ParlamentarPerfilPage({
       ? getVotosByParlamentar(parlamentar.id)
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getVotosByParlamentar>>,
+        ),
+    // Mandatos externos: Câmara-only (Sprint 14.0, G11). Para senadores retorna []
+    // — endpoint não existe no Senado; tabela é Câmara-only por design.
+    parlamentar.casa === 'CAMARA'
+      ? getMandatosExternosByParlamentar(parlamentar.id)
+      : Promise.resolve(
+          [] as Awaited<ReturnType<typeof getMandatosExternosByParlamentar>>,
         ),
   ])
 
@@ -600,6 +611,19 @@ export default async function ParlamentarPerfilPage({
       icon: <Award className="h-4 w-4" />,
       content: <LiderancasCargos frentes={frentes} liderancas={liderancas} />,
     },
+    ...(parlamentar.casa === 'CAMARA'
+      ? [
+          {
+            id: 'mandatos-externos',
+            navLabel: 'Carreira',
+            title: 'Carreira política anterior',
+            subtitle:
+              'Mandatos eletivos anteriores ao mandato atual verificados pelo TSE. Inclui prefeituras, vereadores, governadores e outros cargos eleitos. Câmara-only; Senado não publica endpoint equivalente.',
+            icon: <Briefcase className="h-4 w-4" />,
+            content: <MandatosExternos mandatos={mandatosExternos} />,
+          },
+        ]
+      : []),
     {
       id: 'relatorias',
       navLabel: 'Relatorias',

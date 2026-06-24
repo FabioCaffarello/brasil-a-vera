@@ -48,6 +48,8 @@ export const TTL = {
   // Vetos presidenciais (ADR-059): ingestão mensal → 24h. Dispositivos e votos
   // raramente mudam depois que o resultado é apurado.
   vetos: 86_400,
+  // Mandatos externos de deputados (Sprint 14.0, G11): ingestão mensal → 24h.
+  mandatosExternos: 86_400,
   // Pares de votos em direções opostas (coerência, ADR-054). Só mudam quando
   // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
   // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.
