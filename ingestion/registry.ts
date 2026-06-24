@@ -439,5 +439,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 30,
     },
+    // Mandatos externos (carreira pré-mandato) de deputados federais (Sprint 14.0, G11).
+    // Fonte: GET /deputados/{id}/mandatosExternos — TSE-verificado, não autodeclarado.
+    // ~534 deputados × 1 call × 300ms = ~2.7min. DELETE+INSERT por deputado.
+    // tier 0: depende apenas de camara-deputados populado.
+    {
+      id: 'camara-mandatos-externos',
+      script: 'ingest:camara:mandatos-externos',
+      context: 'ingestion-camara-mandatos-externos',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 15,
+    },
   ],
 )
