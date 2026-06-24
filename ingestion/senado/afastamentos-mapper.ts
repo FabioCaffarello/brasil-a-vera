@@ -1,7 +1,7 @@
 // Mapper puro: converte o envelope parsed do Senado para os valores que
 // serão gravados na tabela `afastamento_senador` (Sprint 13.0, ADR-058).
 
-import type { SenadorLicencasEnvelope } from './afastamentos-schema'
+import type { LicencaParlamentarEnvelope } from './afastamentos-schema'
 
 export interface AfastamentoRow {
   motivoSigla: string
@@ -11,9 +11,10 @@ export interface AfastamentoRow {
 }
 
 export function mapAfastamentos(
-  envelope: SenadorLicencasEnvelope,
+  envelope: LicencaParlamentarEnvelope,
 ): AfastamentoRow[] {
-  const licencas = envelope.SenadorLicencas.Licencas?.Licenca ?? []
+  const licencas =
+    envelope.LicencaParlamentar.Parlamentar?.Licencas?.Licenca ?? []
   const rows: AfastamentoRow[] = []
   for (const l of licencas) {
     if (!l.dataInicio) continue
