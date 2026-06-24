@@ -65,6 +65,7 @@ import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { QuemE } from '@/components/parlamentar/quem-e'
 import { Relatorias } from '@/components/parlamentar/relatorias'
 import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patrimonial'
+import { VetosSenador } from '@/components/parlamentar/vetos-senador'
 import { VotacoesComissao } from '@/components/parlamentar/votacoes-comissao'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { decodeCursor } from '@/lib/cursor'
@@ -125,6 +126,7 @@ import {
   getRelatoriasInfluencia,
 } from '@/lib/queries/relatorias'
 import { getVariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
+import { getVotosByParlamentar } from '@/lib/queries/vetos'
 import { getVotacoesComissaoByParlamentar } from '@/lib/queries/votacoes-comissao'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
@@ -280,6 +282,7 @@ export default async function ParlamentarPerfilPage({
     frentes,
     votacoesComissao,
     afastamentosAtivos,
+    votosParlamentarVetos,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -336,6 +339,13 @@ export default async function ParlamentarPerfilPage({
     // Afastamentos ativos: Senado-only (ADR-058). Para deputados retorna []
     // (tabela filtra por parlamentar_id; nunca há linhas Câmara).
     getAfastamentosAtivosSenador(parlamentar.id),
+    // Vetos: Senado-only (ADR-059). Para deputados retorna [] imediatamente —
+    // a ingestão só popula voto_veto para senadores.
+    parlamentar.casa === 'SENADO'
+      ? getVotosByParlamentar(parlamentar.id)
+      : Promise.resolve(
+          [] as Awaited<ReturnType<typeof getVotosByParlamentar>>,
+        ),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -569,6 +579,15 @@ export default async function ParlamentarPerfilPage({
               'Votações nominais do senador em comissões do Senado (ADR-057). Apenas votos individuais registrados — votações simbólicas sem roll call não aparecem.',
             icon: <Gavel className="h-4 w-4" />,
             content: <VotacoesComissao votacoes={votacoesComissao} />,
+          },
+          {
+            id: 'vetos',
+            navLabel: 'Vetos',
+            title: 'Vetos presidenciais',
+            subtitle:
+              'Como o senador votou na apreciação de vetos presidenciais pelo Congresso Nacional (sessão conjunta). "Sim" = manteve o veto; "Não" = votou para derrubar. ADR-059.',
+            icon: <Vote className="h-4 w-4" />,
+            content: <VetosSenador vetos={votosParlamentarVetos} />,
           },
         ]
       : []),

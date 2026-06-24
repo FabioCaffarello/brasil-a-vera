@@ -218,6 +218,20 @@
       "when": 1782784800000,
       "tag": "0030_votacao_comissao_senado",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1782871200000,
+      "tag": "0031_afastamento_senador",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1782957600000,
+      "tag": "0032_veto",
+      "breakpoints": true
     }
   ]
 }
