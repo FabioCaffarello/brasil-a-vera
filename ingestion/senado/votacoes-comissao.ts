@@ -209,12 +209,16 @@ export async function ingestVotacoesComissaoSenado(
     })
     .filter((x): x is NonNullable<typeof x> => x !== null)
 
-  // Separa plenário (SF ou sem colegiado) de comissão.
-  // siglaColegiado null/absent = não identificável → descarta (conservador).
+  // Grafias de plenário conhecidas na API do Senado:
+  // "SF" = Senado Federal (sessão formal); "PLEN" = plenário em formato abreviado.
+  // Conservador: sigla ausente/nula descarta — melhor falso negativo que gravar
+  // voto plenário como se fosse de comissão.
+  const SIGLAS_PLENARIO = new Set(['SF', 'PLEN'])
+
   const comissao: Array<{ v: SenadoVotacao; sigla: string }> = []
   for (const v of parsed) {
     const sigla = v.informeLegislativo?.siglaColegiado
-    if (!sigla || sigla === 'SF') {
+    if (!sigla || SIGLAS_PLENARIO.has(sigla)) {
       stats.votacoesPlenario++
     } else {
       stats.votacoesComissao++

@@ -30,6 +30,7 @@ import { PerfilProposicaoHeader } from '@/components/proposicao/perfil-header'
 import { RelatoriasList } from '@/components/proposicao/relatorias-list'
 import { TemasList } from '@/components/proposicao/temas-list'
 import { TramitacaoTimeline } from '@/components/proposicao/tramitacao-timeline'
+import { VotacoesComissaoSenado } from '@/components/proposicao/votacoes-comissao-senado'
 import { VotacoesVinculadas } from '@/components/proposicao/votacoes-vinculadas'
 import { VotosConsolidadosChart } from '@/components/proposicao/votos-consolidados-chart-client'
 import { decodeCursor } from '@/lib/cursor'
@@ -58,6 +59,7 @@ import {
 } from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
 import { getRelatoresByProposicao } from '@/lib/queries/relatorias'
+import { getVotacoesComissaoByProposicao } from '@/lib/queries/votacoes-comissao'
 import {
   buildKpiSlotsDetalhe,
   type KpiTone,
@@ -224,6 +226,7 @@ export default async function ProposicaoDetalhePage({
     apoioPartido,
     votosConsolidados,
     relatorias,
+    votacoesComissao,
   ] = await Promise.all([
     getTemasByProposicao(proposicao.id),
     getAutoresByProposicao(proposicao.id),
@@ -239,6 +242,7 @@ export default async function ProposicaoDetalhePage({
     getApoioPorPartido(proposicao.id),
     getVotosConsolidados(proposicao.id),
     getRelatoresByProposicao(proposicao.id),
+    getVotacoesComissaoByProposicao(proposicao.id),
   ])
 
   // 4 slots narrativos do KpiStrip do detalhe (módulo de domínio puro).
@@ -378,6 +382,7 @@ export default async function ProposicaoDetalhePage({
             resultado={votacoesResultado}
             votacoes={votacoes}
           />
+          <VotacoesComissaoSenado votacoes={votacoesComissao} />
         </div>
       ),
     },
