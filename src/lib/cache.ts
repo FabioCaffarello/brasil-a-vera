@@ -45,6 +45,9 @@ export const TTL = {
   liderancas: 86_400,
   // Afastamentos e licenças de senadores (ADR-058): ingestão mensal → 24h.
   afastamentos: 86_400,
+  // Vetos presidenciais (ADR-059): ingestão mensal → 24h. Dispositivos e votos
+  // raramente mudam depois que o resultado é apurado.
+  vetos: 86_400,
   // Pares de votos em direções opostas (coerência, ADR-054). Só mudam quando
   // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
   // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.
