@@ -45,10 +45,20 @@ async function fetchVotosNominais(
   parlamentarLookup: Map<string, string>,
   stats: IngestionStats,
 ): Promise<{
-  votos: Array<{ parlamentarId: string; voto: TipoVoto }>
+  votos: Array<{
+    parlamentarId: string
+    voto: TipoVoto
+    partidoSiglaVoto: string | null
+    ufVoto: string | null
+  }>
   totais: { votosSim: number; votosNao: number; abstencoes: number }
 }> {
-  const votos: Array<{ parlamentarId: string; voto: TipoVoto }> = []
+  const votos: Array<{
+    parlamentarId: string
+    voto: TipoVoto
+    partidoSiglaVoto: string | null
+    ufVoto: string | null
+  }> = []
   let votosSim = 0
   let votosNao = 0
   let abstencoes = 0
@@ -82,7 +92,12 @@ async function fetchVotosNominais(
       stats.votosSkipped++
       continue
     }
-    votos.push({ parlamentarId, voto: tipoVoto })
+    votos.push({
+      parlamentarId,
+      voto: tipoVoto,
+      partidoSiglaVoto: parsed.data.deputado_.siglaPartido ?? null,
+      ufVoto: parsed.data.deputado_.siglaUf ?? null,
+    })
     if (tipoVoto === 'SIM') votosSim++
     else if (tipoVoto === 'NAO') votosNao++
     else if (tipoVoto === 'ABSTENCAO') abstencoes++
@@ -167,6 +182,8 @@ async function processVotacao(
           votacaoId,
           parlamentarId: vt.parlamentarId,
           voto: vt.voto,
+          partidoSiglaVoto: vt.partidoSiglaVoto,
+          ufVoto: vt.ufVoto,
         })),
       )
     }
