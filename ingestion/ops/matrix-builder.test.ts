@@ -60,6 +60,8 @@ describe('buildTierMatrices', () => {
       'camara-blocos',
       'senado-blocos',
       'camara-frentes',
+      'senado-vetos',
+      'camara-mandatos-externos',
     ])
     expect(tiers[1].map((e) => e.id)).toEqual([
       'tse-bens',
