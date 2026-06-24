@@ -55,6 +55,8 @@
     "ingest:camara:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/discursos.ts",
     "ingest:camara:relatorias": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/relatorias.ts",
     "ingest:senado:relatorias": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/relatorias.ts",
+    "ingest:camara:liderancas": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/liderancas.ts",
+    "ingest:senado:liderancas": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/liderancas.ts",
     "ingest:camara:sessoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/sessoes.ts",
     "ingest:senado:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/discursos.ts",
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",

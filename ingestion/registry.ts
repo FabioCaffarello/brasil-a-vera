@@ -326,6 +326,27 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 1,
       timeoutMin: 30,
     },
+    // Lideranças partidárias e institucionais (ADR-056): quase-estáticas,
+    // mudam raramente dentro de uma legislatura → mensal. tier 0: dependem
+    // apenas de parlamentar populado (ingestão diária de runs anteriores).
+    // Câmara: loop por partido (/partidos/{id}/lideres) serial + pacing.
+    // Senado: endpoint único (/composicao/lideranca), cobertura total.
+    {
+      id: 'camara-liderancas',
+      script: 'ingest:camara:liderancas',
+      context: 'ingestion-camara-liderancas',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 30,
+    },
+    {
+      id: 'senado-liderancas',
+      script: 'ingest:senado:liderancas',
+      context: 'ingestion-senado-liderancas',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 10,
+    },
     // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
     // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
     // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
