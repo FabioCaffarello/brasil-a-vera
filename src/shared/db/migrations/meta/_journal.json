@@ -232,6 +232,13 @@
       "when": 1782957600000,
       "tag": "0032_veto",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1783044000000,
+      "tag": "0033_mandato_externo",
+      "breakpoints": true
     }
   ]
 }
