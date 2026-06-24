@@ -40,6 +40,9 @@ export const TTL = {
   relatorias: 86_400,
   // Discursos (ADR-048): ingestão semanal → 24h.
   discursos: 86_400,
+  // Lideranças, blocos e frentes (ADR-056): ingestão mensal → 24h de cache
+  // é folgado e muito abaixo do horizonte de mudança real.
+  liderancas: 86_400,
   // Pares de votos em direções opostas (coerência, ADR-054). Só mudam quando
   // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
   // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.

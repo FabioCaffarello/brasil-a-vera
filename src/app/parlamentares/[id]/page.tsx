@@ -18,6 +18,7 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import {
   ArrowRight,
+  Award,
   Building2,
   CalendarCheck,
   FileText,
@@ -52,6 +53,7 @@ import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
 import { LeituraRapida } from '@/components/parlamentar/leitura-rapida'
+import { LiderancasCargos } from '@/components/parlamentar/liderancas-cargos'
 import { MixComposicaoBlock } from '@/components/parlamentar/mix-composicao'
 import { ParesContraditorios } from '@/components/parlamentar/pares-contraditorios'
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
@@ -84,6 +86,10 @@ import {
   getFidelidadeOrientacao,
   getTimelineMigracao,
 } from '@/lib/queries/fidelidade'
+import {
+  getFrentesByParlamentar,
+  getLiderancasByParlamentar,
+} from '@/lib/queries/liderancas'
 import {
   getAlinhamentoMensal,
   getComparacoesCasa,
@@ -266,6 +272,8 @@ export default async function ParlamentarPerfilPage({
     presencaFisica,
     variacaoPatrimonial,
     discursos,
+    liderancas,
+    frentes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -310,6 +318,8 @@ export default async function ParlamentarPerfilPage({
     getPresencaFisica(parlamentar.id),
     getVariacaoPatrimonial(parlamentar.id),
     getDiscursosParlamentar(parlamentar.id),
+    getLiderancasByParlamentar(parlamentar.id),
+    getFrentesByParlamentar(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -513,6 +523,15 @@ export default async function ParlamentarPerfilPage({
         "Comissões nesta legislatura (57ª). 'Atualmente' = vínculo ativo hoje; o histórico cobre só o mandato corrente.",
       icon: <Gavel className="h-4 w-4" />,
       content: <ComissoesMembro {...comissoes} />,
+    },
+    {
+      id: 'liderancas',
+      navLabel: 'Cargos',
+      title: 'Cargos e Lideranças',
+      subtitle:
+        'Lideranças partidárias, de governo/oposição e frentes parlamentares. Dados quase-estáticos (ingestão mensal) — pode não refletir mudanças recentes.',
+      icon: <Award className="h-4 w-4" />,
+      content: <LiderancasCargos frentes={frentes} liderancas={liderancas} />,
     },
     {
       id: 'relatorias',

@@ -326,6 +326,58 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 1,
       timeoutMin: 30,
     },
+    // Lideranças partidárias e institucionais (ADR-056): quase-estáticas,
+    // mudam raramente dentro de uma legislatura → mensal. tier 0: dependem
+    // apenas de parlamentar populado (ingestão diária de runs anteriores).
+    // Câmara: loop por partido (/partidos/{id}/lideres) serial + pacing.
+    // Senado: endpoint único (/composicao/lideranca), cobertura total.
+    {
+      id: 'camara-liderancas',
+      script: 'ingest:camara:liderancas',
+      context: 'ingestion-camara-liderancas',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 30,
+    },
+    {
+      id: 'senado-liderancas',
+      script: 'ingest:senado:liderancas',
+      context: 'ingestion-senado-liderancas',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 10,
+    },
+    // Blocos partidários (ADR-056): composição muda raramente → mensal.
+    // Câmara: lista /blocos + detalhe por bloco (pacing). Senado: lista +
+    // detalhe por código. Upsert ON CONFLICT substitui partidos[] atomicamente.
+    {
+      id: 'camara-blocos',
+      script: 'ingest:camara:blocos',
+      context: 'ingestion-camara-blocos',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 15,
+    },
+    {
+      id: 'senado-blocos',
+      script: 'ingest:senado:blocos',
+      context: 'ingestion-senado-blocos',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 10,
+    },
+    // Frentes parlamentares (ADR-056): Câmara-only (Senado não publica
+    // equivalente estruturado). Lista /frentes + membros por frente.
+    // Dois upserts por frente: frente_parlamentar (cabeçalho) + frente_membro
+    // (DELETE+INSERT para capturar saídas). Depende de parlamentar populado.
+    {
+      id: 'camara-frentes',
+      script: 'ingest:camara:frentes',
+      context: 'ingestion-camara-frentes',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 60,
+    },
     // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
     // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
     // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
