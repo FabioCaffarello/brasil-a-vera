@@ -69,6 +69,7 @@ import { VotacoesComissao } from '@/components/parlamentar/votacoes-comissao'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatPercentil } from '@/lib/format'
+import { getAfastamentosAtivosSenador } from '@/lib/queries/afastamentos'
 import {
   getAlinhamentoBlocos,
   getAlinhamentoParlamentar,
@@ -278,6 +279,7 @@ export default async function ParlamentarPerfilPage({
     liderancas,
     frentes,
     votacoesComissao,
+    afastamentosAtivos,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -331,6 +333,9 @@ export default async function ParlamentarPerfilPage({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getVotacoesComissaoByParlamentar>>,
         ),
+    // Afastamentos ativos: Senado-only (ADR-058). Para deputados retorna []
+    // (tabela filtra por parlamentar_id; nunca há linhas Câmara).
+    getAfastamentosAtivosSenador(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -827,6 +832,7 @@ export default async function ParlamentarPerfilPage({
       }
       header={
         <PerfilHeader
+          afastamentosAtivos={afastamentosAtivos}
           parlamentar={{
             nome: parlamentar.nome,
             nomeCivil: parlamentar.nomeCivil,

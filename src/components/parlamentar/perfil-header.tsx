@@ -7,6 +7,13 @@ import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { PartyBadge } from '@/design-system/compositions/party-badge'
 
+interface AfastamentoAtivo {
+  motivoSigla: string
+  motivoDescricao: string | null
+  dataInicio: string
+  dataFim: string | null
+}
+
 interface Props {
   parlamentar: {
     nome: string
@@ -21,9 +28,10 @@ interface Props {
     sourceUrl: string
     trustLevel: 'L1' | 'L2' | 'L3' | 'L4'
   }
+  afastamentosAtivos?: AfastamentoAtivo[]
 }
 
-export function PerfilHeader({ parlamentar }: Props) {
+export function PerfilHeader({ parlamentar, afastamentosAtivos = [] }: Props) {
   const cargoLabel =
     parlamentar.casa === 'CAMARA' ? 'Deputado Federal' : 'Senador'
   const casaLabel =
@@ -56,6 +64,16 @@ export function PerfilHeader({ parlamentar }: Props) {
             />
             {situacaoAtipica ? (
               <DataBadge label={parlamentar.situacaoMandato} tone="warning" />
+            ) : null}
+            {afastamentosAtivos.length > 0 ? (
+              <DataBadge
+                label="Em licença"
+                source={
+                  afastamentosAtivos[0].motivoDescricao ??
+                  afastamentosAtivos[0].motivoSigla
+                }
+                tone="warning"
+              />
             ) : null}
           </div>
 
