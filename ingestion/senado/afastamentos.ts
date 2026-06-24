@@ -86,30 +86,40 @@ async function ingestAfastamentosSenador(
       stats.licencasSkipped++
       continue
     }
-    await db
-      .insert(afastamentoSenador)
-      .values({
-        parlamentarId: senadorId,
-        motivoSigla: row.motivoSigla,
-        motivoDescricao: row.motivoDescricao,
-        dataInicio: row.dataInicio,
-        dataFim: row.dataFim,
-        trustLevel: 'L1',
-        sourceUrl,
-      })
-      .onConflictDoUpdate({
-        target: [
-          afastamentoSenador.parlamentarId,
-          afastamentoSenador.motivoSigla,
-          afastamentoSenador.dataInicio,
-        ],
-        set: {
-          dataFim: row.dataFim,
+    try {
+      await db
+        .insert(afastamentoSenador)
+        .values({
+          parlamentarId: senadorId,
+          motivoSigla: row.motivoSigla,
           motivoDescricao: row.motivoDescricao,
-          ingestedAt: sql`now()`,
-        },
+          dataInicio: row.dataInicio,
+          dataFim: row.dataFim,
+          trustLevel: 'L1',
+          sourceUrl,
+        })
+        .onConflictDoUpdate({
+          target: [
+            afastamentoSenador.parlamentarId,
+            afastamentoSenador.motivoSigla,
+            afastamentoSenador.dataInicio,
+          ],
+          set: {
+            dataFim: row.dataFim,
+            motivoDescricao: row.motivoDescricao,
+            ingestedAt: sql`now()`,
+          },
+        })
+      stats.licencasUpserted++
+    } catch (err) {
+      const cause = err instanceof Error && (err as NodeJS.ErrnoException).cause
+      stats.errors.push({
+        context: `senador:${sourceId}:db:${row.motivoSigla}:${row.dataInicio}`,
+        reason:
+          (cause instanceof Error ? cause.message : null) ??
+          (err instanceof Error ? err.message : String(err)),
       })
-    stats.licencasUpserted++
+    }
   }
 }
 
