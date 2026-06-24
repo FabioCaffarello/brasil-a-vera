@@ -112,6 +112,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       timeoutMin: 15,
     },
     {
+      // tier 1: reutiliza /votacao, filtra siglaColegiado != 'SF' (ADR-057).
+      // Depende de senado-senadores (t0) estar no banco para o lookup.
+      // Independente de senado-votacoes — tabela separada.
+      id: 'senado-votacoes-comissao',
+      script: 'ingest:senado:votacoes-comissao',
+      context: 'ingestion-senado-votacoes-comissao',
+      cadence: 'daily',
+      tier: 1,
+      timeoutMin: 15,
+    },
+    {
       // tier 2: overlay de orientação; casa contra a votação populada por
       // camara-votacoes (t1) no mesmo run, por isso roda depois.
       id: 'camara-orientacoes',
