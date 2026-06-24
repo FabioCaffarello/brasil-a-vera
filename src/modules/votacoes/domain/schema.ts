@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import {
   boolean,
+  char,
   index,
   integer,
   pgSchema,
@@ -90,6 +91,10 @@ export const votoNominal = votacoesSchema.table(
       .notNull()
       .references(() => parlamentar.id, { onDelete: 'cascade' }),
     voto: tipoVoto('voto').notNull(),
+    // Partido e UF do parlamentar no instante do voto — capturados do payload
+    // da API em cada votação. Nullable: votos anteriores à migração ficam NULL.
+    partidoSiglaVoto: text('partido_sigla_voto'),
+    ufVoto: char('uf_voto', { length: 2 }),
   },
   (table) => [
     // Um parlamentar vota uma única vez por votação.

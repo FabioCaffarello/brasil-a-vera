@@ -1,15 +1,18 @@
 name: Ingestão mensal
 
 # Dado histórico que muda raramente — dia 1 às 04:00 UTC (01:00 BRT).
-# Eixo 2 (Trilha Patrimonial): declaração de bens do TSE (2014/2018/2022).
-# O TSE reedita declarações retroativamente, então re-ingerimos mensalmente de
-# forma idempotente (DELETE-by-ano + bulk INSERT). Mensal evita churn diário de
-# um dataset estático.
+# Eixo 2 (Trilha Patrimonial): declaração de bens do TSE + CPF dos senadores.
+# O TSE reedita declarações retroativamente → re-ingerimos mensalmente de forma
+# idempotente. Mensal evita churn diário de um dataset quase-estático.
 #
 # Config-driven (ADR-035): o job `discover` lê o registry (cadence=monthly) e
 # emite a matrix por tier. DAG via tier:
-#   t0: camara-backfill-cpf (preenche parlamentar.cpf — pré-requisito do vínculo)
+#   t0: camara-backfill-cpf, camara-filiacoes, camara-backfill-bio,
+#       senado-backfill-bio, senado-filiacoes
 #   t1: tse-bens (download dos zips TSE 2014/2018/2022 + upsert + vínculo CPF)
+#   t2: senado-backfill-cpf (match nome vs tse_candidatura — depende do t1)
+# Há jobs tier0/tier1/tier2 abaixo — o máximo monthly no registry DEVE ser t2
+# (um t3 seria emitido pela matrix mas não teria job que o consumisse).
 # Ver docs/contributing/WORKFLOWS.md.
 #
 # Validação empírica pendente pós-merge (princípio 13 / gotcha do dispatch):
@@ -36,6 +39,7 @@ jobs:
     outputs:
       tier0: ${{ steps.matrix.outputs.tier0 }}
       tier1: ${{ steps.matrix.outputs.tier1 }}
+      tier2: ${{ steps.matrix.outputs.tier2 }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
@@ -70,7 +74,7 @@ jobs:
     name: ${{ matrix.id }}
     needs: [discover, tier0]
     # !cancelled(): roda após o tier0 concluir, sem exigir sucesso. Se o
-    # backfill de CPF falhar, a ingestão de bens (L1) ainda roda — só o vínculo
+    # backfill de CPF falhar, a ingestão de bens ainda roda — só o vínculo
     # fica menor. Degrada de forma segura (scripts idempotentes; ADR-035).
     if: ${{ !cancelled() && needs.discover.outputs.tier1 != '[]' && needs.discover.outputs.tier1 != '' }}
     runs-on: ubuntu-latest
@@ -79,6 +83,31 @@ jobs:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.discover.outputs.tier1) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-project
+      - uses: ./.github/actions/run-ingestion
+        with:
+          script: ${{ matrix.script }}
+          context: ${{ matrix.context }}
+          database-url: ${{ secrets.DATABASE_URL }}
+          direct-url: ${{ secrets.DIRECT_URL }}
+          webhook-url: ${{ secrets.DISCORD_INGESTION_WEBHOOK_URL }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  tier2:
+    name: ${{ matrix.id }}
+    needs: [discover, tier1]
+    # !cancelled(): idem tier1 — não exige sucesso do tier anterior. Se
+    # tse-bens falhar, senado-backfill-cpf roda mas encontra tse_candidatura
+    # vazia e registra erro no log (não dados corrompidos — é idempotente).
+    if: ${{ !cancelled() && needs.discover.outputs.tier2 != '[]' && needs.discover.outputs.tier2 != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeoutMin }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.tier2) }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project

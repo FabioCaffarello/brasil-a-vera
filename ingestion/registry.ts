@@ -9,9 +9,9 @@ import { z } from 'zod'
 // vitest (registry.test.ts cruza `script` com package.json e valida tiers).
 
 // Cadências = buckets de agendamento, um por workflow:
-//   daily    → ingestion-daily.yml  (0 2 * * *) — inclui votações desde ADR-035
-//   weekly   → ingestion-weekly.yml (0 3 * * 0)
-//   monthly  → (sem entradas hoje; schema pronto p/ quando surgir — ADR-035)
+//   daily    → ingestion-daily.yml  (0 2 * * *) — max tier = t2
+//   weekly   → ingestion-weekly.yml (0 3 * * 0) — max tier = t0
+//   monthly  → ingestion-monthly.yml (0 4 1 * *) — max tier = t2
 export const cadenceSchema = z.enum(['daily', 'weekly', 'monthly'])
 export type Cadence = z.infer<typeof cadenceSchema>
 
@@ -325,6 +325,18 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       // 3 pleitos (2014/2018/2022) × 2 zips cada + upsert; anos isolados.
       tier: 1,
       timeoutMin: 30,
+    },
+    // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
+    // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
+    // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
+    // rodar. No-op idempotente após preenchimento inicial.
+    {
+      id: 'senado-backfill-cpf',
+      script: 'backfill:senado:cpf',
+      context: 'ingestion-senado-backfill-cpf',
+      cadence: 'monthly',
+      tier: 2,
+      timeoutMin: 5,
     },
   ],
 )

@@ -43,7 +43,12 @@ async function processVotacao(
 
   // Conta totais a partir dos votos individuais — mais consistente que os
   // campos `totalVotosSim/Nao/Abstencao` que frequentemente vêm null.
-  const votos: Array<{ parlamentarId: string; voto: TipoVoto }> = []
+  const votos: Array<{
+    parlamentarId: string
+    voto: TipoVoto
+    partidoSiglaVoto: string | null
+    ufVoto: string | null
+  }> = []
   let votosSim = 0
   let votosNao = 0
   let abstencoes = 0
@@ -67,7 +72,12 @@ async function processVotacao(
       stats.votosSkipped++
       continue
     }
-    votos.push({ parlamentarId, voto: tipoVoto })
+    votos.push({
+      parlamentarId,
+      voto: tipoVoto,
+      partidoSiglaVoto: rawVoto.siglaPartidoParlamentar ?? null,
+      ufVoto: rawVoto.siglaUFParlamentar ?? null,
+    })
     if (tipoVoto === 'SIM') votosSim++
     else if (tipoVoto === 'NAO') votosNao++
     else if (tipoVoto === 'ABSTENCAO') abstencoes++
@@ -137,6 +147,8 @@ async function processVotacao(
           votacaoId,
           parlamentarId: vt.parlamentarId,
           voto: vt.voto,
+          partidoSiglaVoto: vt.partidoSiglaVoto,
+          ufVoto: vt.ufVoto,
         })),
       )
     }
