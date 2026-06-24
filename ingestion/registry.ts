@@ -9,9 +9,9 @@ import { z } from 'zod'
 // vitest (registry.test.ts cruza `script` com package.json e valida tiers).
 
 // Cadências = buckets de agendamento, um por workflow:
-//   daily    → ingestion-daily.yml  (0 2 * * *) — inclui votações desde ADR-035
-//   weekly   → ingestion-weekly.yml (0 3 * * 0)
-//   monthly  → (sem entradas hoje; schema pronto p/ quando surgir — ADR-035)
+//   daily    → ingestion-daily.yml  (0 2 * * *) — max tier = t2
+//   weekly   → ingestion-weekly.yml (0 3 * * 0) — max tier = t0
+//   monthly  → ingestion-monthly.yml (0 4 1 * *) — max tier = t2
 export const cadenceSchema = z.enum(['daily', 'weekly', 'monthly'])
 export type Cadence = z.infer<typeof cadenceSchema>
 
