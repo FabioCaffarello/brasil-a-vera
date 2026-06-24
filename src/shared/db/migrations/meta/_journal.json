@@ -211,6 +211,13 @@
       "when": 1782352800000,
       "tag": "0029_liderancas_blocos_frentes",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1782784800000,
+      "tag": "0030_votacao_comissao_senado",
+      "breakpoints": true
     }
   ]
 }
