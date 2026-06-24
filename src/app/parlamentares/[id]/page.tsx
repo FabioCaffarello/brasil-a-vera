@@ -599,12 +599,32 @@ export default async function ParlamentarPerfilPage({
         'Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar.',
       icon: <Inbox className="h-4 w-4" />,
       content: (
-        <ProposicoesAutor
-          proposicoes={proposicoes}
-          filtros={proposicoesFiltros}
-          buildFiltroHref={buildProposicoesFiltroHref}
-          proximaPaginaHref={proposicoesProximaPaginaHref}
-        />
+        <div className="space-y-4">
+          <ProposicoesAutor
+            proposicoes={proposicoes}
+            filtros={proposicoesFiltros}
+            buildFiltroHref={buildProposicoesFiltroHref}
+            proximaPaginaHref={proposicoesProximaPaginaHref}
+          />
+          {comparacoes.proposicoesCount !== null &&
+            comparacoes.proposicoesCount > 0 && (
+              <div className="flex justify-end">
+                <CompartilharButton
+                  campaign="proposicoes"
+                  fato={{
+                    mensagem: `Apresentou ${comparacoes.proposicoesCount} proposições como autor ou coautor${comparacoes.percentilProposicoesCasa !== null ? ` — ${formatPercentil(comparacoes.percentilProposicoesCasa)} da ${casaLabel(parlamentar.casa)}` : ''}.`,
+                  }}
+                  parlamentar={{
+                    nome: parlamentar.nome,
+                    partidoSigla: parlamentar.partidoSigla ?? '',
+                    uf: parlamentar.uf,
+                    casa: parlamentar.casa,
+                  }}
+                  path={`/parlamentares/${parlamentar.id}/fato/proposicoes`}
+                />
+              </div>
+            )}
+        </div>
       ),
     },
     {

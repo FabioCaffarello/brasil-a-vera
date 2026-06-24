@@ -20,6 +20,7 @@ export type ShareCampaign =
   | 'par-contraditorio'
   | 'alinhamento'
   | 'gasto'
+  | 'proposicoes'
 
 export function buildShareUrl(
   rawUrl: string,
