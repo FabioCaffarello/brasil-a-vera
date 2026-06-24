@@ -47,6 +47,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
+import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { Discursos } from '@/components/parlamentar/discursos'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
@@ -494,11 +495,30 @@ export default async function ParlamentarPerfilPage({
         '% de votos que coincidem com a orientação do partido. Mede o alinhamento prático com a liderança partidária — não compromisso ideológico.',
       icon: <Users className="h-4 w-4" />,
       content: (
-        <AlinhamentoBancada
-          alinhamento={alinhamento}
-          casa={parlamentar.casa}
-          mensal={alinhamentoMensal}
-        />
+        <div className="space-y-4">
+          <AlinhamentoBancada
+            alinhamento={alinhamento}
+            casa={parlamentar.casa}
+            mensal={alinhamentoMensal}
+          />
+          {alinhamento.percentual !== null && !alinhamento.emFederacao && (
+            <div className="flex justify-end">
+              <CompartilharButton
+                campaign="alinhamento"
+                fato={{
+                  mensagem: `Votou com o partido em ${alinhamento.percentual}% das votações nominais comparáveis (${alinhamento.alinhados} de ${alinhamento.total} votos com orientação registrada).`,
+                }}
+                parlamentar={{
+                  nome: parlamentar.nome,
+                  partidoSigla: parlamentar.partidoSigla ?? '',
+                  uf: parlamentar.uf,
+                  casa: parlamentar.casa,
+                }}
+                path={`/parlamentares/${parlamentar.id}/fato/alinhamento`}
+              />
+            </div>
+          )}
+        </div>
       ),
     },
     {

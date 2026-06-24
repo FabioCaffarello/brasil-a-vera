@@ -15,7 +15,7 @@ export type ShareSource = 'whatsapp' | 'twitter' | 'copy'
 // página do parlamentar; 'par-contraditorio' = card de um par de votos em
 // direções opostas. Permite comparar tráfego de retorno card-de-par vs
 // card-de-perfil no Cloudflare Web Analytics.
-export type ShareCampaign = 'perfil' | 'par-contraditorio'
+export type ShareCampaign = 'perfil' | 'par-contraditorio' | 'alinhamento'
 
 export function buildShareUrl(
   rawUrl: string,
