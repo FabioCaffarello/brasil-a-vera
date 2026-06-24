@@ -5,7 +5,7 @@ import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
 import { readIngestEnv } from '../shared/env'
 import { mapAfastamentos } from './afastamentos-mapper'
-import { senadorLicencasEnvelopeSchema } from './afastamentos-schema'
+import { licencaParlamentarEnvelopeSchema } from './afastamentos-schema'
 import { fetchSenadoJson } from './senado-client'
 
 // Ingere licenças e afastamentos de senadores (Sprint 13.0, ADR-058).
@@ -59,7 +59,7 @@ async function ingestAfastamentosSenador(
     return
   }
 
-  const parsed = senadorLicencasEnvelopeSchema.safeParse(raw)
+  const parsed = licencaParlamentarEnvelopeSchema.safeParse(raw)
   if (!parsed.success) {
     stats.errors.push({
       context: `senador:${sourceId}:parse`,
