@@ -130,6 +130,111 @@ export const estatisticaParlamentarAgregada = parlamentaresSchema.table(
   ],
 )
 
+// ADR-056: lideranças, blocos partidários e frentes parlamentares.
+// Entidades de poder político quase-estáticas (ingestão mensal, trust L1).
+export const liderancaCargo = parlamentaresSchema.table(
+  'lideranca_cargo',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    // Vocabulário normalizado pelo mapper (texto, não enum SQL — extensível
+    // sem migration ao adicionar nova fonte).
+    // Valores usados: LIDER_PARTIDO | VICE_LIDER_PARTIDO | LIDER_GOVERNO |
+    //   LIDER_OPOSICAO | LIDER_MINORIA | LIDER_MAIORIA | LIDER_BLOCO
+    tipo: text('tipo').notNull(),
+    // Sigla do partido, bloco ou posição institucional ("PT", "Governo")
+    entidade: text('entidade').notNull(),
+    casa: casa('casa').notNull(),
+    legislatura: integer('legislatura').notNull(),
+    dataInicio: date('data_inicio'),
+    dataFim: date('data_fim'), // NULL = vigente
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('lideranca_cargo_natural_key').on(
+      table.parlamentarId,
+      table.tipo,
+      table.entidade,
+      table.casa,
+      table.legislatura,
+    ),
+    index('lideranca_cargo_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
+export const blocoPartidario = parlamentaresSchema.table(
+  'bloco_partidario',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    sourceId: text('source_id').notNull(),
+    nome: text('nome').notNull(),
+    casa: casa('casa').notNull(),
+    legislatura: integer('legislatura').notNull(),
+    // Array de siglas dos partidos-membro. Substituído integralmente a cada
+    // ingestão — composição de bloco é atômica, não log de mudanças.
+    partidos: text('partidos').array().notNull().default(sql`'{}'::text[]`),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('bloco_partidario_source_id_casa_unique').on(
+      table.sourceId,
+      table.casa,
+    ),
+  ],
+)
+
+export const frenteParlamentar = parlamentaresSchema.table(
+  'frente_parlamentar',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    sourceId: text('source_id').notNull(),
+    nome: text('nome').notNull(),
+    legislatura: integer('legislatura').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    uniqueIndex('frente_parlamentar_source_id_unique').on(table.sourceId),
+  ],
+)
+
+export const frenteMembro = parlamentaresSchema.table(
+  'frente_membro',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    frenteId: uuid('frente_id')
+      .notNull()
+      .references(() => frenteParlamentar.id, { onDelete: 'cascade' }),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    // Papel do parlamentar na frente (ex.: "Presidente", "Vice-Presidente").
+    titulo: text('titulo'),
+  },
+  (table) => [
+    uniqueIndex('frente_membro_natural_key').on(
+      table.frenteId,
+      table.parlamentarId,
+    ),
+    index('frente_membro_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
 export const membroComissao = parlamentaresSchema.table(
   'membro_comissao',
   {

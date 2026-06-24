@@ -204,6 +204,13 @@
       "when": 1782264643316,
       "tag": "0028_chief_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1782352800000,
+      "tag": "0029_liderancas_blocos_frentes",
+      "breakpoints": true
     }
   ]
 }
