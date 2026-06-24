@@ -19,6 +19,10 @@ const TIPO_LABEL: Record<string, string> = {
   LIDER_MINORIA: 'Líder da Minoria',
   LIDER_MAIORIA: 'Líder da Maioria',
   LIDER_BLOCO: 'Líder de Bloco',
+  PRESIDENTE_MESA: 'Presidente da Mesa Diretora',
+  VICE_PRESIDENTE_MESA: 'Vice-Presidente da Mesa Diretora',
+  SECRETARIO_MESA: 'Secretário da Mesa Diretora',
+  SUPLENTE_MESA: 'Suplente de Secretário',
 }
 
 // Cargos institucionais recebem tone 'dataviz' para destaque visual —
@@ -30,6 +34,8 @@ const TIPOS_INSTITUCIONAIS = new Set([
   'VICE_LIDER_OPOSICAO',
   'LIDER_MINORIA',
   'LIDER_MAIORIA',
+  'PRESIDENTE_MESA',
+  'VICE_PRESIDENTE_MESA',
 ])
 
 interface Props {

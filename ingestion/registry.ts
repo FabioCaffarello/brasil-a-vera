@@ -378,6 +378,19 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 60,
     },
+    // Mesa Diretora da Câmara (ADR-056): composição muda uma vez por sessão
+    // legislativa (fevereiro) → mensal é suficiente. tier 1: roda APÓS
+    // camara-liderancas (tier 0) que limpa toda a tabela CAMARA+leg57 antes de
+    // reinserir líderes de partido. O DELETE por tipo no script garante
+    // idempotência em runs isolados.
+    {
+      id: 'camara-mesa-diretora',
+      script: 'ingest:camara:mesa-diretora',
+      context: 'ingestion-camara-mesa-diretora',
+      cadence: 'monthly',
+      tier: 1,
+      timeoutMin: 5,
+    },
     // CPF dos senadores via tse_candidatura (API do Senado não expõe CPF —
     // verificado: XSD DetalheParlamentarv5.xsd + curl 2026-06-23). Depende de
     // tse-bens (tier 1) ter populado tse_candidatura com CD_CARGO=5 antes de
