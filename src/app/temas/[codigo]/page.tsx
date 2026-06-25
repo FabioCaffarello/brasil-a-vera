@@ -7,8 +7,8 @@ import {
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { formatProposicaoRef } from '@/lib/format'
-import { getTema } from '@/lib/queries/temas'
+import { formatDataBR, formatProposicaoRef } from '@/lib/format'
+import { getTema, getVotacoesByTema } from '@/lib/queries/temas'
 
 interface PageProps {
   params: Promise<{ codigo: string }>
@@ -32,7 +32,7 @@ export default async function TemaPage({ params }: PageProps) {
   const { codigo } = await params
   const n = Number(codigo)
   if (!Number.isInteger(n)) notFound()
-  const tema = await getTema(n)
+  const [tema, votacoes] = await Promise.all([getTema(n), getVotacoesByTema(n)])
   if (!tema) notFound()
 
   return (
@@ -118,6 +118,46 @@ export default async function TemaPage({ params }: PageProps) {
             ))}
           </ul>
         </section>
+
+        {votacoes.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="font-semibold text-fg-primary text-lg">
+              Votações recentes sobre o tema
+            </h2>
+            <ul className="space-y-2">
+              {votacoes.map((v) => (
+                <li
+                  className="rounded-lg border border-line-default p-3"
+                  key={v.id}
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-fg-tertiary text-xs">
+                    <span>{formatDataBR(v.dataHora)}</span>
+                    <span aria-hidden>·</span>
+                    <span>{v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}</span>
+                    <span aria-hidden>·</span>
+                    <span>{v.orgao}</span>
+                    <span aria-hidden>·</span>
+                    <span
+                      className={
+                        v.aprovada
+                          ? 'font-medium text-fg-success'
+                          : 'font-medium text-fg-error'
+                      }
+                    >
+                      {v.aprovada ? 'Aprovada' : 'Rejeitada'}
+                    </span>
+                  </div>
+                  <Link
+                    className="mt-1.5 block text-fg-primary text-sm decoration-dotted underline-offset-2 hover:text-fg-tertiary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                    href={`/votacoes/${v.id}`}
+                  >
+                    {v.descricao}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <p className="text-fg-tertiary text-xs">
           Classificação temática oficial da Câmara. "Quem mais propõe" conta
