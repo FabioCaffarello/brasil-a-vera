@@ -280,6 +280,10 @@ export interface VotoRecenteRow {
   casa: string
   aprovada: boolean
   orientacao: string | null
+  /** Chave de rota da proposição vinculada; null quando votação sem proposição. */
+  proposicaoTipo: string | null
+  proposicaoNumero: number | null
+  proposicaoAno: number | null
 }
 
 export interface VotosRecentesResult {
@@ -364,6 +368,9 @@ export async function getVotosRecentes(
       orientacao: sql<string | null>`orientacao_bancada.orientacao::text`.as(
         'orientacao',
       ),
+      proposicaoTipo: proposicao.tipo,
+      proposicaoNumero: proposicao.numero,
+      proposicaoAno: proposicao.ano,
     })
     .from(votoNominal)
     .innerJoin(votacao, eq(votacao.id, votoNominal.votacaoId))
@@ -372,6 +379,7 @@ export async function getVotosRecentes(
       sql`votacoes.orientacao_bancada`,
       sql`orientacao_bancada.votacao_id = ${votoNominal.votacaoId} AND orientacao_bancada.partido_sigla = ${parlamentar.partidoSigla}`,
     )
+    .leftJoin(proposicao, eq(proposicao.id, votacao.proposicaoId))
     .where(and(...whereClauses))
     .orderBy(desc(votacao.dataHora), desc(votoNominal.id))
     .limit(limitPlusOne)

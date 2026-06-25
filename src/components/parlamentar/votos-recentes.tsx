@@ -16,6 +16,9 @@ interface Voto {
   descricao: string
   orgao: string
   aprovada: boolean
+  proposicaoTipo?: string | null
+  proposicaoNumero?: number | null
+  proposicaoAno?: number | null
 }
 
 export interface VotosRecentesFiltros {
@@ -126,14 +129,27 @@ export function VotosRecentes({
                   >
                     {style.label}
                   </span>
-                  <p className="text-sm">
-                    <Link
-                      className="text-fg-primary decoration-dotted underline-offset-2 hover:text-fg-tertiary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-                      href={`/votacoes/${v.votacaoId}`}
-                    >
-                      {v.descricao}
-                    </Link>
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm">
+                      <Link
+                        className="text-fg-primary decoration-dotted underline-offset-2 hover:text-fg-tertiary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                        href={`/votacoes/${v.votacaoId}`}
+                      >
+                        {v.descricao}
+                      </Link>
+                    </p>
+                    {v.proposicaoTipo &&
+                    v.proposicaoNumero &&
+                    v.proposicaoAno ? (
+                      <Link
+                        className="mt-0.5 inline-block text-fg-tertiary text-xs decoration-dotted underline-offset-2 hover:text-fg-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                        href={`/proposicoes/${v.proposicaoTipo}/${v.proposicaoNumero}/${v.proposicaoAno}`}
+                      >
+                        {v.proposicaoTipo} {v.proposicaoNumero}/
+                        {v.proposicaoAno} →
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             )
