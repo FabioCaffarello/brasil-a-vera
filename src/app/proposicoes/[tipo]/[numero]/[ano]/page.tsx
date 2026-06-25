@@ -59,6 +59,7 @@ import {
 } from '@/lib/queries/proposicoes-relacionadas'
 import { getProposicaoStats } from '@/lib/queries/proposicoes-stats'
 import { getRelatoresByProposicao } from '@/lib/queries/relatorias'
+import { getVotosResumoPorPartido } from '@/lib/queries/votacoes'
 import { getVotacoesComissaoByProposicao } from '@/lib/queries/votacoes-comissao'
 import {
   buildKpiSlotsDetalhe,
@@ -245,6 +246,15 @@ export default async function ProposicaoDetalhePage({
     getVotacoesComissaoByProposicao(proposicao.id),
   ])
 
+  // Resumo de votos por partido para cada votação vinculada.
+  // Individualmente cacheado (TTL 7 dias) — parallel após ter os IDs.
+  const porPartidoEntries = await Promise.all(
+    votacoes.map((v) =>
+      getVotosResumoPorPartido(v.id).then((resumo) => [v.id, resumo] as const),
+    ),
+  )
+  const porPartidoMap = Object.fromEntries(porPartidoEntries)
+
   // 4 slots narrativos do KpiStrip do detalhe (módulo de domínio puro).
   const kpiSlots = buildKpiSlotsDetalhe({
     tipo: proposicao.tipo,
@@ -379,6 +389,7 @@ export default async function ProposicaoDetalhePage({
           <VotacoesVinculadas
             buildFiltroHref={buildVotacoesFiltroHref}
             casa={votacoesCasa}
+            porPartidoMap={porPartidoMap}
             resultado={votacoesResultado}
             votacoes={votacoes}
           />
