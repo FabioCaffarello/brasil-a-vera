@@ -322,6 +322,10 @@ export interface VotacaoListaItem {
   votosNao: number
   abstencoes: number
   sourceUrl: string
+  /** Chave de rota da proposição vinculada; null quando votação sem proposição. */
+  proposicaoTipo: string | null
+  proposicaoNumero: number | null
+  proposicaoAno: number | null
 }
 
 export interface ListVotacoesOpts {
@@ -389,8 +393,12 @@ export async function listVotacoesCursor(
         votosNao: votacao.votosNao,
         abstencoes: votacao.abstencoes,
         sourceUrl: votacao.sourceUrl,
+        proposicaoTipo: proposicao.tipo,
+        proposicaoNumero: proposicao.numero,
+        proposicaoAno: proposicao.ano,
       })
       .from(votacao)
+      .leftJoin(proposicao, eq(proposicao.id, votacao.proposicaoId))
       .where(where.length > 0 ? and(...where) : undefined)
       .orderBy(desc(votacao.dataHora), desc(votacao.id))
       .limit(limitPlusOne)

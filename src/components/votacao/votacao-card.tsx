@@ -1,4 +1,5 @@
 import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
+import Link from 'next/link'
 import { VotacaoPreviewLink } from '@/components/votacao/preview-drawer'
 import { resultadoStatus } from '@/components/votacao/resultado'
 import { formatDataBR } from '@/lib/format'
@@ -14,6 +15,9 @@ interface Props {
     votosSim: number
     votosNao: number
     abstencoes: number
+    proposicaoTipo?: string | null
+    proposicaoNumero?: number | null
+    proposicaoAno?: number | null
   }
 }
 
@@ -33,6 +37,8 @@ interface Props {
 export function VotacaoCard({ votacao: v }: Props) {
   const totalNominais = v.votosSim + v.votosNao + v.abstencoes
   const status = resultadoStatus(v.aprovada)
+  const temProposicao =
+    v.proposicaoTipo && v.proposicaoNumero && v.proposicaoAno
   return (
     <article
       aria-label={`Votação de ${formatDataBR(v.dataHora)} — ${status.label}`}
@@ -75,6 +81,16 @@ export function VotacaoCard({ votacao: v }: Props) {
             </p>
           )}
         </VotacaoPreviewLink>
+        {temProposicao ? (
+          <div className="border-t border-line-default px-4 py-2">
+            <Link
+              className="text-fg-tertiary text-xs decoration-dotted underline-offset-2 hover:text-fg-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+              href={`/proposicoes/${v.proposicaoTipo}/${v.proposicaoNumero}/${v.proposicaoAno}`}
+            >
+              {v.proposicaoTipo} {v.proposicaoNumero}/{v.proposicaoAno} →
+            </Link>
+          </div>
+        ) : null}
       </Card>
     </article>
   )
