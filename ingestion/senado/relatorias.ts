@@ -5,19 +5,17 @@ import { proposicao, relatoria } from '@/modules/proposicoes/domain/schema'
 import { runWithConcurrency } from '../shared/concurrency'
 import { db } from '../shared/db'
 import { mapRelatoriasSenado } from './relatorias-mapper'
-import { senadoRelatoriasEnvelopeSchema } from './relatorias-schema'
+import { relatoriaProcResponseSchema } from './relatorias-schema'
 import { fetchSenadoJson } from './senado-client'
 
-// Ingere as relatorias do Senado (ADR-044, emenda 2026-06-21). Popula
-// `proposicoes.relatoria` com `casa = 'SENADO'`. O relator é o próprio senador
-// consultado, então parlamentar_id sempre mapeia; o join por
-// `proposicao.source_id_senado` limita às matérias já ingeridas (fail-closed).
+// Ingere as relatorias do Senado (ADR-044, ADR-060). Popula
+// `proposicoes.relatoria` com `casa = 'SENADO'`. Fonte: novo endpoint
+// GET /processo/relatoria?codigoParlamentar={codigo} (migrado em Sprint 15.0;
+// endpoint legado /senador/{id}/relatorias estava descontinuado desde 2026-02-01).
 //
-// ⚠️ Fonte LEGADA E FAIL-SOFT: /senador/{id}/relatorias anuncia descontinuação
-// (DataDesativacaoCompleta 2026-02-01) mas ainda serve dados frescos; é a única
-// fonte (a API moderna /processo não expõe relator — probe 2026-06-21). Se o
-// endpoint cair, cada senador falha isolado, loga e segue — as linhas já
-// ingeridas persistem (não há delete). O run só falha se TODOS falharem.
+// O relator é o próprio senador consultado, então parlamentar_id sempre mapeia;
+// o join por `proposicao.source_id_senado` limita às matérias já ingeridas
+// (fail-closed). Retorna flat JSON array — sem quirk XML-to-JSON do legado.
 
 const CASA = 'SENADO' as const
 const CONCURRENCY = 4
@@ -59,10 +57,10 @@ async function processSenador(
 ): Promise<void> {
   try {
     const raw = await fetchSenadoJson<unknown>(
-      `/senador/${sen.sourceId}/relatorias`,
+      `/processo/relatoria?codigoParlamentar=${sen.sourceId}`,
     )
     stats.fetched++
-    const parsed = senadoRelatoriasEnvelopeSchema.safeParse(raw)
+    const parsed = relatoriaProcResponseSchema.safeParse(raw)
     if (!parsed.success) {
       stats.errors.push({
         sourceId: sen.sourceId,
@@ -106,7 +104,6 @@ async function processSenador(
       stats.upserted++
     }
   } catch (err) {
-    // Fail-soft: endpoint legado pode cair a qualquer momento.
     stats.errors.push({
       sourceId: sen.sourceId,
       reason: err instanceof Error ? err.message : String(err),
@@ -159,7 +156,6 @@ ingestRelatoriasSenado()
         ...(errorsExtra > 0 ? { errorsTruncated: errorsExtra } : {}),
       }),
     )
-    // Fail-soft: só falha se TODOS os senadores falharam (endpoint caiu).
     process.exit(stats.errors.length > 0 && stats.upserted === 0 ? 1 : 0)
   })
   .catch((err) => {

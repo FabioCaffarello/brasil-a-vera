@@ -1,52 +1,25 @@
 import { z } from 'zod'
 
-// Schema de GET /senador/{id}/relatorias (ADR-044, emenda 2026-06-21).
+// Schema de GET /processo/relatoria?codigoParlamentar={id} (ADR-060).
 //
-// ⚠️ Endpoint LEGADO: o Metadados anuncia descontinuação (DataDesativacaoCompleta
-// 2026-02-01), mas continua servindo dados frescos. É a ÚNICA fonte de
-// relatorias do Senado — a API moderna /processo não expõe relator (probe
-// 2026-06-21). A ingestão é fail-soft: se o endpoint cair, loga e segue.
+// Migração do endpoint legado /senador/{id}/relatorias (descontinuado em
+// 2026-02-01, removido do código em Sprint 15.0). O novo endpoint retorna
+// um flat JSON array — sem a quirk XML-to-JSON do legado.
 //
-// XML-convertido-em-JSON: elemento repetível vem como objeto único quando há um
-// só, array quando há vários. `oneOrMany` normaliza para array.
-const oneOrMany = <T extends z.ZodTypeAny>(schema: T) =>
-  z
-    .union([z.array(schema), schema])
-    .transform((v) => (Array.isArray(v) ? v : [v]))
+// Probe empírico 2026-06-24 (senador 5936):
+//   items: 219 · tipos: Relator(205) Ad hoc(13) Revisor(1)
+//   dataDesignacao format: "YYYY-MM-DD HH:MM:SS"
 
-const materiaSchema = z
+export const relatoriaProcItemSchema = z
   .object({
-    Codigo: z.union([z.string(), z.number()]).transform(String),
+    codigoMateria: z.union([z.string(), z.number()]).transform(String),
+    descricaoTipoRelator: z.string(),
+    dataDesignacao: z.string().nullable().optional(),
+    dataDestituicao: z.string().nullable().optional(),
   })
   .passthrough()
 
-const relatoriaSchema = z
-  .object({
-    DescricaoTipoRelator: z.string().nullable().optional(),
-    DataDesignacao: z.string().nullable().optional(),
-    Materia: materiaSchema,
-  })
-  .passthrough()
+export const relatoriaProcResponseSchema = z.array(relatoriaProcItemSchema)
 
-export const senadoRelatoriasEnvelopeSchema = z
-  .object({
-    MateriasRelatoriaParlamentar: z
-      .object({
-        Parlamentar: z
-          .object({
-            Relatorias: z
-              .object({
-                Relatoria: oneOrMany(relatoriaSchema).optional(),
-              })
-              .nullable()
-              .optional(),
-          })
-          .passthrough(),
-      })
-      .passthrough(),
-  })
-  .passthrough()
-
-export type SenadoRelatoriasEnvelope = z.infer<
-  typeof senadoRelatoriasEnvelopeSchema
->
+export type RelatoriaProcItem = z.infer<typeof relatoriaProcItemSchema>
+export type RelatoriaProcResponse = z.infer<typeof relatoriaProcResponseSchema>
