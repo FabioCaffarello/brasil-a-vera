@@ -47,6 +47,7 @@ import {
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
+import { CandidaturasEleitorais } from '@/components/parlamentar/candidaturas-eleitorais'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { Discursos } from '@/components/parlamentar/discursos'
@@ -77,6 +78,7 @@ import {
   getAlinhamentoBlocos,
   getAlinhamentoParlamentar,
 } from '@/lib/queries/alinhamento'
+import { getCandidaturasByParlamentar } from '@/lib/queries/candidaturas'
 import {
   getCoerenciaStats,
   getParesContraditoriosCached,
@@ -287,6 +289,7 @@ export default async function ParlamentarPerfilPage({
     afastamentosAtivos,
     votosParlamentarVetos,
     mandatosExternos,
+    candidaturas,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -357,6 +360,9 @@ export default async function ParlamentarPerfilPage({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getMandatosExternosByParlamentar>>,
         ),
+    // Candidaturas TSE: vínculo via CPF (L2). Câmara-only na prática —
+    // senadores sem CPF retornam array vazio; seção omitida quando vazio.
+    getCandidaturasByParlamentar(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -621,6 +627,19 @@ export default async function ParlamentarPerfilPage({
               'Mandatos eletivos anteriores ao mandato atual verificados pelo TSE. Inclui prefeituras, vereadores, governadores e outros cargos eleitos. Câmara-only; Senado não publica endpoint equivalente.',
             icon: <Briefcase className="h-4 w-4" />,
             content: <MandatosExternos mandatos={mandatosExternos} />,
+          },
+        ]
+      : []),
+    ...(candidaturas.length > 0
+      ? [
+          {
+            id: 'candidaturas-tse',
+            navLabel: 'Eleições',
+            title: 'Histórico eleitoral',
+            subtitle:
+              'Candidaturas declaradas ao TSE vinculadas por CPF. Mostra em quais eleições o parlamentar concorreu, a que cargo e o resultado.',
+            icon: <Vote className="h-4 w-4" />,
+            content: <CandidaturasEleitorais candidaturas={candidaturas} />,
           },
         ]
       : []),
