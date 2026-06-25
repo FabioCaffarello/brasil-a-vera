@@ -7,6 +7,7 @@ import {
   proposicao,
   proposicaoAutor,
   proposicaoTema,
+  votacao,
 } from '@/shared/db/schema'
 
 // Busca por tema (ADR-050): taxonomia oficial `proposicao_tema` (curada, sem
@@ -142,6 +143,43 @@ export async function getTema(codigo: number): Promise<TemaDetalhe | null> {
         })),
         proposicoes,
       }
+    },
+  )
+}
+
+const VOTACOES_RECENTES_TEMA = 8
+
+export interface TemaVotacao {
+  id: string
+  dataHora: Date | string
+  descricao: string
+  casa: string
+  orgao: string
+  aprovada: boolean
+}
+
+export async function getVotacoesByTema(
+  codigo: number,
+): Promise<TemaVotacao[]> {
+  return cached(
+    `temas:votacoes:${codigo}`,
+    TTL.proposicoesStatsGlobais,
+    async () => {
+      return db
+        .selectDistinct({
+          id: votacao.id,
+          dataHora: votacao.dataHora,
+          descricao: votacao.descricao,
+          casa: votacao.casa,
+          orgao: votacao.orgao,
+          aprovada: votacao.aprovada,
+        })
+        .from(proposicaoTema)
+        .innerJoin(proposicao, eq(proposicao.id, proposicaoTema.proposicaoId))
+        .innerJoin(votacao, eq(votacao.proposicaoId, proposicao.id))
+        .where(eq(proposicaoTema.codigoTema, codigo))
+        .orderBy(desc(votacao.dataHora))
+        .limit(VOTACOES_RECENTES_TEMA)
     },
   )
 }
