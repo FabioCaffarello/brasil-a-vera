@@ -17,12 +17,15 @@
 import { Card, Text } from '@fabio.caffarello/react-design-system/server'
 import { notFound } from 'next/navigation'
 
+import { AlinhamentoMedioBancadaBlock } from '@/components/partido/alinhamento-medio'
 import { BancadaList } from '@/components/partido/bancada-list'
+import { DistribuicaoBancadaBlock } from '@/components/partido/distribuicao-bancada'
 import { FidelidadeMediaBlock } from '@/components/partido/fidelidade-media'
 import { GastoBancadaBlock } from '@/components/partido/gasto-bancada'
 import { PartidoHeader } from '@/components/partido/header'
 import { TopTemasPartido } from '@/components/partido/top-temas'
 import {
+  getAlinhamentoMedioBancada,
   getFidelidadeInternaMedia,
   getGastoBancadaAno,
   getPartidoOverview,
@@ -98,10 +101,11 @@ export default async function PartidoPage({ params }: PageProps) {
   if (overview.totalParlamentares === 0) notFound()
 
   const anoCorrente = new Date().getFullYear()
-  const [fidelidade, temas, gasto] = await Promise.all([
+  const [fidelidade, temas, gasto, alinhamentoMedio] = await Promise.all([
     getFidelidadeInternaMedia(sigla),
     getTop5TemasPartido(sigla),
     getGastoBancadaAno(sigla, anoCorrente),
+    getAlinhamentoMedioBancada(sigla),
   ])
 
   return (
@@ -117,6 +121,13 @@ export default async function PartidoPage({ params }: PageProps) {
         title="Bancada"
       >
         <BancadaList membros={overview.parlamentares} />
+      </Section>
+
+      <Section
+        hint="Distribuição por Casa e pelos estados com maior representação."
+        title="Composição da bancada"
+      >
+        <DistribuicaoBancadaBlock membros={overview.parlamentares} />
       </Section>
 
       <Section
@@ -146,6 +157,16 @@ export default async function PartidoPage({ params }: PageProps) {
         title={`Gasto CEAP — ${anoCorrente}`}
       >
         <GastoBancadaBlock ano={anoCorrente} gasto={gasto} />
+      </Section>
+
+      <Section
+        hint="Com que frequência os membros votam na mesma direção que a maioria do partido ou bloco. Membros com menos de 10 votações analisadas são excluídos."
+        title="Alinhamento médio da bancada"
+      >
+        <AlinhamentoMedioBancadaBlock
+          alinhamento={alinhamentoMedio}
+          sigla={sigla}
+        />
       </Section>
     </div>
   )
