@@ -50,6 +50,9 @@ export const TTL = {
   vetos: 86_400,
   // Mandatos externos de deputados (Sprint 14.0, G11): ingestão mensal → 24h.
   mandatosExternos: 86_400,
+  // Rankings de transparência (Sprint 16.0): gastos CEAP e alinhamento.
+  // Dado de estatistica_parlamentar_agregada — atualizado pelo seed diário → 24h.
+  rankings: 86_400,
   // Pares de votos em direções opostas (coerência, ADR-054). Só mudam quando
   // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
   // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.
