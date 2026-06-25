@@ -1,9 +1,10 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinhamento'
 import { db } from '@/shared/db'
 import {
+  estatisticaParlamentarAgregada,
   gasto,
   parlamentar,
   proposicaoAutor,
@@ -243,6 +244,56 @@ export async function getGastoBancadaAno(
       return {
         totalGeral: Number(totalStr).toFixed(2),
         totalRegistros: Number(row?.n ?? 0),
+      }
+    },
+  )
+}
+
+export interface AlinhamentoMedioBancada {
+  /** Média de pct_alinhamento dos membros com ≥ 10 votações analisadas. null se nenhum elegível. */
+  percentualMedio: number | null
+  /** Membros com dados suficientes (≥ 10 votações). */
+  comDados: number
+}
+
+// Média de alinhamento partidário da bancada via estatistica_parlamentar_agregada.
+// Distinto de getFidelidadeInternaMedia (que mede alinhamento à orientação de bancada
+// via voto_nominal join orientacao_bancada). Este usa o campo pré-computado.
+export async function getAlinhamentoMedioBancada(
+  sigla: string,
+): Promise<AlinhamentoMedioBancada> {
+  return cached(
+    `partido:alinhamento-medio:${sigla}`,
+    TTL.rankings,
+    async () => {
+      const MIN_VOTACOES = 10
+      const rows = await db
+        .select({
+          avgAlinhamento: sql<
+            string | null
+          >`AVG(${estatisticaParlamentarAgregada.pctAlinhamento})`,
+          comDados: sql<number>`COUNT(*)::int`,
+        })
+        .from(parlamentar)
+        .innerJoin(
+          estatisticaParlamentarAgregada,
+          eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+        )
+        .where(
+          and(
+            eq(parlamentar.partidoSigla, sigla),
+            isNotNull(estatisticaParlamentarAgregada.pctAlinhamento),
+            sql`${estatisticaParlamentarAgregada.votacoesAnalisadas} >= ${MIN_VOTACOES}`,
+          ),
+        )
+
+      const row = rows[0]
+      return {
+        percentualMedio:
+          row?.avgAlinhamento != null
+            ? Math.round(parseFloat(row.avgAlinhamento) * 10) / 10
+            : null,
+        comDados: Number(row?.comDados ?? 0),
       }
     },
   )
