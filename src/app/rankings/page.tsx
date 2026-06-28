@@ -2,7 +2,7 @@
 // Cada card linka para um ranking específico.
 
 import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
-import { Receipt, Scale, TrendingUp } from 'lucide-react'
+import { Receipt, Scale, TrendingUp, UserCheck } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -38,6 +38,14 @@ const RANKINGS = [
     title: 'Disciplina partidária',
     description:
       'Quem vota mais junto com o partido e quem diverge mais. Calculado sobre votações nominais no plenário.',
+  },
+  {
+    href: '/rankings/presenca',
+    icon: UserCheck,
+    iconClass: 'text-green-600',
+    title: 'Presença em plenário',
+    description:
+      'Quem mais comparece (e quem mais falta) às votações nominais no plenário, calculado na janela do mandato de cada parlamentar.',
   },
 ]
 
