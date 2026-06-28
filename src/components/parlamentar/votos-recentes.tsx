@@ -19,6 +19,15 @@ interface Voto {
   proposicaoTipo?: string | null
   proposicaoNumero?: number | null
   proposicaoAno?: number | null
+  orientacao?: string | null
+}
+
+const ORIENTACAO_LABEL: Record<string, string> = {
+  SIM: 'SIM',
+  NAO: 'NÃO',
+  ABSTENCAO: 'Abs.',
+  OBSTRUCAO: 'Obstr.',
+  LIBERADO: 'Livre',
 }
 
 export interface VotosRecentesFiltros {
@@ -148,6 +157,12 @@ export function VotosRecentes({
                         {v.proposicaoTipo} {v.proposicaoNumero}/
                         {v.proposicaoAno} →
                       </Link>
+                    ) : null}
+                    {v.orientacao ? (
+                      <span className="mt-0.5 block text-fg-quaternary text-xs">
+                        bancada:{' '}
+                        {ORIENTACAO_LABEL[v.orientacao] ?? v.orientacao}
+                      </span>
                     ) : null}
                   </div>
                 </div>

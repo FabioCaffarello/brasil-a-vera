@@ -40,6 +40,8 @@ export interface FiltrosVotacao {
   resultado?: 'aprovadas' | 'rejeitadas'
   /** Apenas votações com pelo menos 1 voto nominal registrado. */
   somenteNominais?: boolean
+  /** Filtrar pelo ID interno da proposição vinculada. */
+  proposicaoId?: string
 }
 
 export async function listVotacoes(filtros: FiltrosVotacao = {}, limit = 50) {
@@ -240,7 +242,7 @@ export async function getVotosResumoPorPartido(
 export async function countVotacoes(
   filtros: FiltrosVotacao = {},
 ): Promise<number> {
-  const key = `votacoes:count:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}`
+  const key = `votacoes:count:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}:prop=${filtros.proposicaoId ?? '_'}`
   return cached(key, TTL.listagemFiltrada, async () => {
     const where = []
     if (filtros.casa) where.push(eq(votacao.casa, filtros.casa))
@@ -256,6 +258,8 @@ export async function countVotacoes(
         sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
       )
     }
+    if (filtros.proposicaoId)
+      where.push(eq(votacao.proposicaoId, filtros.proposicaoId))
 
     const rows = await db
       .select({ total: sql<number>`count(*)::int` })
@@ -370,7 +374,7 @@ export async function listVotacoesCursor(
 ): Promise<ListVotacoesCursorResult> {
   const limit = opts.limit ?? VOTACOES_LISTAGEM_PAGE_SIZE
   const cursorPart = opts.cursor ? encodeCursor(opts.cursor) : 'p1'
-  const key = `votacoes:listcursor:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}:limit=${limit}:cursor=${cursorPart}`
+  const key = `votacoes:listcursor:casa=${filtros.casa ?? '_'}:ano=${filtros.ano ?? '_'}:resultado=${filtros.resultado ?? '_'}:nominais=${filtros.somenteNominais ? '1' : '0'}:prop=${filtros.proposicaoId ?? '_'}:limit=${limit}:cursor=${cursorPart}`
 
   return cached(key, TTL.listagemFiltrada, async () => {
     const where = []
@@ -387,6 +391,8 @@ export async function listVotacoesCursor(
         sql`exists (select 1 from votacoes.voto_nominal vn where vn.votacao_id = ${votacao.id})`,
       )
     }
+    if (filtros.proposicaoId)
+      where.push(eq(votacao.proposicaoId, filtros.proposicaoId))
 
     if (opts.cursor) {
       const c = opts.cursor

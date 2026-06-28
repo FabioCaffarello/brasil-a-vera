@@ -10,6 +10,14 @@ import { notFound } from 'next/navigation'
 import { formatDataBR, formatProposicaoRef } from '@/lib/format'
 import { getTema, getVotacoesByTema } from '@/lib/queries/temas'
 
+const SITUACAO_LABELS: Record<string, string> = {
+  TRAMITANDO: 'Tramitando',
+  APROVADA: 'Aprovada',
+  REJEITADA: 'Rejeitada',
+  ARQUIVADA: 'Arquivada',
+  TRANSFORMADA_EM_NORMA: 'Virou norma',
+}
+
 interface PageProps {
   params: Promise<{ codigo: string }>
 }
@@ -107,12 +115,17 @@ export default async function TemaPage({ params }: PageProps) {
                 className="rounded-lg border border-line-default p-3"
                 key={p.proposicaoId}
               >
-                <Link
-                  className="font-medium font-mono text-fg-primary text-xs hover:text-fg-tertiary hover:underline"
-                  href={`/proposicoes/${p.tipo}/${p.numero}/${p.ano}`}
-                >
-                  {formatProposicaoRef(p.tipo, p.numero, p.ano)}
-                </Link>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    className="font-medium font-mono text-fg-primary text-xs hover:text-fg-tertiary hover:underline"
+                    href={`/proposicoes/${p.tipo}/${p.numero}/${p.ano}`}
+                  >
+                    {formatProposicaoRef(p.tipo, p.numero, p.ano)}
+                  </Link>
+                  <span className="text-fg-tertiary text-xs">
+                    {SITUACAO_LABELS[p.situacao] ?? p.situacao}
+                  </span>
+                </div>
                 <p className="mt-1.5 text-fg-primary text-sm">{p.ementa}</p>
               </li>
             ))}
