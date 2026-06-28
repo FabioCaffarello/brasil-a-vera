@@ -136,9 +136,12 @@ export function ProposicoesAutor({
               key={p.proposicaoId}
             >
               <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-xs">
-                <span className="font-medium font-mono text-fg-primary">
+                <Link
+                  className="font-medium font-mono text-fg-primary hover:text-fg-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                  href={`/proposicoes/${p.tipo}/${p.numero}/${p.ano}`}
+                >
                   {formatProposicaoRef(p.tipo, p.numero, p.ano)}
-                </span>
+                </Link>
                 <span className="flex items-center gap-2">
                   <span>{p.tipoAutoria === 'AUTOR' ? 'Autor' : 'Coautor'}</span>
                   <span aria-hidden>·</span>
