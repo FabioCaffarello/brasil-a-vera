@@ -15,6 +15,7 @@ import {
   parlamentar,
   proposicao,
   proposicaoAutor,
+  proposicaoTema,
   votacao,
   votoNominal,
 } from '@/shared/db/schema'
@@ -445,6 +446,47 @@ export interface ProposicoesAutoradasOpts {
   cursor?: CursorProposicoesV1Payload
   tipo?: ProposicaoTipoFilter
   situacao?: ProposicaoSituacaoFilter
+  /** Filtro por tema: código da proposicao_tema. Usa EXISTS — sem JOIN extra. */
+  codigoTema?: number
+}
+
+export interface TopTemaParlamentar {
+  codigo: number
+  nome: string
+  total: number
+}
+
+export async function getTopTemasByParlamentar(
+  parlamentarId: string,
+  limit = 5,
+): Promise<TopTemaParlamentar[]> {
+  return cached(
+    `parlamentar:top-temas:${parlamentarId}:${limit}`,
+    TTL.proposicoesStatsGlobais,
+    async () => {
+      const rows = await db
+        .select({
+          codigo: proposicaoTema.codigoTema,
+          nome: sql<string>`MAX(${proposicaoTema.nomeTema})`,
+          total: sql<number>`COUNT(*)::int`,
+        })
+        .from(proposicaoAutor)
+        .innerJoin(proposicao, eq(proposicao.id, proposicaoAutor.proposicaoId))
+        .innerJoin(
+          proposicaoTema,
+          eq(proposicaoTema.proposicaoId, proposicao.id),
+        )
+        .where(eq(proposicaoAutor.parlamentarId, parlamentarId))
+        .groupBy(proposicaoTema.codigoTema)
+        .orderBy(desc(sql`COUNT(*)`))
+        .limit(limit)
+      return rows.map((r) => ({
+        codigo: r.codigo,
+        nome: r.nome,
+        total: Number(r.total),
+      }))
+    },
+  )
 }
 
 export interface ProposicaoAutoradaRow {
@@ -484,6 +526,7 @@ export async function getProposicoesAutoradas(
   const cursor = opts.cursor
   const tipo = opts.tipo ?? 'todos'
   const situacao = opts.situacao ?? 'todas'
+  const codigoTema = opts.codigoTema
 
   const whereClauses = [eq(proposicaoAutor.parlamentarId, parlamentarId)]
 
@@ -492,6 +535,11 @@ export async function getProposicoesAutoradas(
   }
   if (situacao !== 'todas') {
     whereClauses.push(sql`${proposicao.situacao}::text = ${situacao}`)
+  }
+  if (codigoTema !== undefined) {
+    whereClauses.push(
+      sql`EXISTS (SELECT 1 FROM proposicoes.proposicao_tema pt WHERE pt.proposicao_id = ${proposicao.id} AND pt.codigo_tema = ${codigoTema})`,
+    )
   }
 
   // Keyset pagination (ADR-026). Tuple compare em 3 colunas:

@@ -108,6 +108,7 @@ import {
   getParlamentarById,
   getProposicoesAutoradas,
   getTop5Afinidade,
+  getTopTemasByParlamentar,
   getVotosDistribuicao,
   getVotosRecentes,
   PROPOSICAO_SITUACOES,
@@ -146,6 +147,7 @@ interface PageProps {
     propos_after?: string
     propos_tipo?: string
     propos_situacao?: string
+    propos_tema?: string
   }>
 }
 
@@ -254,6 +256,7 @@ export default async function ParlamentarPerfilPage({
   const alinhamentoVotos = normalizeVotosAlinhamento(sp.votos_alinhamento)
   const tipoPropos = normalizeProposicaoTipo(sp.propos_tipo)
   const situacaoPropos = normalizeProposicaoSituacao(sp.propos_situacao)
+  const temaPropos = sp.propos_tema ? Number(sp.propos_tema) : undefined
 
   const anoCorrente = new Date().getFullYear()
   const [
@@ -290,6 +293,7 @@ export default async function ParlamentarPerfilPage({
     votosParlamentarVetos,
     mandatosExternos,
     candidaturas,
+    topTemasProposicoes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -304,6 +308,7 @@ export default async function ParlamentarPerfilPage({
       cursor: cursorPropos,
       tipo: tipoPropos,
       situacao: situacaoPropos,
+      codigoTema: temaPropos,
     }),
     getGastosResumo(parlamentar.id, anoCorrente),
     getGastosMensalMedianaCasa(parlamentar.id, anoCorrente),
@@ -363,6 +368,7 @@ export default async function ParlamentarPerfilPage({
     // Candidaturas TSE: vínculo via CPF (L2). Câmara-only na prática —
     // senadores sem CPF retornam array vazio; seção omitida quando vazio.
     getCandidaturasByParlamentar(parlamentar.id),
+    getTopTemasByParlamentar(parlamentar.id),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -410,6 +416,7 @@ export default async function ParlamentarPerfilPage({
   const proposicoesFiltros = {
     tipo: tipoPropos ?? 'todos',
     situacao: situacaoPropos ?? 'todas',
+    tema: temaPropos ?? null,
   } as const
   const buildProposicoesFiltroHref = (
     overrides: Record<string, string | null>,
@@ -670,6 +677,7 @@ export default async function ParlamentarPerfilPage({
           <ProposicoesAutor
             proposicoes={proposicoes}
             filtros={proposicoesFiltros}
+            topTemas={topTemasProposicoes}
             buildFiltroHref={buildProposicoesFiltroHref}
             proximaPaginaHref={proposicoesProximaPaginaHref}
           />
