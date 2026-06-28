@@ -1,4 +1,4 @@
-import { desc, or, sql } from 'drizzle-orm'
+import { desc, eq, or, sql } from 'drizzle-orm'
 
 import { escapeIlike, parseProposicaoRef } from '@/lib/busca-parser'
 import { db } from '@/shared/db'
@@ -33,6 +33,9 @@ export interface ResultadosBusca {
     votosSim: number
     votosNao: number
     abstencoes: number
+    proposicaoTipo: string | null
+    proposicaoNumero: number | null
+    proposicaoAno: number | null
   }>
   proposicaoMatchExato: { tipo: string; numero: number; ano: number } | null
 }
@@ -107,8 +110,12 @@ export async function busca(query: string): Promise<ResultadosBusca> {
         votosSim: votacao.votosSim,
         votosNao: votacao.votosNao,
         abstencoes: votacao.abstencoes,
+        proposicaoTipo: proposicao.tipo,
+        proposicaoNumero: proposicao.numero,
+        proposicaoAno: proposicao.ano,
       })
       .from(votacao)
+      .leftJoin(proposicao, eq(proposicao.id, votacao.proposicaoId))
       .where(sql`${votacao.descricao} ILIKE ${pattern}`)
       .orderBy(desc(votacao.dataHora))
       .limit(LIMIT_POR_SECAO),
