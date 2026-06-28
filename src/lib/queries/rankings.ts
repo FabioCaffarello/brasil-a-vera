@@ -4,6 +4,8 @@ import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
 import { estatisticaParlamentarAgregada, parlamentar } from '@/shared/db/schema'
 
+const MIN_ELEGIVEIS_PRESENCA = 10
+
 // Rankings de transparência (Sprint 16.0).
 // Fonte: estatistica_parlamentar_agregada, atualizada pelo seed diário.
 // Cache 24h (TTL.rankings) — mesmo horizonte do seed.
@@ -142,6 +144,113 @@ export async function getRankingAlinhamento(limit = 25): Promise<{
     return {
       disciplinados: disciplinados.map(toEntry),
       independentes: independentes.map(toEntry),
+    }
+  })
+}
+
+export interface RankingPresencaEntry {
+  id: string
+  nome: string
+  partidoSigla: string | null
+  uf: string
+  urlFoto: string | null
+  casa: 'CAMARA' | 'SENADO'
+  pctPresenca: number
+  presentes: number
+  elegiveis: number
+}
+
+// Ranking global de presença em votações nominais de plenário.
+// Adapta a lógica de fetchPresenca (presenca.ts) sem filtro por IDs:
+// janela de mandato aproximada pelo min/max de participação do parlamentar.
+// Requer >= MIN_ELEGIVEIS_PRESENCA votações elegíveis para entrar.
+// Cold cache estimado 2–8s; cacheado 24h.
+export async function getRankingPresenca(limit = 25): Promise<{
+  maisPresentes: RankingPresencaEntry[]
+  maisAusentes: RankingPresencaEntry[]
+}> {
+  return cached(`rankings:presenca:n=${limit}`, TTL.rankings, async () => {
+    const presencaQuery = sql`
+      WITH win AS (
+        SELECT vn.parlamentar_id AS pid,
+               p.casa,
+               min(v.data_hora) AS lo,
+               max(v.data_hora) AS hi
+        FROM votacoes.voto_nominal vn
+        JOIN parlamentares.parlamentar p ON p.id = vn.parlamentar_id
+        JOIN votacoes.votacao v ON v.id = vn.votacao_id
+        GROUP BY vn.parlamentar_id, p.casa
+      ),
+      elegiveis AS (
+        SELECT w.pid, v.id AS votacao_id
+        FROM win w
+        JOIN votacoes.votacao v
+          ON v.casa = w.casa
+         AND v.orgao = 'PLEN'
+         AND v.data_hora BETWEEN w.lo AND w.hi
+        WHERE EXISTS (
+          SELECT 1 FROM votacoes.voto_nominal vn2 WHERE vn2.votacao_id = v.id
+        )
+      ),
+      contagem AS (
+        SELECT
+          w.pid AS parlamentar_id,
+          count(e.votacao_id)::int AS elegiveis_total,
+          count(e.votacao_id) FILTER (
+            WHERE EXISTS (
+              SELECT 1 FROM votacoes.voto_nominal vn
+              WHERE vn.votacao_id = e.votacao_id
+                AND vn.parlamentar_id = w.pid
+                AND vn.voto::text <> 'AUSENTE'
+            )
+          )::int AS presentes_total
+        FROM win w
+        LEFT JOIN elegiveis e ON e.pid = w.pid
+        GROUP BY w.pid
+      )
+      SELECT
+        c.parlamentar_id AS id,
+        p.nome,
+        p.partido_sigla AS "partidoSigla",
+        p.uf,
+        p.url_foto AS "urlFoto",
+        p.casa,
+        c.elegiveis_total AS elegiveis,
+        c.presentes_total AS presentes,
+        (c.presentes_total::float / c.elegiveis_total) * 100 AS pct_presenca
+      FROM contagem c
+      JOIN parlamentares.parlamentar p ON p.id = c.parlamentar_id
+      WHERE c.elegiveis_total >= ${MIN_ELEGIVEIS_PRESENCA}
+    `
+
+    const [topRows, botRows] = await Promise.all([
+      db.execute(
+        sql`${presencaQuery} ORDER BY pct_presenca DESC LIMIT ${limit}`,
+      ),
+      db.execute(
+        sql`${presencaQuery} ORDER BY pct_presenca ASC LIMIT ${limit}`,
+      ),
+    ])
+
+    const toEntry = (r: Record<string, unknown>): RankingPresencaEntry => ({
+      id: r.id as string,
+      nome: r.nome as string,
+      partidoSigla: (r.partidoSigla as string | null) ?? null,
+      uf: r.uf as string,
+      urlFoto: (r.urlFoto as string | null) ?? null,
+      casa: r.casa as 'CAMARA' | 'SENADO',
+      pctPresenca: Math.round(Number(r.pct_presenca) * 10) / 10,
+      presentes: Number(r.presentes),
+      elegiveis: Number(r.elegiveis),
+    })
+
+    return {
+      maisPresentes: (topRows.rows as unknown as Record<string, unknown>[]).map(
+        toEntry,
+      ),
+      maisAusentes: (botRows.rows as unknown as Record<string, unknown>[]).map(
+        toEntry,
+      ),
     }
   })
 }
