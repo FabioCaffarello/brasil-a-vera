@@ -280,6 +280,9 @@ export interface VotacaoRecente {
   dataHora: Date | string
   descricao: string
   aprovada: boolean
+  proposicaoTipo: string | null
+  proposicaoNumero: number | null
+  proposicaoAno: number | null
 }
 
 // Votações mais recentes para o card narrativo da home (Sprint 3.1 Tarefa 2).
@@ -300,8 +303,12 @@ export async function getVotacoesRecentes(
         dataHora: votacao.dataHora,
         descricao: votacao.descricao,
         aprovada: votacao.aprovada,
+        proposicaoTipo: proposicao.tipo,
+        proposicaoNumero: proposicao.numero,
+        proposicaoAno: proposicao.ano,
       })
       .from(votacao)
+      .leftJoin(proposicao, eq(proposicao.id, votacao.proposicaoId))
       .where(
         sql`${votacao.dataHora} >= now() - make_interval(days => ${diasJanela})`,
       )
