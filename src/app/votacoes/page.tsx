@@ -20,6 +20,7 @@ import {
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Vote } from 'lucide-react'
+import Link from 'next/link'
 import { permanentRedirect } from 'next/navigation'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { MostrarMais } from '@/components/listagem/mostrar-mais'
@@ -81,6 +82,8 @@ interface PageProps {
     resultado?: string
     somenteNominais?: string
     after?: string
+    /** Filtro por ID interno de proposição (vem do link da página de proposição). */
+    proposicao_id?: string
     /** Compat ADR-028 §4 — aceito por 1 release. Sempre redireciona para
      * strip do param, preservando os demais filtros. */
     offset?: string
@@ -146,6 +149,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     ano: normalizeAno(params.ano),
     resultado: normalizeResultado(params.resultado),
     somenteNominais: params.somenteNominais === '1',
+    proposicaoId: params.proposicao_id || undefined,
   }
 
   // Cursor ADR-026: null = token inválido (versão antiga, shape errado,
@@ -237,6 +241,15 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             somenteNominais: params.somenteNominais === '1',
           }}
         />
+
+        {params.proposicao_id && (
+          <p className="text-fg-tertiary text-sm">
+            Exibindo votações de uma proposição específica.{' '}
+            <Link className="underline hover:text-fg-primary" href="/votacoes">
+              Ver todas as votações →
+            </Link>
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2 text-fg-tertiary text-sm">
           <span>

@@ -394,6 +394,16 @@ export default async function ProposicaoDetalhePage({
             votacoes={votacoes}
           />
           <VotacoesComissaoSenado votacoes={votacoesComissao} />
+          {votacoes.length > 0 && (
+            <p className="text-fg-tertiary text-sm">
+              <a
+                className="underline hover:text-fg-primary"
+                href={`/votacoes?proposicao_id=${proposicao.id}`}
+              >
+                Ver todas as votações desta proposição na listagem →
+              </a>
+            </p>
+          )}
         </div>
       ),
     },

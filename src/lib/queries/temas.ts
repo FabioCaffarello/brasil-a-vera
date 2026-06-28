@@ -36,6 +36,7 @@ export interface TemaProposicao {
   numero: number
   ano: number
   ementa: string
+  situacao: string
 }
 
 export interface TemaDetalhe {
@@ -111,6 +112,7 @@ export async function getTema(codigo: number): Promise<TemaDetalhe | null> {
           numero: proposicao.numero,
           ano: proposicao.ano,
           ementa: proposicao.ementa,
+          situacao: proposicao.situacao,
         })
         .from(proposicaoTema)
         .innerJoin(proposicao, eq(proposicao.id, proposicaoTema.proposicaoId))
