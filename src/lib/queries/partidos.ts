@@ -249,6 +249,45 @@ export async function getGastoBancadaAno(
   )
 }
 
+export interface GastoCategoriasBancada {
+  categorias: { descricao: string; total: string }[]
+}
+
+export async function getGastoCategoriasBancada(
+  sigla: string,
+  ano: number,
+): Promise<GastoCategoriasBancada> {
+  return cached(
+    `partido:gasto-categorias:${sigla}:${ano}`,
+    TTL.partidoOverview,
+    async () => {
+      const rows = await db
+        .select({
+          descricao: gasto.categoriaDescricao,
+          total: sql<string>`SUM(${gasto.valor})`,
+        })
+        .from(gasto)
+        .innerJoin(parlamentar, eq(parlamentar.id, gasto.parlamentarId))
+        .where(
+          and(
+            eq(parlamentar.partidoSigla, sigla),
+            sql`extract(year from ${gasto.dataEmissao}) = ${ano}`,
+          ),
+        )
+        .groupBy(gasto.categoriaDescricao)
+        .orderBy(desc(sql`SUM(${gasto.valor})`))
+        .limit(5)
+
+      return {
+        categorias: rows.map((r) => ({
+          descricao: r.descricao,
+          total: Number(r.total ?? 0).toFixed(2),
+        })),
+      }
+    },
+  )
+}
+
 export interface AlinhamentoMedioBancada {
   /** Média de pct_alinhamento dos membros com ≥ 10 votações analisadas. null se nenhum elegível. */
   percentualMedio: number | null
