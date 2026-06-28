@@ -11,6 +11,7 @@ interface Props {
     ano: number
     ementa: string
     situacao: string
+    temas?: Array<{ codigo: number; nome: string }>
   }
 }
 
@@ -39,6 +40,18 @@ export function ProposicaoVinculada({ proposicao: p }: Props) {
           <span className="text-fg-quaternary italic">(sem ementa)</span>
         )}
       </p>
+      {p.temas && p.temas.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-1">
+          {p.temas.map((t) => (
+            <li
+              className="inline-flex items-center rounded-full bg-surface-raised px-2 py-0.5 text-fg-tertiary text-xs"
+              key={t.codigo}
+            >
+              {t.nome}
+            </li>
+          ))}
+        </ul>
+      )}
     </Link>
   )
 }

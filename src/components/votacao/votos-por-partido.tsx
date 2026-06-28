@@ -1,5 +1,7 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
+import Link from 'next/link'
+
 import type { ResumoPorPartido } from '@/lib/queries/votacoes'
 
 interface Props {
@@ -45,7 +47,12 @@ export function VotosPorPartido({ porPartido }: Props) {
               key={p.partidoSigla}
             >
               <td className="px-2 py-1.5 font-medium text-fg-primary">
-                {p.partidoSigla}
+                <Link
+                  className="hover:text-fg-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-1"
+                  href={`/partidos/${p.partidoSigla}`}
+                >
+                  {p.partidoSigla}
+                </Link>
               </td>
               <td className="px-2 py-1.5 text-right tabular-nums text-fg-primary">
                 {p.sim || ''}

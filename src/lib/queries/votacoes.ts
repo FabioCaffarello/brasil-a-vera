@@ -12,6 +12,7 @@ import {
   orientacao,
   parlamentar,
   proposicao,
+  proposicaoTema,
   votacao,
   votoNominal,
 } from '@/shared/db/schema'
@@ -111,19 +112,29 @@ export async function getProposicaoVinculada(proposicaoId: string | null) {
     `votacoes:proposicao-vinculada:${proposicaoId}`,
     TTL.votacaoHistorica,
     async () => {
-      const rows = await db
-        .select({
-          id: proposicao.id,
-          tipo: proposicao.tipo,
-          numero: proposicao.numero,
-          ano: proposicao.ano,
-          ementa: proposicao.ementa,
-          situacao: proposicao.situacao,
-        })
-        .from(proposicao)
-        .where(eq(proposicao.id, proposicaoId))
-        .limit(1)
-      return rows[0] ?? null
+      const [rows, temas] = await Promise.all([
+        db
+          .select({
+            id: proposicao.id,
+            tipo: proposicao.tipo,
+            numero: proposicao.numero,
+            ano: proposicao.ano,
+            ementa: proposicao.ementa,
+            situacao: proposicao.situacao,
+          })
+          .from(proposicao)
+          .where(eq(proposicao.id, proposicaoId))
+          .limit(1),
+        db
+          .select({
+            codigo: proposicaoTema.codigoTema,
+            nome: proposicaoTema.nomeTema,
+          })
+          .from(proposicaoTema)
+          .where(eq(proposicaoTema.proposicaoId, proposicaoId))
+          .orderBy(proposicaoTema.nomeTema),
+      ])
+      return rows[0] ? { ...rows[0], temas } : null
     },
   )
 }
