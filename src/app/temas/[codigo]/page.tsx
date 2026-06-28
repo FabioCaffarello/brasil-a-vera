@@ -166,6 +166,21 @@ export default async function TemaPage({ params }: PageProps) {
                   >
                     {v.descricao}
                   </Link>
+                  {v.proposicaoTipo &&
+                    v.proposicaoNumero &&
+                    v.proposicaoAno && (
+                      <Link
+                        className="mt-0.5 inline-block text-fg-tertiary text-xs decoration-dotted underline-offset-2 hover:text-fg-secondary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
+                        href={`/proposicoes/${v.proposicaoTipo}/${v.proposicaoNumero}/${v.proposicaoAno}`}
+                      >
+                        {formatProposicaoRef(
+                          v.proposicaoTipo,
+                          v.proposicaoNumero,
+                          v.proposicaoAno,
+                        )}{' '}
+                        →
+                      </Link>
+                    )}
                 </li>
               ))}
             </ul>
