@@ -6,6 +6,7 @@ import { formatProposicaoRef } from '@/lib/format'
 import type {
   ProposicaoSituacaoFilter,
   ProposicaoTipoFilter,
+  TopTemaParlamentar,
 } from '@/lib/queries/parlamentares'
 
 interface Proposicao {
@@ -21,11 +22,14 @@ interface Proposicao {
 export interface ProposicoesAutorFiltros {
   tipo: ProposicaoTipoFilter
   situacao: ProposicaoSituacaoFilter
+  tema: number | null
 }
 
 interface Props {
   proposicoes: Proposicao[]
   filtros: ProposicoesAutorFiltros
+  /** Top temas do parlamentar para chips de filtro. Omitido quando vazio. */
+  topTemas: TopTemaParlamentar[]
   /**
    * Mesma assinatura do VotosRecentes: troca um filtro mantendo os
    * demais (`null` para reset). Caller (page) acopla com URL.
@@ -67,6 +71,7 @@ const SITUACAO_FILTER_LABEL: Record<ProposicaoSituacaoFilter, string> = {
 export function ProposicoesAutor({
   proposicoes,
   filtros,
+  topTemas,
   buildFiltroHref,
   proximaPaginaHref,
 }: Props) {
@@ -102,6 +107,21 @@ export function ProposicoesAutor({
             </Chip>
           ))}
         </FilterChips>
+
+        {topTemas.length > 0 && (
+          <FilterChips label="Tema">
+            <Chip asChild selected={filtros.tema === null}>
+              <Link href={buildFiltroHref({ tema: null })}>Todos</Link>
+            </Chip>
+            {topTemas.map((t) => (
+              <Chip asChild key={t.codigo} selected={filtros.tema === t.codigo}>
+                <Link href={buildFiltroHref({ tema: String(t.codigo) })}>
+                  {t.nome}
+                </Link>
+              </Chip>
+            ))}
+          </FilterChips>
+        )}
       </div>
 
       {proposicoes.length === 0 ? (
