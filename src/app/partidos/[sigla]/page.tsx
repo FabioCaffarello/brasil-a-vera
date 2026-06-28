@@ -28,6 +28,7 @@ import {
   getAlinhamentoMedioBancada,
   getFidelidadeInternaMedia,
   getGastoBancadaAno,
+  getGastoCategoriasBancada,
   getPartidoOverview,
   getTop5TemasPartido,
 } from '@/lib/queries/partidos'
@@ -101,12 +102,14 @@ export default async function PartidoPage({ params }: PageProps) {
   if (overview.totalParlamentares === 0) notFound()
 
   const anoCorrente = new Date().getFullYear()
-  const [fidelidade, temas, gasto, alinhamentoMedio] = await Promise.all([
-    getFidelidadeInternaMedia(sigla),
-    getTop5TemasPartido(sigla),
-    getGastoBancadaAno(sigla, anoCorrente),
-    getAlinhamentoMedioBancada(sigla),
-  ])
+  const [fidelidade, temas, gasto, alinhamentoMedio, gastoCategorias] =
+    await Promise.all([
+      getFidelidadeInternaMedia(sigla),
+      getTop5TemasPartido(sigla),
+      getGastoBancadaAno(sigla, anoCorrente),
+      getAlinhamentoMedioBancada(sigla),
+      getGastoCategoriasBancada(sigla, anoCorrente),
+    ])
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
@@ -156,7 +159,11 @@ export default async function PartidoPage({ params }: PageProps) {
         hint="Cota para Exercício da Atividade Parlamentar (Câmara). Senado tem regime próprio ainda não ingerido."
         title={`Gasto CEAP — ${anoCorrente}`}
       >
-        <GastoBancadaBlock ano={anoCorrente} gasto={gasto} />
+        <GastoBancadaBlock
+          ano={anoCorrente}
+          categorias={gastoCategorias}
+          gasto={gasto}
+        />
       </Section>
 
       <Section
