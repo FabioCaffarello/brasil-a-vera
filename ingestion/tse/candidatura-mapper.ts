@@ -14,6 +14,7 @@ export interface CandidaturaRow {
   sgUf: string
   sgUe: string
   dsSituacaoCandidatura: string
+  qtVotosNominais: number | null
   trustLevel: 'L1'
   sourceUrl: string
 }
@@ -33,6 +34,10 @@ export function mapTseCandidatura(
     sgUf: input.SG_UF,
     sgUe: input.SG_UE,
     dsSituacaoCandidatura: input.DS_SITUACAO_CANDIDATURA,
+    qtVotosNominais:
+      input.QT_VOTOS_NOMINAIS != null && input.QT_VOTOS_NOMINAIS.trim() !== ''
+        ? Number(input.QT_VOTOS_NOMINAIS)
+        : null,
     trustLevel: 'L1',
     sourceUrl,
   }

@@ -15,6 +15,7 @@ export interface CandidaturaTse {
   sgUf: string
   dsSituacaoCandidatura: string
   sqCandidato: number
+  qtVotosNominais: number | null
 }
 
 export async function getCandidaturasByParlamentar(
@@ -32,6 +33,7 @@ export async function getCandidaturasByParlamentar(
           sgUf: tseCandidatura.sgUf,
           dsSituacaoCandidatura: tseCandidatura.dsSituacaoCandidatura,
           sqCandidato: tseCandidatura.sqCandidato,
+          qtVotosNominais: tseCandidatura.qtVotosNominais,
         })
         .from(tseCandidatura)
         .where(eq(tseCandidatura.parlamentarId, parlamentarId))

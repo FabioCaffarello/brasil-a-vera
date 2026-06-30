@@ -25,8 +25,10 @@ import { GastoBancadaBlock } from '@/components/partido/gasto-bancada'
 import { PartidoHeader } from '@/components/partido/header'
 import { TopTemasPartido } from '@/components/partido/top-temas'
 import {
+  type FiliacaoMovimentacao,
   getAlinhamentoMedioBancada,
   getFidelidadeInternaMedia,
+  getFiliacoesRecentes,
   getGastoBancadaAno,
   getGastoCategoriasBancada,
   getPartidoOverview,
@@ -94,6 +96,43 @@ function Section({
   )
 }
 
+function MovimentacoesFiliacoes({
+  movimentacoes,
+}: {
+  movimentacoes: FiliacaoMovimentacao[]
+}) {
+  return (
+    <ul className="space-y-2">
+      {movimentacoes.map((m) => (
+        <li
+          className="flex flex-wrap items-center gap-2 text-sm"
+          key={`${m.parlamentarId}-${m.tipo}-${m.data}`}
+        >
+          <span
+            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
+              m.tipo === 'ENTRADA'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+            }`}
+          >
+            {m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}
+          </span>
+          <span className="font-medium text-fg-primary">
+            {m.parlamentarNome}
+          </span>
+          <span className="text-fg-tertiary text-xs">
+            {m.parlamentarUf} ·{' '}
+            {m.parlamentarCasa === 'CAMARA' ? 'Câmara' : 'Senado'}
+          </span>
+          <span className="ml-auto font-mono text-fg-tertiary text-xs tabular-nums">
+            {new Date(m.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default async function PartidoPage({ params }: PageProps) {
   const { sigla: siglaRaw } = await params
   const sigla = siglaRaw.toUpperCase()
@@ -102,14 +141,21 @@ export default async function PartidoPage({ params }: PageProps) {
   if (overview.totalParlamentares === 0) notFound()
 
   const anoCorrente = new Date().getFullYear()
-  const [fidelidade, temas, gasto, alinhamentoMedio, gastoCategorias] =
-    await Promise.all([
-      getFidelidadeInternaMedia(sigla),
-      getTop5TemasPartido(sigla),
-      getGastoBancadaAno(sigla, anoCorrente),
-      getAlinhamentoMedioBancada(sigla),
-      getGastoCategoriasBancada(sigla, anoCorrente),
-    ])
+  const [
+    fidelidade,
+    temas,
+    gasto,
+    alinhamentoMedio,
+    gastoCategorias,
+    filiacoesRecentes,
+  ] = await Promise.all([
+    getFidelidadeInternaMedia(sigla),
+    getTop5TemasPartido(sigla),
+    getGastoBancadaAno(sigla, anoCorrente),
+    getAlinhamentoMedioBancada(sigla),
+    getGastoCategoriasBancada(sigla, anoCorrente),
+    getFiliacoesRecentes(sigla),
+  ])
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
@@ -175,6 +221,15 @@ export default async function PartidoPage({ params }: PageProps) {
           sigla={sigla}
         />
       </Section>
+
+      {filiacoesRecentes.length > 0 && (
+        <Section
+          hint="Entradas e saídas dos últimos 365 dias registradas na base de filiações."
+          title="Movimentações recentes"
+        >
+          <MovimentacoesFiliacoes movimentacoes={filiacoesRecentes} />
+        </Section>
+      )}
     </div>
   )
 }

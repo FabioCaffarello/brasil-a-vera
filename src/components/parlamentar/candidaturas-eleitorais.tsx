@@ -55,6 +55,12 @@ export function CandidaturasEleitorais({ candidaturas }: Props) {
                 {formatSituacao(c.dsSituacaoCandidatura)}
               </span>
             </div>
+            {c.qtVotosNominais != null &&
+              c.dsSituacaoCandidatura.toUpperCase().startsWith('ELEITO') && (
+                <p className="mt-0.5 text-fg-tertiary text-xs tabular-nums">
+                  {c.qtVotosNominais.toLocaleString('pt-BR')} votos nominais
+                </p>
+              )}
           </li>
         ))}
       </ul>
