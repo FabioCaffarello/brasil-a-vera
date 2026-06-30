@@ -33,6 +33,7 @@ describe('mapTseCandidatura', () => {
       sgUf: 'MT',
       sgUe: 'MT',
       dsSituacaoCandidatura: 'APTO',
+      qtVotosNominais: null,
       trustLevel: 'L1',
       sourceUrl: SOURCE_URL,
     })
