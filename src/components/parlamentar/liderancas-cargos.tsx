@@ -25,6 +25,12 @@ const TIPO_LABEL: Record<string, string> = {
   VICE_PRESIDENTE_MESA: 'Vice-Presidente da Mesa Diretora',
   SECRETARIO_MESA: 'Secretário da Mesa Diretora',
   SUPLENTE_MESA: 'Suplente de Secretário',
+  PRESIDENTE_COMISSAO: 'Presidente de Comissão',
+  PRIMEIRO_VICE_PRESIDENTE_COMISSAO: '1º Vice-Presidente de Comissão',
+  VICE_PRESIDENTE_COMISSAO: 'Vice-Presidente de Comissão',
+  MEMBRO_COMISSAO: 'Membro de Comissão',
+  SUPLENTE_COMISSAO: 'Suplente em Comissão',
+  RELATOR_COMISSAO: 'Relator em Comissão',
 }
 
 // Cargos institucionais recebem tone 'dataviz' para destaque visual —
