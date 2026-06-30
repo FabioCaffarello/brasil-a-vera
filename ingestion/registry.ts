@@ -276,7 +276,7 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       script: 'ingest:camara:presenca-comissoes',
       context: 'ingestion-camara-presenca-comissoes',
       cadence: 'weekly',
-      tier: 1,
+      tier: 0,
       timeoutMin: 30,
     },
     // ── monthly ───────────────────────────────────────────────────────────

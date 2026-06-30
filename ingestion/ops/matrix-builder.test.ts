@@ -36,6 +36,7 @@ describe('buildTierMatrices', () => {
       'camara-comissoes',
       'camara-discursos',
       'camara-gastos',
+      'camara-presenca-comissoes',
       'camara-relatorias',
       'camara-sessoes',
       'camara-tramitacao',
@@ -67,6 +68,7 @@ describe('buildTierMatrices', () => {
       'tse-bens',
       'camara-mesa-diretora',
       'senado-afastamentos',
+      'senado-cargos',
     ])
     expect(tiers[2].map((e) => e.id)).toEqual(['senado-backfill-cpf'])
   })
