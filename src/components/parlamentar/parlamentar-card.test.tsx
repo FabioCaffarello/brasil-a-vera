@@ -64,11 +64,12 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
     expect(screen.queryByText(/% alinhado/)).toBeNull()
   })
 
-  it('sem_dado: votacoesAnalisadas = 0 → "Sem votações nominais registradas"', () => {
+  it('sem_dado: votacoesAnalisadas = 0 (partido fora de federação) → "Sem votações nominais registradas"', () => {
     render(
       <ParlamentarCard
         parlamentar={{
           ...BASE,
+          partidoSigla: 'PL',
           pctAlinhamento: null,
           votacoesAnalisadas: 0,
         }}
@@ -78,7 +79,7 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
   })
 
   it('sem_dado quando agregado nunca rodou (undefined) também cai em sem_dado', () => {
-    render(<ParlamentarCard parlamentar={BASE} />)
+    render(<ParlamentarCard parlamentar={{ ...BASE, partidoSigla: 'PL' }} />)
     expect(screen.getByText('Sem votações nominais registradas')).toBeDefined()
   })
 
@@ -87,6 +88,7 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
       <ParlamentarCard
         parlamentar={{
           ...BASE,
+          partidoSigla: 'PL',
           casa: 'SENADO',
           pctAlinhamento: null,
           votacoesAnalisadas: 0,
@@ -104,6 +106,7 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
       <ParlamentarCard
         parlamentar={{
           ...BASE,
+          partidoSigla: 'PL',
           casa: 'CAMARA',
           pctAlinhamento: null,
           votacoesAnalisadas: 0,
@@ -112,6 +115,23 @@ describe('ParlamentarCard — contrato de fallback (Sprint 7.1 PR4)', () => {
     )
     const text = screen.getByText('Sem votações nominais registradas')
     expect(text.getAttribute('title')).toBeNull()
+  })
+
+  it('federacao: partido em federação com votacoesAnalisadas=0 → "partido em federação"', () => {
+    render(
+      <ParlamentarCard
+        parlamentar={{
+          ...BASE,
+          partidoSigla: 'PT',
+          pctAlinhamento: null,
+          votacoesAnalisadas: 0,
+        }}
+      />,
+    )
+    expect(
+      screen.getByText(/Alinhamento indisponível · partido em federação/),
+    ).toBeDefined()
+    expect(screen.queryByText('Sem votações nominais registradas')).toBeNull()
   })
 
   it('pluraliza votações corretamente (1 votação vs N votações)', () => {

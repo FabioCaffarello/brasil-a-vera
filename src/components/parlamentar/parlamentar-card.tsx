@@ -70,6 +70,7 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
     votacoesAnalisadas,
     pctAlinhamento,
     casa,
+    partidoSigla,
   )
 
   const cargo = casa === 'CAMARA' ? 'Deputado' : 'Senador'

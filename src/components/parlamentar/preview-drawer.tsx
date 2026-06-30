@@ -82,6 +82,7 @@ function PreviewBody({
     data.votacoesAnalisadas,
     data.pctAlinhamento,
     data.casa,
+    data.partidoSigla,
   )
   return (
     <>
