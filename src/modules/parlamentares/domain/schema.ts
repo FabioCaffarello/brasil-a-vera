@@ -113,6 +113,7 @@ export const estatisticaParlamentarAgregada = parlamentaresSchema.table(
       precision: 5,
       scale: 2,
     }),
+    paresContraditoriosCount: integer('pares_contraditorios_count'),
     trustLevel: trustLevel('trust_level').notNull().default('L2'),
     computedAt: timestamp('computed_at', { withTimezone: true })
       .notNull()
@@ -126,6 +127,9 @@ export const estatisticaParlamentarAgregada = parlamentaresSchema.table(
     ),
     index('idx_estat_parlamentar_gasto').on(
       sql`${table.gastoTotalAno} DESC NULLS LAST`,
+    ),
+    index('idx_estat_parlamentar_pares').on(
+      sql`${table.paresContraditoriosCount} DESC NULLS LAST`,
     ),
   ],
 )

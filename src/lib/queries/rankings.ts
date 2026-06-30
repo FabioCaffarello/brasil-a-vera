@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, isNotNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, isNotNull, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
@@ -291,5 +291,79 @@ export async function getRankingProposicoes(
       ...r,
       casa: r.casa as 'CAMARA' | 'SENADO',
     }))
+  })
+}
+
+export interface RankingCoerenciaEntry {
+  id: string
+  nome: string
+  partidoSigla: string | null
+  uf: string
+  urlFoto: string | null
+  casa: 'CAMARA' | 'SENADO'
+  paresContraditoriosCount: number
+}
+
+// Top/bottom por pares contraditórios de voto. Calculado pelo seed diário via
+// CTEs de classificação semântica de ementa (mesmo algoritmo de coerencia.ts).
+// Requer ao menos 1 voto em proposição classificada — NULL significa que o
+// parlamentar não tem votos analisáveis, não que tem 0 contradições.
+export async function getRankingCoerencia(limit = 25): Promise<{
+  maisPares: RankingCoerenciaEntry[]
+  menosPares: RankingCoerenciaEntry[]
+}> {
+  return cached(`rankings:coerencia:n=${limit}`, TTL.rankings, async () => {
+    const baseWhere = isNotNull(
+      estatisticaParlamentarAgregada.paresContraditoriosCount,
+    )
+
+    const select = {
+      id: parlamentar.id,
+      nome: parlamentar.nome,
+      partidoSigla: parlamentar.partidoSigla,
+      uf: parlamentar.uf,
+      urlFoto: parlamentar.urlFoto,
+      casa: parlamentar.casa,
+      paresContraditoriosCount:
+        estatisticaParlamentarAgregada.paresContraditoriosCount,
+    }
+
+    const [maisPares, menosPares] = await Promise.all([
+      db
+        .select(select)
+        .from(parlamentar)
+        .innerJoin(
+          estatisticaParlamentarAgregada,
+          eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+        )
+        .where(baseWhere)
+        .orderBy(desc(estatisticaParlamentarAgregada.paresContraditoriosCount))
+        .limit(limit),
+      db
+        .select(select)
+        .from(parlamentar)
+        .innerJoin(
+          estatisticaParlamentarAgregada,
+          eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+        )
+        .where(baseWhere)
+        .orderBy(asc(estatisticaParlamentarAgregada.paresContraditoriosCount))
+        .limit(limit),
+    ])
+
+    const toEntry = (r: (typeof maisPares)[number]): RankingCoerenciaEntry => ({
+      id: r.id,
+      nome: r.nome,
+      partidoSigla: r.partidoSigla,
+      uf: r.uf,
+      urlFoto: r.urlFoto,
+      casa: r.casa as 'CAMARA' | 'SENADO',
+      paresContraditoriosCount: r.paresContraditoriosCount as unknown as number,
+    })
+
+    return {
+      maisPares: maisPares.map(toEntry),
+      menosPares: menosPares.map(toEntry),
+    }
   })
 }

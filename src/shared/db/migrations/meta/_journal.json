@@ -253,6 +253,13 @@
       "when": 1783216800000,
       "tag": "0035_evento_comissao_presenca",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1783303200000,
+      "tag": "0036_pares_contraditorios_count",
+      "breakpoints": true
     }
   ]
 }
