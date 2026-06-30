@@ -12,6 +12,7 @@ import {
 } from '@/modules/parlamentares/domain/alinhamento'
 import { db } from '@/shared/db'
 import {
+  blocoPartidario,
   orientacao,
   parlamentar,
   votacao,
@@ -267,6 +268,33 @@ export async function getAlinhamentoBlocos(
           classificacao: v.classificacao,
         })),
       }))
+    },
+  )
+}
+
+export interface BlocoComposicao {
+  nome: string
+  partidos: string[]
+}
+
+// Composição dos blocos Gov/Oposição por casa — campo `partidos text[]`
+// ingerido mas nunca exposto na UI até Sprint 26.
+export async function getBlocosComposicao(
+  casa: 'CAMARA' | 'SENADO',
+): Promise<BlocoComposicao[]> {
+  return cached(
+    `blocos:composicao:${casa}`,
+    TTL.alinhamentoPartidario,
+    async () => {
+      const rows = await db
+        .select({
+          nome: blocoPartidario.nome,
+          partidos: blocoPartidario.partidos,
+        })
+        .from(blocoPartidario)
+        .where(eq(blocoPartidario.casa, casa))
+        .orderBy(blocoPartidario.nome)
+      return rows.map((r) => ({ nome: r.nome, partidos: r.partidos }))
     },
   )
 }

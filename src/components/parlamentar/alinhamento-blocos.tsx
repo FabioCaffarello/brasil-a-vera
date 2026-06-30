@@ -7,10 +7,14 @@
 import Link from 'next/link'
 
 import { formatDataBR } from '@/lib/format'
-import type { BlocoAlinhamentoResult } from '@/lib/queries/alinhamento'
+import type {
+  BlocoAlinhamentoResult,
+  BlocoComposicao,
+} from '@/lib/queries/alinhamento'
 
 interface Props {
   blocos: BlocoAlinhamentoResult[]
+  composicao?: BlocoComposicao[]
 }
 
 function VotacaoLink({
@@ -30,12 +34,30 @@ function VotacaoLink({
   )
 }
 
-function BlocoCard({ bloco }: { bloco: BlocoAlinhamentoResult }) {
+function BlocoCard({
+  bloco,
+  partidos,
+}: {
+  bloco: BlocoAlinhamentoResult
+  partidos?: string[]
+}) {
   return (
     <div className="space-y-2">
-      <h3 className="font-medium text-fg-secondary text-sm">
-        Orientação do {bloco.bloco}
-      </h3>
+      <div className="flex flex-wrap items-baseline gap-2">
+        <h3 className="font-medium text-fg-secondary text-sm">
+          Orientação do {bloco.bloco}
+        </h3>
+        {partidos && partidos.length > 0 && (
+          <details className="inline">
+            <summary className="cursor-pointer list-none text-fg-tertiary text-xs hover:text-fg-secondary">
+              ver partidos ▸
+            </summary>
+            <span className="block text-fg-tertiary text-xs">
+              {partidos.join(' · ')}
+            </span>
+          </details>
+        )}
+      </div>
       <p className="text-fg-primary text-sm">
         Em <strong className="tabular-nums">{bloco.total}</strong> votações com
         orientação do {bloco.bloco}, o voto coincidiu em{' '}
@@ -66,8 +88,9 @@ function BlocoCard({ bloco }: { bloco: BlocoAlinhamentoResult }) {
   )
 }
 
-export function AlinhamentoBlocos({ blocos }: Props) {
+export function AlinhamentoBlocos({ blocos, composicao = [] }: Props) {
   const comDados = blocos.filter((b) => b.total > 0)
+  const composicaoMap = new Map(composicao.map((c) => [c.nome, c.partidos]))
 
   if (comDados.length === 0) {
     return (
@@ -89,7 +112,11 @@ export function AlinhamentoBlocos({ blocos }: Props) {
         na conta.
       </p>
       {comDados.map((b) => (
-        <BlocoCard bloco={b} key={b.bloco} />
+        <BlocoCard
+          bloco={b}
+          key={b.bloco}
+          partidos={composicaoMap.get(b.bloco)}
+        />
       ))}
     </div>
   )

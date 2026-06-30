@@ -1,10 +1,12 @@
 import { DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { Award } from 'lucide-react'
+import Link from 'next/link'
 
 import { EmptyState } from '@/components/ui/empty-state'
 import type {
   FrenteParlamentarItem,
   LiderancaAtiva,
+  LiderancaHistorica,
 } from '@/lib/queries/liderancas'
 
 // Rótulo legível por tipo de cargo. Mantido em código (não banco) pois é
@@ -41,10 +43,30 @@ const TIPOS_INSTITUCIONAIS = new Set([
 interface Props {
   liderancas: LiderancaAtiva[]
   frentes: FrenteParlamentarItem[]
+  historicas?: LiderancaHistorica[]
+  frentesById?: Map<string, string>
 }
 
-export function LiderancasCargos({ liderancas, frentes }: Props) {
-  if (liderancas.length === 0 && frentes.length === 0) {
+function formatPeriodo(
+  dataInicio: string | null,
+  dataFim: string | null,
+): string {
+  const fmt = (d: string | null) =>
+    d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '?'
+  return `${fmt(dataInicio)} – ${fmt(dataFim)}`
+}
+
+export function LiderancasCargos({
+  liderancas,
+  frentes,
+  historicas = [],
+  frentesById,
+}: Props) {
+  if (
+    liderancas.length === 0 &&
+    frentes.length === 0 &&
+    historicas.length === 0
+  ) {
     return (
       <EmptyState
         icon={Award}
@@ -94,23 +116,71 @@ export function LiderancasCargos({ liderancas, frentes }: Props) {
             Frentes parlamentares
           </h4>
           <ul className="space-y-1.5">
-            {frentes.map((f) => (
-              <li
-                className="flex flex-wrap items-baseline gap-2 text-sm"
-                key={f.nome}
-              >
-                <span className="text-fg-primary">{f.nome}</span>
-                {f.titulo && (
-                  <span className="text-fg-tertiary text-xs">— {f.titulo}</span>
-                )}
-              </li>
-            ))}
+            {frentes.map((f) => {
+              const id = frentesById?.get(f.nome)
+              return (
+                <li
+                  className="flex flex-wrap items-baseline gap-2 text-sm"
+                  key={f.nome}
+                >
+                  {id ? (
+                    <Link
+                      className="text-fg-primary hover:underline"
+                      href={`/frentes/${id}`}
+                    >
+                      {f.nome}
+                    </Link>
+                  ) : (
+                    <span className="text-fg-primary">{f.nome}</span>
+                  )}
+                  {f.titulo && (
+                    <span className="text-fg-tertiary text-xs">
+                      — {f.titulo}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
           </ul>
           <p className="text-fg-tertiary text-xs">
             Frentes suprapartidárias da Câmara dos Deputados. Senado não publica
             dados estruturados equivalentes.
           </p>
         </div>
+      )}
+
+      {historicas.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer list-none text-fg-tertiary text-xs hover:text-fg-secondary">
+            <span className="group-open:hidden">
+              + {historicas.length} cargo
+              {historicas.length > 1 ? 's' : ''} anterior
+              {historicas.length > 1 ? 'es' : ''}
+            </span>
+            <span className="hidden group-open:inline">
+              − Ocultar anteriores
+            </span>
+          </summary>
+          <ul className="mt-2 space-y-2">
+            {historicas.map((h) => (
+              <li
+                className="flex flex-wrap items-center gap-2 rounded-lg border border-line-default p-3 opacity-70"
+                key={`${h.tipo}-${h.entidade}-${h.casa}-${h.legislatura}`}
+              >
+                <DataBadge
+                  label={TIPO_LABEL[h.tipo] ?? h.tipo}
+                  tone="neutral"
+                />
+                <span className="font-medium text-fg-secondary text-sm">
+                  {h.entidade}
+                </span>
+                <span className="ml-auto text-fg-tertiary text-xs">
+                  {formatPeriodo(h.dataInicio, h.dataFim)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   )
