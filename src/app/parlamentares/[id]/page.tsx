@@ -925,8 +925,11 @@ export default async function ParlamentarPerfilPage({
           coerencia={coerenciaStats}
           comparacoes={comparacoes}
           gastos={gastos}
-          proposicoesCount={proposicoes.length}
-          proposicoesParcial={!!proposicoesPage.nextCursor}
+          proposicoesCount={comparacoes.proposicoesCount ?? proposicoes.length}
+          proposicoesParcial={
+            comparacoes.proposicoesCount === null &&
+            !!proposicoesPage.nextCursor
+          }
         />
       }
       breadcrumb={
