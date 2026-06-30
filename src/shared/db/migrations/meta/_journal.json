@@ -239,6 +239,20 @@
       "when": 1783044000000,
       "tag": "0033_mandato_externo",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1783130400000,
+      "tag": "0034_tse_votos_nominais",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1783216800000,
+      "tag": "0035_evento_comissao_presenca",
+      "breakpoints": true
     }
   ]
 }
