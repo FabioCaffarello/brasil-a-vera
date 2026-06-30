@@ -132,7 +132,10 @@ import {
   getRelatoriasInfluencia,
 } from '@/lib/queries/relatorias'
 import { getVariacaoPatrimonial } from '@/lib/queries/variacao-patrimonial'
-import { getVotosByParlamentar } from '@/lib/queries/vetos'
+import {
+  getVetosStatsParlamentar,
+  getVotosByParlamentar,
+} from '@/lib/queries/vetos'
 import { getVotacoesComissaoByParlamentar } from '@/lib/queries/votacoes-comissao'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
@@ -291,6 +294,7 @@ export default async function ParlamentarPerfilPage({
     votacoesComissao,
     afastamentosAtivos,
     votosParlamentarVetos,
+    vetosStats,
     mandatosExternos,
     candidaturas,
     topTemasProposicoes,
@@ -336,7 +340,17 @@ export default async function ParlamentarPerfilPage({
     getRelatoriasInfluencia(parlamentar.id),
     getRelatorAutoria(parlamentar.id),
     getPresencaPlenario(parlamentar.id),
-    getPresencaFisica(parlamentar.id),
+    // Presença física em sessões: Câmara-only (ADR-046). Senado não publica
+    // endpoint equivalente — evita fetch desnecessário para os 81 senadores.
+    parlamentar.casa === 'CAMARA'
+      ? getPresencaFisica(parlamentar.id)
+      : Promise.resolve({
+          elegiveis: 0,
+          presentes: 0,
+          ausencias: 0,
+          percentual: null,
+          amostraInsuficiente: true,
+        } as Awaited<ReturnType<typeof getPresencaFisica>>),
     getVariacaoPatrimonial(parlamentar.id),
     getDiscursosParlamentar(parlamentar.id),
     getLiderancasByParlamentar(parlamentar.id),
@@ -358,6 +372,10 @@ export default async function ParlamentarPerfilPage({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getVotosByParlamentar>>,
         ),
+    // Stats de vetos (Sim/Não/Abstenção) para KpiStrip: Senado-only.
+    parlamentar.casa === 'SENADO'
+      ? getVetosStatsParlamentar(parlamentar.id)
+      : Promise.resolve(null),
     // Mandatos externos: Câmara-only (Sprint 14.0, G11). Para senadores retorna []
     // — endpoint não existe no Senado; tabela é Câmara-only por design.
     parlamentar.casa === 'CAMARA'
@@ -611,7 +629,9 @@ export default async function ParlamentarPerfilPage({
             subtitle:
               'Como o senador votou na apreciação de vetos presidenciais pelo Congresso Nacional (sessão conjunta). "Sim" = manteve o veto; "Não" = votou para derrubar. ADR-059.',
             icon: <Vote className="h-4 w-4" />,
-            content: <VetosSenador vetos={votosParlamentarVetos} />,
+            content: (
+              <VetosSenador stats={vetosStats} vetos={votosParlamentarVetos} />
+            ),
           },
         ]
       : []),

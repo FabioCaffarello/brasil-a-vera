@@ -1261,6 +1261,7 @@ export interface GastoDetalheRow {
   fornecedorNome: string
   fornecedorCnpjCpf: string | null
   valor: string
+  valorGlosa: string | null
   urlDocumento: string | null
 }
 
@@ -1316,6 +1317,7 @@ export async function getGastosDetalhe(
       fornecedorNome: gasto.fornecedorNome,
       fornecedorCnpjCpf: gasto.fornecedorCnpjCpf,
       valor: gasto.valor,
+      valorGlosa: gasto.valorGlosa,
       urlDocumento: gasto.urlDocumento,
     })
     .from(gasto)
@@ -1343,6 +1345,19 @@ export async function getGastosDetalhe(
   }
 
   return { rows: pageRows as GastoDetalheRow[], nextCursor }
+}
+
+// Anos com gastos registrados para o parlamentar (ordem decrescente).
+// Popula o seletor de ano na rota /parlamentares/[id]/gastos.
+export async function getAnosGastos(parlamentarId: string): Promise<number[]> {
+  const rows = await db
+    .selectDistinct({
+      ano: sql<number>`EXTRACT(YEAR FROM ${gasto.dataEmissao})::int`,
+    })
+    .from(gasto)
+    .where(eq(gasto.parlamentarId, parlamentarId))
+    .orderBy(desc(sql`EXTRACT(YEAR FROM ${gasto.dataEmissao})`))
+  return rows.map((r) => r.ano)
 }
 
 // Lista distinta de categorias presentes nos gastos do parlamentar no ano

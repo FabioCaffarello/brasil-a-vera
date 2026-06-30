@@ -169,13 +169,20 @@ export async function getVotosByVotacao(
         voto: votoNominal.voto,
         parlamentarId: parlamentar.id,
         parlamentarNome: parlamentar.nome,
-        parlamentarPartidoSigla: parlamentar.partidoSigla,
-        parlamentarUf: parlamentar.uf,
+        // Usar partido no momento do voto (migration 0028), não o atual.
+        // COALESCE: fallback para votos históricos pré-migration onde o campo é null.
+        parlamentarPartidoSigla: sql<string>`COALESCE(${votoNominal.partidoSiglaVoto}, ${parlamentar.partidoSigla})`,
+        parlamentarUf: sql<string>`COALESCE(${votoNominal.ufVoto}, ${parlamentar.uf})`,
       })
       .from(votoNominal)
       .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
       .where(and(...where))
-      .orderBy(asc(parlamentar.partidoSigla), asc(parlamentar.nome))
+      .orderBy(
+        asc(
+          sql`COALESCE(${votoNominal.partidoSiglaVoto}, ${parlamentar.partidoSigla})`,
+        ),
+        asc(parlamentar.nome),
+      )
   }
 
   if (filtros.voto) return loader()
@@ -201,16 +208,17 @@ export async function getVotosResumoPorPartido(
     `votacoes:resumo-partido:${votacaoId}`,
     TTL.votacaoHistorica,
     async () => {
+      const partidoNoVoto = sql<string>`COALESCE(${votoNominal.partidoSiglaVoto}, ${parlamentar.partidoSigla})`
       const rows = await db
         .select({
-          partidoSigla: parlamentar.partidoSigla,
+          partidoSigla: partidoNoVoto,
           voto: votoNominal.voto,
           n: count(votoNominal.id),
         })
         .from(votoNominal)
         .innerJoin(parlamentar, eq(parlamentar.id, votoNominal.parlamentarId))
         .where(eq(votoNominal.votacaoId, votacaoId))
-        .groupBy(parlamentar.partidoSigla, votoNominal.voto)
+        .groupBy(partidoNoVoto, votoNominal.voto)
 
       const mapa = new Map<string, ResumoPorPartido>()
       for (const r of rows) {

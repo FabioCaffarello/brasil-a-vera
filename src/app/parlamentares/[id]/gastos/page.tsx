@@ -32,6 +32,7 @@ import { CursorGastosV1 } from '@/lib/queries/cursor-schemas'
 import {
   GASTOS_TRIMESTRES,
   type GastosTrimestreFilter,
+  getAnosGastos,
   getGastosCategoriasDistintas,
   getGastosDetalhe,
   getParlamentarById,
@@ -43,6 +44,7 @@ interface PageProps {
     after?: string
     trimestre?: string
     categoria?: string
+    ano?: string
   }>
 }
 
@@ -117,15 +119,20 @@ export default async function GastosDetalhePage({
   const trimestre = normalizeTrimestre(sp.trimestre)
   const categoria = sp.categoria?.trim() || undefined
 
-  const ano = new Date().getFullYear()
-  const [{ rows, nextCursor }, categoriasDisponiveis] = await Promise.all([
-    getGastosDetalhe(parlamentar.id, ano, {
-      cursor,
-      trimestre,
-      categoria,
-    }),
-    getGastosCategoriasDistintas(parlamentar.id, ano),
-  ])
+  const anoCorrente = new Date().getFullYear()
+  const anoParam = sp.ano ? Number.parseInt(sp.ano, 10) : NaN
+  const ano = Number.isFinite(anoParam) ? anoParam : anoCorrente
+
+  const [{ rows, nextCursor }, categoriasDisponiveis, anosDisponiveis] =
+    await Promise.all([
+      getGastosDetalhe(parlamentar.id, ano, {
+        cursor,
+        trimestre,
+        categoria,
+      }),
+      getGastosCategoriasDistintas(parlamentar.id, ano),
+      getAnosGastos(parlamentar.id),
+    ])
 
   // Helper que troca um filtro mantendo os demais; sempre reseta cursor.
   const buildFiltroHref = (overrides: Record<string, string | null>) =>
@@ -143,7 +150,7 @@ export default async function GastosDetalhePage({
 
       <header className="mb-6">
         <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
-          Gastos CEAP {ano}
+          Gastos CEAP
         </h1>
         <p className="mt-1 text-fg-tertiary text-sm">
           {parlamentar.nome} ({parlamentar.partidoSigla}/{parlamentar.uf}) —
@@ -153,6 +160,20 @@ export default async function GastosDetalhePage({
       </header>
 
       <div className="mb-4 space-y-3 rounded-lg border border-line-default bg-surface-base p-4">
+        {anosDisponiveis.length > 1 && (
+          <div className="flex flex-wrap items-center gap-2 border-line-default border-b pb-3">
+            <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ano">
+              Ano
+            </Label>
+            {anosDisponiveis.map((a) => (
+              <Chip asChild key={a} selected={a === ano}>
+                <Link href={buildFiltroHref({ ano: String(a), after: null })}>
+                  {a}
+                </Link>
+              </Chip>
+            ))}
+          </div>
+        )}
         <FilterChips label="Período">
           {GASTOS_TRIMESTRES.map((t) => (
             <Chip asChild key={t} selected={(trimestre ?? 'todo') === t}>
@@ -173,6 +194,9 @@ export default async function GastosDetalhePage({
           >
             {trimestre ? (
               <input name="trimestre" type="hidden" value={trimestre} />
+            ) : null}
+            {ano !== anoCorrente ? (
+              <input name="ano" type="hidden" value={String(ano)} />
             ) : null}
             <div className="flex flex-col gap-1">
               <Label
@@ -265,6 +289,11 @@ export default async function GastosDetalhePage({
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums text-fg-primary">
                     {formatBRL(g.valor)}
+                    {g.valorGlosa && Number(g.valorGlosa) > 0 ? (
+                      <span className="block text-fg-tertiary text-xs">
+                        −{formatBRL(g.valorGlosa)} glosado
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}
