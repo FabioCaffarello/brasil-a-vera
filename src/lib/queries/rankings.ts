@@ -1,4 +1,4 @@
-import { and, desc, isNotNull, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, isNotNull, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
@@ -252,5 +252,44 @@ export async function getRankingPresenca(limit = 25): Promise<{
         toEntry,
       ),
     }
+  })
+}
+
+export interface RankingProposicoesEntry {
+  id: string
+  nome: string
+  partidoSigla: string | null
+  uf: string
+  urlFoto: string | null
+  casa: 'CAMARA' | 'SENADO'
+  proposicoesCount: number
+}
+
+export async function getRankingProposicoes(
+  limit = 30,
+): Promise<RankingProposicoesEntry[]> {
+  return cached(`rankings:proposicoes:n=${limit}`, TTL.rankings, async () => {
+    const rows = await db
+      .select({
+        id: parlamentar.id,
+        nome: parlamentar.nome,
+        partidoSigla: parlamentar.partidoSigla,
+        uf: parlamentar.uf,
+        urlFoto: parlamentar.urlFoto,
+        casa: parlamentar.casa,
+        proposicoesCount: estatisticaParlamentarAgregada.proposicoesCount,
+      })
+      .from(parlamentar)
+      .innerJoin(
+        estatisticaParlamentarAgregada,
+        eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
+      )
+      .where(gt(estatisticaParlamentarAgregada.proposicoesCount, 0))
+      .orderBy(desc(estatisticaParlamentarAgregada.proposicoesCount))
+      .limit(limit)
+    return rows.map((r) => ({
+      ...r,
+      casa: r.casa as 'CAMARA' | 'SENADO',
+    }))
   })
 }

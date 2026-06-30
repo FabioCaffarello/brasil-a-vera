@@ -77,6 +77,7 @@ import { getAfastamentosAtivosSenador } from '@/lib/queries/afastamentos'
 import {
   getAlinhamentoBlocos,
   getAlinhamentoParlamentar,
+  getBlocosComposicao,
 } from '@/lib/queries/alinhamento'
 import { getCandidaturasByParlamentar } from '@/lib/queries/candidaturas'
 import {
@@ -94,9 +95,11 @@ import {
   getFidelidadeOrientacao,
   getTimelineMigracao,
 } from '@/lib/queries/fidelidade'
+import { getFrentesNameToIdMap } from '@/lib/queries/frentes'
 import {
   getFrentesByParlamentar,
   getLiderancasByParlamentar,
+  getLiderancasHistoricas,
 } from '@/lib/queries/liderancas'
 import { getMandatosExternosByParlamentar } from '@/lib/queries/mandatos-externos'
 import {
@@ -298,6 +301,9 @@ export default async function ParlamentarPerfilPage({
     mandatosExternos,
     candidaturas,
     topTemasProposicoes,
+    liderancasHistoricas,
+    blocosComposicao,
+    frentesNameToIdMap,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -387,6 +393,12 @@ export default async function ParlamentarPerfilPage({
     // senadores sem CPF retornam array vazio; seção omitida quando vazio.
     getCandidaturasByParlamentar(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
+    getLiderancasHistoricas(parlamentar.id),
+    // Composição dos blocos Gov/Oposição: Câmara-only (fonte ADR-040).
+    parlamentar.casa === 'CAMARA'
+      ? getBlocosComposicao('CAMARA')
+      : Promise.resolve([] as Awaited<ReturnType<typeof getBlocosComposicao>>),
+    getFrentesNameToIdMap(),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -482,7 +494,10 @@ export default async function ParlamentarPerfilPage({
         para deputados federais (Câmara).
       </p>
     ) : (
-      <AlinhamentoBlocos blocos={alinhamentoBlocos} />
+      <AlinhamentoBlocos
+        blocos={alinhamentoBlocos}
+        composicao={blocosComposicao}
+      />
     )
 
   const sections: DetailSection[] = [
@@ -642,7 +657,14 @@ export default async function ParlamentarPerfilPage({
       subtitle:
         'Lideranças partidárias, de governo/oposição e frentes parlamentares. Dados quase-estáticos (ingestão mensal) — pode não refletir mudanças recentes.',
       icon: <Award className="h-4 w-4" />,
-      content: <LiderancasCargos frentes={frentes} liderancas={liderancas} />,
+      content: (
+        <LiderancasCargos
+          frentes={frentes}
+          frentesById={frentesNameToIdMap}
+          historicas={liderancasHistoricas}
+          liderancas={liderancas}
+        />
+      ),
     },
     ...(parlamentar.casa === 'CAMARA'
       ? [

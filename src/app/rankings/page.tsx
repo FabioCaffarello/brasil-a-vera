@@ -2,7 +2,7 @@
 // Cada card linka para um ranking específico.
 
 import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
-import { Receipt, Scale, TrendingUp, UserCheck } from 'lucide-react'
+import { FileText, Receipt, Scale, TrendingUp, UserCheck } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -46,6 +46,14 @@ const RANKINGS = [
     title: 'Presença em plenário',
     description:
       'Quem mais comparece (e quem mais falta) às votações nominais no plenário, calculado na janela do mandato de cada parlamentar.',
+  },
+  {
+    href: '/rankings/proposicoes',
+    icon: FileText,
+    iconClass: 'text-purple-600',
+    title: 'Produção legislativa',
+    description:
+      'Parlamentares com maior número de proposições apresentadas na legislatura corrente — projetos de lei, emendas, requerimentos e demais matérias registradas.',
   },
 ]
 
