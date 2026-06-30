@@ -36,6 +36,8 @@ interface Props {
   follow?: {
     isFollowing: boolean
   }
+  /** Cards acima da dobra (primeiros 3) recebem loading eager para melhorar LCP. */
+  priority?: boolean
 }
 
 /**
@@ -54,7 +56,7 @@ interface Props {
  *  - sem_dado (votacoes = 0): texto subtle, SEM barra
  *  - sem_dado em SENADO: + tooltip via title attr sobre cobertura parcial
  */
-export function ParlamentarCard({ parlamentar, follow }: Props) {
+export function ParlamentarCard({ parlamentar, follow, priority }: Props) {
   const {
     id,
     nome,
@@ -105,7 +107,7 @@ export function ParlamentarCard({ parlamentar, follow }: Props) {
           <div className="flex items-start gap-3">
             <ParlamentarAvatar
               className="size-14 shrink-0"
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
               nome={nome}
               size="lg"
               urlFoto={urlFoto}

@@ -20,8 +20,14 @@ import { camaraVotacaoDetalheSchema } from './votacao-detalhe-schema'
 // mas as proposições alvo estão fora da janela default de
 // `ingest:camara:proposicoes` (30 dias). Safeguard de 50 proposições
 // novas por execução previne explosão acidental; quando atinge, deixa
-// NULL e próximo cron tenta. Loop é SERIAL quando o safeguard está
-// próximo para respeitar o limite (vs concurrent antes).
+// NULL e próximo cron tenta.
+//
+// **Concorrência (Sprint 34, issue #567)**: sem flag, concorrência=1
+// (serial — comportamento histórico, seguro no cron). Para backfill
+// histórico bulk use `--concurrency=N` (máx 20) ou env
+// `BACKFILL_CONCURRENCY`. O loop bifasico paralleliza os fetchDetalhe
+// (HTTP puro) e serializa as operações de DB+auto-fetch (safeguard
+// invariante). N=5–10 reduz tempo de 28k votações de horas para minutos.
 
 const CASA = 'CAMARA' as const
 const BASE_URL = 'https://dadosabertos.camara.leg.br/api/v2'
@@ -41,6 +47,21 @@ interface BackfillStats {
   proposicoesSkippedTipo: number
   proposicoesSkippedError: number
   errors: Array<{ context: string; reason: string }>
+}
+
+function parseConcurrency(): number {
+  const raw =
+    process.argv.find((a) => a.startsWith('--concurrency='))?.split('=')[1] ??
+    process.env.BACKFILL_CONCURRENCY
+  if (!raw) return 1
+  const n = parseInt(raw, 10)
+  if (Number.isNaN(n) || n < 1)
+    throw new Error(`--concurrency inválido: "${raw}". Esperado inteiro ≥ 1.`)
+  if (n > 20)
+    throw new Error(
+      `--concurrency ${n} excede o máximo de 20 (proteção contra rate-limit da API da Câmara).`,
+    )
+  return n
 }
 
 async function loadProposicaoLookup(): Promise<Map<string, string>> {
@@ -77,27 +98,16 @@ async function fetchDetalhe(votacaoSourceId: string) {
   return camaraVotacaoDetalheSchema.parse(json.dados)
 }
 
-async function processVotacao(
+// Processa o resultado de fetchDetalhe: resolve FK no lookup local e,
+// se necessário, auto-faz a proposição. Sempre serial (garante invariante
+// do contador do safeguard).
+async function processResult(
   row: { id: string; sourceId: string },
+  detalhe: Awaited<ReturnType<typeof fetchDetalhe>>,
   proposicaoLookup: Map<string, string>,
   parlamentarLookup: Map<string, string>,
   stats: BackfillStats,
 ): Promise<void> {
-  let detalhe: Awaited<ReturnType<typeof fetchDetalhe>>
-  try {
-    detalhe = await fetchDetalhe(row.sourceId)
-  } catch (err) {
-    if (err instanceof HttpFetchError && err.status === 404) {
-      stats.naoEncontradas404++
-      return
-    }
-    stats.errors.push({
-      context: `detalhe:${row.sourceId}`,
-      reason: err instanceof Error ? err.message : String(err),
-    })
-    return
-  }
-
   const afetada = detalhe.proposicoesAfetadas?.[0]
   if (!afetada) {
     stats.naoEncontradas++
@@ -182,12 +192,101 @@ export async function backfillVotacaoProposicao(): Promise<BackfillStats> {
     errors: [],
   }
 
-  // Loop SERIAL — auto-fetch reverso muta o lookup compartilhado e
-  // incrementa o contador do safeguard. Concorrência criaria race
-  // condition no contador. Volume é pequeno (dezenas de votações por
-  // execução pós-3.0.5; backfill 4×/dia), serial é aceitável.
-  for (const row of elegiveis) {
-    await processVotacao(row, proposicaoLookup, parlamentarLookup, stats)
+  const concurrency = parseConcurrency()
+
+  if (concurrency === 1) {
+    // Loop serial — comportamento histórico. Auto-fetch reverso muta o
+    // lookup compartilhado e incrementa o contador do safeguard; sem
+    // await concorrente, o contador é atualizado antes do próximo item.
+    for (const row of elegiveis) {
+      let detalhe: Awaited<ReturnType<typeof fetchDetalhe>>
+      try {
+        detalhe = await fetchDetalhe(row.sourceId)
+      } catch (err) {
+        if (err instanceof HttpFetchError && err.status === 404) {
+          stats.naoEncontradas404++
+        } else {
+          stats.errors.push({
+            context: `detalhe:${row.sourceId}`,
+            reason: err instanceof Error ? err.message : String(err),
+          })
+        }
+        continue
+      }
+      await processResult(
+        row,
+        detalhe,
+        proposicaoLookup,
+        parlamentarLookup,
+        stats,
+      )
+    }
+  } else {
+    // Loop bifásico para backfill bulk histórico (--concurrency=N).
+    // Fase 1 (paralela): N fetchDetalhe simultâneos → puro HTTP, sem
+    //   mutação de estado.
+    // Fase 2 (serial): processa os resultados do lote em ordem →
+    //   safeguard e lookup permanecem single-writer.
+    // Cada 10 lotes emite progresso em stderr para acompanhar a execução.
+    const BATCH = concurrency
+    const totalBatches = Math.ceil(elegiveis.length / BATCH)
+
+    for (let b = 0; b < totalBatches; b++) {
+      const batch = elegiveis.slice(b * BATCH, (b + 1) * BATCH)
+
+      type FetchOk = {
+        ok: true
+        row: (typeof batch)[0]
+        detalhe: Awaited<ReturnType<typeof fetchDetalhe>>
+      }
+      type FetchErr = { ok: false; row: (typeof batch)[0]; err: unknown }
+
+      const fetched: Array<FetchOk | FetchErr> = await Promise.all(
+        batch.map(async (row): Promise<FetchOk | FetchErr> => {
+          try {
+            return { ok: true, row, detalhe: await fetchDetalhe(row.sourceId) }
+          } catch (err) {
+            return { ok: false, row, err }
+          }
+        }),
+      )
+
+      for (const r of fetched) {
+        if (!r.ok) {
+          const err = r.err
+          if (err instanceof HttpFetchError && err.status === 404) {
+            stats.naoEncontradas404++
+          } else {
+            stats.errors.push({
+              context: `detalhe:${r.row.sourceId}`,
+              reason: err instanceof Error ? err.message : String(err),
+            })
+          }
+          continue
+        }
+        await processResult(
+          r.row,
+          r.detalhe,
+          proposicaoLookup,
+          parlamentarLookup,
+          stats,
+        )
+      }
+
+      if ((b + 1) % 10 === 0 || b + 1 === totalBatches) {
+        process.stderr.write(
+          JSON.stringify({
+            event: 'backfill_progress',
+            batch: b + 1,
+            totalBatches,
+            processed: Math.min((b + 1) * BATCH, elegiveis.length),
+            total: elegiveis.length,
+            matched: stats.matched,
+            errors: stats.errors.length,
+          }) + '\n',
+        )
+      }
+    }
   }
 
   return stats
