@@ -6,8 +6,15 @@ import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
 import type { VetoPorSenador } from '@/lib/queries/vetos'
 
+interface VetosStats {
+  sim: number
+  nao: number
+  abstencao: number
+}
+
 interface Props {
   vetos: VetoPorSenador[]
+  stats: VetosStats | null
 }
 
 function VotoChip({ voto }: { voto: string }) {
@@ -46,7 +53,7 @@ function SituacaoLabel({ situacao }: { situacao: string | null }) {
   )
 }
 
-export function VetosSenador({ vetos }: Props) {
+export function VetosSenador({ vetos, stats }: Props) {
   if (vetos.length === 0) {
     return (
       <EmptyState
@@ -58,6 +65,23 @@ export function VetosSenador({ vetos }: Props) {
 
   return (
     <div className="space-y-3">
+      {stats && (
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 font-medium text-green-800 text-sm dark:bg-green-900/30 dark:text-green-300">
+            <ThumbsUp className="h-3.5 w-3.5" aria-hidden />
+            Sim — {stats.sim}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 font-medium text-red-800 text-sm dark:bg-red-900/30 dark:text-red-300">
+            <ThumbsDown className="h-3.5 w-3.5" aria-hidden />
+            Não — {stats.nao}
+          </span>
+          {stats.abstencao > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-3 py-1 text-fg-tertiary text-sm">
+              Abstenção — {stats.abstencao}
+            </span>
+          )}
+        </div>
+      )}
       <ul className="space-y-2">
         {vetos.map((v) => (
           <li

@@ -158,6 +158,9 @@ export interface TemaVotacao {
   casa: string
   orgao: string
   aprovada: boolean
+  proposicaoTipo: string | null
+  proposicaoNumero: number | null
+  proposicaoAno: number | null
 }
 
 export async function getVotacoesByTema(
@@ -175,6 +178,9 @@ export async function getVotacoesByTema(
           casa: votacao.casa,
           orgao: votacao.orgao,
           aprovada: votacao.aprovada,
+          proposicaoTipo: proposicao.tipo,
+          proposicaoNumero: proposicao.numero,
+          proposicaoAno: proposicao.ano,
         })
         .from(proposicaoTema)
         .innerJoin(proposicao, eq(proposicao.id, proposicaoTema.proposicaoId))
