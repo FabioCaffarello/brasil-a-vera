@@ -62,6 +62,7 @@
     "ingest:senado:blocos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/blocos.ts",
     "ingest:camara:frentes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/frentes.ts",
     "ingest:senado:afastamentos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/afastamentos.ts",
+    "ingest:senado:cargos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/cargos.ts",
     "ingest:senado:vetos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/vetos.ts",
     "ingest:camara:mandatos-externos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/mandatos-externos.ts",
     "ingest:camara:mesa-diretora": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/mesa-diretora.ts",

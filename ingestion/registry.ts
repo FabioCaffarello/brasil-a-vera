@@ -451,5 +451,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 15,
     },
+    // Cargos em comissões dos senadores (G15, Sprint 27, ADR-060).
+    // Fonte: GET /senador/{codigo}/cargos — ~81 senadores × 1 call.
+    // Persiste em lideranca_cargo (tipos *_COMISSAO, texto ADR-056).
+    // tier 1: depende de senado-senadores (tier 0) para ter parlamentar_id.
+    {
+      id: 'senado-cargos',
+      script: 'ingest:senado:cargos',
+      context: 'ingestion-senado-cargos',
+      cadence: 'monthly',
+      tier: 1,
+      timeoutMin: 10,
+    },
   ],
 )
