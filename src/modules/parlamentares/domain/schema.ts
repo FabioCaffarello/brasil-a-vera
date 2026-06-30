@@ -298,6 +298,36 @@ export const mandatoExterno = parlamentaresSchema.table(
   ],
 )
 
+export const eventoComissaoPresenca = parlamentaresSchema.table(
+  'evento_comissao_presenca',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    eventoId: text('evento_id').notNull(),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    dataEvento: date('data_evento').notNull(),
+    descricaoTipo: text('descricao_tipo').notNull(),
+    orgaoSigla: text('orgao_sigla'),
+    legislatura: integer('legislatura').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('evento_comissao_presenca_natural_key').on(
+      table.eventoId,
+      table.parlamentarId,
+    ),
+    index('evento_comissao_presenca_parlamentar_data_idx').on(
+      table.parlamentarId,
+      table.dataEvento,
+    ),
+  ],
+)
+
 export const membroComissao = parlamentaresSchema.table(
   'membro_comissao',
   {

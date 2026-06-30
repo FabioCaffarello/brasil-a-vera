@@ -63,6 +63,7 @@ import { ParesContraditorios } from '@/components/parlamentar/pares-contraditori
 import { PatrimonioBlock } from '@/components/parlamentar/patrimonio'
 import { PerfilHeader } from '@/components/parlamentar/perfil-header'
 import { Presenca } from '@/components/parlamentar/presenca'
+import { PresencaComissoes } from '@/components/parlamentar/presenca-comissoes'
 import { PresencaFisica } from '@/components/parlamentar/presenca-fisica'
 import { ProposicoesAutor } from '@/components/parlamentar/proposicoes-autor'
 import { QuemE } from '@/components/parlamentar/quem-e'
@@ -129,6 +130,7 @@ import {
   getPatrimonioSnapshot,
 } from '@/lib/queries/patrimonio'
 import { getPresencaPlenario } from '@/lib/queries/presenca'
+import { getPresencaComissoes } from '@/lib/queries/presenca-comissoes'
 import { getPresencaFisica } from '@/lib/queries/presenca-fisica'
 import {
   getRelatorAutoria,
@@ -304,6 +306,7 @@ export default async function ParlamentarPerfilPage({
     liderancasHistoricas,
     blocosComposicao,
     frentesNameToIdMap,
+    presencaComissoes,
   ] = await Promise.all([
     getVotosRecentes(parlamentar.id, {
       cursor: cursorVotos,
@@ -399,6 +402,10 @@ export default async function ParlamentarPerfilPage({
       ? getBlocosComposicao('CAMARA')
       : Promise.resolve([] as Awaited<ReturnType<typeof getBlocosComposicao>>),
     getFrentesNameToIdMap(),
+    // Presença em reuniões deliberativas de comissão: Câmara-only (ADR-061/062).
+    parlamentar.casa === 'CAMARA'
+      ? getPresencaComissoes(parlamentar.id)
+      : Promise.resolve([] as Awaited<ReturnType<typeof getPresencaComissoes>>),
   ])
 
   // Camada C deriva da evolução (mesma query) — mix % é imune ao IPCA.
@@ -559,6 +566,19 @@ export default async function ParlamentarPerfilPage({
         <PresencaFisica presenca={presencaFisica} casa={parlamentar.casa} />
       ),
     },
+    ...(parlamentar.casa === 'CAMARA' && presencaComissoes.length > 0
+      ? [
+          {
+            id: 'presenca-comissoes',
+            navLabel: 'Comissões',
+            title: 'Presença em comissões',
+            subtitle:
+              'Reuniões deliberativas de comissão onde o parlamentar esteve presente (últimos 90 dias, legislatura atual). Câmara-only — Senado não publica endpoint equivalente.',
+            icon: <UserCheck className="h-4 w-4" />,
+            content: <PresencaComissoes eventos={presencaComissoes} />,
+          },
+        ]
+      : []),
     {
       id: 'alinhamento',
       navLabel: 'Alinhamento',

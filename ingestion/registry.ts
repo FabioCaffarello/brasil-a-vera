@@ -268,6 +268,17 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 60,
     },
+    // Presença em reuniões deliberativas de comissão (ADR-061/062): janela de
+    // 90 dias por rodada (cobre backlog recente); backfill histórico via DATA_INICIO/FIM.
+    // tier 1: depende de parlamentar populado + não é crítico como sessoes.
+    {
+      id: 'camara-presenca-comissoes',
+      script: 'ingest:camara:presenca-comissoes',
+      context: 'ingestion-camara-presenca-comissoes',
+      cadence: 'weekly',
+      tier: 1,
+      timeoutMin: 30,
+    },
     // ── monthly ───────────────────────────────────────────────────────────
     // Filiação partidária (#502): histórico que muda poucas vezes/ano →
     // mensal. tier 0: dependem só de parlamentar populado (daily), como o

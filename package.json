@@ -67,6 +67,7 @@
     "ingest:camara:mandatos-externos": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/mandatos-externos.ts",
     "ingest:camara:mesa-diretora": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/mesa-diretora.ts",
     "ingest:camara:sessoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/sessoes.ts",
+    "ingest:camara:presenca-comissoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/presenca-comissoes.ts",
     "ingest:senado:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/discursos.ts",
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",
     "seed:agregados:parlamentar": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-parlamentar.ts",
