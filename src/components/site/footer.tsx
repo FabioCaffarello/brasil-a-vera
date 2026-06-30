@@ -46,6 +46,12 @@ export function Footer() {
           >
             Como ler os dados
           </Link>
+          <Link
+            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            href="/sobre/metodologia"
+          >
+            Metodologia
+          </Link>
           <a
             className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             href="https://github.com/FabioCaffarello/brasil-a-vera"
