@@ -34,7 +34,7 @@ const neonProjectSchema = z
 
 const NEON_API_BASE = 'https://console.neon.tech/api/v2'
 const TRACKER_ISSUE = 39 // revisão trimestral recorrente, tied to ADR-017
-const REPO_LABEL_CRITICAL = 'wave-2-blocker'
+const REPO_LABEL_CRITICAL = 'ops'
 
 type Metrics = {
   daysSinceCreated: number
