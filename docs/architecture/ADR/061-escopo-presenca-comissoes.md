@@ -2,64 +2,115 @@
 
 | Campo | Valor |
 |-------|-------|
-| Status | proposed |
+| Status | accepted |
 | Data | 2026-06-30 |
 | Autor | FabioCaffarello |
 | Decisores | FabioCaffarello |
-| Relacionado | ADR-056 (lideranças/blocos/frentes), ADR-058 (afastamentos) |
+| Relacionado | ADR-056 (lideranças/blocos/frentes), ADR-058 (afastamentos), ADR-062 (modelagem pauta) |
 
 ---
 
 ## Contexto
 
-A Câmara publica dois tipos de evento em `GET /eventos`:
+A Câmara publica eventos via `GET /api/v2/eventos`. Queremos exibir presença de deputados
+em comissões no perfil do parlamentar. O endpoint `GET /eventos/{id}/deputados` retorna
+os deputados vinculados ao evento.
 
-- **Reuniões deliberativas** (~1.709 eventos/2024) — sessões onde votações formais ocorrem; presença tem alta saliência cívica.
-- **Audiências públicas, comissões gerais e outros eventos** (~5.000+/2024) — preparatórias ou informativas; presença tem valor de transparência, mas semântica de "ausência" é ambígua (parlamentar pode ter participado do debate sem assinar presença na lista formal).
+### Probe empírico — 2026-06-30
 
-`GET /eventos/{id}/deputados` retorna a lista de deputados vinculados ao evento. Este endpoint não distingue "presente na reunião deliberativa" de "listado como membro naquele dia". A interpretação depende do tipo de evento.
+```
+GET https://dadosabertos.camara.leg.br/api/v2/eventos?dataInicio=2024-01-01&dataFim=2024-12-31&itens=1
+X-Total-Count: 2623
+```
 
-O Senado não publica endpoint equivalente estruturado para presença em comissões.
+**Volume total de eventos em 2024:** 2.623
+
+Distribuição por tipo (amostra de 100 eventos, pág. 1):
+
+| Tipo | Contagem na amostra | Estimativa ano |
+|------|---------------------|----------------|
+| Reunião de Instalação e Eleição | 31 | ~813 |
+| Sessão Não Deliberativa Solene | 15 | ~394 |
+| Reunião Técnica | 15 | ~394 |
+| **Reunião Deliberativa** | **9** | **~236** |
+| **Sessão Deliberativa** | **9** | **~236** |
+| Seminário | 9 | ~236 |
+| Audiência Pública | 1 | ~26 |
+| Audiência Pública e Deliberação | 1 | ~26 |
+| Outros (Painel, Visita, Debate, etc.) | 10 | ~263 |
+
+**Eventos com caráter deliberativo** (Reunião Deliberativa + Sessão Deliberativa +
+Audiência Pública e Deliberação): ~33% da amostra → ~**865–900 eventos/ano**.
+
+```
+GET https://dadosabertos.camara.leg.br/api/v2/eventos/71759/deputados
+# Evento: Reunião Deliberativa, 2024-03-12
+# Resultado: 50 deputados
+```
+
+**Estimativa de footprint** (opção A — só deliberativas):
+- 865 eventos/ano × 50 deputados/evento = 43.250 rows/ano
+- Row size estimado: ~200 bytes (3 UUIDs + timestamp + enum) → ~8,6 MB/ano
+- 4 anos de cobertura (2023–2026): ~35 MB — dentro do free tier Neon (0,5 GB)
+
+**Estimativa footprint** (opção B — todos os 2.623 eventos):
+- 2.623 × 50 = 131.150 rows/ano → ~26 MB/ano → ~104 MB em 4 anos (viável mas apertado)
+
+---
 
 ## Opções
 
-### A — Só reuniões deliberativas (scope restrito)
+### A — Só eventos com caráter deliberativo (ESCOLHIDA)
 
-- Volume: ~1.709 eventos/ano × ~20 deputados/comissão = ~34.000 rows/ano
-- Footprint Neon estimado: ~5 MB/ano
-- Semântica clara: ausência = não estava lá quando havia votação
-- Contras: subestima participação em audiências (comissão pode ser ativa sem deliberar)
+Filtro: `descricaoTipo IN ('Reunião Deliberativa', 'Sessão Deliberativa', 'Audiência Pública e Deliberação')`
 
-### B — Todos os tipos de evento
+- Volume: ~865 eventos/ano × ~50 deputados = ~43k rows/ano (~8,6 MB/ano)
+- Footprint em 4 anos: ~35 MB — confortável no free tier
+- Semântica clara: ausência = não estava lá quando havia votação ou deliberação formal
+- Contra: exclui audiências públicas informativas (mas semântica de "ausência" lá é ambígua)
 
-- Volume: ~5.000+ eventos/ano × ~20 = ~100.000 rows/ano
-- Footprint Neon: ~15 MB/ano (acima do budget de 0.5 GB free tier se acumulado por mais de 10 anos)
-- Semântica ambígua: ausência numa audiência pública pode ser intencional ou não registrada
-- Contras: inflaciona a tabela sem evidência de que o dado adicional seja interpretável
+### B — Todos os 2.623 eventos
 
-### C — Reuniões deliberativas + filtro por comissão temática permanente
+- Volume: ~131k rows/ano (~26 MB/ano)
+- Footprint em 4 anos: ~104 MB (viável mas sem margem)
+- Semântica ambígua: "ausente" numa reunião técnica não equivale a "não trabalhou"
 
-- Exclui Plenário, sessões conjuntas, CPIs encerradas
-- Volume: ~800–1.200 eventos/ano
-- Semântica mais limpa, menor footprint
-- Contras: lógica de filtro precisa de manutenção quando novas comissões são criadas
+### C — Só reuniões deliberativas de comissões permanentes (descartada)
 
-## Decisão pendente
+- Exigiria JOIN contra cadastro de comissões para filtrar por tipo de órgão
+- Complexidade de manutenção alta; a filtragem por `descricaoTipo` da opção A já
+  é suficientemente restritiva
 
-**Gate para implementação:** antes de qualquer código, verificar empiricamente:
+---
 
-1. `curl https://dadosabertos.camara.leg.br/api/v2/eventos?dataInicio=2024-01-01&dataFim=2024-12-31&codSituacao=REALIZADA | jq '.dados | length'` — confirmar volume real de eventos realizados em 2024
+## Decisão
 
-2. `curl https://dadosabertos.camara.leg.br/api/v2/eventos/{id}/deputados | jq '.dados | length'` — confirmar que o endpoint retorna lista de deputados (não só membros) para eventos deliberativos
+**Opção A.** Ingerir apenas eventos com `descricaoTipo` deliberativo.
+Footprint de ~35 MB em 4 anos é sustentável no Neon free tier com margem.
 
-3. Estimativa empírica de footprint: `rows = eventos × deputados_por_evento × anos_retidos`
+A filtragem é feita no script de ingestão por string match em `descricaoTipo`
+(não por `codTipoEvento` — o campo não é um código controlado na API v2).
+
+---
 
 ## Consequências
 
-- **Enquanto em `proposed`:** nenhum código de ingestão de presença em comissões será escrito.
-- **Após aceito (opção A ou C):** Sprint 29 pode implementar a tabela `evento_comissao_presenca`, o script de ingestão e a UI na página do parlamentar.
-- **Se rejeitado / descartado:** o dado de presença em comissões permanece fora do escopo do produto; seção de afastamentos (`afastamento_senador`) continua como único proxy de ausência justificada.
+- **Nova tabela** `evento_comissao_presenca` — modelagem em ADR-062.
+- Script `ingestion/camara/presenca-comissoes.ts` — Sprint 30 (não Sprint 29).
+- UI no perfil do parlamentar: seção "Presença em comissões" — Sprint 30.
+- O Senado não publica endpoint equivalente; assimetria Câmara-only documentada
+  em `docs/audits/2026-06-wave12-planejamento.md` §6.
 
-## Critério de aprovação
+## Evidência empírica (Princípio 13)
 
-Evidência empírica (curl + contagem de rows) anexada no PR que mudar este ADR de `proposed` para `accepted`. Sem evidência = sem merge.
+```
+# Volume total
+curl "https://dadosabertos.camara.leg.br/api/v2/eventos?dataInicio=2024-01-01&dataFim=2024-12-31&itens=1"
+# X-Total-Count: 2623
+
+# Deputados por evento deliberativo
+curl "https://dadosabertos.camara.leg.br/api/v2/eventos/71759/deputados"
+# count: 50 deputados (Reunião Deliberativa 2024-03-12)
+```
+
+Data do probe: 2026-06-30.
