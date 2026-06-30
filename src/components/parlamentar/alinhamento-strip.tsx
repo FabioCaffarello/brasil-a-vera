@@ -36,6 +36,17 @@ export function AlinhamentoStrip({ state }: { state: AlinhamentoCardState }) {
     )
   }
 
+  if (state.kind === 'federacao') {
+    return (
+      <p
+        className="text-fg-quaternary text-xs"
+        title="A Câmara publica a orientação pela federação, não pela sigla — sem dado comparável para este partido"
+      >
+        Alinhamento indisponível · partido em federação
+      </p>
+    )
+  }
+
   // sem_dado
   return (
     <p

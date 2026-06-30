@@ -221,7 +221,7 @@ export default async function VotacaoPage({ params }: PageProps) {
         </div>
       ),
     },
-    ...(disciplinas.length > 0
+    ...(disciplinas.length > 0 || federadasExcluidas.length > 0
       ? [
           {
             id: 'disciplina',
@@ -232,28 +232,34 @@ export default async function VotacaoPage({ params }: PageProps) {
             icon: <BarChart3 className="h-4 w-4" />,
             content: (
               <>
-                <DisciplinaPartidariaChart data={disciplinas} />
+                {disciplinas.length > 0 && (
+                  <DisciplinaPartidariaChart data={disciplinas} />
+                )}
                 <FederacaoExclusaoNota siglas={federadasExcluidas} />
               </>
             ),
           },
-          {
-            id: 'divergencias',
-            navLabel: 'Divergências',
-            title: 'Quem votou diferente da orientação',
-            subtitle:
-              'Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva.',
-            icon: <UserMinus className="h-4 w-4" />,
-            content: (
-              <>
-                <DivergenciasList
-                  divergencias={divergencias}
-                  partidosComOrientacao={disciplinas.length}
-                />
-                <FederacaoExclusaoNota siglas={federadasExcluidas} />
-              </>
-            ),
-          },
+          ...(disciplinas.length > 0
+            ? [
+                {
+                  id: 'divergencias',
+                  navLabel: 'Divergências',
+                  title: 'Quem votou diferente da orientação',
+                  subtitle:
+                    'Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva.',
+                  icon: <UserMinus className="h-4 w-4" />,
+                  content: (
+                    <>
+                      <DivergenciasList
+                        divergencias={divergencias}
+                        partidosComOrientacao={disciplinas.length}
+                      />
+                      <FederacaoExclusaoNota siglas={federadasExcluidas} />
+                    </>
+                  ),
+                },
+              ]
+            : []),
         ]
       : []),
     {

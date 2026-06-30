@@ -1,3 +1,4 @@
+import { emFederacao } from '@/shared/federacoes'
 import { ALINHAMENTO_AMOSTRA_MINIMA } from './alinhamento'
 
 // Estado de EXIBIÇÃO do alinhamento de um parlamentar em cards/preview
@@ -13,6 +14,7 @@ export type AlinhamentoCardState =
   | { kind: 'com_amostra'; percentual: number; votacoes: number }
   | { kind: 'amostra_insuficiente'; votacoes: number }
   | { kind: 'sem_dado'; senadoLegacy: boolean }
+  | { kind: 'federacao' }
 
 /**
  * Classifica o estado de exibição do alinhamento.
@@ -25,14 +27,22 @@ export type AlinhamentoCardState =
  * - amostra_insuficiente (0 < votacoes < 50): texto subtle, SEM barra
  * - sem_dado (votacoes = 0): texto subtle, SEM barra
  * - sem_dado em SENADO: marca senadoLegacy para tooltip de cobertura parcial
+ * - federacao (votacoes = 0 E partido em federação): ausência por construção
+ *   (seed-agregados não encontra orientação pela sigla — join não casa com
+ *   orientação publicada pela federação). Distinto de "sem_dado" — o dado
+ *   existe, mas não é comparável pela sigla individual (ADR-041).
  */
 export function classifyAlinhamentoCard(
   votacoes: number | null | undefined,
   pct: string | null | undefined,
   casa: string,
+  partidoSigla?: string | null,
 ): AlinhamentoCardState {
   const v = votacoes ?? 0
   if (v === 0) {
+    if (partidoSigla && emFederacao(partidoSigla)) {
+      return { kind: 'federacao' }
+    }
     return { kind: 'sem_dado', senadoLegacy: casa === 'SENADO' }
   }
   if (v < ALINHAMENTO_AMOSTRA_MINIMA || pct === null || pct === undefined) {
