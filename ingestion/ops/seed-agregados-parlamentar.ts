@@ -118,11 +118,74 @@ async function seed(parlamentarIdFilter: string | null): Promise<number> {
           (PERCENT_RANK() OVER (PARTITION BY p.casa ORDER BY gpp.gasto_total) * 100)::numeric(5, 2) AS percentil
         FROM gasto_pp gpp
         JOIN parlamentares.parlamentar p ON p.id = gpp.parlamentar_id
+      ),
+      -- Classifica proposições por direção semântica usando as mesmas
+      -- palavras-chave do direcao-classifier.ts (sem NLP, só boundary regex).
+      -- \m = início de palavra, \M = fim (ARE do PostgreSQL).
+      prop_direcao AS (
+        SELECT
+          p.id,
+          CASE
+            WHEN lower(p.ementa) ~ '\m(revoga|proibe|veda|criminaliza|restringe|limita|suspende|extingue)\M'
+              AND lower(p.ementa) !~ '\m(autoriza|permite|flexibiliza|amplia|libera|cria|institui|concede|isenta)\M'
+            THEN 'RESTRITIVA'
+            WHEN lower(p.ementa) ~ '\m(autoriza|permite|flexibiliza|amplia|libera|cria|institui|concede|isenta)\M'
+              AND lower(p.ementa) !~ '\m(revoga|proibe|veda|criminaliza|restringe|limita|suspende|extingue)\M'
+            THEN 'PERMISSIVA'
+            ELSE NULL
+          END AS direcao
+        FROM proposicoes.proposicao p
+        WHERE p.ementa IS NOT NULL
+      ),
+      -- Votos SIM/NAO em proposições com direção classificada.
+      voto_classificado AS (
+        SELECT
+          vn.parlamentar_id,
+          vn.votacao_id,
+          vn.voto,
+          v.proposicao_id,
+          pd.direcao
+        FROM votacoes.voto_nominal vn
+        JOIN votacoes.votacao v ON v.id = vn.votacao_id
+        JOIN prop_direcao pd ON pd.id = v.proposicao_id
+        WHERE vn.voto IN ('SIM', 'NAO')
+          AND pd.direcao IS NOT NULL
+          AND v.proposicao_id IS NOT NULL
+      ),
+      -- Conta pares contraditórios por parlamentar: mesmo tema, direções
+      -- opostas (RESTRITIVA vs PERMISSIVA), voto idêntico (SIM+SIM ou NAO+NAO).
+      -- DISTINCT (v1.votacao_id, v2.votacao_id) evita multiplicação por temas
+      -- compartilhados múltiplos — espelha computePares em coerencia.ts.
+      pares_pp AS (
+        SELECT
+          dp.parlamentar_id,
+          COUNT(*)::int AS pares_count
+        FROM (
+          SELECT DISTINCT
+            v1.parlamentar_id,
+            v1.votacao_id AS v1_id,
+            v2.votacao_id AS v2_id
+          FROM voto_classificado v1
+          JOIN voto_classificado v2
+            ON v2.parlamentar_id = v1.parlamentar_id
+            AND v2.votacao_id > v1.votacao_id
+            AND v1.voto = v2.voto
+            AND v1.direcao != v2.direcao
+          WHERE EXISTS (
+            SELECT 1
+            FROM proposicoes.proposicao_tema pt1
+            JOIN proposicoes.proposicao_tema pt2
+              ON pt2.nome_tema = pt1.nome_tema
+             AND pt2.proposicao_id = v2.proposicao_id
+            WHERE pt1.proposicao_id = v1.proposicao_id
+          )
+        ) AS dp
+        GROUP BY dp.parlamentar_id
       )
     INSERT INTO parlamentares.estatistica_parlamentar_agregada AS e
       (parlamentar_id, pct_alinhamento, votacoes_analisadas, proposicoes_count,
        gasto_total_ano, gasto_mediana_casa, percentil_gasto_casa,
-       trust_level, computed_at)
+       pares_contraditorios_count, trust_level, computed_at)
     SELECT
       p.id,
       CASE
@@ -135,6 +198,7 @@ async function seed(parlamentarIdFilter: string | null): Promise<number> {
       gpp.gasto_total AS gasto_total_ano,
       mc.mediana AS gasto_mediana_casa,
       pper.percentil AS percentil_gasto_casa,
+      COALESCE(par.pares_count, 0) AS pares_contraditorios_count,
       'L2'::trust_level,
       now()
     FROM parlamentares.parlamentar p
@@ -143,6 +207,7 @@ async function seed(parlamentarIdFilter: string | null): Promise<number> {
     LEFT JOIN gasto_pp gpp ON gpp.parlamentar_id = p.id
     LEFT JOIN mediana_casa mc ON mc.casa = p.casa
     LEFT JOIN percentil_pp pper ON pper.parlamentar_id = p.id
+    LEFT JOIN pares_pp par ON par.parlamentar_id = p.id
     WHERE ${parlamentarIdFilter ? sql`p.id = ${parlamentarIdFilter}` : sql`TRUE`}
     ON CONFLICT (parlamentar_id) DO UPDATE SET
       pct_alinhamento = EXCLUDED.pct_alinhamento,
@@ -151,6 +216,7 @@ async function seed(parlamentarIdFilter: string | null): Promise<number> {
       gasto_total_ano = EXCLUDED.gasto_total_ano,
       gasto_mediana_casa = EXCLUDED.gasto_mediana_casa,
       percentil_gasto_casa = EXCLUDED.percentil_gasto_casa,
+      pares_contraditorios_count = EXCLUDED.pares_contraditorios_count,
       trust_level = EXCLUDED.trust_level,
       computed_at = now()
   `)

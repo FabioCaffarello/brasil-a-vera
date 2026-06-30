@@ -2,7 +2,14 @@
 // Cada card linka para um ranking específico.
 
 import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
-import { FileText, Receipt, Scale, TrendingUp, UserCheck } from 'lucide-react'
+import {
+  FileText,
+  GitMerge,
+  Receipt,
+  Scale,
+  TrendingUp,
+  UserCheck,
+} from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -54,6 +61,14 @@ const RANKINGS = [
     title: 'Produção legislativa',
     description:
       'Parlamentares com maior número de proposições apresentadas na legislatura corrente — projetos de lei, emendas, requerimentos e demais matérias registradas.',
+  },
+  {
+    href: '/rankings/coerencia',
+    icon: GitMerge,
+    iconClass: 'text-teal-600',
+    title: 'Coerência de voto',
+    description:
+      'Quem vota de forma mais consistente — e quem apresenta mais pares contraditórios em proposições do mesmo tema com direções semânticas opostas.',
   },
 ]
 
