@@ -174,6 +174,14 @@ export default async function VetoDetalhePage({ params }: Props) {
               </dd>
             </>
           )}
+          {detalhe.materiaVetadaEmenta && (
+            <>
+              <dt className="text-fg-tertiary">Ementa da matéria</dt>
+              <dd className="col-span-1 text-fg-secondary sm:col-span-2">
+                {detalhe.materiaVetadaEmenta}
+              </dd>
+            </>
+          )}
           {detalhe.dataPublicacao && (
             <>
               <dt className="text-fg-tertiary">Publicação do veto</dt>
