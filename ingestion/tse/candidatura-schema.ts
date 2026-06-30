@@ -15,6 +15,9 @@ export const tseCandidaturaRecordSchema = z
     SG_UF: z.string(),
     SG_UE: z.string(),
     DS_SITUACAO_CANDIDATURA: z.string(),
+    // Votos nominais obtidos no pleito (QT_VOTOS_NOMINAIS no CSV do TSE).
+    // Opcional: ausente em anos mais antigos ou candidatos sem votação.
+    QT_VOTOS_NOMINAIS: z.string().optional(),
   })
   .passthrough()
 

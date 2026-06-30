@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, isNotNull, or, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinhamento'
 import { db } from '@/shared/db'
 import {
   estatisticaParlamentarAgregada,
+  filiacaoPartidaria,
   gasto,
   parlamentar,
   proposicaoAutor,
@@ -334,6 +335,110 @@ export async function getAlinhamentoMedioBancada(
             : null,
         comDados: Number(row?.comDados ?? 0),
       }
+    },
+  )
+}
+
+// ── Movimentações recentes ────────────────────────────────────────────────────
+
+export interface FiliacaoMovimentacao {
+  parlamentarId: string
+  parlamentarNome: string
+  parlamentarCasa: 'CAMARA' | 'SENADO'
+  parlamentarUf: string
+  parlamentarUrlFoto: string | null
+  tipo: 'ENTRADA' | 'SAIDA'
+  data: string
+}
+
+// Retorna entradas e saídas recentes (~365 dias) de parlamentares neste partido.
+// Condicional: retorna [] quando filiacao_partidaria está vazia (graceful
+// degradation enquanto a ingestão ainda não rodou em prod).
+export async function getFiliacoesRecentes(
+  sigla: string,
+  limit = 10,
+): Promise<FiliacaoMovimentacao[]> {
+  return cached(
+    `partido:filiacoes-recentes:${sigla}:n=${limit}`,
+    TTL.partidoOverview,
+    async () => {
+      const corte = sql`NOW() - INTERVAL '365 days'`
+
+      const entradas = await db
+        .select({
+          parlamentarId: parlamentar.id,
+          parlamentarNome: parlamentar.nome,
+          parlamentarCasa: parlamentar.casa,
+          parlamentarUf: parlamentar.uf,
+          parlamentarUrlFoto: parlamentar.urlFoto,
+          data: filiacaoPartidaria.dataInicio,
+        })
+        .from(filiacaoPartidaria)
+        .innerJoin(
+          parlamentar,
+          eq(parlamentar.id, filiacaoPartidaria.parlamentarId),
+        )
+        .where(
+          and(
+            eq(filiacaoPartidaria.partidoSigla, sigla),
+            gte(filiacaoPartidaria.dataInicio, sql`${corte}::date`),
+          ),
+        )
+        .orderBy(desc(filiacaoPartidaria.dataInicio))
+        .limit(limit)
+
+      const saidas = await db
+        .select({
+          parlamentarId: parlamentar.id,
+          parlamentarNome: parlamentar.nome,
+          parlamentarCasa: parlamentar.casa,
+          parlamentarUf: parlamentar.uf,
+          parlamentarUrlFoto: parlamentar.urlFoto,
+          data: filiacaoPartidaria.dataFim,
+        })
+        .from(filiacaoPartidaria)
+        .innerJoin(
+          parlamentar,
+          eq(parlamentar.id, filiacaoPartidaria.parlamentarId),
+        )
+        .where(
+          and(
+            eq(filiacaoPartidaria.partidoSigla, sigla),
+            or(
+              gte(filiacaoPartidaria.dataFim, sql`${corte}::date`),
+              isNotNull(filiacaoPartidaria.dataFim),
+            ),
+            gte(filiacaoPartidaria.dataFim, sql`${corte}::date`),
+          ),
+        )
+        .orderBy(desc(filiacaoPartidaria.dataFim))
+        .limit(limit)
+
+      const resultado: FiliacaoMovimentacao[] = [
+        ...entradas.map((r) => ({
+          parlamentarId: r.parlamentarId,
+          parlamentarNome: r.parlamentarNome,
+          parlamentarCasa: r.parlamentarCasa as 'CAMARA' | 'SENADO',
+          parlamentarUf: r.parlamentarUf,
+          parlamentarUrlFoto: r.parlamentarUrlFoto,
+          tipo: 'ENTRADA' as const,
+          data: r.data,
+        })),
+        ...saidas
+          .filter((r) => r.data != null)
+          .map((r) => ({
+            parlamentarId: r.parlamentarId,
+            parlamentarNome: r.parlamentarNome,
+            parlamentarCasa: r.parlamentarCasa as 'CAMARA' | 'SENADO',
+            parlamentarUf: r.parlamentarUf,
+            parlamentarUrlFoto: r.parlamentarUrlFoto,
+            tipo: 'SAIDA' as const,
+            data: r.data as string,
+          })),
+      ]
+
+      resultado.sort((a, b) => b.data.localeCompare(a.data))
+      return resultado.slice(0, limit)
     },
   )
 }

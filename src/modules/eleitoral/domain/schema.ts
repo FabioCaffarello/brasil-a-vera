@@ -57,6 +57,9 @@ export const tseCandidatura = eleitoralSchema.table(
     sgUf: char('sg_uf', { length: 2 }).notNull(),
     sgUe: text('sg_ue').notNull(),
     dsSituacaoCandidatura: text('ds_situacao_candidatura').notNull(),
+    // Votos nominais recebidos no pleito. NULL = campo ausente no CSV do TSE
+    // ou candidato sem votação nominal (ex.: substituição tardia).
+    qtVotosNominais: integer('qt_votos_nominais'),
     // A ponte (L2): preenchida por CPF exato. NULL = não-vinculado.
     parlamentarId: uuid('parlamentar_id').references(() => parlamentar.id, {
       onDelete: 'set null',
