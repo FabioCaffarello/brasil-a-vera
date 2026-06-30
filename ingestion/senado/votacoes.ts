@@ -15,6 +15,16 @@ const CONCURRENCY = 5
 const DEFAULT_DAYS_BACK = 30
 const LIMIT = 1000
 
+// Limite empírico de cobertura da API do Senado /votacao (legis.senado.leg.br).
+// Confirmado em 2026-06-23: janelas com datainicio em 2023/2024 retornam 0
+// registros, mesmo passando parâmetros corretos. O endpoint tem uma janela
+// deslizante de ~12 meses — datas mais antigas são ignoradas silenciosamente.
+// Alternativa (sessão a sessão) exige endpoint diferente não documentado e não
+// testado empiricamente; investigação pendente (#566).
+// Quando DATA_INICIO resulta em janela > WARN_LOOKBACK_DAYS, o log emite
+// warning para registrar a limitação explicitamente no run.
+const SENADO_VOTACAO_WARN_LOOKBACK_DAYS = 365
+
 interface IngestionStats {
   votacoesFetched: number
   votacoesUpserted: number
@@ -170,6 +180,29 @@ export async function ingestVotacoesSenado(
           dataFim: opts.dataFim.replace(/-/g, ''),
         }
       : defaultDateRange(DEFAULT_DAYS_BACK, true)
+
+  // Avisa quando a janela solicitada excede o limite empírico da API.
+  // O endpoint retorna silenciosamente 0 para datas além de ~1 ano —
+  // sem erro, sem indicação. O warning torna o comportamento visível nos logs.
+  if (opts.dataInicio) {
+    const requestedStart = new Date(opts.dataInicio)
+    const msPerDay = 86_400_000
+    const daysBack = (Date.now() - requestedStart.getTime()) / msPerDay
+    if (daysBack > SENADO_VOTACAO_WARN_LOOKBACK_DAYS) {
+      console.warn(
+        JSON.stringify({
+          event: 'senado_votacao_lookback_exceeded',
+          requestedDataInicio: opts.dataInicio,
+          daysBack: Math.round(daysBack),
+          limitDays: SENADO_VOTACAO_WARN_LOOKBACK_DAYS,
+          message:
+            'API /votacao do Senado tem janela deslizante de ~12 meses. ' +
+            'Datas além desse limite retornam 0 resultados silenciosamente. ' +
+            'Ver issue #566.',
+        }),
+      )
+    }
+  }
 
   const parlamentarLookup = await loadParlamentarLookup()
   if (parlamentarLookup.size === 0) {

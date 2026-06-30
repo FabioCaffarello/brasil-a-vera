@@ -104,6 +104,12 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       // tier 1: o produtor dá throw sem senadores no banco (guard explícito).
       // Era t0 enquanto senado-senadores era t1 — inversão do DAG que falhava em
       // DB frio (#545). Agora depende do root (t0).
+      //
+      // COBERTURA: API /votacao do Senado tem janela deslizante de ~12 meses.
+      // DATA_INICIO além desse limite retorna 0 silenciosamente (confirmado
+      // empiricamente em 2026-06-23, issue #566). Histórico anterior a ~1 ano
+      // não é acessível por este endpoint; investigação de endpoint alternativo
+      // (por sessão) pendente. Cobertura atual: ~último ano do plenário SF.
       id: 'senado-votacoes',
       script: 'ingest:senado:votacoes',
       context: 'ingestion-senado-votacoes',
