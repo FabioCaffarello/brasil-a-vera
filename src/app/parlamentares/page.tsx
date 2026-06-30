@@ -204,7 +204,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
         ) : (
           <ParlamentarPreviewProvider>
             <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {parlamentares.map((p) => (
+              {parlamentares.map((p, i) => (
                 <li key={p.id}>
                   <ParlamentarCard
                     follow={
@@ -213,6 +213,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
                         : undefined
                     }
                     parlamentar={p}
+                    priority={i < 3}
                   />
                 </li>
               ))}
