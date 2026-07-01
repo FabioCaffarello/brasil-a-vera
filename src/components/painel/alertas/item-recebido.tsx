@@ -63,7 +63,7 @@ export function ItemRecebido({
     >
       <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
         {isNovo && (
-          <span className="inline-flex items-center rounded-full bg-fg-brand px-2 py-0.5 font-medium text-brand-foreground text-xs">
+          <span className="inline-flex items-center rounded-full bg-fg-brand px-2 py-0.5 font-medium text-white text-xs">
             Novo
           </span>
         )}
