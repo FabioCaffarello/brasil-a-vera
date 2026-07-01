@@ -1,6 +1,6 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { DataBadge } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { CompartilharVotacaoButton } from '@/components/votacao/compartilhar-button'
 import { resultadoStatus } from '@/components/votacao/resultado'
@@ -22,7 +22,7 @@ interface Props {
 
 export function PerfilVotacaoHeader({ votacao: v }: Props) {
   return (
-    <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
+    <Card className="p-6 sm:p-8" padding="none" variant="default">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <DataBadge
           label={v.casa === 'CAMARA' ? 'Câmara' : 'Senado'}
@@ -60,6 +60,6 @@ export function PerfilVotacaoHeader({ votacao: v }: Props) {
           }}
         />
       </div>
-    </header>
+    </Card>
   )
 }
