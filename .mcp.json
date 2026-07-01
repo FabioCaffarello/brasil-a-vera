@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "dotcontext": {
+      "command": "npx",
+      "args": [
+        "--registry=https://registry.npmjs.org/",
+        "-y",
+        "@dotcontext/mcp@latest"
+      ],
+      "env": {}
+    }
+  }
+}
