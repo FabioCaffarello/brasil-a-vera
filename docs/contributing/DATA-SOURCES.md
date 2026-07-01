@@ -72,8 +72,8 @@ da cadência. O DAG é preservado: tier N+1 só roda após todo tier N.
 
 | Entidade | Script | Cadência | Cobertura | Limitações |
 |---|---|---|---|---|
-| Bens de candidatos | `ingest:tse:bens` | monthly t1 | Pleitos 2014, 2018, 2022 | 2026 indisponível até ciclo eleitoral; vínculo por CPF (Câmara-only) |
-| CPF senadores | `backfill:senado:cpf` | monthly t2 | Senadores via `tse_candidatura` | Depende de `tse-bens` (t1) para ter CPF |
+| Bens de candidatos | `ingest:tse:bens` | monthly t1 | Pleitos 2014, 2018, 2022 | 2026 indisponível até ciclo eleitoral; vínculo por CPF |
+| CPF senadores | `backfill:senado:cpf` | monthly t2 | Senadores via `tse_candidatura` | Cobertura atual: **88,9% (72/81)**. 9 suplentes sem registro federal TSE 2014–2022 (ver ADR-063). Também linka `tse_candidatura.parlamentar_id` para os senadores resolvidos. |
 
 ## Variáveis de ambiente aceitas pelos scripts
 

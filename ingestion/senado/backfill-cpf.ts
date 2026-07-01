@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm'
 
 import { tseCandidatura } from '@/modules/eleitoral/domain/schema'
 import { parlamentar } from '@/shared/db/schema'
@@ -26,6 +26,9 @@ interface BackfillStats {
   candidatos: number
   senadores: number
   preenchidos: number
+  // Candidaturas TSE (cd_cargo=5) linkadas via parlamentar_id após gravar CPFs.
+  // Fica 0 se tse_candidatura ainda não foi populada (tse-bens não rodou antes).
+  candidaturasLinked: number
   semMatch: Array<{ nomeCivil: string; melhorScore: number }>
   errors: Array<{ nomeCivil: string; reason: string }>
 }
@@ -86,6 +89,7 @@ export async function backfillCpfSenado(): Promise<BackfillStats> {
     candidatos: candidaturas.length,
     senadores: senadores.length,
     preenchidos: 0,
+    candidaturasLinked: 0,
     semMatch: [],
     errors: [],
   }
@@ -143,6 +147,30 @@ export async function backfillCpfSenado(): Promise<BackfillStats> {
     }
   }
 
+  // Fase 2: linkar tse_candidatura.parlamentar_id para senadores cujos CPFs
+  // acabaram de ser gravados (ou que já estavam preenchidos de runs anteriores).
+  // Necessário porque tse-bens (t1) roda ANTES deste script (t2) e não consegue
+  // resolver os parlamentar_id dos senadores na época em que insere as candidaturas.
+  // Esta etapa é idempotente: só atualiza rows onde parlamentar_id IS NULL.
+  try {
+    const linkResult = await db.execute(sql`
+      UPDATE eleitoral.tse_candidatura c
+      SET parlamentar_id = p.id
+      FROM parlamentares.parlamentar p
+      WHERE c.cpf = p.cpf
+        AND p.casa = 'SENADO'
+        AND c.cd_cargo = ${CD_CARGO_SENADOR}
+        AND c.parlamentar_id IS NULL
+    `)
+    stats.candidaturasLinked =
+      (linkResult as unknown as { rowCount: number }).rowCount ?? 0
+  } catch (err) {
+    stats.errors.push({
+      nomeCivil: '*link-candidaturas*',
+      reason: err instanceof Error ? err.message : String(err),
+    })
+  }
+
   return stats
 }
 
@@ -157,6 +185,7 @@ backfillCpfSenado()
         candidaturasTSE: stats.candidatos,
         senadoresSemCpf: stats.senadores,
         preenchidos: stats.preenchidos,
+        candidaturasLinked: stats.candidaturasLinked,
         semMatch: stats.semMatch.length,
         semMatchDetalhes: stats.semMatch,
         errorsCount: stats.errors.length,
