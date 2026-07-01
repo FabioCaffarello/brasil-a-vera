@@ -14,6 +14,7 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
+import { FilterPanel } from '@/components/ui/filter-panel'
 
 interface Props {
   anos: number[]
@@ -149,7 +150,7 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
  */
 export function FiltrosVotacao({ anos, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
+    <FilterPanel>
       <FilterChips label="Casa">
         <Chip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>
@@ -237,6 +238,6 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
       </form>
 
       <FiltrosAtivos selecionado={selecionado} />
-    </div>
+    </FilterPanel>
   )
 }

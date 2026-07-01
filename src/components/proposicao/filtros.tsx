@@ -15,6 +15,7 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
+import { FilterPanel } from '@/components/ui/filter-panel'
 import { Autocomplete } from '@/design-system/primitives/rds-autocomplete'
 import type { TemaDistinto } from '@/lib/queries/proposicoes'
 
@@ -187,7 +188,7 @@ function FiltrosAtivos({
  */
 export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
+    <FilterPanel>
       <FilterChips label="Tipo">
         <Chip asChild selected={!selecionado.tipo}>
           <Link href={buildHref(selecionado, { tipo: null })}>Todos</Link>
@@ -314,6 +315,6 @@ export function FiltrosProposicao({ anos, temas, selecionado }: Props) {
       </form>
 
       <FiltrosAtivos selecionado={selecionado} temas={temas} />
-    </div>
+    </FilterPanel>
   )
 }

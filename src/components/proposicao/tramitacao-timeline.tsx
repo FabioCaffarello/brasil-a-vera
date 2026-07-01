@@ -1,6 +1,7 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
 import {
+  Button,
   Chip,
   FilterChips,
   Timeline,
@@ -94,15 +95,14 @@ export function TramitacaoTimeline({
           o scroll na seção após paginar (ADR-026 §4). Sem JS. */}
       {mostrarMaisHref ? (
         <div className="flex justify-center pt-2">
-          <a
-            className="inline-flex items-center gap-2 rounded-md border border-line-emphasis bg-surface-canvas px-3 py-2 font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-            href={mostrarMaisHref}
-          >
-            <ArrowDown aria-hidden className="h-3.5 w-3.5" />
-            {typeof restantes === 'number' && restantes > 0
-              ? `Mostrar mais (${restantes} ${restantes === 1 ? 'restante' : 'restantes'})`
-              : 'Mostrar mais'}
-          </a>
+          <Button asChild size="sm" variant="outline">
+            <a href={mostrarMaisHref}>
+              <ArrowDown aria-hidden className="h-3.5 w-3.5" />
+              {typeof restantes === 'number' && restantes > 0
+                ? `Mostrar mais (${restantes} ${restantes === 1 ? 'restante' : 'restantes'})`
+                : 'Mostrar mais'}
+            </a>
+          </Button>
         </div>
       ) : null}
     </div>

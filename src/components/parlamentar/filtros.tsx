@@ -17,6 +17,7 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { X } from 'lucide-react'
 import Link from 'next/link'
+import { FilterPanel } from '@/components/ui/filter-panel'
 import { Autocomplete } from '@/design-system/primitives/rds-autocomplete'
 import type { OrdemListagem } from '@/lib/queries/parlamentares'
 
@@ -137,7 +138,7 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
  */
 export function Filtros({ partidos, ufs, selecionado }: Props) {
   return (
-    <div className="space-y-4 rounded-lg border border-line-default bg-surface-base p-4">
+    <FilterPanel>
       <FilterChips label="Casa">
         <Chip asChild selected={!selecionado.casa}>
           <Link href={buildHref(selecionado, { casa: null })}>Todas</Link>
@@ -242,6 +243,6 @@ export function Filtros({ partidos, ufs, selecionado }: Props) {
       </form>
 
       <FiltrosAtivos selecionado={selecionado} />
-    </div>
+    </FilterPanel>
   )
 }

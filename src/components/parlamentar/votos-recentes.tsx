@@ -1,6 +1,10 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { Chip, FilterChips } from '@fabio.caffarello/react-design-system/server'
+import {
+  Button,
+  Chip,
+  FilterChips,
+} from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 import {
   formatDataBR,
@@ -186,13 +190,11 @@ export function VotosRecentes({
         // navegador rola até o NOVO botão (que está no mesmo offset
         // visual). Usuário continua perto de onde estava em vez de
         // saltar para o topo da seção.
-        <a
-          className="block w-full rounded-md border border-line-emphasis bg-surface-canvas py-2 text-center font-medium text-fg-primary text-sm hover:bg-surface-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
-          href={proximaPaginaHref}
-          id="mostrar-mais-votos"
-        >
-          Mostrar mais
-        </a>
+        <Button asChild className="w-full" size="sm" variant="outline">
+          <a href={proximaPaginaHref} id="mostrar-mais-votos">
+            Mostrar mais
+          </a>
+        </Button>
       ) : null}
     </div>
   )
