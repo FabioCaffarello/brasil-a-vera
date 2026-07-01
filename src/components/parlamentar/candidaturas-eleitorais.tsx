@@ -1,3 +1,4 @@
+import { Card } from '@fabio.caffarello/react-design-system/server'
 import { Vote } from 'lucide-react'
 
 import { EmptyState } from '@/components/ui/empty-state'
@@ -37,30 +38,29 @@ export function CandidaturasEleitorais({ candidaturas }: Props) {
     <div className="space-y-3">
       <ul className="space-y-2">
         {candidaturas.map((c) => (
-          <li
-            key={c.id}
-            className="rounded-lg border border-line-default bg-surface-base p-3"
-          >
-            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <span className="font-mono text-fg-tertiary text-xs tabular-nums">
-                {c.anoEleicao}
-              </span>
-              <span className="font-medium text-fg-primary text-sm">
-                {formatCargo(c.dsCargo)}
-              </span>
-              <span className="text-fg-secondary text-sm">{c.sgUf}</span>
-              <span
-                className={`ml-auto text-xs font-medium ${situacaoClass(c.dsSituacaoCandidatura)}`}
-              >
-                {formatSituacao(c.dsSituacaoCandidatura)}
-              </span>
-            </div>
-            {c.qtVotosNominais != null &&
-              c.dsSituacaoCandidatura.toUpperCase().startsWith('ELEITO') && (
-                <p className="mt-0.5 text-fg-tertiary text-xs tabular-nums">
-                  {c.qtVotosNominais.toLocaleString('pt-BR')} votos nominais
-                </p>
-              )}
+          <li key={c.id}>
+            <Card padding="none" className="p-3" variant="default">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="font-mono text-fg-tertiary text-xs tabular-nums">
+                  {c.anoEleicao}
+                </span>
+                <span className="font-medium text-fg-primary text-sm">
+                  {formatCargo(c.dsCargo)}
+                </span>
+                <span className="text-fg-secondary text-sm">{c.sgUf}</span>
+                <span
+                  className={`ml-auto text-xs font-medium ${situacaoClass(c.dsSituacaoCandidatura)}`}
+                >
+                  {formatSituacao(c.dsSituacaoCandidatura)}
+                </span>
+              </div>
+              {c.qtVotosNominais != null &&
+                c.dsSituacaoCandidatura.toUpperCase().startsWith('ELEITO') && (
+                  <p className="mt-0.5 text-fg-tertiary text-xs tabular-nums">
+                    {c.qtVotosNominais.toLocaleString('pt-BR')} votos nominais
+                  </p>
+                )}
+            </Card>
           </li>
         ))}
       </ul>

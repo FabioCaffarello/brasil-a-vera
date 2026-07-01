@@ -1,6 +1,6 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { DataBadge } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { Building2 } from 'lucide-react'
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
@@ -41,7 +41,7 @@ export function PerfilHeader({ parlamentar, afastamentosAtivos = [] }: Props) {
     situacaoLower !== 'exercicio' && situacaoLower !== 'exercício'
 
   return (
-    <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
+    <Card className="p-6 sm:p-8" padding="none" variant="default">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <ParlamentarAvatar
           className="shrink-0 sm:size-28"
@@ -130,6 +130,6 @@ export function PerfilHeader({ parlamentar, afastamentosAtivos = [] }: Props) {
           </div>
         </div>
       </div>
-    </header>
+    </Card>
   )
 }

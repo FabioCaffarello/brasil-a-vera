@@ -14,9 +14,13 @@
 // server-side é feito por query via `cached(...)` em
 // src/lib/queries/partidos.ts (Workers caches.default API).
 
-import { Card, Text } from '@fabio.caffarello/react-design-system/server'
+import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
 import { notFound } from 'next/navigation'
 
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@/components/detail/detail-layout'
 import { AlinhamentoMedioBancadaBlock } from '@/components/partido/alinhamento-medio'
 import { BancadaList } from '@/components/partido/bancada-list'
 import { DistribuicaoBancadaBlock } from '@/components/partido/distribuicao-bancada'
@@ -63,37 +67,6 @@ export async function generateMetadata({ params }: PageProps) {
     twitter: { title, description },
     alternates: { types: { 'application/rss+xml': feedHref } },
   }
-}
-
-// Section: <Card> (do /server) + Text/HTML cru para título e hint,
-// seguindo a tabela canônica. <h2> permanece HTML cru porque a
-// tipografia tem 4 propriedades (font-medium + text-sm + uppercase +
-// tracking-wide) — `variant="label"` cobre 2, as outras viram override,
-// mantendo a regra dura de "duas ou mais → HTML cru".
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <Card>
-      <header className="mb-3">
-        <h2 className="font-medium text-fg-tertiary text-sm uppercase tracking-wide">
-          {title}
-        </h2>
-        {hint && (
-          <Text variant="caption" className="mt-0.5 text-fg-tertiary">
-            {hint}
-          </Text>
-        )}
-      </header>
-      {children}
-    </Card>
-  )
 }
 
 function MovimentacoesFiliacoes({
@@ -157,79 +130,104 @@ export default async function PartidoPage({ params }: PageProps) {
     getFiliacoesRecentes(sigla),
   ])
 
-  return (
-    <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
-      <PartidoHeader
-        nomeOficial={overview.nomeOficial}
-        sigla={overview.sigla}
-        totalParlamentares={overview.totalParlamentares}
-      />
-
-      <Section
-        hint="Parlamentares atualmente filiados a esta sigla. Trocas de partido durante a legislatura aparecem assim que a próxima ingestão capturar a nova filiação."
-        title="Bancada"
-      >
-        <BancadaList membros={overview.parlamentares} />
-      </Section>
-
-      <Section
-        hint="Distribuição por Casa e pelos estados com maior representação."
-        title="Composição da bancada"
-      >
-        <DistribuicaoBancadaBlock membros={overview.parlamentares} />
-      </Section>
-
-      <Section
-        // Hint federation-aware (ADR-041): para partido federado não existe
-        // orientação da sigla, então o subtítulo NÃO pode prometer "alinhamento
-        // à orientação do partido" — seria contradito pelo corpo do bloco.
-        // Nenhuma superfície afirma o que outra nega.
-        hint={
-          fidelidade.emFederacao
-            ? 'Quão coesa é a bancada na hora do voto.'
-            : 'Quão coesa é a bancada na hora do voto — média do alinhamento individual dos membros à orientação do partido.'
-        }
-        title="Fidelidade interna média"
-      >
+  const sections: DetailSection[] = [
+    {
+      id: 'bancada',
+      navLabel: 'Bancada',
+      title: 'Bancada',
+      subtitle:
+        'Parlamentares atualmente filiados a esta sigla. Trocas de partido durante a legislatura aparecem assim que a próxima ingestão capturar a nova filiação.',
+      content: <BancadaList membros={overview.parlamentares} />,
+    },
+    {
+      id: 'composicao',
+      navLabel: 'Composição',
+      title: 'Composição da bancada',
+      subtitle:
+        'Distribuição por Casa e pelos estados com maior representação.',
+      content: <DistribuicaoBancadaBlock membros={overview.parlamentares} />,
+    },
+    {
+      // Hint federation-aware (ADR-041): para partido federado não existe
+      // orientação da sigla, então o subtítulo NÃO pode prometer "alinhamento
+      // à orientação do partido" — seria contradito pelo corpo do bloco.
+      id: 'fidelidade',
+      navLabel: 'Fidelidade',
+      title: 'Fidelidade interna média',
+      subtitle: fidelidade.emFederacao
+        ? 'Quão coesa é a bancada na hora do voto.'
+        : 'Quão coesa é a bancada na hora do voto — média do alinhamento individual dos membros à orientação do partido.',
+      content: (
         <FidelidadeMediaBlock fidelidade={fidelidade} sigla={overview.sigla} />
-      </Section>
-
-      <Section
-        hint="Temas mais frequentes nas proposições onde membros desta bancada figuram como autor ou coautor."
-        title="Top 5 temas de proposições autoradas"
-      >
-        <TopTemasPartido temas={temas} />
-      </Section>
-
-      <Section
-        hint="Cota para Exercício da Atividade Parlamentar (Câmara). Senado tem regime próprio ainda não ingerido."
-        title={`Gasto CEAP — ${anoCorrente}`}
-      >
+      ),
+    },
+    {
+      id: 'temas',
+      navLabel: 'Temas',
+      title: 'Top 5 temas de proposições autoradas',
+      subtitle:
+        'Temas mais frequentes nas proposições onde membros desta bancada figuram como autor ou coautor.',
+      content: <TopTemasPartido temas={temas} />,
+    },
+    {
+      id: 'gasto',
+      navLabel: 'Gasto CEAP',
+      title: `Gasto CEAP — ${anoCorrente}`,
+      subtitle:
+        'Cota para Exercício da Atividade Parlamentar (Câmara). Senado tem regime próprio ainda não ingerido.',
+      content: (
         <GastoBancadaBlock
           ano={anoCorrente}
           categorias={gastoCategorias}
           gasto={gasto}
         />
-      </Section>
-
-      <Section
-        hint="Com que frequência os membros votam na mesma direção que a maioria do partido ou bloco. Membros com menos de 10 votações analisadas são excluídos."
-        title="Alinhamento médio da bancada"
-      >
+      ),
+    },
+    {
+      id: 'alinhamento',
+      navLabel: 'Alinhamento',
+      title: 'Alinhamento médio da bancada',
+      subtitle:
+        'Com que frequência os membros votam na mesma direção que a maioria do partido ou bloco. Membros com menos de 10 votações analisadas são excluídos.',
+      content: (
         <AlinhamentoMedioBancadaBlock
           alinhamento={alinhamentoMedio}
           sigla={sigla}
         />
-      </Section>
+      ),
+    },
+  ]
 
-      {filiacoesRecentes.length > 0 && (
-        <Section
-          hint="Entradas e saídas dos últimos 365 dias registradas na base de filiações."
-          title="Movimentações recentes"
-        >
-          <MovimentacoesFiliacoes movimentacoes={filiacoesRecentes} />
-        </Section>
-      )}
-    </div>
+  if (filiacoesRecentes.length > 0) {
+    sections.push({
+      id: 'movimentacoes',
+      navLabel: 'Movimentações',
+      title: 'Movimentações recentes',
+      subtitle:
+        'Entradas e saídas dos últimos 365 dias registradas na base de filiações.',
+      content: <MovimentacoesFiliacoes movimentacoes={filiacoesRecentes} />,
+    })
+  }
+
+  return (
+    <DetailLayout
+      breadcrumb={
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Partidos', href: '/partidos' },
+            { label: sigla },
+          ]}
+        />
+      }
+      header={
+        <PartidoHeader
+          nomeOficial={overview.nomeOficial}
+          sigla={overview.sigla}
+          totalParlamentares={overview.totalParlamentares}
+        />
+      }
+      sections={sections}
+    />
   )
 }

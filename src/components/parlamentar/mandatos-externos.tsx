@@ -1,3 +1,4 @@
+import { Card } from '@fabio.caffarello/react-design-system/server'
 import { Briefcase } from 'lucide-react'
 
 import { EmptyState } from '@/components/ui/empty-state'
@@ -47,30 +48,29 @@ export function MandatosExternos({ mandatos }: Props) {
           const key = `${m.cargo}-${m.anoInicio ?? 'x'}-${m.siglaUf ?? 'x'}`
 
           return (
-            <li
-              key={key}
-              className="rounded-lg border border-line-default bg-surface-base p-3"
-            >
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="font-medium text-fg-primary text-sm">
-                  {m.cargo}
-                </span>
-                {localidade && (
-                  <span className="text-fg-secondary text-sm">
-                    {localidade}
+            <li key={key}>
+              <Card padding="none" className="p-3" variant="default">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="font-medium text-fg-primary text-sm">
+                    {m.cargo}
                   </span>
+                  {localidade && (
+                    <span className="text-fg-secondary text-sm">
+                      {localidade}
+                    </span>
+                  )}
+                  {periodo && (
+                    <span className="ml-auto text-fg-tertiary text-xs tabular-nums">
+                      {periodo}
+                    </span>
+                  )}
+                </div>
+                {m.siglaPartidoEleicao && (
+                  <p className="mt-0.5 text-fg-tertiary text-xs">
+                    Eleito pelo {m.siglaPartidoEleicao}
+                  </p>
                 )}
-                {periodo && (
-                  <span className="ml-auto text-fg-tertiary text-xs tabular-nums">
-                    {periodo}
-                  </span>
-                )}
-              </div>
-              {m.siglaPartidoEleicao && (
-                <p className="mt-0.5 text-fg-tertiary text-xs">
-                  Eleito pelo {m.siglaPartidoEleicao}
-                </p>
-              )}
+              </Card>
             </li>
           )
         })}

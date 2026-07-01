@@ -64,8 +64,8 @@ stats-grid 1`.
 > **genéricas terminou**. Todo componente local com equivalente no RDS foi migrado;
 > os gaps que dependiam do RDS foram **destravados pelas 5 issues** (entregues nas
 > releases v4.0 → v4.2 e consumidas de volta). A camada `primitives/` ficou só com
-> `card` + `tabs` (gaps ratificados) + **4 wrappers de bundle sancionados**
-> (`rds-accordion`/`-autocomplete`/`-dialog`/`-toast`). **Zero duplicata local** de
+> `card` + `tabs` (gaps ratificados) + **5 wrappers de bundle sancionados**
+> (`rds-accordion`/`-autocomplete`/`-dialog`/`-drawer`/`-toast`). **Zero duplicata local** de
 > componente RDS; **zero `@radix-ui/react-dialog` direto** (6 deps radix órfãs
 > removidas, #455). Detalhe por PR na §[Encerramento](#encerramento-2026-06-16) no fim.
 
@@ -86,6 +86,7 @@ stats-grid 1`.
 | `command` | 1 | **X** | — (cmdk; sem par) | ✅ removido com o `Combobox` (#450) | alto | ✓ |
 | `popover` | 1 | **X** | `Popover` | ✅ removido com o `Combobox` (#450) | médio | ✓ |
 | `rds-dialog` / `rds-toast` / `rds-autocomplete` | — | **D** | wrappers de bundle | manter — re-export `/granular` (razão de bundle, como `rds-accordion`) | — | — |
+| `rds-drawer` | 4 | **D** | wrapper sancionado (ADR-053 Fase 2, 2026-07-01) | manter — `Drawer` é client (estado open/close + portal); importar barrel `/granular` DENTRO do módulo `'use client'` poupa +294KB num RSC. Consumers: `parlamentar/`, `proposicao/`, `votacao/preview-drawer` + `votos-drawer` | — | — |
 | `card` | 3 | **R** | `Card` compound (`./server`) | ✅ consolidado (#456-follow; `CardContent`→`CardBody`, `CardDescription`→`CardSubtitle`, `CardFooter`→`CardActions`; spacer vazio da home virou `<div flex-1>` pois `CardBody` exige children) | médio | ✓ |
 | `tabs` (stateful) | 0 | **R** | só `TabsAsLinks` | ✅ removido como órfão — o único consumer era o showroom `/dev/design`, eliminado. Levou junto a dep `@radix-ui/react-tabs` (última radix → **zero**). Tabs com estado segue gap do RDS; se surgir necessidade real, abrir issue (guard proíbe recriar local) | baixo | ✓ |
 
@@ -183,8 +184,8 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
 
 **Estado final da `src/design-system/`:**
 
-- **Primitivas:** **zero primitiva local** — só os 4 wrappers de bundle sancionados
-  `rds-accordion`/`rds-autocomplete`/`rds-dialog`/`rds-toast` (`'use client'`
+- **Primitivas:** **zero primitiva local** — só os 5 wrappers de bundle sancionados
+  `rds-accordion`/`rds-autocomplete`/`rds-dialog`/`rds-drawer`/`rds-toast` (`'use client'`
   re-exportando `/granular` — evita vazar +294KB do barrel num RSC). `card` foi
   consolidado (Card compound do RDS); `tabs` foi removido como órfão (único consumer
   era o showroom `/dev/design`, eliminado).

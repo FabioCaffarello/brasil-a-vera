@@ -5,6 +5,7 @@
 // composto a partir daqui). Conformidade ADR-040 §4: contagem/percentil factual,
 // SEM score, SEM cor de juízo (números em fg-primary neutro), "o cidadão conclui".
 
+import { Card } from '@fabio.caffarello/react-design-system/server'
 import Link from 'next/link'
 
 import { TrustBadge } from '@/components/trust/trust-badge'
@@ -189,9 +190,12 @@ export function LeituraRapida({
   coerencia,
 }: Props) {
   return (
-    <section
+    <Card
+      asSection
       aria-labelledby="leitura-rapida-title"
-      className="rounded-lg border border-line-default bg-surface-base p-4 sm:p-6"
+      className="p-4 sm:p-6"
+      padding="none"
+      variant="default"
     >
       <h2
         className="font-semibold text-base text-fg-primary"
@@ -232,6 +236,6 @@ export function LeituraRapida({
           Como ler um perfil →
         </Link>
       </p>
-    </section>
+    </Card>
   )
 }

@@ -32,6 +32,12 @@ interface Forbidden {
   ref: string
 }
 
+// Wrappers de bundle sancionados (NÃO entram em FORBIDDEN — são os caminhos corretos):
+//   rds-accordion · rds-autocomplete · rds-dialog · rds-drawer · rds-toast
+// Todos re-exportam do barrel `/granular` DENTRO de um módulo `'use client'`.
+// Importar `/granular` direto num Server Component vaza +294KB — daí os wrappers.
+// Ao adicionar novo wrapper, documente em docs/migration/rds-consolidation-plan.md.
+
 // Primitivas/composições já consolidadas no RDS ou órfãs slated p/ remoção.
 // Uma entrada por primitiva, adicionada no PR que a remove/aposenta.
 const FORBIDDEN: Forbidden[] = [

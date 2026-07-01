@@ -1,6 +1,6 @@
 // Promovido ao RDS (migração ADR-033) — tokens via docs/migration/token-map.md.
 
-import { DataBadge } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 
 import { CompartilharProposicaoButton } from '@/components/proposicao/compartilhar-button'
 import { situacaoStatus } from '@/components/proposicao/situacao'
@@ -34,7 +34,7 @@ export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
     proposicao.ano,
   )
   return (
-    <header className="rounded-lg border border-line-default bg-surface-base p-6 sm:p-8">
+    <Card className="p-6 sm:p-8" padding="none" variant="default">
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <h1 className="font-mono font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
           {ref}
@@ -91,6 +91,6 @@ export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
           }}
         />
       </div>
-    </header>
+    </Card>
   )
 }

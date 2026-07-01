@@ -1,6 +1,7 @@
 // Seção "Vetos presidenciais" no perfil do senador (ADR-059, Sprint 13.2).
 // Mostra os vetos em que votou, com posição e resultado do dispositivo.
 
+import { Card } from '@fabio.caffarello/react-design-system/server'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -84,33 +85,32 @@ export function VetosSenador({ vetos, stats }: Props) {
       )}
       <ul className="space-y-2">
         {vetos.map((v) => (
-          <li
-            key={`${v.dispositivoId}`}
-            className="rounded-lg border border-line-default bg-surface-base p-3"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <Link
-                  className="font-medium text-fg-primary text-sm hover:underline"
-                  href={`/vetos/${v.vetoId}`}
-                >
-                  VET {v.vetoNumero}/{v.vetoAno}
-                </Link>
-                <p className="mt-0.5 line-clamp-2 text-fg-tertiary text-xs">
-                  {v.vetoEmenta}
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-mono text-fg-quaternary">
-                    {v.dispositivoIdentificador}
-                  </span>
-                  {v.dataSessao && (
-                    <span className="text-fg-quaternary">{v.dataSessao}</span>
-                  )}
-                  <SituacaoLabel situacao={v.situacao} />
+          <li key={`${v.dispositivoId}`}>
+            <Card padding="none" className="p-3" variant="default">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    className="font-medium text-fg-primary text-sm hover:underline"
+                    href={`/vetos/${v.vetoId}`}
+                  >
+                    VET {v.vetoNumero}/{v.vetoAno}
+                  </Link>
+                  <p className="mt-0.5 line-clamp-2 text-fg-tertiary text-xs">
+                    {v.vetoEmenta}
+                  </p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="font-mono text-fg-quaternary">
+                      {v.dispositivoIdentificador}
+                    </span>
+                    {v.dataSessao && (
+                      <span className="text-fg-quaternary">{v.dataSessao}</span>
+                    )}
+                    <SituacaoLabel situacao={v.situacao} />
+                  </div>
                 </div>
+                <VotoChip voto={v.voto} />
               </div>
-              <VotoChip voto={v.voto} />
-            </div>
+            </Card>
           </li>
         ))}
       </ul>
