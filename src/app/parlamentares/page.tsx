@@ -11,7 +11,6 @@
 //   @/components/parlamentar; ExportCsvLink/FollowButton/Combobox e
 //   auth/canExport/follows preservados.
 
-import { auth } from '@clerk/nextjs/server'
 import {
   Button,
   DataBadge,
@@ -21,9 +20,11 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { SearchX, Users } from 'lucide-react'
 import { permanentRedirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { ExportCsvLink } from '@/components/export-csv-link'
 import { MostrarMais } from '@/components/listagem/mostrar-mais'
 import { Filtros } from '@/components/parlamentar/filtros'
+import { FollowIsland } from '@/components/parlamentar/follow-island'
 import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import {
   ParlamentarPreviewDrawer,
@@ -34,7 +35,6 @@ import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { buildListaHref, restantesPrimeiraPagina } from '@/lib/pagination'
 import { CursorParlamentaresV1 } from '@/lib/queries/cursor-schemas'
-import { getFollowsByUserId } from '@/lib/queries/follows'
 import {
   type Casa,
   countParlamentares,
@@ -46,7 +46,6 @@ import {
   type OrdemListagem,
   PARLAMENTARES_LISTAGEM_PAGE_SIZE,
 } from '@/lib/queries/parlamentares'
-import { getOrCreateUserProfileId } from '@/lib/queries/user-profile'
 
 export const metadata = {
   title: 'Parlamentares — Brasil à Vera',
@@ -100,6 +99,18 @@ function normalizeOrdem(value: string | undefined): OrdemListagem | undefined {
   return undefined
 }
 
+async function ExportIsland({
+  exportHref,
+  totalFiltrado,
+}: {
+  exportHref: string
+  totalFiltrado: number
+}) {
+  const can = await canExport()
+  if (!can || totalFiltrado === 0) return null
+  return <ExportCsvLink href={exportHref} />
+}
+
 export default async function ParlamentaresPage({ searchParams }: PageProps) {
   const params = await searchParams
   const filtros = {
@@ -117,15 +128,13 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     permanentRedirect(buildPageHref(params, { after: null }))
   }
 
-  const [page, partidos, ufs, stats, totalFiltrado, canExportData] =
-    await Promise.all([
-      listParlamentaresPaginado(filtros, { cursor }),
-      getPartidosDistintos(),
-      getUfsDistintos(),
-      getListagemStats(),
-      countParlamentares(filtros),
-      canExport(),
-    ])
+  const [page, partidos, ufs, stats, totalFiltrado] = await Promise.all([
+    listParlamentaresPaginado(filtros, { cursor }),
+    getPartidosDistintos(),
+    getUfsDistintos(),
+    getListagemStats(),
+    countParlamentares(filtros),
+  ])
   const parlamentares = page.rows
   // "N restantes" só na 1ª página (sem cursor).
   const restantes = restantesPrimeiraPagina(
@@ -134,18 +143,13 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     PARLAMENTARES_LISTAGEM_PAGE_SIZE,
   )
 
-  // Gating server-side do FollowButton (Wave 10 Hotfix 10.1, preservado):
-  // anônimos não disparam getFollowsByUserId e o card recebe
-  // follow={undefined} — zero HTML/JS do botão. Autenticados: lazy upsert
-  // do user_profile + query de follows.
-  const { userId: clerkUserId } = await auth()
-  let followingIds: Set<string> = new Set()
-  if (clerkUserId) {
-    const internalUserId = await getOrCreateUserProfileId(clerkUserId)
-    if (internalUserId) {
-      followingIds = await getFollowsByUserId(internalUserId)
-    }
-  }
+  const exportHref = `/api/export/parlamentares?${new URLSearchParams(
+    Object.entries({
+      casa: filtros.casa ?? '',
+      partido: filtros.partido ?? '',
+      uf: filtros.uf ?? '',
+    }).filter(([, v]) => v !== ''),
+  ).toString()}`
 
   return (
     <>
@@ -177,17 +181,13 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           <span>
             {totalFiltrado} {totalFiltrado === 1 ? 'resultado' : 'resultados'}
           </span>
-          {canExportData && totalFiltrado > 0 && (
-            <ExportCsvLink
-              href={`/api/export/parlamentares?${new URLSearchParams(
-                Object.entries({
-                  casa: filtros.casa ?? '',
-                  partido: filtros.partido ?? '',
-                  uf: filtros.uf ?? '',
-                }).filter(([, v]) => v !== ''),
-              ).toString()}`}
+          {/* ExportCsvLink streams via ExportIsland — auth required */}
+          <Suspense fallback={null}>
+            <ExportIsland
+              exportHref={exportHref}
+              totalFiltrado={totalFiltrado}
             />
-          )}
+          </Suspense>
         </div>
 
         {parlamentares.length === 0 ? (
@@ -203,21 +203,21 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
           />
         ) : (
           <ParlamentarPreviewProvider>
-            <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {parlamentares.map((p, i) => (
-                <li key={p.id}>
-                  <ParlamentarCard
-                    follow={
-                      clerkUserId
-                        ? { isFollowing: followingIds.has(p.id) }
-                        : undefined
-                    }
-                    parlamentar={p}
-                    priority={i < 3}
-                  />
-                </li>
-              ))}
-            </ul>
+            {/* Fallback: list without follow state, streams immediately.
+                FollowIsland resolves auth + follows and replaces via Suspense. */}
+            <Suspense
+              fallback={
+                <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {parlamentares.map((p, i) => (
+                    <li key={p.id}>
+                      <ParlamentarCard parlamentar={p} priority={i < 3} />
+                    </li>
+                  ))}
+                </ul>
+              }
+            >
+              <FollowIsland parlamentares={parlamentares} />
+            </Suspense>
             <ParlamentarPreviewDrawer />
           </ParlamentarPreviewProvider>
         )}
