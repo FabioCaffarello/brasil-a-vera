@@ -52,7 +52,7 @@ export default async function TemaPage({ params }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      <div className="mx-auto max-w-5xl space-y-8 py-8">
         <Breadcrumb
           items={[
             { label: 'Início', href: '/' },

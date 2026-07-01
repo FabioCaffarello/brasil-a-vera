@@ -14,6 +14,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: '/parlamentares', label: 'Parlamentares' },
   { href: '/proposicoes', label: 'Proposições' },
   { href: '/votacoes', label: 'Votações' },
+  { href: '/temas', label: 'Temas' },
   { href: '/docs', label: 'Docs' },
 ]
 

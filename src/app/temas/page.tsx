@@ -31,7 +31,7 @@ export default async function TemasPage() {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="mx-auto max-w-4xl py-8">
         {temas.length === 0 ? (
           <p className="text-fg-tertiary text-sm">
             Nenhum tema classificado nas proposições ingeridas.
