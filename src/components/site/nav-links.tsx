@@ -1,9 +1,8 @@
 'use client'
 
+import { NavLink as RdsNavLink } from '@fabio.caffarello/react-design-system'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-import { cn } from '@/lib/cn'
 
 export type NavLink = {
   href: string
@@ -39,19 +38,20 @@ interface Props {
 /**
  * NavLinks — desktop horizontal (≥ md). Mobile usa <NavMobile />.
  *
- * Active state Wave 6 reskin:
- * - Active: bg-foreground/10 ring-1 ring-foreground/10
- *   (substitui bg-surface-elevated que sumia no glass shell)
- * - Idle: text-foreground-muted, hover text-foreground com fill leve
+ * Construído sobre o `NavLink` do RDS (ADR-053, camada compositiva):
+ * variant="background" (fundo no active), size="sm". `as={Link}` é
+ * obrigatório — o `useNavLink` deste build retorna `NextLink: undefined`,
+ * então sem `as` o NavLink degrada para `<a>` cru (perde soft-nav do App
+ * Router). O estado ativo (`active`) e o `aria-current="page"` (WCAG
+ * 2.4.8 / 4.1.2) são derivados por `isNavLinkActive` (startsWith), não
+ * pela auto-detecção de pathname do RDS — a semântica startsWith é
+ * compartilhada com <NavMobile />.
  *
  * Todos os links têm peso visual uniforme — sem diferenciação por área
  * (decisão Hotfix 10.3 Proposta C: "Painel" entra como item primeiro
  * sem ícone/divisor; sinaliza prioridade por posição, não por estilo).
  *
- * Active = pathname começa com href (ou exatamente "/" para home).
- * aria-current="page" (WCAG 2.4.8 / 4.1.2).
- *
- * Cliente apenas para usePathname(). Sem outros listeners; bundle ~1KB gzip.
+ * Cliente apenas para usePathname(). Sem outros listeners.
  */
 export function NavLinks({ personalLink }: Props = {}) {
   const pathname = usePathname()
@@ -66,19 +66,15 @@ export function NavLinks({ personalLink }: Props = {}) {
 
         return (
           <li key={link.href}>
-            <Link
-              aria-current={isActive ? 'page' : undefined}
-              className={cn(
-                'inline-flex items-center rounded-md px-3 py-1.5 font-medium transition-colors duration-150',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                isActive
-                  ? 'bg-fg-primary/10 text-fg-primary ring-1 ring-fg-primary/10'
-                  : 'text-fg-tertiary hover:bg-fg-primary/5 hover:text-fg-primary',
-              )}
+            <RdsNavLink
+              active={isActive}
+              as={Link}
               href={link.href}
+              size="sm"
+              variant="background"
             >
               {link.label}
-            </Link>
+            </RdsNavLink>
           </li>
         )
       })}

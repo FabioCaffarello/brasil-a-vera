@@ -40,30 +40,29 @@ describe('NavLinks', () => {
     }
   })
 
-  it('todos os links idle têm tratamento neutro (text-fg-tertiary, sem text-brand)', () => {
+  it('links idle não recebem marcação de active (data-active=false, sem aria-current)', () => {
     mockedPathname.mockReturnValue('/votacoes')
     render(<NavLinks />)
     const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
     const docs = screen.getByRole('link', { name: 'Docs' })
-    expect(parlamentares.className).toContain('text-fg-tertiary')
-    expect(parlamentares.className).not.toContain('text-brand')
-    expect(docs.className).toContain('text-fg-tertiary')
+    expect(parlamentares.getAttribute('data-active')).toBe('false')
+    expect(parlamentares.getAttribute('aria-current')).toBeNull()
+    expect(docs.getAttribute('data-active')).toBe('false')
   })
 
-  it('link active tem bg-fg-primary/10 + ring-fg-primary/10 (uniforme para todos)', () => {
+  it('link active recebe data-active=true + aria-current (NavLink do RDS)', () => {
     mockedPathname.mockReturnValue('/parlamentares')
     render(<NavLinks />)
     const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
-    expect(parlamentares.className).toContain('bg-fg-primary/10')
-    expect(parlamentares.className).toContain('ring-fg-primary/10')
+    expect(parlamentares.getAttribute('data-active')).toBe('true')
+    expect(parlamentares.getAttribute('aria-current')).toBe('page')
   })
 
-  it('todos os links têm focus ring via token --ring', () => {
+  it('todos os links têm focus ring (base do NavLink do RDS)', () => {
     render(<NavLinks />)
     const links = screen.getAllByRole('link')
     for (const link of links) {
-      expect(link.className).toContain('focus-visible:ring-ring')
-      expect(link.className).toContain('focus-visible:ring-2')
+      expect(link.className).toContain('focus:ring-2')
     }
   })
 })
