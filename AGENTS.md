@@ -18,3 +18,7 @@ role; trate `CLAUDE.md` como fonte canônica de instruções:
 - [`.claude/docs/ROLES.md`](.claude/docs/ROLES.md) — matriz role × path
   aplicada automaticamente por hooks (`BAV_CLAUDE_ROLE`).
 - [`docs/README.md`](docs/README.md) — índice da documentação completa.
+## AI Context References
+- Documentation index: `.context/docs/README.md`
+- Agent playbooks: `.context/agents/README.md`
+

@@ -2,7 +2,7 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-06-20
-> Status: proposed (recomendação **revertida** para Alt 2 — ver [Emenda](#emenda-2026-06-20--reversão-para-alt-2-espinha-votacao))
+> Status: accepted (Alt 2 — espinha `/votacao` + orientação como overlay fail-closed; ver [Emenda](#emenda-2026-06-20--reversão-para-alt-2-espinha-votacao))
 
 ---
 

@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "generatedAt": "2026-07-01T00:00:00.000Z",
+  "source": "manual",
+  "stack": {
+    "primaryLanguage": "typescript",
+    "languages": ["javascript", "typescript"],
+    "frameworks": ["nextjs"],
+    "buildTools": ["docker-compose"],
+    "testFrameworks": ["vitest"],
+    "packageManager": "npm"
+  },
+  "sensors": [
+    {
+      "id": "build",
+      "name": "Build",
+      "description": "Next.js production build via OpenNext for Cloudflare Workers. Baseline ~975ms — spikes to 5s+ indicate ingestion/ leaked into app bundle.",
+      "severity": "critical",
+      "command": "npm run build",
+      "script": "build"
+    },
+    {
+      "id": "check",
+      "name": "Lint & Format (Biome)",
+      "description": "Biome lint + format check. Use before any PR. Project uses Biome, NOT ESLint/Prettier.",
+      "severity": "warning",
+      "command": "npm run check",
+      "script": "check"
+    },
+    {
+      "id": "ci",
+      "name": "CI Lint (Biome strict)",
+      "description": "Strict Biome CI mode — same gate as GitHub Actions CI. Must pass before merge.",
+      "severity": "critical",
+      "command": "npm run ci",
+      "script": "ci"
+    },
+    {
+      "id": "test",
+      "name": "Unit Tests",
+      "description": "Vitest unit tests with coverage thresholds. DB tests use testcontainers (real Postgres), never mocks.",
+      "severity": "critical",
+      "command": "npm run test:coverage",
+      "script": "test:coverage"
+    },
+    {
+      "id": "guard-rds-noop",
+      "name": "RDS Noop Guard",
+      "description": "Verifies RDS semantic tokens resolve to non-empty values (catches theme layer collision bug #416).",
+      "severity": "warning",
+      "command": "npm run guard:rds-noop",
+      "script": "guard:rds-noop"
+    },
+    {
+      "id": "guard-rds-primitive",
+      "name": "RDS Primitive Guard",
+      "description": "Ensures no forbidden local primitives are imported after RDS consolidation (ADR-038).",
+      "severity": "warning",
+      "command": "npm run guard:rds-primitive",
+      "script": "guard:rds-primitive"
+    },
+    {
+      "id": "wcag",
+      "name": "WCAG Contrast Check",
+      "description": "Checks color token contrast ratios against WCAG AA thresholds for both light and dark themes.",
+      "severity": "warning",
+      "command": "npm run wcag:check",
+      "script": "wcag:check"
+    }
+  ]
+}

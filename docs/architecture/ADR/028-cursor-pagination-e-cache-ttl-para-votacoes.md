@@ -2,7 +2,7 @@
 
 > Brasil a Vera · Arquitetura · v0.1
 > Última atualização: 2026-05-18
-> Status: proposed
+> Status: accepted
 
 ---
 

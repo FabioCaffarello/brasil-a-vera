@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Brasil a Vera
 
 Plataforma de transparência política brasileira. Código publicamente auditável
@@ -81,13 +85,24 @@ npm run dev              # Next dev server
 npm run build            # Build produção
 npm run check            # Biome lint + format check (use antes do PR)
 npm run ci               # Biome ci (estrito, mesmo do CI)
-npm run test             # Vitest watch
-npm run test:coverage    # Vitest com coverage + thresholds
+npm run test             # Vitest watch (unit, env jsdom)
+npm run test:coverage    # Vitest com coverage + thresholds (80/80/70/80)
+npm run test:integration # Vitest integration (testcontainers — requer Docker)
+npm run wcag:check       # Gate de contraste WCAG
+
+# Rodar um único arquivo de teste
+npx vitest run src/path/to/file.test.ts
 
 # Database (Drizzle Kit)
 npm run db:generate      # Gera migration do schema Drizzle
 npm run db:migrate       # Aplica migrations no banco
 npm run db:studio        # UI do Drizzle pra inspecionar dados
+
+# Banco local com Docker (dev sem Neon)
+npm run db:local:up      # Sobe postgres:17 via docker-compose
+npm run db:local:down    # Derruba o container
+npm run db:local:reset   # Drop + recria + aplica migrations
+npm run db:local:seed    # Popula com dados mínimos (seed-local.sh)
 
 # Cloudflare Workers
 npm run cf:build         # Build pro Cloudflare Workers via OpenNext
@@ -95,13 +110,14 @@ npm run cf:preview       # Preview local com Wrangler
 npm run cf:deploy        # Deploy no Cloudflare Workers
 
 # Ingestão (rodados em GitHub Actions cron; também úteis localmente)
-npm run ingest:camara:deputados      # Sync deputados da Câmara
-npm run ingest:senado:senadores      # Sync senadores
-npm run ingest:camara:proposicoes    # Sync proposições da Câmara (janela default 30d)
-npm run ingest:senado:proposicoes    # Sync proposições do Senado
-npm run ingest:camara:votacoes       # Sync votações da Câmara
-npm run ingest:senado:votacoes       # Sync votações do Senado
-npm run ingest:camara:gastos         # Sync gastos CEAP (ano corrente)
+npm run ingest:print-matrix              # Imprime a matriz de sources do registry.ts
+npm run ingest:camara:deputados          # Sync deputados da Câmara
+npm run ingest:senado:senadores          # Sync senadores
+npm run ingest:camara:proposicoes        # Sync proposições da Câmara (janela default 30d)
+npm run ingest:senado:proposicoes        # Sync proposições do Senado
+npm run ingest:camara:votacoes           # Sync votações da Câmara
+npm run ingest:senado:votacoes           # Sync votações do Senado
+npm run ingest:camara:gastos             # Sync gastos CEAP (ano corrente)
 npm run backfill:camara:votacao-proposicao  # Vincula votação→proposição em rows com FK NULL
 
 # Envs aceitos pelos scripts de ingestão (validados por Zod):
@@ -128,6 +144,45 @@ docs/
 ├── releases/             # Release notes por versão
 ├── seeds/                # Documentos fundacionais (não alterar)
 └── future/               # Visão futura, não compromisso de implementação
+
+## Arquitetura
+
+### Modelo de IO em camadas
+
+O projeto separa IO em três camadas distintas — nunca misturar:
+
+| Camada | Localização | Responsabilidade |
+|--------|-------------|-----------------|
+| Domínio puro | `src/modules/<ctx>/domain/` | Schema Drizzle + funções puras. Sem IO. |
+| Leitura (app) | `src/lib/queries/` | Queries Drizzle consumidas por Server Components. Toda query nova precisa de edge cache (ADR-018). |
+| Escrita (ingestão) | `ingestion/` | Scripts ETL standalone (`tsx`), idempotentes, rodam em GitHub Actions. |
+
+`src/shared/db/schema.ts` re-exporta todos os schemas de módulos para o Drizzle Kit.
+
+### Driver de banco — split crítico
+
+O app usa **neon-http** (`src/shared/db/index.ts`): compatível com Workers (edge), sem WebSockets.  
+Os scripts de ingestão usam **node-postgres** (`ingestion/shared/db.ts`): suporta transações multi-statement.
+
+**neon-http NÃO suporta transações multi-statement.** Nunca use `db.transaction()` em código que rode no Workers. Transações só existem na camada de ingestão.
+
+Dev local: defina `DB_DRIVER=node-postgres` e `DATABASE_URL` apontando para o Docker Postgres. O guard `NODE_ENV !== 'production'` faz dead-code elimination no bundle Workers (node-postgres nunca vai pro edge).
+
+### Ingestion registry
+
+`ingestion/registry.ts` é a fonte de verdade para todos os jobs de ingestão. Os workflows GitHub Actions (`ingestion-daily.yml`, `ingestion-weekly.yml`, `ingestion-monthly.yml`) usam `npm run ingest:print-matrix` para gerar a job matrix dinamicamente — **não editar os YAMLs manualmente**.
+
+Tiers dentro de uma cadência: tier N+1 só roda após todos os tier N completarem. Ordem padrão: `deputados/senadores (tier 0) → votacoes/proposicoes (tier 1) → backfills (tier 2)`.
+
+Para adicionar uma nova fonte: 1 entrada no array `SOURCES` de `registry.ts`. Sem mudança de YAML.
+
+Cada script de ingestão segue o padrão: `schema.ts` (Zod para API externa) + `mapper.ts` (puro, testado) + `main.ts` (IO, upsert idempotente). `ingestion/shared/http.ts` provê `fetchWithRetry` (3 tentativas: 1s/5s/30s, timeout 30s).
+
+### Design system — boundary de importação
+
+`src/design-system/` é um **nó folha**: não pode importar de `src/components/`, `src/lib/queries/`, `src/modules/` ou `src/shared/db/`. O boundary é verificado automaticamente em `src/design-system/__tests__/import-boundaries.test.ts`.
+
+Em CSS inline / SVG / ReactFlow: use **classes Tailwind** para cor (`bg-surface-base`, `text-fg-quaternary`, `stroke-current`). Nunca use `var(--color-fg-*)` inline — esses tokens resolvem vazio fora do layer Tailwind. Apenas `--color-chart-N` funciona em `var()` inline.
 
 ## Convenções
 

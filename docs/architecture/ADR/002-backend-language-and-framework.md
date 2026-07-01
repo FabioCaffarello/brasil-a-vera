@@ -2,7 +2,7 @@
 
 > Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-05-11
-> Status: proposed
+> Status: superseded by [ADR-020](020-stack-definitivo-typescript-nodejs.md)
 
 ---
 

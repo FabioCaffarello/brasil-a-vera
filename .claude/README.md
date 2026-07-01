@@ -31,8 +31,8 @@ projeto. O `.gitignore` permite apenas estado verdadeiramente local:
 
 | Caminho | Conteúdo |
 |---|---|
-| `agents/` | Subagents (`.md` com YAML frontmatter). Hoje: `design-system-curator`. |
-| `skills/` | Slash commands. Hoje: 6 (`add-primitive`, `design-token-check`, `visual-qa`, `plan-sprint`, `new-adr`, `release-notes`). |
+| `agents/` | Symlinks → `.context/agents/` (fonte de verdade). Hoje: `design-system-curator`, `rds-consolidation-curator`. |
+| `skills/` | Slash commands. Hoje: 4 (`design-token-check`, `visual-qa`, `new-adr`, `release-notes`). Skills removidas: `add-primitive` (ADR-038), `plan-sprint` (substituído por PREVC dotcontext). |
 | `hooks/` | Hooks shell (PreToolUse / PostToolUse). Hoje: 3 hooks + 2 libs + matriz de teste. |
 | `docs/` | Onboarding humanos + `ROLES.md`. |
 | `settings.json` | Permissions (deny + allow) + bindings dos hooks. |
@@ -40,7 +40,7 @@ projeto. O `.gitignore` permite apenas estado verdadeiramente local:
 
 ## Como invocar
 
-- **Skill**: digite `/<nome>` no chat. Exemplo: `/add-primitive popover`.
+- **Skill**: digite `/<nome>` no chat. Exemplo: `/new-adr "Titulo da decisão"`.
 - **Subagent**: invocado automaticamente quando o pedido casar com a
   description do agent (e.g. "adiciona uma primitiva nova" dispara
   `design-system-curator`), ou explicitamente via Agent tool em
