@@ -14,7 +14,11 @@
 // server-side é feito por query via `cached(...)` em
 // src/lib/queries/partidos.ts (Workers caches.default API).
 
-import { Card, Text } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  Card,
+  Text,
+} from '@fabio.caffarello/react-design-system/server'
 import { notFound } from 'next/navigation'
 
 import { AlinhamentoMedioBancadaBlock } from '@/components/partido/alinhamento-medio'
@@ -159,6 +163,13 @@ export default async function PartidoPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
+      <Breadcrumb
+        items={[
+          { label: 'Início', href: '/' },
+          { label: 'Partidos', href: '/partidos' },
+          { label: sigla },
+        ]}
+      />
       <PartidoHeader
         nomeOficial={overview.nomeOficial}
         sigla={overview.sigla}
