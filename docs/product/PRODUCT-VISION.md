@@ -1,7 +1,7 @@
 # Product Vision
 
-> Brasil a Vera · Produto · v0.2
-> Última atualização: 2026-05-13 (aprendizados Waves 1 e 2 incorporados)
+> Brasil a Vera · Produto · v0.3
+> Última atualização: 2026-07-01 (aprendizados Waves 7–13 incorporados; hipóteses revisadas)
 > Status: accepted
 
 ---
@@ -151,6 +151,9 @@ Esta seção registra ajustes ao posicionamento original derivados de contato co
 
 ### Volume real (2026-05-13)
 
+> **Nota:** Para o estado atual do banco (2026-07-01), ver seção
+> [Aprendizados das Waves 7–13](#aprendizados-das-waves-713) abaixo.
+
 | Recurso | Total | Notas |
 |---|---|---|
 | Parlamentares | 721 | 513 deputados + 81 senadores + suplentes/ex |
@@ -222,6 +225,50 @@ PRODUCT-VISION fala em "visão 360° do parlamentar", mas a cobertura atual é p
 - **Cobertura vertical (eventos por parlamentar)**: cresce a cada cron — ~10 votos médios por deputado em 2026-05-13 vs threshold de 50 para alinhamento estatisticamente robusto.
 
 A plataforma é honesta sobre a parcialidade — warnings de "amostra pequena" e empty states explícitos onde dados faltam. O posicionamento mantém-se: o sistema é o espelho. O espelho ainda tem partes embaçadas, mas anuncia onde estão.
+
+## Aprendizados das Waves 7–13
+
+Esta seção registra o que mudou entre maio e julho de 2026 — waves 7 a 13,
+Sprint 40+. Substitui hipóteses por evidências empíricas onde aplicável.
+
+### Estado do banco em 2026-07-01
+
+| Recurso | Total | Notas |
+|---|---|---|
+| Parlamentares | ~900 | Câmara + Senado (histórico + ativos) |
+| Proposições | ~50k+ | Câmara + Senado multi-legislatura |
+| Votações nominais | ~5k+ | Câmara + Senado |
+| Votos individuais | ~500k+ | Cresce com cada cron diário |
+| Bens declarados TSE | 3 pleitos (2014/2018/2022) | Eixo 2 completo |
+| Comissões — membros | Câmara + Senado | Wave 13 — ADR-061 |
+| Discursos — metadados | Câmara + Senado | Feature pausada — ADR-048 |
+| Custo operacional | ~$0/mês | Neon free tier; quota reseta mensalmente |
+
+### Aprendizados arquiteturais
+
+- **RDS externo é o caminho certo** (ADR-033/038/053): strangler fig funcionou sem incidentes.
+  Componentes de domínio construídos *sobre* o RDS têm manutenção menor que cópias locais.
+- **Heurística de vínculo é suficiente para L3** (ADR-063): 88,9% de cobertura
+  de senadores via nome+partido+UF — dado derivado honesto, não fabricado.
+- **CPF de senador é gap real** (ADR-055): Senado não publica CPF na API;
+  TSE tem via candidatura. Ingestão cruzada resolve.
+- **APIs brasileiras continuam instáveis** (princípio 13): incidentes de
+  ingestão (#676-#680 em jun/2026) são normais. Retry com backoff é regra permanente.
+- **Harness como código funciona** (ADR-019): `.claude/` como infraestrutura
+  versionada previne regressões sem friction para o owner.
+- **Orientação Senado existe** (ADR-040 §revisão): premissa "Senado não publica
+  orientação" era falsa — endpoint `orientacaoBancada/{data}` existe e está populado.
+
+### Hipóteses revisadas
+
+| Hipótese original (v0.1/v0.2) | Realidade em 2026-07 |
+|---|---|
+| "Senado não publica orientação" (ADR-040) | **FALSA** — endpoint `orientacaoBancada/{data}` existe |
+| "Custo operacional próximo de zero" | **CONFIRMADA** — free tier sustenta carga atual |
+| "Trust pyramid diferencia o BaV" | **CONFIRMADA** — nenhum competidor tem L1-L4 explícito e auditável |
+| "Motor de coerência é o principal diferencial" | **PARCIAL** — dado latente disponível; feature UI ainda não entregue |
+| "Expansão para assembleias estaduais na Wave 4" | **ADIADA indefinidamente** (ADR-019 — sem evidência de demanda) |
+| "APIs públicas brasileiras são razoavelmente estáveis" | **PARCIAL** — funcionais mas sem SLA; incidentes mensais são normais |
 
 ---
 

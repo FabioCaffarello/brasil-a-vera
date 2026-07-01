@@ -14,11 +14,11 @@
 import {
   DataBadge,
   HeroSection,
+  SectionCard,
 } from '@fabio.caffarello/react-design-system/server'
 import { Columns3 } from 'lucide-react'
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
-import { SectionCard } from '@/design-system/compositions/section-card'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
 
 export const metadata = {
@@ -138,6 +138,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
 
       <div className="mx-auto max-w-5xl space-y-5 px-4 pb-8">
         <SectionCard
+          id="comparacao"
           subtitle="Presença em votações nominais, autoria primária de proposições, gastos CEAP do ano corrente."
           title="Comparação"
         >
@@ -149,6 +150,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
         </SectionCard>
 
         <SectionCard
+          id="concordancia"
           subtitle={`% de coincidência nos votos das votações em comum (mín. 5 votações comparáveis para considerar amostra estatisticamente válida).`}
           title="Concordância entre pares"
         >

@@ -55,7 +55,7 @@ export default async function VetosPage() {
 
   if (anos.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-3xl py-8">
         <Breadcrumb
           items={[
             { label: 'Início', href: '/' },
@@ -68,7 +68,7 @@ export default async function VetosPage() {
             title="Nenhum veto disponível"
           />
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -77,7 +77,7 @@ export default async function VetosPage() {
   const vetos = await getVetosByAno(anoAtivo)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -170,6 +170,6 @@ export default async function VetosPage() {
         Fonte: API do Congresso Nacional. Votos nominais disponíveis apenas para
         senadores — ADR-059.
       </p>
-    </main>
+    </div>
   )
 }

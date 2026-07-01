@@ -17,6 +17,7 @@ import {
   Button,
   DataBadge,
   HeroSection,
+  SectionCard,
 } from '@fabio.caffarello/react-design-system/server'
 import { MapPin, Search } from 'lucide-react'
 import Link from 'next/link'
@@ -25,7 +26,6 @@ import { ParlamentarCard } from '@/components/parlamentar/parlamentar-card'
 import { ProposicaoCard } from '@/components/proposicao/proposicao-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { VotacaoCard } from '@/components/votacao/votacao-card'
-import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatProposicaoRef } from '@/lib/format'
 import { busca } from '@/lib/queries/busca'
 
@@ -59,7 +59,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
           title="Buscar"
           variant="plain"
         />
-        <div className="mx-auto max-w-3xl px-4 pb-12">
+        <div className="mx-auto max-w-3xl pb-12">
           <SearchForm variant="page" />
         </div>
       </>
@@ -82,7 +82,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
           title="Buscar"
           variant="plain"
         />
-        <div className="mx-auto max-w-3xl space-y-4 px-4 pb-12">
+        <div className="mx-auto max-w-3xl space-y-4 pb-12">
           <SearchForm defaultValue={query} variant="page" />
           <p className="text-fg-tertiary text-sm">
             Digite ao menos 2 caracteres.
@@ -114,7 +114,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-5xl space-y-6 px-4 pb-8">
+      <div className="mx-auto max-w-5xl space-y-6 pb-8">
         <SearchForm defaultValue={query} variant="page" />
 
         {resultados.proposicaoMatchExato && (
@@ -157,6 +157,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
           <>
             {resultados.parlamentares.length > 0 && (
               <SectionCard
+                id="resultados-parlamentares"
                 subtitle={
                   resultados.parlamentares.length === 10
                     ? 'Mostrando os 10 primeiros — refine a busca para outros.'
@@ -176,6 +177,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
 
             {resultados.proposicoes.length > 0 && (
               <SectionCard
+                id="resultados-proposicoes"
                 subtitle={
                   resultados.proposicoes.length === 10
                     ? 'Mostrando as 10 primeiras — refine a busca para outras.'
@@ -195,6 +197,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
 
             {resultados.votacoes.length > 0 && (
               <SectionCard
+                id="resultados-votacoes"
                 subtitle={
                   resultados.votacoes.length === 10
                     ? 'Mostrando as 10 primeiras — refine a busca para outras.'

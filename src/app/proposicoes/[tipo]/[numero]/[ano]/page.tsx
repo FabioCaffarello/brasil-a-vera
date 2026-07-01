@@ -5,12 +5,15 @@
 // O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
 // por composição nested — NÃO importar aqui.
 //
-// - Stat/StatGroup (KPIs) + SectionCard (Card compound) do /server;
-//   SectionNav (useScrollSpy) de @/design-system/compositions; Accordion
-//   mobile via @/design-system/primitives/rds-accordion (/granular).
+// - Stat/StatGroup (KPIs) do /server; casca de detalhe via DetailLayout do RDS
+//   (SectionNav desktop + Accordion mobile derivados de um único `sections[]`).
 // - Charts (ApoioPartidoChart, VotosConsolidadosChart — recharts) sobem como
 //   resíduo BaV (ADR-034 §5; o donut teve o fix #303/#304 na Fase C, #408).
 
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@fabio.caffarello/react-design-system'
 import {
   Breadcrumb,
   Stat,
@@ -18,10 +21,6 @@ import {
 } from '@fabio.caffarello/react-design-system/server'
 import { Clock, FileText, Gavel, Tag, Users } from 'lucide-react'
 import { notFound, permanentRedirect } from 'next/navigation'
-import {
-  DetailLayout,
-  type DetailSection,
-} from '@/components/detail/detail-layout'
 import { ApoioPartidoChart } from '@/components/proposicao/apoio-partido-chart-client'
 import { AutoresList } from '@/components/proposicao/autores-list'
 import { BarraProgressoTramitacao } from '@/components/proposicao/barra-progresso-tramitacao'
@@ -350,13 +349,13 @@ export default async function ProposicaoDetalhePage({
     {
       id: 'temas',
       navLabel: 'Temas',
-      icon: <Tag className="h-4 w-4" />,
+      navIcon: <Tag className="h-4 w-4" />,
       content: <TemasList temas={temas} />,
     },
     {
       id: 'relator',
       navLabel: 'Relator',
-      icon: <Gavel className="h-4 w-4" />,
+      navIcon: <Gavel className="h-4 w-4" />,
       content: <RelatoriasList relatorias={relatorias} />,
     },
     {
@@ -364,7 +363,7 @@ export default async function ProposicaoDetalhePage({
       navLabel: 'Autores',
       subtitle:
         'Parlamentares vinculados levam ao seu perfil 360°. Comissões, mesas e demais autores não-individuais aparecem só como nome.',
-      icon: <Users className="h-4 w-4" />,
+      navIcon: <Users className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           {apoioPartido.length > 0 ? (
@@ -380,7 +379,7 @@ export default async function ProposicaoDetalhePage({
       title: 'Votações vinculadas',
       subtitle:
         'Votações conhecidamente associadas a esta proposição. Para votações nominais detalhadas (voto por parlamentar), navegue até a página da votação correspondente.',
-      icon: <FileText className="h-4 w-4" />,
+      navIcon: <FileText className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           {votosConsolidados ? (
@@ -412,7 +411,7 @@ export default async function ProposicaoDetalhePage({
       navLabel: 'Tramitação',
       subtitle:
         'Histórico de movimentação da proposição, do evento mais recente para o mais antigo. Despachos completos disponíveis em cada evento quando agregam contexto.',
-      icon: <Clock className="h-4 w-4" />,
+      navIcon: <Clock className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           {barraMarcoAtual !== null && ultimoOrgao !== null ? (
@@ -502,6 +501,7 @@ export default async function ProposicaoDetalhePage({
           ))}
         </StatGroup>
       }
+      stickyNavTop="3.5rem"
     />
   )
 }

@@ -87,7 +87,7 @@ export default async function RankingAlinhamentoPage() {
   const { disciplinados, independentes } = await getRankingAlinhamento(TOP_N)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -167,6 +167,6 @@ export default async function RankingAlinhamentoPage() {
         Disciplina e independência são descrições factuais de comportamento de
         voto. Nenhuma implica avaliação de mérito.
       </p>
-    </main>
+    </div>
   )
 }

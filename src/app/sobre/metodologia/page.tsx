@@ -92,7 +92,7 @@ const SECTIONS = [
 
 export default function MetodologiaPage() {
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-3xl py-12 sm:py-16">
       <header className="mb-10">
         <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
           Metodologia

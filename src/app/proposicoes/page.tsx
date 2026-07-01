@@ -190,7 +190,7 @@ export default async function ProposicoesPage({ searchParams }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 py-8">
         {/* StatGroup (precedente §3.6/§3.14: StatsGrid→StatGroup) alimenta
             o hero com 4 stats narrativos. Hints curtos explicam a janela de
             cada métrica. Aprovadas/Encerradas filtradas pelos últimos 12m

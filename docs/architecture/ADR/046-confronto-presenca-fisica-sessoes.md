@@ -1,8 +1,8 @@
 # ADR-046: Confronto de presença física em sessões deliberativas de plenário
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-22
-> Status: proposed
+> Última atualização: 2026-07-01
+> Status: accepted (feature implementada — `PresencaFisica` component em produção; cobertura Câmara ok, Senado parcial; `[A CONFIRMAR]` era gate de Neon-402 de junho, resolvido)
 
 > Confronto do Eixo 1, complementar à participação em votações ([ADR-045](045-confronto-presenca-votacoes-plenario.md)).
 > Reusa a moldura de copy neutra do [ADR-040](040-alinhamento-orientacao-de-bloco.md) §4,

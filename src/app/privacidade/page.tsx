@@ -83,7 +83,7 @@ export default function PrivacidadePage() {
   const effective = formatEffectiveDate(PRIVACY_POLICY_EFFECTIVE_AT)
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-3xl py-12 sm:py-16">
       <header className="mb-10 border-line-default border-b pb-6">
         <h1 className="font-semibold text-3xl text-fg-primary tracking-tight sm:text-4xl">
           Política de Privacidade
@@ -355,6 +355,6 @@ export default function PrivacidadePage() {
         </a>
         .
       </footer>
-    </main>
+    </div>
   )
 }

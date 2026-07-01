@@ -1,7 +1,9 @@
-import { Badge } from '@fabio.caffarello/react-design-system/server'
+import {
+  Badge,
+  SectionCard,
+} from '@fabio.caffarello/react-design-system/server'
 import type { ReactNode } from 'react'
 
-import { SectionCard } from '@/design-system/compositions/section-card'
 import type { RepresentanteCard } from '@/lib/queries/representantes'
 import { ParlamentarGrid } from './parlamentar-grid'
 

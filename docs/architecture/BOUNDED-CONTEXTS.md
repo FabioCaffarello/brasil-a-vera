@@ -1,7 +1,7 @@
 # Bounded Contexts
 
-> Brasil a Vera · Arquitetura · v0.2
-> Última atualização: 2026-04-14
+> Brasil a Vera · Arquitetura · v0.3
+> Última atualização: 2026-07-01
 > Status: accepted
 
 ---
@@ -22,7 +22,7 @@
 
 O Brasil a Vera é modelado segundo Domain-Driven Design (DDD) com bounded contexts que refletem o domínio legislativo brasileiro e os níveis da [Pirâmide de Confiança](TRUST-PYRAMID.md). Cada contexto é autónomo: tem seu próprio modelo de domínio, repositório, use cases e routes.
 
-Nas Waves 0–2, cada contexto vive como módulo TypeScript em `src/modules/<contexto>/` dentro do monolito Next.js (ver [ADR-007](ADR/007-monolith-first-strategy.md)). Na Wave 3+, módulos são extraídos para microserviços Go via Strangler Fig (ver [ADR-002](ADR/002-backend-language-and-framework.md)).
+Cada contexto vive como módulo TypeScript em `src/modules/<contexto>/` dentro do monolito Next.js (ver [ADR-007](ADR/007-monolith-first-strategy.md)). O projeto permanece monolito TypeScript per [ADR-020](ADR/020-permanencia-monolito-typescript.md) — extração para microserviços Go foi descartada definitivamente.
 
 A separação em contextos não é apenas organizacional — é a garantia estrutural de que dados factuais (L1) nunca são contaminados por análises derivadas (L3/L4).
 
@@ -65,7 +65,7 @@ graph TB
     TRUST -.->|shared kernel| IMPA
 ```
 
-**Legenda**: setas sólidas = comunicação entre contextos (chamada de função no monolito Waves 0–2, domain events via NATS na Wave 3+ — ver [ADR-005](../future/adr/005-event-driven-communication.md)); setas tracejadas = dependência de shared kernel.
+**Legenda**: setas sólidas = comunicação entre contextos (chamada de função no monolito, sem plano de migração para NATS (ver [ADR-020](ADR/020-permanencia-monolito-typescript.md))); setas tracejadas = dependência de shared kernel.
 
 ## Contextos Core (L1)
 
@@ -132,11 +132,11 @@ Distinção importante: votação nominal (voto individual registrado) vs. vota�
 | **Eventos publicados** | `CandidaturaRegistrada`, `DoacaoRegistrada` |
 | **Consumers** | (futuro: correlação doações × votos em L3) |
 
-Integração a partir da Wave 2. Dados do TSE são em CSV bulk — pipeline de ingestão diferente das APIs REST.
+Integração completa: bens 2014/2018/2022 ingeridos (Camadas A/B/C/D); doações de campanha não existem (issue #98). Dados do TSE são em CSV bulk — pipeline de ingestão diferente das APIs REST.
 
 ## Contextos Analíticos (L2/L3)
 
-Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos contextos L1. Nas Waves 0–2, a comunicação é via chamada de serviço TypeScript dentro do monolito. Na Wave 3+, migra para domain events assíncronos via NATS JetStream (ver [ADR-005](../future/adr/005-event-driven-communication.md)).
+Estes contextos consomem dados dos contextos core sem acesso direto ao banco dos contextos L1. A comunicação é via chamada de serviço TypeScript dentro do monolito. Domain events são contratos TypeScript em `src/shared/domain-events/` — sem transporte assíncrono planejado (ADR-020).
 
 ### Coerência
 
@@ -157,7 +157,7 @@ Princípio: falso negativo > falso positivo. Apenas classificações inequívoca
 | **Responsabilidade** | Rede de vínculos entre parlamentares, métricas de centralidade, detecção de comunidades, evolução temporal |
 | **Trust level** | L2 (arestas e métricas) / L3 (detecção de comunidades e interpretação de clusters) |
 | **Consome eventos de** | Votações, Proposições, Parlamentares |
-| **Persistência** | PostgreSQL (Waves 0–2: SQL simples; Wave 3: Apache AGE + NetworkX; Wave 4+: avaliar graph database dedicado — ver [ADR-003](ADR/003-database-neon.md) e [ADR-004](../future/adr/004-graph-database-choice.md)) |
+| **Persistência** | PostgreSQL + ReactFlow para visualização (issue #96). Graph database dedicado não planejado (ADR-019). |
 | **Spec detalhada** | [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md) |
 
 ### Impacto
@@ -213,17 +213,10 @@ graph LR
 
 ## Regras de Comunicação
 
-### Waves 0–2 (monolito Next.js)
+### Monolito Next.js (permanente — ADR-020)
 
 1. **Chamada de serviço, nunca queries diretas ao banco** — um módulo nunca faz query ao schema de outro. Comunicação é via interface de serviço TypeScript (chamada de função síncrona)
 2. **Biome `noRestrictedImports`** — bloqueia imports cruzados entre módulos no CI (ver [ADR-006](ADR/006-frontend-stack.md#import-boundaries-biome))
-3. **Contratos em shared kernel** — domain events são interfaces TypeScript definidas em `src/shared/domain-events/`, documentando os contratos mesmo antes do NATS
+3. **Contratos em shared kernel** — domain events são interfaces TypeScript definidas em `src/shared/domain-events/`, documentando os contratos entre contextos
 4. **Direção única: Core → Analítico** — contextos L1 fornecem dados; contextos L2/L3 consomem. Nunca o inverso.
 5. **Falha isolada** — se o módulo Coerência falhar, Votações e Proposições continuam funcionando normalmente
-
-### Wave 3+ (microserviços Go + NATS)
-
-1. **Domain events assíncronos via NATS JetStream** — ver [ADR-005](../future/adr/005-event-driven-communication.md)
-2. **Idempotência obrigatória** — consumers devem tratar duplicação de eventos (at-least-once delivery)
-3. **Sem orquestração centralizada** — cada consumer decide quando e como processar eventos (coreografia, não orquestração)
-4. **Contratos em shared lib** — eventos são structs Go definidas no shared kernel, espelhando as interfaces TypeScript

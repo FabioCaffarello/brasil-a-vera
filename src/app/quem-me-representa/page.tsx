@@ -2,11 +2,13 @@
 // 27 links agrupados por região). O cidadão sabe seu estado, não os nomes dos
 // parlamentares.
 
-import { HeroSection } from '@fabio.caffarello/react-design-system/server'
+import {
+  HeroSection,
+  SectionCard,
+} from '@fabio.caffarello/react-design-system/server'
 import { MapPin } from 'lucide-react'
 import Link from 'next/link'
 
-import { SectionCard } from '@/design-system/compositions/section-card'
 import { ufsPorRegiao } from '@/lib/ufs'
 
 export const metadata = {

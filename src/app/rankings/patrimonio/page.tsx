@@ -108,7 +108,7 @@ export default async function RankingPatrimonioPage() {
   const losers = leaderboard.slice(-TOP_N).reverse()
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -183,6 +183,6 @@ export default async function RankingPatrimonioPage() {
         posição (ADR-040). Patrimônio declarado pode omitir bens ou incluir
         estimativas imprecisas. A correção IPCA usa o deflator oficial do IBGE.
       </p>
-    </main>
+    </div>
   )
 }

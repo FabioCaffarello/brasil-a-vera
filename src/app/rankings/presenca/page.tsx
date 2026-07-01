@@ -81,7 +81,7 @@ export default async function RankingPresencaPage() {
   const { maisPresentes, maisAusentes } = await getRankingPresenca(TOP_N)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -161,6 +161,6 @@ export default async function RankingPresencaPage() {
         Presença e ausência são descrições factuais de comparecimento ao voto.
         Ausências podem ter justificativa institucional não refletida aqui.
       </p>
-    </main>
+    </div>
   )
 }

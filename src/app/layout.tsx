@@ -142,7 +142,10 @@ export default function RootLayout({
               dele. ToastContainer renderiza os toasts no canto. */}
           <ToastProvider>
             <Navbar />
-            <main className="min-h-[calc(100vh-3rem)]" id="conteudo">
+            <main
+              className="min-h-[calc(100vh-3rem)] px-6 sm:px-10 lg:px-48"
+              id="conteudo"
+            >
               {children}
             </main>
             <Footer />

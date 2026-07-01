@@ -1,7 +1,7 @@
 # Roadmap
 
-> Brasil a Vera · Produto · v0.6.0
-> Última atualização: 2026-05-16 (Sprint 6.4 fechada — comparar/busca/meu-parlamentar reskinned com HeroSection variants + SectionCard; sprints 6.5-6.6 permanecem planejadas; contrato vigente em `docs/product/PROMPT-MESTRE-WAVE-6.md`)
+> Brasil a Vera · Produto · v0.7.0
+> Última atualização: 2026-07-01 (Waves 11–13 documentadas; PRODUCT-GAPS.md criado; status em Sprint 40+)
 > Status: accepted
 
 ---
@@ -47,6 +47,12 @@
 - [Wave 4 — Design System & Frontend de Excelência](#wave-4--design-system--frontend-de-excelência)
 - [Wave 5 — Open Ground](#wave-5--open-ground)
 - [Wave 6 — Frontend de Excelência (reskin diagnóstico-dirigido)](#wave-6--frontend-de-excelência-reskin-diagnóstico-dirigido)
+- [Wave 7 — Parlamentar 360°](#wave-7--parlamentar-360)
+- [Wave 8 — Proposição 360°](#wave-8--proposição-360)
+- [Wave 9 — Votações 360°](#wave-9--votações-360)
+- [Wave 10 — Área Logada](#wave-10--área-logada)
+- [Waves 11–13 — Eixos Cívicos, RDS Compositivo & Infra](#waves-1113--eixos-cívicos-rds-compositivo--infra)
+- [Estado em 2026-07-01](#estado-em-2026-07-01)
 - [Dependências entre Waves](#dependências-entre-waves)
 
 ---
@@ -1291,6 +1297,110 @@ Reversão consciente da topologia de rotas da Wave 10, motivada por revisão de 
 | 4 | Atualização documental — VISION §4 addendum, ADR-022 + ADR-029 addendum, ROADMAP (este registro), URLs em ADR-030/031/CLERK-SETUP/LGPD-ERASE-MENORES | [#342](https://github.com/FabioCaffarello/brasil-a-vera/pull/342) |
 
 Custo cristalizado: 5× queries server-side por request `/painel` (todos os slots renderizam em paralelo via RSC streaming; `<ActiveSlotPicker />` client decide visibilidade). Mitigação `cached()` ADR-018 fica como follow-up pós-deploy (RFC §7 R1: "medir antes de aplicar").
+
+---
+
+## Waves 11–13 — Eixos Cívicos, RDS Compositivo & Infra
+
+As waves 11–13 executaram em paralelo com a consolidação do harness e da
+camada compositiva do RDS. Cada sprint foi planejada just-in-time; detalhes
+nos commits e release notes em `docs/releases/`.
+
+### Wave 11 — Eixo 2 Patrimonial & CPF Senado (2026-06 a 2026-07)
+
+Entregou a **Trilha Patrimonial** completa do produto:
+
+- **Camada A** — candidaturas TSE (3 pleitos: 2014/2018/2022)
+- **Camada B** — trajetória patrimonial corrigida por IPCA ([ADR-036](../architecture/ADR/036-correcao-monetaria-patrimonio.md))
+- **Camada C** — bem a bem declarado por pleito
+- **Camada D** — grafo de participação societária via Receita Federal ([ADR-037](../architecture/ADR/037-grafo-participacao-societaria.md))
+
+Backfill de CPF de senadores via heurística TSE (nome+partido+UF, L3):
+
+- [ADR-055](../architecture/ADR/055-cpf-senador-via-tse-candidatura.md) — modelagem do vínculo
+- [ADR-063](../architecture/ADR/063-vinculo-heuristico-parlamentar-candidatura.md) — vínculo heurístico parlamentar→candidatura (L3)
+
+Cobertura alcançada: **100% Câmara / 88,9% Senado** (senadores sem CPF público ficam L3).
+
+Outros ADRs:
+
+- [ADR-051](../architecture/ADR/051-veredito-do-espelho-fatos-fixos.md) — Veredito do espelho: fatos fixos (invariante de copy neutra)
+- [ADR-054](../architecture/ADR/054-card-de-fato-par-contraditorio.md) — Card de fato: par contraditório
+
+### Wave 12 — Eixo 1 Coerência & Features Cívicas (2026-06)
+
+Especificou e preparou os **confrontos do Eixo 1** (coerência parlamentar) e
+features cívicas complementares:
+
+| ADR | Feature |
+|-----|---------|
+| [ADR-040](../architecture/ADR/040-alinhamento-orientacao-de-bloco.md) | Alinhamento com orientação de bloco (copy neutra) |
+| [ADR-041](../architecture/ADR/041-sinalizacao-alinhamento-federacao.md) | Sinalização de alinhamento por federação |
+| [ADR-042](../architecture/ADR/042-modelagem-votacao-senado.md) | Modelagem de votação do Senado |
+| [ADR-043](../architecture/ADR/043-fidelidade-partidaria-duas-definicoes.md) | Fidelidade partidária — duas definições (proposed) |
+| [ADR-044](../architecture/ADR/044-confronto-relatorias-influencia-e-autoria.md) | Confronto relatorias: influência e autoria |
+| [ADR-045](../architecture/ADR/045-confronto-presenca-votacoes-plenario.md) | Confronto presença em votações nominais (proposed) |
+| [ADR-046](../architecture/ADR/046-confronto-presenca-fisica-sessoes.md) | Confronto presença física em sessões (proposed) |
+| [ADR-047](../architecture/ADR/047-confronto-variacao-patrimonial-mandato.md) | Confronto variação patrimonial vs pares (proposed) |
+| [ADR-048](../architecture/ADR/048-feature-discursos-temas-recentes.md) | Feature discursos/temas recentes (proposed) |
+| [ADR-049](../architecture/ADR/049-perfil-biografico-parlamentar.md) | Perfil biográfico parlamentar |
+| [ADR-050](../architecture/ADR/050-busca-por-tema.md) | Busca por tema — taxonomia curada (proposed) |
+| [ADR-057](../architecture/ADR/057-votacoes-comissao-senado.md) | Votações de comissão no Senado |
+| [ADR-058](../architecture/ADR/058-afastamentos-senadores.md) | Afastamentos de senadores |
+| [ADR-059](../architecture/ADR/059-vetos-presidenciais.md) | Vetos presidenciais e votos do Congresso |
+| [ADR-060](../architecture/ADR/060-relatorias-senado-v2-processo.md) | Relatorias Senado v2 — processo |
+
+Nota: 6 ADRs desta wave permanecem em estado `proposed` (043/045/046/047/048/050) —
+representam confrontos documentados aguardando implementação de UI.
+
+### Wave 13 — Infra, Comissões, RDS Compositivo & Harness (2026-06 a 2026-07)
+
+Consolidou a infraestrutura de ingestão e a experiência de desenvolvimento:
+
+**Ingestão:**
+
+- [ADR-056](../architecture/ADR/056-liderancas-blocos-frentes.md) — Lideranças, blocos e frentes parlamentares
+- [ADR-061](../architecture/ADR/061-escopo-presenca-comissoes.md) — Escopo de presença em comissões (proposed)
+- [ADR-062](../architecture/ADR/062-modelagem-pauta-deliberativa.md) — Modelagem de pauta deliberativa
+- Ingestão de membros de comissão (Câmara + Senado) — cobre comissões ativas
+
+**RDS Compositivo (ADR-053):**
+
+Adoção da camada compositiva do `@fabio.caffarello/react-design-system`:
+componentes de domínio em `src/components/` passaram a ser construídos *sobre*
+as composições do RDS (Card compound, FilterPanel, Button, DetailLayout) em vez
+de reinventar layout. Wrappers de bundle (`rds-accordion`, `rds-dialog`, etc.)
+sancionados como residuais permanentes por razão de bundle.
+
+**Harness dotcontext:**
+
+`.context/` promovido a fonte de verdade do ecossistema Claude Code (PR #681):
+
+- 11 agentes (1 BaV-específico: `rds-consolidation-curator`; 10 genéricos)
+- 9 skills BaV-específicas registradas no harness global
+- Hooks por role (`engineer` / `designer`) com guardrails automáticos
+- Snapshot semântico versionado em `.context/cache/`
+
+---
+
+## Estado em 2026-07-01
+
+| Métrica | Valor |
+|---------|-------|
+| Sprints completas | 40+ |
+| ADRs totais | 064 (000 = template) — ~52 aceitos, 6 proposed |
+| Último PR mergeado | #682 (RDS camada compositiva — Card, FilterPanel, Button, DetailLayout) |
+| Cobertura Eixo 2 | 100% Câmara / 88,9% Senado |
+| Cobertura Eixo 1 | Coerência: alinhamento em prod; confrontos pending (6 ADRs proposed) |
+| Custo operacional | ~$0/mês (Neon free tier resetou 2026-07-01) |
+| Agentes harness | 12 (incluindo `source-navigator` adicionado Wave 14) |
+| Skills harness | 18 (incluindo `source-coverage-audit`, `product-gap-analysis`, `swot-analysis`, `adr-audit`) |
+
+**Próximas decisões:**
+
+1. Fechar os 6 ADRs proposed (043/045/046/047/048/050) — `accepted` ou `rejected`
+2. Definir escopo da Wave 14 com base em `/product-gap-analysis` e `/swot-analysis`
+3. Validar empiricamente ADRs com marcadores `[A CONFIRMAR]` contra Neon prod (quota resetou)
 
 ---
 

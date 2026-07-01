@@ -40,7 +40,7 @@ export default async function ResumoSlot() {
   const internalUserId = await getOrCreateUserProfileId(userId)
   if (!internalUserId) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
+      <div className="container mx-auto max-w-2xl py-16 text-fg-tertiary">
         Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
         segundos.
       </div>

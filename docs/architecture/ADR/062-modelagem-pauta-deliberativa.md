@@ -1,5 +1,9 @@
 # ADR-062 — Modelagem de presença em comissões (tabela + ingestão)
 
+> Brasil a Vera · Arquitetura · v0.1
+> Última atualização: 2026-06-30
+> Status: accepted
+
 | Campo | Valor |
 |-------|-------|
 | Status | accepted |

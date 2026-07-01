@@ -14,13 +14,12 @@
 // server-side é feito por query via `cached(...)` em
 // src/lib/queries/partidos.ts (Workers caches.default API).
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
-import { notFound } from 'next/navigation'
-
 import {
   DetailLayout,
   type DetailSection,
-} from '@/components/detail/detail-layout'
+} from '@fabio.caffarello/react-design-system'
+import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import { notFound } from 'next/navigation'
 import { AlinhamentoMedioBancadaBlock } from '@/components/partido/alinhamento-medio'
 import { BancadaList } from '@/components/partido/bancada-list'
 import { DistribuicaoBancadaBlock } from '@/components/partido/distribuicao-bancada'
@@ -228,6 +227,7 @@ export default async function PartidoPage({ params }: PageProps) {
         />
       }
       sections={sections}
+      stickyNavTop="3.5rem"
     />
   )
 }

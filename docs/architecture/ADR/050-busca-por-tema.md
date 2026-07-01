@@ -1,8 +1,8 @@
 # ADR-050: Busca por tema — taxonomia curada, não keywords de discurso
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-22
-> Status: proposed
+> Última atualização: 2026-07-01
+> Status: accepted (decisão tomada — taxonomia curada > keywords; filtro por tema implementado em /proposicoes; entrada dedicada por tema é pendência de implementação, não de decisão arquitetural)
 
 > Porta de entrada por ASSUNTO (complementa a entrada por estado do
 > "Quem me representa"). Respeita a moldura de copy neutra do

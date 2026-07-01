@@ -5,12 +5,15 @@
 // O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
 // por composição nested — NÃO importar aqui.
 //
-// - Stat/StatGroup (KPIs) + SectionCard (Card compound) do /server; SectionNav
-//   (useScrollSpy) de @/design-system/compositions; Accordion mobile via
-//   @/design-system/primitives/rds-accordion (/granular).
+// - Stat/StatGroup (KPIs) do /server; casca de detalhe via DetailLayout do RDS
+//   (SectionNav desktop + Accordion mobile derivados de um único `sections[]`).
 // - Data-viz (VotacaoHemicicloChart SVG, MargemDecisaoBar CSS, 3 charts recharts)
 //   sobem como resíduo BaV (ADR-034 §5 — sem paleta de chart upstream).
 
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@fabio.caffarello/react-design-system'
 import {
   Breadcrumb,
   Stat,
@@ -26,10 +29,6 @@ import {
   X,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import {
-  DetailLayout,
-  type DetailSection,
-} from '@/components/detail/detail-layout'
 import { DisciplinaPartidariaChart } from '@/components/votacao/charts/disciplina-chart-client'
 import { VotacaoHemicicloChart } from '@/components/votacao/charts/hemiciclo'
 import { VotacaoPorPartidoChart } from '@/components/votacao/charts/por-partido-chart-client'
@@ -151,7 +150,7 @@ export default async function VotacaoPage({ params }: PageProps) {
     {
       id: 'resumo',
       navLabel: 'Resumo',
-      icon: <CircleSlash className="h-4 w-4" />,
+      navIcon: <CircleSlash className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           <MargemDecisaoBar
@@ -190,7 +189,7 @@ export default async function VotacaoPage({ params }: PageProps) {
       id: 'proposicao',
       navLabel: 'Proposição',
       title: 'Proposição vinculada',
-      icon: <FileText className="h-4 w-4" />,
+      navIcon: <FileText className="h-4 w-4" />,
       content: proposicao ? (
         <ProposicaoVinculada proposicao={proposicao} />
       ) : (
@@ -206,7 +205,7 @@ export default async function VotacaoPage({ params }: PageProps) {
       navLabel: 'Por partido',
       title: 'Por partido',
       subtitle: 'Como cada bancada se posicionou (soma dos votos individuais).',
-      icon: <Users className="h-4 w-4" />,
+      navIcon: <Users className="h-4 w-4" />,
       content: (
         <div className="space-y-3">
           <VotacaoPorPartidoChart data={resumoPorPartido} />
@@ -229,7 +228,7 @@ export default async function VotacaoPage({ params }: PageProps) {
             title: 'Disciplina partidária',
             subtitle:
               '% de parlamentares de cada bancada que seguiram a orientação do próprio partido. Partidos que liberaram a bancada não aparecem.',
-            icon: <BarChart3 className="h-4 w-4" />,
+            navIcon: <BarChart3 className="h-4 w-4" />,
             content: (
               <>
                 {disciplinas.length > 0 && (
@@ -247,7 +246,7 @@ export default async function VotacaoPage({ params }: PageProps) {
                   title: 'Quem votou diferente da orientação',
                   subtitle:
                     'Parlamentares que votaram diferente da orientação do próprio partido nesta votação. Voto ativo (Sim/Não/Obstrução) divergente da orientação efetiva.',
-                  icon: <UserMinus className="h-4 w-4" />,
+                  navIcon: <UserMinus className="h-4 w-4" />,
                   content: (
                     <>
                       <DivergenciasList
@@ -268,7 +267,7 @@ export default async function VotacaoPage({ params }: PageProps) {
       title: 'Votos individuais',
       subtitle:
         'Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV.',
-      icon: <Users className="h-4 w-4" />,
+      navIcon: <Users className="h-4 w-4" />,
       content: (
         <VotosDrawer
           canExport={canExportData}
@@ -357,6 +356,7 @@ export default async function VotacaoPage({ params }: PageProps) {
           />
         </StatGroup>
       }
+      stickyNavTop="3.5rem"
     />
   )
 }

@@ -136,7 +136,7 @@ export default async function VetoDetalhePage({ params }: Props) {
   if (!detalhe) notFound()
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -266,6 +266,6 @@ export default async function VetoDetalhePage({ params }: Props) {
         incluída nesta versão (ADR-059). "Mantido" = Congresso manteve o veto do
         presidente; "Derrubado" = Congresso rejeitou o veto.
       </p>
-    </main>
+    </div>
   )
 }

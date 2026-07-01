@@ -5,12 +5,14 @@
 // O chrome (Navbar + Footer + Toaster + skip-link) vem do root layout
 // `src/app/layout.tsx` por composição nested — NÃO importar aqui.
 //
-// - Stat/StatGroup (KPIs) do /server; SectionCard (Card compound) do /server;
-//   SectionNav (useScrollSpy via entry /hooks) de @/design-system/compositions.
-// - Accordion mobile: Accordion do RDS via entry /granular (wrapper client
-//   @/design-system/primitives/rds-accordion — tree-shaking poda o barrel).
+// - Stat/StatGroup (KPIs) do /server; casca de detalhe via DetailLayout do RDS
+//   (SectionNav desktop + Accordion mobile derivados de um único `sections[]`).
 // - Charts (GastosChart, recharts) sobem como resíduo BaV (ADR-034 §5).
 
+import {
+  DetailLayout,
+  type DetailSection,
+} from '@fabio.caffarello/react-design-system'
 import {
   Breadcrumb,
   Stat,
@@ -40,10 +42,6 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
-import {
-  DetailLayout,
-  type DetailSection,
-} from '@/components/detail/detail-layout'
 import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
@@ -516,7 +514,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Quem é',
             subtitle:
               'Profissão, escolaridade e naturalidade autodeclaradas pelo parlamentar no registro oficial. Câmara-only nesta fase.',
-            icon: <UserCircle className="h-4 w-4" />,
+            navIcon: <UserCircle className="h-4 w-4" />,
             content: (
               <QuemE
                 escolaridade={parlamentar.escolaridade}
@@ -535,7 +533,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Votos recentes',
       subtitle:
         'Apenas votações nominais (com voto individual registrado). Comissões frequentemente decidem em votação simbólica — esses casos não aparecem aqui.',
-      icon: <Vote className="h-4 w-4" />,
+      navIcon: <Vote className="h-4 w-4" />,
       content: (
         <VotosRecentes
           votos={votos}
@@ -552,7 +550,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Participação em votações',
       subtitle:
         'Quanto o parlamentar participa das votações nominais de plenário (votou em quantas), no período de mandato. Não inclui comissões nem votações simbólicas. Câmara infere a ausência (sem registro nominal); Senado a registra.',
-      icon: <CalendarCheck className="h-4 w-4" />,
+      navIcon: <CalendarCheck className="h-4 w-4" />,
       content: <Presenca presenca={presenca} casa={parlamentar.casa} />,
     },
     {
@@ -561,7 +559,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Presença em sessões',
       subtitle:
         'Frequência física às sessões deliberativas de plenário (compareceu a quantas), no período de mandato. Diferente de participar das votações: dá para comparecer e não votar numa votação específica. Câmara-only.',
-      icon: <UserCheck className="h-4 w-4" />,
+      navIcon: <UserCheck className="h-4 w-4" />,
       content: (
         <PresencaFisica presenca={presencaFisica} casa={parlamentar.casa} />
       ),
@@ -574,7 +572,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Presença em comissões',
             subtitle:
               'Reuniões deliberativas de comissão onde o parlamentar esteve presente (últimos 90 dias, legislatura atual). Câmara-only — Senado não publica endpoint equivalente.',
-            icon: <UserCheck className="h-4 w-4" />,
+            navIcon: <UserCheck className="h-4 w-4" />,
             content: <PresencaComissoes eventos={presencaComissoes} />,
           },
         ]
@@ -585,7 +583,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Alinhamento à bancada',
       subtitle:
         '% de votos que coincidem com a orientação do partido. Mede o alinhamento prático com a liderança partidária — não compromisso ideológico.',
-      icon: <Users className="h-4 w-4" />,
+      navIcon: <Users className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           <AlinhamentoBancada
@@ -619,7 +617,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Alinhamento com Governo e Oposição',
       subtitle:
         'Comparação factual entre o voto individual e a orientação formalizada pelas lideranças do Governo e da Oposição na Câmara. Referência de leitura, não juízo de valor.',
-      icon: <Landmark className="h-4 w-4" />,
+      navIcon: <Landmark className="h-4 w-4" />,
       content: alinhamentoBlocosContent,
     },
     {
@@ -628,7 +626,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Voto e partido ao longo do mandato',
       subtitle:
         'Compara cada voto com duas referências do partido vigente na data do voto — a orientação da liderança e a maioria efetiva da bancada — considerando as trocas de partido. Referência factual, sem juízo de valor.',
-      icon: <GitBranch className="h-4 w-4" />,
+      navIcon: <GitBranch className="h-4 w-4" />,
       content: (
         <FidelidadePartidaria
           timeline={fidelidadeTimeline}
@@ -643,7 +641,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Comissões',
       subtitle:
         "Comissões nesta legislatura (57ª). 'Atualmente' = vínculo ativo hoje; o histórico cobre só o mandato corrente.",
-      icon: <Gavel className="h-4 w-4" />,
+      navIcon: <Gavel className="h-4 w-4" />,
       content: <ComissoesMembro {...comissoes} />,
     },
     ...(parlamentar.casa === 'SENADO'
@@ -654,7 +652,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Votações em comissão',
             subtitle:
               'Votações nominais do senador em comissões do Senado (ADR-057). Apenas votos individuais registrados — votações simbólicas sem roll call não aparecem.',
-            icon: <Gavel className="h-4 w-4" />,
+            navIcon: <Gavel className="h-4 w-4" />,
             content: <VotacoesComissao votacoes={votacoesComissao} />,
           },
           {
@@ -663,7 +661,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Vetos presidenciais',
             subtitle:
               'Como o senador votou na apreciação de vetos presidenciais pelo Congresso Nacional (sessão conjunta). "Sim" = manteve o veto; "Não" = votou para derrubar. ADR-059.',
-            icon: <Vote className="h-4 w-4" />,
+            navIcon: <Vote className="h-4 w-4" />,
             content: (
               <VetosSenador stats={vetosStats} vetos={votosParlamentarVetos} />
             ),
@@ -676,7 +674,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Cargos e Lideranças',
       subtitle:
         'Lideranças partidárias, de governo/oposição e frentes parlamentares. Dados quase-estáticos (ingestão mensal) — pode não refletir mudanças recentes.',
-      icon: <Award className="h-4 w-4" />,
+      navIcon: <Award className="h-4 w-4" />,
       content: (
         <LiderancasCargos
           frentes={frentes}
@@ -694,7 +692,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Carreira política anterior',
             subtitle:
               'Mandatos eletivos anteriores ao mandato atual verificados pelo TSE. Inclui prefeituras, vereadores, governadores e outros cargos eleitos. Câmara-only; Senado não publica endpoint equivalente.',
-            icon: <Briefcase className="h-4 w-4" />,
+            navIcon: <Briefcase className="h-4 w-4" />,
             content: <MandatosExternos mandatos={mandatosExternos} />,
           },
         ]
@@ -707,7 +705,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Histórico eleitoral',
             subtitle:
               'Candidaturas declaradas ao TSE vinculadas por CPF. Mostra em quais eleições o parlamentar concorreu, a que cargo e o resultado.',
-            icon: <Vote className="h-4 w-4" />,
+            navIcon: <Vote className="h-4 w-4" />,
             content: <CandidaturasEleitorais candidaturas={candidaturas} />,
           },
         ]
@@ -718,7 +716,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Relatorias',
       subtitle:
         'Proposições em que é o relator vigente/último (designação institucional, não escolha do parlamentar) e a distribuição partidária dos autores dessas proposições. Câmara-only; referência factual, sem juízo.',
-      icon: <ScrollText className="h-4 w-4" />,
+      navIcon: <ScrollText className="h-4 w-4" />,
       content: (
         <Relatorias
           influencia={relatoriasInfluencia}
@@ -733,7 +731,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Proposições onde é autor ou coautor',
       subtitle:
         'Limitado às proposições já ingeridas no Brasil à Vera. Pode não refletir toda a produção legislativa histórica do parlamentar.',
-      icon: <Inbox className="h-4 w-4" />,
+      navIcon: <Inbox className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           <ProposicoesAutor
@@ -770,7 +768,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Discursos',
       subtitle:
         'O que o parlamentar fala em plenário e comissão: principais temas (indexação oficial da fonte) e discursos recentes com link ao inteiro teor. Discurso não é a posição oficial nem o voto.',
-      icon: <MessageSquare className="h-4 w-4" />,
+      navIcon: <MessageSquare className="h-4 w-4" />,
       content: <Discursos discursos={discursos} />,
     },
     {
@@ -779,7 +777,7 @@ export default async function ParlamentarPerfilPage({
       title: `Gastos parlamentares — ${anoCorrente}`,
       subtitle:
         'Cota para Exercício da Atividade Parlamentar (CEAP) reportada pela Câmara. Senado tem regime próprio, ainda não ingerido.',
-      icon: <TrendingDown className="h-4 w-4" />,
+      navIcon: <TrendingDown className="h-4 w-4" />,
       content: (
         <div className="space-y-4">
           <GastosResumoBlock
@@ -817,7 +815,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Patrimônio declarado',
             subtitle:
               'Bens declarados ao TSE na candidatura de 2022. Vínculo por CPF exato — só aparece para parlamentares da Câmara identificados na base do TSE.',
-            icon: <Building2 className="h-4 w-4" />,
+            navIcon: <Building2 className="h-4 w-4" />,
             content: <PatrimonioBlock snapshot={patrimonio} />,
           },
         ]
@@ -830,7 +828,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Evolução patrimonial entre pleitos',
             subtitle:
               'Como o patrimônio declarado variou entre as candidaturas. Valores corrigidos pela inflação (IPCA) para comparação justa; pontos discretos — o intervalo entre pleitos é desconhecido.',
-            icon: <TrendingUp className="h-4 w-4" />,
+            navIcon: <TrendingUp className="h-4 w-4" />,
             content: (
               <EvolucaoPatrimonialBlock evolucao={evolucaoPatrimonial} />
             ),
@@ -845,7 +843,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Variação patrimonial no mandato',
             subtitle:
               'Variação real do patrimônio declarado durante o mandato (entre os dois pleitos mais recentes), com o percentil em relação aos pares. Declaração à Justiça Eleitoral — não é renda nem movimentação. Distinto dos gastos da cota (CEAP).',
-            icon: <TrendingUp className="h-4 w-4" />,
+            navIcon: <TrendingUp className="h-4 w-4" />,
             content: (
               <VariacaoPatrimonialBlock variacao={variacaoPatrimonial} />
             ),
@@ -860,7 +858,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Composição patrimonial ao longo do tempo',
             subtitle:
               'Para onde o patrimônio migrou entre as candidaturas. Composição em %, imune à inflação — isola a mudança de mix dos valores absolutos.',
-            icon: <PieChart className="h-4 w-4" />,
+            navIcon: <PieChart className="h-4 w-4" />,
             content: <MixComposicaoBlock mix={mixComposicao} />,
           },
         ]
@@ -873,7 +871,7 @@ export default async function ParlamentarPerfilPage({
             title: 'Participação societária',
             subtitle:
               'Empresas em que o parlamentar declarou participação societária (quotas/ações). Extraído da descrição do TSE; só o que foi declarado, sem consulta externa.',
-            icon: <Network className="h-4 w-4" />,
+            navIcon: <Network className="h-4 w-4" />,
             content: (
               <GrafoParticipacaoBlock
                 grafo={grafoParticipacao}
@@ -889,7 +887,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Top 5 maior afinidade de voto',
       subtitle:
         'Outros parlamentares que mais coincidem no voto. Mostra concordância prática, não alinhamento ideológico declarado.',
-      icon: <Users className="h-4 w-4" />,
+      navIcon: <Users className="h-4 w-4" />,
       content: <Top5Afinidade afinidades={afinidades} />,
     },
     {
@@ -898,7 +896,7 @@ export default async function ParlamentarPerfilPage({
       title: 'Pares de votos em direções opostas',
       subtitle:
         'Mesmo tema, direções inversas (uma restritiva, outra permissiva), voto idêntico. A plataforma é o espelho — o cidadão tira a conclusão.',
-      icon: <FileText className="h-4 w-4" />,
+      navIcon: <FileText className="h-4 w-4" />,
       content: (
         <ParesContraditorios
           pares={paresContraditorios}
@@ -1071,6 +1069,7 @@ export default async function ParlamentarPerfilPage({
           />
         </StatGroup>
       }
+      stickyNavTop="3.5rem"
     />
   )
 }

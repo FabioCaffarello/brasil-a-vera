@@ -91,7 +91,7 @@ export default async function RankingCoerenciaPage() {
   const { maisPares, menosPares } = await getRankingCoerencia(TOP_N)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -192,6 +192,6 @@ export default async function RankingCoerenciaPage() {
         classificável pelo analisador de direção. Federações e partidos sem
         orientação publicada podem apresentar contagem subestimada.
       </p>
-    </main>
+    </div>
   )
 }
