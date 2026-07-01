@@ -28,7 +28,7 @@ const RANKINGS = [
     iconClass: 'text-green-600',
     title: 'Variação patrimonial',
     description:
-      'Quem mais enriqueceu (ou perdeu) patrimônio entre dois pleitos consecutivos, corrigido pelo IPCA. Câmara-only.',
+      'Quem mais enriqueceu (ou perdeu) patrimônio entre dois pleitos consecutivos, corrigido pelo IPCA. Câmara + Senado (88,9%).',
   },
   {
     href: '/rankings/gastos',

@@ -17,8 +17,8 @@ import {
 //
 // O percentil precisa de TODOS os pares, então o ranking é computado uma vez
 // (sobre ~372 parlamentares com bens vinculados) e cacheado 24h (ADR-018); o
-// getter por parlamentar lê do mapa cacheado. Câmara-only na prática (Senado
-// sem CPF → sem vínculo TSE). Reusa a correção IPCA do ADR-036.
+// getter por parlamentar lê do mapa cacheado. Câmara 100% + Senado 88,9%
+// (Sprint 39 — link tse_candidatura.parlamentar_id). Reusa IPCA do ADR-036.
 
 export type { VariacaoPatrimonial }
 

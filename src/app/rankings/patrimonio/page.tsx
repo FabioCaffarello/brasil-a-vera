@@ -1,6 +1,7 @@
 // Leaderboard de variação patrimonial durante o mandato (ADR-047).
 // Dado: TSE declarações de bens 2014/2018/2022, corrigido por IPCA (ADR-036).
-// Câmara-only na prática — senadores sem CPF vinculado ao TSE não aparecem.
+// Cobertura: Câmara 100% + Senado 88,9% (72/81 — 9 suplentes sem registro TSE
+// 2014–2022, ver ADR-063). Senadores com CPF aparecem desde Sprint 39/40.
 // Cache 24h (mesma cadência do getVariacaoPatrimonialRanking).
 
 import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
@@ -123,7 +124,12 @@ export default async function RankingPatrimonioPage() {
         <p className="mt-2 text-fg-secondary text-sm">
           Diferença de patrimônio entre dois pleitos consecutivos, corrigida
           pelo IPCA (ADR-047). Fonte: TSE — declarações de bens 2014, 2018 e
-          2022. Câmara-only: senadores sem CPF vinculado ao TSE não aparecem.
+          2022. Câmara: 100%. Senado: 88,9% (9 suplentes sem registro TSE
+          2014–2022 ficam de fora — ver{' '}
+          <a href="/sobre/metodologia" className="underline">
+            metodologia
+          </a>
+          ).
         </p>
       </div>
 
