@@ -9,12 +9,20 @@ ou referenciadas em natural language. Cada skill mora em
 
 | Slash | Função |
 |---|---|
-| `/add-primitive` | Wrapper sobre `design-system-curator` para adicionar primitiva curada |
 | `/design-token-check` | Grep dos padrões legacy (zinc, HEX inline, `bg-primary-\d+` em design-system/) |
 | `/visual-qa` | Roteiro interativo de QA visual antes do PR |
-| `/plan-sprint` | Esqueleto do plano de sprint (draft em `docs/design/`) |
 | `/new-adr` | Criar ADR seguindo o template + próximo número sequencial |
 | `/release-notes` | Gerar release notes a partir de `git log` agrupado por sprint |
+
+> `/add-primitive` e `/plan-sprint` foram removidas. Gap de primitiva vai
+> como issue no RDS upstream (ADR-038). Planejamento de sprint usa o
+> workflow PREVC do dotcontext (`dotcontext admin workflow init`).
+
+## Skills built-in dotcontext (não duplicar aqui)
+
+`commit-message`, `pr-review`, `code-review`, `test-generation`,
+`documentation`, `refactoring`, `bug-investigation`, `feature-breakdown`,
+`api-design`, `security-audit` — disponíveis nativamente via dotcontext.
 
 ## Quando adicionar skill nova
 

@@ -77,3 +77,10 @@ Thumbs.db
 *.zip
 # temporary work files (gh issue bodies, drafts, etc.)
 .tmp/
+
+# dotcontext runtime state
+.context/plans/
+.context/cache/semantic/
+.context/runtime/
+.context/**/archive/
+
