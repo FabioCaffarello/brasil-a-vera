@@ -19,9 +19,10 @@ import { tseBemCandidato, tseCandidatura } from '@/shared/db/schema'
 
 // Eixo 2 — Camada A: snapshot patrimonial de um parlamentar a partir da
 // declaração de bens da candidatura vinculada (ponte por CPF exato, L2).
-// SOMENTE 2022 por ora (único pleito ingerido). Câmara-only na prática: só
-// candidaturas com parlamentar_id (vínculo por CPF) entram — Senado não tem
-// CPF, logo nunca vincula (a seção some no perfil).
+// Pleitos ingeridos: 2014, 2018, 2022. Snapshot usa 2022 por padrão.
+// Cobertura: Câmara 100% + Senado 88,9% (72/81). Os 9 suplentes restantes
+// não têm registro TSE federal 2014–2022 (ver ADR-063); a seção some no
+// perfil quando getPatrimonioSnapshot retorna null.
 //
 // Cache de edge (ADR-018 / princípio 8): TTL.patrimonioDeclarado (24h).
 

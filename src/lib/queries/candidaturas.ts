@@ -5,7 +5,7 @@ import { db } from '@/shared/db'
 import { tseCandidatura } from '@/shared/db/schema'
 
 // Histórico de candidaturas TSE vinculadas ao parlamentar via CPF (L2).
-// Câmara-only na prática — senadores sem CPF na base não têm vínculo.
+// Câmara 100% + Senado 88,9% (72/81 com CPF e parlamentar_id linkado, Sprint 39).
 // Cache 24h (mesma cadência da ingestão TSE).
 
 export interface CandidaturaTse {

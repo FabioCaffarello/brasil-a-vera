@@ -31,7 +31,9 @@ import { trustLevel } from '@/shared/db/enums'
 //   é INNER JOIN, então bens órfãos simplesmente não aparecem.
 // - A ÚNICA FK é candidatura.parlamentar_id → parlamentar.id: a "ponte",
 //   resolvida em batch por CPF exato (L2). NULL = não-vinculado (fora da
-//   Camada A). Senado não publica CPF → senadores ficam NULL neste incremento.
+//   Camada A). Câmara: 100%. Senado: 88,9% — 9 suplentes sem registro TSE
+//   federal 2014–2022 ficam NULL (ADR-063). CPF de senadores via TSE +
+//   match de nome (ADR-055); link de parlamentar_id em backfill-cpf (Sprint 39).
 // - Valor: numeric(15,2) mode 'string' (igual a gastos.gasto.valor) — o CSV
 //   traz vírgula decimal ("9645,00"); o mapper normaliza para "9645.00".
 // - Índices de leitura (Camada A) ficam para quando a query existir, com

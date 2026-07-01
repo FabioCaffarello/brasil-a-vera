@@ -392,8 +392,8 @@ export default async function ParlamentarPerfilPage({
       : Promise.resolve(
           [] as Awaited<ReturnType<typeof getMandatosExternosByParlamentar>>,
         ),
-    // Candidaturas TSE: vínculo via CPF (L2). Câmara-only na prática —
-    // senadores sem CPF retornam array vazio; seção omitida quando vazio.
+    // Candidaturas TSE: vínculo via CPF (L2). Câmara 100% + Senado 88,9%.
+    // Retorna array vazio quando sem vínculo; seção omitida quando vazio.
     getCandidaturasByParlamentar(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
     getLiderancasHistoricas(parlamentar.id),
