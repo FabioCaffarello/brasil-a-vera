@@ -1,8 +1,8 @@
 # ADR-045: Confronto de presença em votações nominais de plenário
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-21
-> Status: proposed
+> Última atualização: 2026-07-01
+> Status: accepted (feature implementada — `Presenca` component + `getPresencaPlenario` + `/rankings/presenca` em produção; `[A CONFIRMAR]` era gate de Neon-402 de junho, resolvido)
 
 > Confronto do Eixo 1 após fidelidade ([ADR-043](043-fidelidade-partidaria-duas-definicoes.md))
 > e relatorias ([ADR-044](044-confronto-relatorias-influencia-e-autoria.md)). Reusa a

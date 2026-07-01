@@ -39,7 +39,7 @@ export default async function FrenteDetalhePage({ params }: PageProps) {
   )
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -93,7 +93,7 @@ export default async function FrenteDetalhePage({ params }: PageProps) {
         Frente parlamentar suprapartidária da Câmara dos Deputados. Dados da API
         oficial da Câmara, atualizados mensalmente.
       </p>
-    </main>
+    </div>
   )
 }
 

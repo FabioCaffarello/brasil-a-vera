@@ -71,7 +71,7 @@ export default async function RankingProposicoesPage() {
   const ranking = await getRankingProposicoes(TOP_N)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -115,6 +115,6 @@ export default async function RankingProposicoesPage() {
         principal ou coautor, conforme dados das APIs oficiais. A mesma
         proposição pode ser contada para múltiplos autores.
       </p>
-    </main>
+    </div>
   )
 }

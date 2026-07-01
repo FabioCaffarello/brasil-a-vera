@@ -141,6 +141,21 @@ const FORBIDDEN: Forbidden[] = [
     use: 'se precisar de navegação por links, use TabsAsLinks do RDS; tabs com estado interno é gap do RDS — abrir issue/gap, NÃO recriar primitiva local',
     ref: 'ADR-038 — tabs local removido como órfão (único consumer era o showroom /dev/design, eliminado). Zera a camada de primitivos locais',
   },
+  {
+    path: '@/design-system/compositions/section-card',
+    use: "import { SectionCard } from '@fabio.caffarello/react-design-system/server' (RSC-safe; id agora obrigatório, scrollOffset no lugar do scroll-mt-28 embutido)",
+    ref: 'ADR-053 — SectionCard consolidado no RDS (/server, v4.11)',
+  },
+  {
+    path: '@/design-system/compositions/section-nav',
+    use: "import { SectionNav } from '@fabio.caffarello/react-design-system' (client; useScrollSpy interno, stickyTop + linkComponent)",
+    ref: 'ADR-053 — SectionNav consolidado no RDS (v4.11)',
+  },
+  {
+    path: '@/components/detail/detail-layout',
+    use: "import { DetailLayout, type DetailSection } from '@fabio.caffarello/react-design-system' (sections[].icon→navIcon, stickyTop→stickyNavTop)",
+    ref: 'ADR-053 — DetailLayout consolidado no RDS (v4.11), resolvendo os gaps das issues #259/#260',
+  },
 ]
 
 function walk(dir: string, exts: string[]): string[] {

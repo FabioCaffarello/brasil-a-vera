@@ -1,8 +1,8 @@
 # ADR-048: Feature de discursos — temas e discursos recentes
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-22
-> Status: proposed
+> Última atualização: 2026-07-01
+> Status: accepted (feature implementada — `Discursos` component + `getDiscursosParlamentar` + schema `discursos.discurso` em produção; ingestão ativa; `[A CONFIRMAR]` era gate de Neon-402 de junho, resolvido)
 
 > Feature cívica (não-confronto) que ativa um dado já ingerido e parado.
 > Respeita [ADR-016](016-cobertura-temporal-arquivamento.md) (texto longo por

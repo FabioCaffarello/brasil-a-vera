@@ -24,13 +24,19 @@ The system is a **read-heavy monolith** with a separate ingestion pipeline:
 
 ## Architectural Layers
 
-- **Domain modules** (`src/modules/*/domain/`): Pure functions — no IO, no framework imports. Alinhamento, coerência, patrimônio, etc. are calculated here.
-- **Queries** (`src/lib/queries/`): Drizzle + raw SQL queries against Neon. All wrapped in `cached()` per ADR-018. No direct DB calls from components.
-- **Components** (`src/components/`, `src/app/`): Next.js App Router pages and React Server Components. Domain components are built on top of `@fabio.caffarello/react-design-system` compositions (ADR-053).
-- **Ingestion** (`ingestion/`): Standalone Node.js ETL. Registry-driven (`ingestion/registry.ts`). Uses `node-postgres` for transactions. Must never be imported by app bundle.
-- **Shared** (`src/shared/`): Trust level system, DB schema (Drizzle), domain event types. Cross-cutting concerns only.
+Full doc: [`docs/architecture/CLEAN-ARCHITECTURE.md`](../../docs/architecture/CLEAN-ARCHITECTURE.md)
+
+| Layer (Clean Architecture) | Location | Rules |
+|---|---|---|
+| Domain | `src/modules/*/domain/`, `src/shared/trust/`, `src/shared/domain-events/` | Pure functions, zero IO, no framework imports |
+| Application | `src/lib/queries/`, `src/lib/aggregators/` | Orchestrates domain; every query wrapped in `cached()` (ADR-018) |
+| Infrastructure | `src/shared/db/`, `ingestion/shared/`, `src/lib/` | DB drivers, HTTP clients, Zod validation at boundary |
+| Presentation | `src/app/`, `src/components/` | RSC pages + domain components built on RDS (ADR-053) |
+| ETL (separate runtime) | `ingestion/` | Standalone Node.js; uses node-postgres; must never be imported by app bundle |
 
 ## Detected Design Patterns
+
+Full catalog: [`docs/architecture/DESIGN-PATTERNS.md`](../../docs/architecture/DESIGN-PATTERNS.md)
 
 | Pattern | Confidence | Locations | Description |
 |---------|------------|-----------|-------------|
@@ -40,6 +46,8 @@ The system is a **read-heavy monolith** with a separate ingestion pipeline:
 | ETL registry | 85% | `ingestion/registry.ts` | Single Zod-validated source of truth for GitHub Actions matrix |
 | Strangler fig | 80% | `src/design-system/`, `scripts/rds-primitive-guard.ts` | ADR-038/053 consolidation of local primitives into RDS |
 | Trust pyramid | 85% | `src/shared/trust/`, `trust_level` columns | L1-L4 per aggregate root, inherited by child rows |
+| Edge cache wrapper | 95% | `src/lib/cache.ts`, all `src/lib/queries/*.ts` | `cached()` on every read query — ADR-018 |
+| Split driver | 90% | `src/shared/db/index.ts` vs `ingestion/shared/db.ts` | neon-http (edge) / node-postgres (ETL) — ADR-015 |
 
 ## Entry Points
 
@@ -102,3 +110,6 @@ The system is a **read-heavy monolith** with a separate ingestion pipeline:
 - [Development Workflow](development-workflow.md)
 - [ADR Index](../../docs/architecture/ADR/)
 - [CLAUDE.md](../../CLAUDE.md)
+- [Clean Architecture (layers)](../../docs/architecture/CLEAN-ARCHITECTURE.md)
+- [Design Patterns Catalog](../../docs/architecture/DESIGN-PATTERNS.md)
+- [Bounded Contexts (DDD)](../../docs/architecture/BOUNDED-CONTEXTS.md)

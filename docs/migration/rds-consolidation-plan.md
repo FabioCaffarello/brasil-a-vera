@@ -97,8 +97,9 @@ stats-grid 1`.
 | `filter-chips` (`FilterChip`) | 9 | **R** | `Chip` (+ `FilterChips`) | ✅ consolidado (WS4, #445; v4 `Chip.count`) | médio | ✓ |
 | `kpi-strip` | 1 | **R** | `Stat`/`StatGroup` | ✅ consolidado (WS4, #443) | médio | ✓ |
 | `stats-grid` | 1 | **R** | `Stat`/`StatGroup` | ✅ consolidado (WS4, #443) | médio | ✓ |
-| `section-card` | 7 | **D** | `Card` compound | manter — JÁ construído sobre o `Card` do RDS (wrapper sancionado) | — | — |
-| `section-nav` | 4 | **D** | wrapper sobre `useScrollSpy` | manter (composição sancionada) | — | — |
+| `section-card` | 7 | **R** | `SectionCard` (`./server`) | ✅ consolidado (ADR-053, RDS 4.11 [#259](https://github.com/FabioCaffarello/react-design-system/issues/259)) — `id` agora obrigatório; `scroll-mt-28` embutido virou prop `scrollOffset` (passada pelo `DetailLayout`) | baixo | ✓ |
+| `section-nav` | 4 | **R** | `SectionNav` (`.`) | ✅ consolidado (ADR-053, RDS 4.11 [#259](https://github.com/FabioCaffarello/react-design-system/issues/259)) — só consumido internamente pelo `DetailLayout` | baixo | ✓ |
+| `detail-layout` (`src/components/detail`) | 4 | **R** | `DetailLayout` (`.`) | ✅ consolidado (ADR-053, RDS 4.11 [#260](https://github.com/FabioCaffarello/react-design-system/issues/260)) — `sections[].icon`→`navIcon`, prop `stickyTop`→`stickyNavTop` | médio | ✓ |
 | `party-badge` | 4 | **D** | — | manter (cores oficiais, D4 Wave 6) | — | — |
 | `kpi-card` | 3 | **R** | `Stat`/`StatGroup` (v4.6, [#245](https://github.com/FabioCaffarello/react-design-system/issues/245)) | ✅ consolidado — `StatGroup` ganhou o slot `floatingBadge` (TrustBadge L1 na home) na RDS 4.6.0. Migrados home + `quem-me-representa/[uf]` + showcase; `<StatGroup layout="grid" cols={4}>` p/ preservar o colapso responsivo | médio | ✓ |
 | `hero-section` | 1 | **R** | `HeroSection` (`./server`) | ✅ consolidado (#452; drop-in — mesmas variantes `plain`/`gradient`/`gradient-glow`) | baixo | ✓ |
@@ -189,9 +190,10 @@ BaV consome de volta. Foi o que destravou Button/Input/Combobox/Dialog/Chip
   re-exportando `/granular` — evita vazar +294KB do barrel num RSC). `card` foi
   consolidado (Card compound do RDS); `tabs` foi removido como órfão (único consumer
   era o showroom `/dev/design`, eliminado).
-- **Composições:** `party-badge` (ratificado, cores oficiais) +
-  `section-card`/`section-nav` (wrappers sancionados sobre Card/useScrollSpy do RDS).
-  `data-badge` consolidado no `DataBadge` do RDS (v4.5, /server) — cópia local removida.
+- **Composições:** `party-badge` (ratificado, cores oficiais) é a única composição
+  local remanescente. `section-card`/`section-nav`/`detail-layout` consolidados no RDS
+  (ADR-053, 4.11) — cópias locais removidas. `data-badge` consolidado no `DataBadge`
+  do RDS (v4.5, /server) — cópia local removida.
   `kpi-card` consolidado no `Stat`/`StatGroup` do RDS (v4.6, slot `floatingBadge`
   via [#245](https://github.com/FabioCaffarello/react-design-system/issues/245)) — cópia local removida.
 - **Zero duplicata local** de componente RDS. **Zero deps `@radix-ui`** diretas

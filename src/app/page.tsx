@@ -21,6 +21,7 @@
 import {
   Button,
   HeroSection,
+  SectionCard,
   Stat,
   StatGroup,
 } from '@fabio.caffarello/react-design-system/server'
@@ -30,7 +31,6 @@ import { CardVotacoesSemana } from '@/components/home/card-votacoes-semana'
 import { EntryCard } from '@/components/home/entry-card'
 import { FeaturesGrid } from '@/components/home/features-grid'
 import { TrustBadge } from '@/components/trust/trust-badge'
-import { SectionCard } from '@/design-system/compositions/section-card'
 import { formatNumeroAbreviado } from '@/lib/format-number'
 import { getPublicStats } from '@/lib/queries/stats-public'
 import { getVotacoesRecentes } from '@/lib/queries/votacoes'
@@ -147,7 +147,7 @@ export default async function Home() {
           max-w-screen-xl do RDS Container = 1280px ≠ 1152px da navbar, então
           inline Tailwind preserva o alinhamento correto. space-y-10 (40px)
           substitui space-y-12 (48px): ritmo editorial sem "blocos soltos". */}
-      <div className="mx-auto max-w-6xl space-y-10 px-4 py-12 sm:py-16">
+      <div className="mx-auto max-w-6xl space-y-10 py-12 sm:py-16">
         {/* ATO 1: EXPLORAR — ação primeiro */}
 
         {/* ENTRY POINTS — portas de entrada cívicas em grid (ação primeiro).

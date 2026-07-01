@@ -1,5 +1,9 @@
 # ADR-061 — Escopo de presença em reuniões de comissão
 
+> Brasil a Vera · Arquitetura · v0.1
+> Última atualização: 2026-06-30
+> Status: accepted
+
 | Campo | Valor |
 |-------|-------|
 | Status | accepted |

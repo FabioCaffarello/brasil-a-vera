@@ -1,8 +1,8 @@
 # ADR-043: Fidelidade partidária — duas definições de "o partido" e reconstrução temporal
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-20
-> Status: proposed
+> Última atualização: 2026-07-01
+> Status: accepted (feature implementada — `FidelidadePartidaria` component + queries `fidelidadeTimeline/Bancada/Orientacao` em produção; `[A CONFIRMAR]` era gate de Neon-402 de junho, resolvido)
 
 > Estende a **invariante de copy neutra** do [ADR-040](040-alinhamento-orientacao-de-bloco.md)
 > (§Decisão item 4) para o confronto de fidelidade partidária do Eixo 1.

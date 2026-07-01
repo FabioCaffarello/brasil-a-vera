@@ -199,7 +199,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 py-8">
         {/* StatGroup (precedente §3.6/§3.14: StatsGrid→StatGroup) alimenta
             o hero com 4 stats narrativos. Total e "Última votação" sempre
             presentes; Aprovadas/Rejeitadas usam janela 12m para refletir

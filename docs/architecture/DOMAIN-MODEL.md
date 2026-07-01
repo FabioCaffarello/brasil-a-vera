@@ -438,7 +438,7 @@ Detalhes dos algoritmos no [Grafo Legislativo](../future/LEGISLATIVE-GRAPH.md).
 
 ## Domain Events
 
-Todos os eventos seguem o contrato base definido em `src/shared/domain-events/` (ver [ADR-005](../future/adr/005-event-driven-communication.md)). Nas Waves 0–2, domain events são interfaces TypeScript — a transmissão é via chamada de função síncrona no monolito. Na Wave 3+, migram para mensagens NATS JetStream.
+Todos os eventos seguem o contrato base definido em `src/shared/domain-events/` (ver [ADR-020](ADR/020-permanencia-monolito-typescript.md)). Domain events são interfaces TypeScript — a transmissão é via chamada de função síncrona dentro do monolito. Não há plano de migração para NATS ou mensageria assíncrona (ADR-020 encerrou essa direção definitivamente).
 
 ```typescript
 // src/shared/domain-events/types.ts

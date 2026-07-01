@@ -43,7 +43,7 @@ export default async function ParlamentaresSlot({ searchParams }: PageProps) {
   const internalUserId = await getOrCreateUserProfileId(userId)
   if (!internalUserId) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
+      <div className="container mx-auto max-w-2xl py-16 text-fg-tertiary">
         Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
         segundos.
       </div>
@@ -74,7 +74,7 @@ export default async function ParlamentaresSlot({ searchParams }: PageProps) {
     defaultSubtab(profile.uf, acompanhados.length)
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8">
+    <div className="container mx-auto max-w-6xl py-8">
       <header className="mb-6">
         <h1 className="font-semibold text-3xl text-fg-primary tracking-tight">
           Parlamentares

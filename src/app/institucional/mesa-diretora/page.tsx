@@ -77,7 +77,7 @@ export default async function MesaDiretoraPage() {
     .sort((a, b) => (TIPO_ORDER[a.tipo] ?? 9) - (TIPO_ORDER[b.tipo] ?? 9))
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-3xl py-8">
       <Breadcrumb
         items={[
           { label: 'Início', href: '/' },
@@ -141,6 +141,6 @@ export default async function MesaDiretoraPage() {
         Dados atualizados mensalmente via API oficial da Câmara dos Deputados.
         Legislatura {camara[0]?.legislatura ?? senado[0]?.legislatura ?? '—'}.
       </p>
-    </main>
+    </div>
   )
 }

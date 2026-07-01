@@ -67,7 +67,7 @@ export default async function MeusDadosSlot() {
   const internalUserId = await getOrCreateUserProfileId(userId)
   if (!internalUserId) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
+      <div className="container mx-auto max-w-2xl py-16 text-fg-tertiary">
         Não conseguimos carregar seu perfil. Tente atualizar a página em alguns
         segundos.
       </div>
@@ -81,14 +81,14 @@ export default async function MeusDadosSlot() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-16 text-fg-tertiary">
+      <div className="container mx-auto max-w-2xl py-16 text-fg-tertiary">
         Perfil não encontrado.
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto max-w-2xl px-4 py-8">
+    <div className="container mx-auto max-w-2xl py-8">
       <Link
         className="inline-flex items-center gap-2 text-fg-tertiary text-sm hover:text-fg-primary"
         href="/painel?tab=configuracoes"
