@@ -57,7 +57,6 @@ export async function ingestLiderancasCamara(): Promise<LiderancasStats> {
   const rows: LiderancaCargoRow[] = []
 
   for await (const rawPartido of paginate('/partidos', {
-    legislatura: LEGISLATURA_ATUAL,
     itens: 100,
   })) {
     const parsedPartido = camaraPartidoSchema.safeParse(rawPartido)

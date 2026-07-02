@@ -1,18 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { mapBlocoSenado } from './blocos-mapper'
-import type { SenadoBlocoDetalhe } from './blocos-schema'
+import type { SenadoBlocoItem } from './blocos-schema'
 
-const blocoBase: SenadoBlocoDetalhe = {
-  DetalhesBloco: {
-    Codigo: '42',
-    Nome: 'Bloco Parlamentar da Renovação',
-    NomeApelido: 'BPR',
-    Partidos: {
-      Partido: [
-        { SiglaPartido: 'PODE', NomePartido: 'Podemos' },
-        { SiglaPartido: 'PSDB', NomePartido: 'PSDB' },
-      ],
-    },
+const blocoBase: SenadoBlocoItem = {
+  CodigoBloco: '42',
+  NomeBloco: 'Bloco Parlamentar da Renovação',
+  NomeApelido: 'BPR',
+  DataCriacao: '2023-01-01',
+  Membros: {
+    Membro: [
+      {
+        Partido: { SiglaPartido: 'PODE', NomePartido: 'Podemos' },
+        DataAdesao: '2023-01-01',
+      },
+      {
+        Partido: { SiglaPartido: 'PSDB', NomePartido: 'PSDB' },
+        DataAdesao: '2023-01-01',
+      },
+    ],
   },
 }
 
@@ -28,25 +33,21 @@ describe('mapBlocoSenado', () => {
     })
   })
 
-  it('usa Nome quando NomeApelido ausente', () => {
-    const bloco: SenadoBlocoDetalhe = {
-      DetalhesBloco: { ...blocoBase.DetalhesBloco, NomeApelido: undefined },
-    }
+  it('usa NomeBloco quando NomeApelido ausente', () => {
+    const bloco: SenadoBlocoItem = { ...blocoBase, NomeApelido: undefined }
     expect(mapBlocoSenado(bloco).nome).toBe('Bloco Parlamentar da Renovação')
   })
 
-  it('Partidos ausentes → array vazio', () => {
-    const bloco: SenadoBlocoDetalhe = {
-      DetalhesBloco: { ...blocoBase.DetalhesBloco, Partidos: undefined },
-    }
+  it('Membros ausentes → array vazio', () => {
+    const bloco: SenadoBlocoItem = { ...blocoBase, Membros: undefined }
     expect(mapBlocoSenado(bloco).partidos).toEqual([])
   })
 
   it('normaliza siglas para maiúsculo', () => {
-    const bloco: SenadoBlocoDetalhe = {
-      DetalhesBloco: {
-        ...blocoBase.DetalhesBloco,
-        Partidos: { Partido: [{ SiglaPartido: 'mdb' }] },
+    const bloco: SenadoBlocoItem = {
+      ...blocoBase,
+      Membros: {
+        Membro: [{ Partido: { SiglaPartido: 'mdb' }, DataAdesao: null }],
       },
     }
     expect(mapBlocoSenado(bloco).partidos).toEqual(['MDB'])

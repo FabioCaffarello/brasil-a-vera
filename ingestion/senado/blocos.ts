@@ -3,21 +3,14 @@ import { sql } from 'drizzle-orm'
 import { blocoPartidario } from '@/shared/db/schema'
 import { db } from '../shared/db'
 import { mapBlocoSenado } from './blocos-mapper'
-import {
-  senadoBlocoDetalheSchema,
-  senadoBlocosListaSchema,
-} from './blocos-schema'
+import { senadoBlocosListaSchema } from './blocos-schema'
 import { fetchSenadoJson } from './senado-client'
 
 // Ingere composição de blocos partidários do Senado na legislatura atual.
-// Fonte: GET /composicao/lista/blocos (lista) → GET /composicao/bloco/{codigo} (detalhe).
+// Fonte: GET /dados/ListaBlocoParlamentar.json — arquivo JSON unificado com
+// todos os blocos e seus membros em uma única chamada (substitui o fluxo
+// /composicao/lista/blocos → /composicao/bloco/{codigo} descontinuado em 2026-07).
 // Idempotente: ON CONFLICT (source_id, casa) DO UPDATE substitui partidos e nome.
-
-const PACING_MS = 200
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
 
 interface BlocosStats {
   blocosFetched: number
@@ -32,46 +25,23 @@ export async function ingestBlocosSenado(): Promise<BlocosStats> {
     errors: [],
   }
 
-  const rawLista = await fetchSenadoJson<unknown>('/composicao/lista/blocos')
+  const rawLista = await fetchSenadoJson<unknown>(
+    '/dados/ListaBlocoParlamentar.json',
+  )
   const parsedLista = senadoBlocosListaSchema.safeParse(rawLista)
   if (!parsedLista.success) {
     stats.errors.push({
-      context: 'composicao/lista/blocos',
+      context: '/dados/ListaBlocoParlamentar.json',
       reason: parsedLista.error.issues.map((i) => i.message).join('; '),
     })
     return stats
   }
 
-  const blocos = parsedLista.data.ListaBlocos.Bloco ?? []
+  const blocos = parsedLista.data.Blocos.Bloco ?? []
+  stats.blocosFetched = blocos.length
 
   for (const blocoItem of blocos) {
-    stats.blocosFetched++
-
-    let rawDetalhe: unknown
-    try {
-      rawDetalhe = await fetchSenadoJson<unknown>(
-        `/composicao/bloco/${blocoItem.CodigoBloco}`,
-      )
-    } catch (err) {
-      stats.errors.push({
-        context: `bloco:${blocoItem.CodigoBloco}`,
-        reason: err instanceof Error ? err.message : String(err),
-      })
-      await sleep(PACING_MS)
-      continue
-    }
-
-    const parsedDetalhe = senadoBlocoDetalheSchema.safeParse(rawDetalhe)
-    if (!parsedDetalhe.success) {
-      stats.errors.push({
-        context: `bloco:${blocoItem.CodigoBloco}:detalhe`,
-        reason: parsedDetalhe.error.issues.map((i) => i.message).join('; '),
-      })
-      await sleep(PACING_MS)
-      continue
-    }
-
-    const row = mapBlocoSenado(parsedDetalhe.data)
+    const row = mapBlocoSenado(blocoItem)
 
     await db
       .insert(blocoPartidario)
@@ -86,7 +56,6 @@ export async function ingestBlocosSenado(): Promise<BlocosStats> {
       })
 
     stats.blocosUpserted++
-    await sleep(PACING_MS)
   }
 
   return stats

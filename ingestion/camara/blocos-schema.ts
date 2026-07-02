@@ -13,7 +13,7 @@ export const camaraBlocoListSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform(String),
     nome: z.string().min(1),
-    idLegislatura: z.number().int().optional(),
+    idLegislatura: z.coerce.number().int().optional(),
   })
   .passthrough()
 
@@ -31,7 +31,7 @@ export const camaraBlocoDetalheSchema = z
   .object({
     id: z.union([z.string(), z.number()]).transform(String),
     nome: z.string().min(1),
-    idLegislatura: z.number().int().optional(),
+    idLegislatura: z.coerce.number().int().optional(),
     partidos: z.array(camaraPartidoBlocoSchema).optional(),
   })
   .passthrough()
