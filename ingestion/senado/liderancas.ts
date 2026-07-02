@@ -4,7 +4,7 @@ import { liderancaCargo, parlamentar } from '@/shared/db/schema'
 import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
 import { db } from '../shared/db'
 import { mapLiderancasSenado } from './liderancas-mapper'
-import { senadoLiderancasEnvelopeSchema } from './liderancas-schema'
+import { senadoLiderancasSchema } from './liderancas-schema'
 import { fetchSenadoJson } from './senado-client'
 
 // Ingere líderes do Senado Federal na legislatura atual.
@@ -45,7 +45,7 @@ export async function ingestLiderancasSenado(): Promise<LiderancasStats> {
   }
 
   const raw = await fetchSenadoJson<unknown>('/composicao/lideranca')
-  const parsed = senadoLiderancasEnvelopeSchema.safeParse(raw)
+  const parsed = senadoLiderancasSchema.safeParse(raw)
   if (!parsed.success) {
     stats.errors.push({
       context: 'composicao/lideranca',
@@ -60,9 +60,8 @@ export async function ingestLiderancasSenado(): Promise<LiderancasStats> {
     parlamentarPorSourceId,
   )
 
-  stats.lideresEncontrados = (
-    parsed.data.ListaLiderancas.Lideranca ?? []
-  ).reduce((acc, l) => acc + (l.Membros?.Membro?.length ?? 0), 0)
+  const sfItems = parsed.data.filter((item) => item.casa === 'SF')
+  stats.lideresEncontrados = sfItems.length
   stats.foraBaseParlamentar = stats.lideresEncontrados - rows.length
 
   await db.transaction(async (tx) => {

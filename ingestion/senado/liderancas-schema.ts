@@ -2,57 +2,28 @@ import { z } from 'zod'
 
 // Schema de GET /composicao/lideranca no Senado.
 //
-// ⚠️  XML-convertido-em-JSON: elemento repetível vem como objeto único quando
-//     há um só, array quando há vários. `oneOrMany` normaliza para array.
+// ⚠️  API migrou de formato XML-nested para flat JSON array em 2026-07.
+//     Cada item representa um parlamentar em uma liderança.
+//     Filtrar por `casa === 'SF'` para ficar só com o Senado.
 //
 // ⚠️  Shape validada contra fixture real antes do merge (princípio 13).
 
-const oneOrMany = <T extends z.ZodTypeAny>(schema: T) =>
-  z
-    .union([z.array(schema), schema])
-    .transform((v) => (Array.isArray(v) ? v : [v]))
-
-// Membro individual de uma liderança.
-const membroLiderancaSchema = z
+export const senadoLiderancaItemSchema = z
   .object({
-    CodigoParlamentar: z.union([z.string(), z.number()]).transform(String),
-    NomeParlamentar: z.string().min(1),
-    // Papel: "Lider" | "Vice-Lider" | outros (conservador: passthrough)
-    Papel: z.string().nullable().optional(),
+    casa: z.string(),
+    codigo: z.union([z.string(), z.number()]).transform(String),
+    codigoParlamentar: z.union([z.string(), z.number()]).transform(String),
+    siglaPartidoFiliacao: z.string().nullable().optional(),
+    siglaTipoLideranca: z.string().nullable().optional(),
+    siglaTipoUnidadeLideranca: z.string().nullable().optional(),
+    descricaoTipoLideranca: z.string().nullable().optional(),
+    nomeParlamentar: z.string().nullable().optional(),
+    dataDesignacao: z.string().nullable().optional(),
   })
   .passthrough()
 
-export type SenadoMembroLideranca = z.infer<typeof membroLiderancaSchema>
+export type SenadoLiderancaItem = z.infer<typeof senadoLiderancaItemSchema>
 
-// Bloco de liderança (partido ou posição institucional).
-const liderancaBlocoSchema = z
-  .object({
-    // Nome/sigla da entidade: "PT", "MDB", "Governo", "Oposição", etc.
-    SiglaLideranca: z.string().min(1),
-    NomeLideranca: z.string().nullable().optional(),
-    DescricaoLideranca: z.string().nullable().optional(),
-    Membros: z
-      .object({
-        Membro: oneOrMany(membroLiderancaSchema).optional(),
-      })
-      .nullable()
-      .optional(),
-  })
-  .passthrough()
+export const senadoLiderancasSchema = z.array(senadoLiderancaItemSchema)
 
-export type SenadoLiderancaBloco = z.infer<typeof liderancaBlocoSchema>
-
-// Envelope raiz do endpoint.
-export const senadoLiderancasEnvelopeSchema = z
-  .object({
-    ListaLiderancas: z
-      .object({
-        Lideranca: oneOrMany(liderancaBlocoSchema).optional(),
-      })
-      .passthrough(),
-  })
-  .passthrough()
-
-export type SenadoLiderancasEnvelope = z.infer<
-  typeof senadoLiderancasEnvelopeSchema
->
+export type SenadoLiderancas = z.infer<typeof senadoLiderancasSchema>

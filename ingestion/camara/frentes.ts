@@ -100,11 +100,21 @@ async function processFrente(
     })
   }
 
+  // API can return the same parlamentar multiple times per frente with different
+  // títulos — deduplicate by (frenteId, parlamentarId) to avoid UNIQUE violation.
+  const seenKeys = new Set<string>()
+  const dedupedRows = rows.filter((r) => {
+    const key = `${r.frenteId}:${r.parlamentarId}`
+    if (seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
+
   // Substituição atômica de membros: apaga o conjunto atual e reinsere.
   await db.transaction(async (tx) => {
     await tx.delete(frenteMembro).where(eq(frenteMembro.frenteId, frenteDbId))
-    if (rows.length > 0) {
-      await tx.insert(frenteMembro).values(rows)
+    if (dedupedRows.length > 0) {
+      await tx.insert(frenteMembro).values(dedupedRows)
     }
   })
 

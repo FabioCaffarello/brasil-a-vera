@@ -1,5 +1,5 @@
 import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
-import type { SenadoBlocoDetalhe } from './blocos-schema'
+import type { SenadoBlocoItem } from './blocos-schema'
 
 export interface BlocoPartidarioRow {
   sourceId: string
@@ -9,18 +9,17 @@ export interface BlocoPartidarioRow {
   partidos: string[]
 }
 
-// Monta a row a partir do detalhe de /composicao/bloco/{codigo}.
-export function mapBlocoSenado(
-  detalhe: SenadoBlocoDetalhe,
-): BlocoPartidarioRow {
-  const d = detalhe.DetalhesBloco
-  const partidos = (d.Partidos?.Partido ?? [])
-    .map((p) => p.SiglaPartido.trim().toUpperCase())
+// Monta a row a partir de um item do /dados/ListaBlocoParlamentar.json.
+// Os partidos são extraídos de Membros.Membro[].Partido.SiglaPartido.
+export function mapBlocoSenado(bloco: SenadoBlocoItem): BlocoPartidarioRow {
+  const membros = bloco.Membros?.Membro ?? []
+  const partidos = membros
+    .map((m) => m.Partido.SiglaPartido.trim().toUpperCase())
     .filter(Boolean)
 
   return {
-    sourceId: d.Codigo,
-    nome: d.NomeApelido?.trim() || d.Nome,
+    sourceId: bloco.CodigoBloco,
+    nome: bloco.NomeApelido?.trim() || bloco.NomeBloco,
     casa: 'SENADO',
     legislatura: LEGISLATURA_ATUAL,
     partidos,
