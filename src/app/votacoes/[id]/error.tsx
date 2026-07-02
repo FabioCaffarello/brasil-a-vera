@@ -33,7 +33,7 @@ export default function VotacaoError({ error, reset }: Props) {
   }, [error])
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
+    <div className="mx-auto max-w-2xl py-16">
       <div className="rounded-lg border border-border bg-surface p-8 text-center">
         <div className="mb-4 flex justify-center">
           <AlertTriangle aria-hidden className="h-12 w-12 text-fg-error" />

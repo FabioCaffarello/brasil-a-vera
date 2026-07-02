@@ -168,7 +168,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 py-8">
         <StatGroup cols={3} layout="grid">
           <Stat label="parlamentares" value={stats.totalParlamentares} />
           <Stat label="partidos" value={stats.totalPartidos} />

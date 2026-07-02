@@ -10,7 +10,7 @@ import { Skeleton } from '@fabio.caffarello/react-design-system/server'
  */
 export default function ProposicoesLoading() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-6xl space-y-6 py-8">
       {/* StatGroup (4) */}
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line-default bg-line-default sm:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (

@@ -64,7 +64,7 @@ export default async function ContradicaoPage({ params }: PageProps) {
   if (!par) notFound()
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-6 py-8">
       <Button asChild size="sm" variant="ghost">
         <a href={`/parlamentares/${id}#pares`}>
           <ArrowLeft className="h-4 w-4" />

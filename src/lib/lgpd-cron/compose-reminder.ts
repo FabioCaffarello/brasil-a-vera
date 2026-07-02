@@ -45,7 +45,7 @@ export function buildReminderEmail(
       daysRemaining === 1 ? '' : 's'
     }`,
     '',
-    greeting + ',',
+    `${greeting},`,
     '',
     `Você solicitou a eliminação da sua conta no Brasil à Vera em **${deletedAtPt}**.`,
     `A eliminação definitiva acontece em **${hardDeleteAtPt}** — faltam ${daysRemaining} dia${

@@ -275,7 +275,7 @@ export async function backfillVotacaoProposicao(): Promise<BackfillStats> {
 
       if ((b + 1) % 10 === 0 || b + 1 === totalBatches) {
         process.stderr.write(
-          JSON.stringify({
+          `${JSON.stringify({
             event: 'backfill_progress',
             batch: b + 1,
             totalBatches,
@@ -283,7 +283,7 @@ export async function backfillVotacaoProposicao(): Promise<BackfillStats> {
             total: elegiveis.length,
             matched: stats.matched,
             errors: stats.errors.length,
-          }) + '\n',
+          })}\n`,
         )
       }
     }

@@ -139,7 +139,7 @@ export default async function GastosDetalhePage({
     buildHref(parlamentar.id, sp, { ...overrides, after: null })
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl py-8">
       <Link
         className="mb-3 inline-flex items-center gap-1 rounded text-fg-tertiary text-sm hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-line-focus focus-visible:ring-offset-2"
         href={`/parlamentares/${parlamentar.id}`}
