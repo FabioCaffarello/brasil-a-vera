@@ -60,12 +60,13 @@ describe('NavMobile', () => {
     expect(document.body.style.overflow).toBe('')
   })
 
-  it('lista todos os 4 links de navegação no painel', () => {
+  it('lista todos os 5 links de navegação no painel', () => {
     render(<NavMobile />)
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     expect(screen.getByRole('link', { name: /^parlamentares$/i })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Proposições' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Votações' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Temas' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Docs' })).toBeDefined()
   })
 
@@ -89,7 +90,7 @@ describe('NavMobile', () => {
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(6)
+    expect(links).toHaveLength(7)
     expect(links[0].textContent).toBe('Painel')
   })
 
@@ -98,7 +99,7 @@ describe('NavMobile', () => {
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(5)
+    expect(links).toHaveLength(6)
     expect(dialog.querySelector('a[href="/painel"]')).toBeNull()
   })
 })

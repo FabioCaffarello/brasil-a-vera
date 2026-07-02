@@ -30,7 +30,7 @@ export default function QuemMeRepresentaPage() {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-6 py-8">
         {grupos.map(({ regiao, ufs }) => (
           <SectionCard id={regiao.toLowerCase()} key={regiao} title={regiao}>
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">

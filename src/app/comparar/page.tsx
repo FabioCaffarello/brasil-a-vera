@@ -61,7 +61,7 @@ function parseIds(raw: string | string[] | undefined): {
  */
 function ErrorState({ message }: { message: string }) {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
+    <div className="mx-auto max-w-2xl py-12">
       <div className="rounded-lg border border-warning/40 bg-warning/10 p-5">
         <h1 className="font-medium text-base text-fg-warning">
           Comparativo indisponível
@@ -136,7 +136,7 @@ export default async function CompararPage({ searchParams }: PageProps) {
         variant="plain"
       />
 
-      <div className="mx-auto max-w-5xl space-y-5 px-4 pb-8">
+      <div className="mx-auto max-w-5xl space-y-5 pb-8">
         <SectionCard
           id="comparacao"
           subtitle="Presença em votações nominais, autoria primária de proposições, gastos CEAP do ano corrente."

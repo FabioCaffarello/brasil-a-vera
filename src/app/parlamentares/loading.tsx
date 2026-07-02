@@ -10,7 +10,7 @@ import { Skeleton } from '@fabio.caffarello/react-design-system/server'
  */
 export default function ParlamentaresLoading() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-6xl space-y-6 py-8">
       {/* StatGroup (3) */}
       <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-line-default bg-line-default">
         {[0, 1, 2].map((i) => (

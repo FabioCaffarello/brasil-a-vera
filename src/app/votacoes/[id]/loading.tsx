@@ -14,7 +14,7 @@ import { Skeleton } from '@fabio.caffarello/react-design-system/server'
  */
 export default function VotacaoLoading() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl py-8">
       <div className="space-y-5">
         {/* Breadcrumb */}
         <Skeleton className="h-4 w-20" />
