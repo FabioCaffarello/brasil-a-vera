@@ -1,8 +1,8 @@
 # ADR-065: Colégio eleitoral por município via TSE (votação candidato×município)
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-07-02
-> Status: accepted
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-07-05
+> Status: accepted (emendado 2026-07-05 — ver [Emenda](#emenda-2026-07-05--premissas-corrigidas-na-implementação))
 
 ## Contexto
 
@@ -136,6 +136,50 @@ provado.
 - Votos por zona eleitoral (granularidade abaixo do município).
 - Candidatos que não foram eleitos (escopo = parlamentares em `parlamentar`).
 - Histórico de migração do colégio eleitoral entre pleitos (feature futura).
+
+## Emenda 2026-07-05 — premissas corrigidas na implementação
+
+Probes empíricos contra o CDN real do TSE (princípio 13) durante a Sprint 14.1
+falsificaram três premissas do texto original. Correções aplicadas:
+
+### E1 — Fonte é zip nacional único, não arquivos por UF (corrige D2/D3)
+
+Arquivos por UF **não existem** no CDN (`votacao_candidato_munzona_{ano}_{UF}.zip`
+→ HTTP 404 verificado). A fonte real é `votacao_candidato_munzona_{ano}.zip`
+nacional (~494-592 MB comprimido) contendo CSVs por UF + `BRASIL.csv`
+consolidado (4,3 GB, redundante — pulado) + `_BR.csv` (apenas Presidente,
+verificado; inócuo sob filtro de cargo). Como SP 2022 descomprimido tem
+**1,2 GB** — acima do limite de string do V8 (~512 MB) —, o processamento é
+**streaming** (fflate `Unzip` + decode Latin-1 incremental + parser CSV
+incremental em `ingestion/tse/csv.ts`), nunca string única.
+
+### E2 — Sem FK física; relação lógica via (ano_eleicao, sq_candidato) (corrige D1)
+
+`tse-bens` repõe `tse_candidatura` com **DELETE+INSERT por ano** a cada run
+mensal — os UUIDs regeneram e uma FK `candidatura_id` órfã/cascataria
+mensalmente. A tabela usa relação **lógica** `(ano_eleicao, sq_candidato)`,
+mesmo padrão e mesma razão documentada de `tse_bem_candidato`. O filtro "CPF
+em `parlamentar.cpf`" do texto original é transitivo: o CSV munzona **não tem
+coluna de CPF** (verificado nos headers 2014/2022); o conjunto de
+`SQ_CANDIDATO` vem de `tse_candidatura WHERE parlamentar_id IS NOT NULL`
+(ponte ADR-063). Idempotência por DELETE-by-ano + INSERT (princípio 5),
+alinhada ao padrão da casa, em vez do ON CONFLICT do texto original.
+
+### E3 — Top-20 persistido + denominador em tse_candidatura (refina D1/D5)
+
+Persistir a distribuição completa custaria ~400k rows; o produto usa top-5 e
+% de concentração. Persistimos o **top-20 por candidatura por pleito**
+(constante `TOP_MUNICIPIOS_PERSISTIDOS` exportada) — ~27k rows para as 1.331
+candidaturas vinculadas. O denominador do % é o **total integral do pleito**
+(soma de todos os municípios, computada antes do corte), gravado em
+`tse_candidatura.qt_votos_nominais` — coluna criada pela migration 0034 e
+verificada **zerada em prod nos 3 pleitos** (2026-07-05); esta ingestão é o
+backfill que a 0034 previa. D5 permanece: nenhum percentual materializado.
+
+Detalhes de normalização: `CD_MUNICIPIO` vem com zero à esquerda em 2014
+("01120") e sem em 2022 (1139) — canonizado sem zeros no mapper; zonas do
+mesmo município são somadas; apenas `NR_TURNO = 1` (cargos federais não têm
+2º turno).
 
 ## Referências
 

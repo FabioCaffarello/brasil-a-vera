@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseCsv, rowsToRecords } from './csv'
+import {
+  createCsvRecordStream,
+  createCsvStreamParser,
+  parseCsv,
+  rowsToRecords,
+} from './csv'
 
 describe('parseCsv', () => {
   it('parseia campos mistos quoted/unquoted com separador ;', () => {
@@ -45,6 +50,61 @@ describe('parseCsv', () => {
 
   it('preserva campo vazio entre aspas (distinto de linha em branco)', () => {
     expect(parseCsv('"";"x"')).toEqual([['', 'x']])
+  })
+})
+
+describe('createCsvStreamParser', () => {
+  // Alimenta o mesmo conteúdo em chunks de todos os tamanhos possíveis e
+  // exige resultado idêntico ao parse whole-string — fronteiras de chunk
+  // podem cair em QUALQUER ponto (inclusive entre \r e \n ou dentro de "").
+  function parseChunked(content: string, chunkSize: number): string[][] {
+    const rows: string[][] = []
+    const parser = createCsvStreamParser((row) => rows.push(row))
+    for (let i = 0; i < content.length; i += chunkSize) {
+      parser.push(content.slice(i, i + chunkSize))
+    }
+    parser.flush()
+    return rows
+  }
+
+  it('é equivalente a parseCsv para qualquer fronteira de chunk', () => {
+    const csv =
+      '"COD";"DESC";"VALOR"\r\n"95";"linha com\nquebra e ""aspas""";"15879,55"\r\na;b\n\n"";x\n'
+    const expected = parseCsv(csv)
+    for (let size = 1; size <= csv.length; size++) {
+      expect(parseChunked(csv, size), `chunkSize=${size}`).toEqual(expected)
+    }
+  })
+
+  it('emite a última linha no flush quando o arquivo não termina em newline', () => {
+    const rows: string[][] = []
+    const parser = createCsvStreamParser((row) => rows.push(row))
+    parser.push('a;b\nc;')
+    parser.push('d')
+    expect(rows).toEqual([['a', 'b']])
+    parser.flush()
+    expect(rows).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ])
+  })
+})
+
+describe('createCsvRecordStream', () => {
+  it('usa a primeira linha como header e emite records incrementais', () => {
+    const records: Array<Record<string, string>> = []
+    const skipped: number[] = []
+    const stream = createCsvRecordStream(
+      (record) => records.push(record),
+      (_row, index) => skipped.push(index),
+    )
+    stream.push('"ANO";"SQ"\n"2022";"110001595906"\n"quebrado"\n"2014";"7"')
+    stream.flush()
+    expect(records).toEqual([
+      { ANO: '2022', SQ: '110001595906' },
+      { ANO: '2014', SQ: '7' },
+    ])
+    expect(skipped).toEqual([2])
   })
 })
 

@@ -354,6 +354,19 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 1,
       timeoutMin: 30,
     },
+    // Colégio eleitoral municipal (ADR-065): votos por município dos
+    // parlamentares vinculados. tier 2: lê tse_candidatura.parlamentar_id
+    // que o tse-bens (tier 1) acabou de repor via DELETE+INSERT no mesmo run.
+    // 3 zips nacionais (~500-600MB cada) processados em streaming; anos
+    // isolados. Também grava o total do pleito em qt_votos_nominais.
+    {
+      id: 'tse-votacao-municipal',
+      script: 'ingest:tse:votacao-municipal',
+      context: 'ingestion-tse-votacao-municipal',
+      cadence: 'monthly',
+      tier: 2,
+      timeoutMin: 45,
+    },
     // Lideranças partidárias e institucionais (ADR-056): quase-estáticas,
     // mudam raramente dentro de uma legislatura → mensal. tier 0: dependem
     // apenas de parlamentar populado (ingestão diária de runs anteriores).

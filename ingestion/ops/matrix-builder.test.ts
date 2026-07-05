@@ -70,7 +70,10 @@ describe('buildTierMatrices', () => {
       'senado-afastamentos',
       'senado-cargos',
     ])
-    expect(tiers[2].map((e) => e.id)).toEqual(['senado-backfill-cpf'])
+    expect(tiers[2].map((e) => e.id)).toEqual([
+      'tse-votacao-municipal',
+      'senado-backfill-cpf',
+    ])
   })
 
   it('cadência sem entradas no registry retorna []', () => {
