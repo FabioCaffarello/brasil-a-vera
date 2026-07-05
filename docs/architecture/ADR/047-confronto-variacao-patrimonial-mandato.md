@@ -1,8 +1,8 @@
 # ADR-047: Confronto de variação patrimonial real durante o mandato (percentil vs pares)
 
 > Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-06-22
-> Status: proposed
+> Última atualização: 2026-07-02
+> Status: accepted
 
 > Confronto do eixo patrimônio (Eixo 2), sobre a trajetória da Camada B
 > ([ADR-036](036-correcao-monetaria-patrimonio.md) — correção IPCA). Reusa a
