@@ -29,6 +29,7 @@ import {
   GitBranch,
   Inbox,
   Landmark,
+  MapPin,
   MessageSquare,
   Network,
   PieChart,
@@ -46,6 +47,7 @@ import { Top5Afinidade } from '@/components/parlamentar/afinidade-voto'
 import { AlinhamentoBancada } from '@/components/parlamentar/alinhamento'
 import { AlinhamentoBlocos } from '@/components/parlamentar/alinhamento-blocos'
 import { CandidaturasEleitorais } from '@/components/parlamentar/candidaturas-eleitorais'
+import { ColegioEleitoral } from '@/components/parlamentar/colegio-eleitoral'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { Discursos } from '@/components/parlamentar/discursos'
@@ -83,6 +85,7 @@ import {
   getCoerenciaStats,
   getParesContraditoriosCached,
 } from '@/lib/queries/coerencia'
+import { getColegioEleitoral } from '@/lib/queries/colegio-eleitoral'
 import { getComissoesParlamentar } from '@/lib/queries/comissoes'
 import {
   CursorProposicoesV1,
@@ -300,6 +303,7 @@ export default async function ParlamentarPerfilPage({
     vetosStats,
     mandatosExternos,
     candidaturas,
+    colegioEleitoral,
     topTemasProposicoes,
     liderancasHistoricas,
     blocosComposicao,
@@ -393,6 +397,7 @@ export default async function ParlamentarPerfilPage({
     // Candidaturas TSE: vínculo via CPF (L2). Câmara 100% + Senado 88,9%.
     // Retorna array vazio quando sem vínculo; seção omitida quando vazio.
     getCandidaturasByParlamentar(parlamentar.id),
+    getColegioEleitoral(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
     getLiderancasHistoricas(parlamentar.id),
     // Composição dos blocos Gov/Oposição: Câmara-only (fonte ADR-040).
@@ -707,6 +712,21 @@ export default async function ParlamentarPerfilPage({
               'Candidaturas declaradas ao TSE vinculadas por CPF. Mostra em quais eleições o parlamentar concorreu, a que cargo e o resultado.',
             navIcon: <Vote className="h-4 w-4" />,
             content: <CandidaturasEleitorais candidaturas={candidaturas} />,
+          },
+        ]
+      : []),
+    // Fail-closed (ADR-065): sem candidatura vinculada ou sem votos por
+    // município ingeridos, a seção não existe — sem empty state.
+    ...(colegioEleitoral.length > 0
+      ? [
+          {
+            id: 'colegio-eleitoral',
+            navLabel: 'Colégio eleitoral',
+            title: 'Colégio eleitoral',
+            subtitle:
+              'De quais municípios vieram os votos do parlamentar em cada pleito, segundo a votação nominal oficial do TSE. Agregação determinística com critério explícito; a eleição é por circunscrição estadual — o recorte municipal é informativo.',
+            navIcon: <MapPin className="h-4 w-4" />,
+            content: <ColegioEleitoral pleitos={colegioEleitoral} />,
           },
         ]
       : []),
