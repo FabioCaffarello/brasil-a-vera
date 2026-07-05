@@ -46,3 +46,6 @@ runs:
         webhook-url: ${{ inputs.webhook-url }}
         github-token: ${{ inputs.github-token }}
         context: ${{ inputs.context }}
+        # Jobs de ingestão têm auto-retry-once (ingestion-retry.yml, #701):
+        # falha da attempt 1 é re-sorteio de runner, não incidente.
+        skip-first-attempt: 'true'
