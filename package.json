@@ -70,6 +70,7 @@
     "ingest:camara:presenca-comissoes": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/presenca-comissoes.ts",
     "ingest:senado:discursos": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/discursos.ts",
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",
+    "ingest:tse:votacao-municipal": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/votacao-municipal.ts",
     "seed:agregados:parlamentar": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-parlamentar.ts",
     "seed:agregados:proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-proposicao.ts",
     "smoke": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/smoke.ts",

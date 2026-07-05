@@ -81,6 +81,44 @@ export const tseCandidatura = eleitoralSchema.table(
   ],
 )
 
+// Colégio eleitoral municipal (ADR-065): votos nominais por município dos
+// parlamentares vinculados. Persistimos o top-20 municípios por candidatura
+// por pleito (a UI usa 5; o denominador do % de concentração é o total do
+// pleito em tse_candidatura.qt_votos_nominais, atualizado pela mesma
+// ingestão a partir da soma integral do CSV — mesma fonte L1).
+// Relação LÓGICA via (ano_eleicao, sq_candidato), sem FK física — tse-bens
+// repõe candidaturas por DELETE+INSERT (ver nota no topo do arquivo).
+export const votoCandidatoMunicipio = eleitoralSchema.table(
+  'voto_candidato_municipio',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    anoEleicao: integer('ano_eleicao').notNull(),
+    sqCandidato: bigint('sq_candidato', { mode: 'number' }).notNull(),
+    // CD_MUNICIPIO do TSE normalizado (sem zeros à esquerda — 2014 traz
+    // "01120", 2022 traz 1139; a forma canônica evita duplicata fantasma).
+    municipioTseCodigo: text('municipio_tse_codigo').notNull(),
+    municipioNome: text('municipio_nome').notNull(),
+    uf: char('uf', { length: 2 }).notNull(),
+    // Soma das zonas eleitorais do município (o CSV é por município+zona).
+    qtVotosNominais: integer('qt_votos_nominais').notNull(),
+    trustLevel: trustLevel('trust_level').notNull(),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (table) => [
+    // Chave natural — base da idempotência (DELETE-by-ano + INSERT).
+    uniqueIndex('voto_candidato_municipio_ano_sq_mun_unique').on(
+      table.anoEleicao,
+      table.sqCandidato,
+      table.municipioTseCodigo,
+    ),
+  ],
+)
+
 export const tseBemCandidato = eleitoralSchema.table(
   'tse_bem_candidato',
   {
