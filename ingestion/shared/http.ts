@@ -27,6 +27,31 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// undici esconde a causa real de "fetch failed" (ECONNRESET, ETIMEDOUT,
+// ENOTFOUND, TLS...) em `error.cause`, e os scripts logam só `err.message` —
+// o incidente #688-#698 ficou indiagnosticável por isso. Achata a cadeia de
+// causas numa mensagem única.
+function describeFetchError(err: unknown): string {
+  const parts: string[] = []
+  let current: unknown = err
+  for (let depth = 0; current instanceof Error && depth < 4; depth++) {
+    const code =
+      'code' in current && typeof current.code === 'string'
+        ? current.code
+        : undefined
+    const message =
+      current.message || (current instanceof AggregateError ? '' : current.name)
+    parts.push(
+      code && !message.includes(code) ? `${message} [${code}]` : message,
+    )
+    current =
+      current instanceof AggregateError && current.errors.length > 0
+        ? current.errors[0]
+        : current.cause
+  }
+  return parts.filter((p) => p.length > 0).join(' <- ')
+}
+
 export async function fetchWithRetry(
   url: string,
   options: FetchOptions = {},
@@ -81,7 +106,10 @@ export async function fetchWithRetry(
         await sleep(RETRY_DELAYS_MS[attempt])
         continue
       }
-      throw err
+      if (err instanceof HttpFetchError) {
+        throw err
+      }
+      throw new HttpFetchError(describeFetchError(err), undefined, url)
     }
   }
   throw lastError ?? new HttpFetchError('Exhausted retries', undefined, url)
