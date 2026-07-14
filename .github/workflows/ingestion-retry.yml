@@ -14,6 +14,14 @@ name: Ingestão — retry de jobs falhos
 # com run_attempt == 2, que não passa no guard. Falhou de novo na attempt 2 →
 # notify-failure cria o incidente normalmente (a supressão da attempt 1 fica
 # em .github/actions/notify-failure, opt-in via skip-first-attempt).
+#
+# Cobre também conclusion == 'cancelled' (gap descoberto em 2026-07-14, run
+# 29352712666): job morto por timeout-minutes conclui como 'cancelled' — e o
+# timeout é exatamente como a lentidão do firewall do leg.br se manifesta
+# quando os fetches degradam em vez de falhar (backoff acumulado estoura o
+# limite do job). Guard no step: run cancelado SEM nenhum job de ingestão
+# bem-sucedido é tratado como cancelamento deliberado do operador e NÃO é
+# ressuscitado; timeout pontual sempre convive com jobs irmãos verdes.
 
 on:
   workflow_run:
@@ -30,7 +38,8 @@ jobs:
   rerun-failed:
     name: Re-executar jobs falhos (attempt 2)
     if: >-
-      github.event.workflow_run.conclusion == 'failure' &&
+      (github.event.workflow_run.conclusion == 'failure' ||
+       github.event.workflow_run.conclusion == 'cancelled') &&
       github.event.workflow_run.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -39,6 +48,19 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
+          if [ "${CONCLUSION}" = "cancelled" ]; then
+            # Timeout-cancel pontual convive com jobs irmãos verdes;
+            # cancelamento deliberado do run inteiro, não. Sem nenhum job
+            # de sucesso, respeita a decisão do operador e não ressuscita.
+            SUCESSOS=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs?per_page=100" \
+              --jq '[.jobs[] | select(.conclusion == "success")] | length')
+            if [ "${SUCESSOS}" -eq 0 ]; then
+              echo "Run ${RUN_ID} cancelado sem nenhum job verde — cancelamento deliberado, sem retry."
+              exit 0
+            fi
+            echo "Run ${RUN_ID} cancelado com ${SUCESSOS} jobs verdes — assinatura de timeout pontual."
+          fi
           echo "Re-executando jobs falhos do run ${RUN_ID} (${{ github.event.workflow_run.html_url }})"
           gh api -X POST "repos/${{ github.repository }}/actions/runs/${RUN_ID}/rerun-failed-jobs"
