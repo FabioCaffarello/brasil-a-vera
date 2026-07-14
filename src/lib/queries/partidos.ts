@@ -362,7 +362,11 @@ export async function getFiliacoesRecentes(
     `partido:filiacoes-recentes:${sigla}:n=${limit}`,
     TTL.partidoOverview,
     async () => {
-      const corte = sql`NOW() - INTERVAL '365 days'`
+      // Parênteses obrigatórios: sem eles o ::date liga no literal INTERVAL
+      // (precedência do Postgres) → "cannot cast type interval to date".
+      // Regressão do #660 que derrubou /partidos/[sigla] com 500 em prod,
+      // mascarada pelo deploy sempre-vermelho (âncora órfã, fix #725).
+      const corte = sql`(NOW() - INTERVAL '365 days')::date`
 
       const entradas = await db
         .select({
@@ -381,7 +385,7 @@ export async function getFiliacoesRecentes(
         .where(
           and(
             eq(filiacaoPartidaria.partidoSigla, sigla),
-            gte(filiacaoPartidaria.dataInicio, sql`${corte}::date`),
+            gte(filiacaoPartidaria.dataInicio, corte),
           ),
         )
         .orderBy(desc(filiacaoPartidaria.dataInicio))
@@ -405,10 +409,10 @@ export async function getFiliacoesRecentes(
           and(
             eq(filiacaoPartidaria.partidoSigla, sigla),
             or(
-              gte(filiacaoPartidaria.dataFim, sql`${corte}::date`),
+              gte(filiacaoPartidaria.dataFim, corte),
               isNotNull(filiacaoPartidaria.dataFim),
             ),
-            gte(filiacaoPartidaria.dataFim, sql`${corte}::date`),
+            gte(filiacaoPartidaria.dataFim, corte),
           ),
         )
         .orderBy(desc(filiacaoPartidaria.dataFim))
