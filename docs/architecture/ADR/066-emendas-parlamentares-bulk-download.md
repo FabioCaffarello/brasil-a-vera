@@ -1,8 +1,9 @@
 # ADR-066: Emendas parlamentares via bulk download do Portal da Transparência
 
-> Brasil a Vera · Arquitetura · v0.1
+> Brasil a Vera · Arquitetura · v0.2
 > Última atualização: 2026-07-14
-> Status: proposed
+> Status: **accepted** (aceito pelo owner em 2026-07-14, com gate de
+> validação Fase B cumprido — probes A+B com output literal neste ADR)
 
 ---
 
