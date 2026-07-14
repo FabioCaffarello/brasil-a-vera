@@ -367,6 +367,19 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 2,
       timeoutMin: 45,
     },
+    // Emendas parlamentares (ADR-066): bulk download da CGU sem token,
+    // 1 zip de 32MB processado em streaming. tier 0: depende apenas de
+    // parlamentar populado (ingestão diária de runs anteriores) — o vínculo
+    // autor→parlamentar é por nome oficial (fail-closed), não por
+    // candidatura TSE.
+    {
+      id: 'cgu-emendas',
+      script: 'ingest:cgu:emendas',
+      context: 'ingestion-cgu-emendas',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 20,
+    },
     // Lideranças partidárias e institucionais (ADR-056): quase-estáticas,
     // mudam raramente dentro de uma legislatura → mensal. tier 0: dependem
     // apenas de parlamentar populado (ingestão diária de runs anteriores).
