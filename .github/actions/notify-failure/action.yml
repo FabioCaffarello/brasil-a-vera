@@ -12,11 +12,21 @@ inputs:
   context:
     description: Stable identifier for this job (e.g. "ingestion-camara-deputados"). Used as dedupe key for the incident issue.
     required: true
+  skip-first-attempt:
+    description: >-
+      Quando "true", suprime Discord + issue se github.run_attempt == 1.
+      Para jobs cobertos pelo auto-retry (ingestion-retry.yml, issue #701):
+      a 1ª falha é re-executada em runner novo (novo IP); só a falha da
+      attempt 2 vira incidente. Default "false" — workflows sem auto-retry
+      (alertas-cron, lgpd-cron) notificam na primeira falha como sempre.
+    required: false
+    default: 'false'
 
 runs:
   using: composite
   steps:
     - name: Notify Discord
+      if: inputs.skip-first-attempt != 'true' || github.run_attempt != '1'
       shell: bash
       env:
         WEBHOOK_URL: ${{ inputs.webhook-url }}
@@ -40,6 +50,7 @@ runs:
           || echo "Discord notification failed (non-fatal)" >&2
 
     - name: Create or update incident issue
+      if: inputs.skip-first-attempt != 'true' || github.run_attempt != '1'
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}

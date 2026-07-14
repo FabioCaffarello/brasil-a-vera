@@ -1,0 +1,44 @@
+name: Ingestão — retry de jobs falhos
+
+# Auto-retry-once dos workflows de ingestão (issue #701).
+#
+# Causa raiz diagnosticada em 2026-07-05: o firewall do leg.br dropa
+# silenciosamente conexões (UND_ERR_CONNECT_TIMEOUT — SYN sem resposta) de
+# parte do pool de IPs do GitHub Actions. Sucesso de um job depende do IP
+# sorteado pelo runner; TODOS os fetches de um runner bloqueado falham.
+# Consequência: retry DENTRO do job é inócuo (mesmo IP); re-run do JOB
+# aloca runner novo → novo sorteio de IP. Este workflow re-executa os jobs
+# falhos (e seus dependentes cancelados) UMA única vez.
+#
+# Anti-loop: `run_attempt == 1` — o re-run gera um novo evento workflow_run
+# com run_attempt == 2, que não passa no guard. Falhou de novo na attempt 2 →
+# notify-failure cria o incidente normalmente (a supressão da attempt 1 fica
+# em .github/actions/notify-failure, opt-in via skip-first-attempt).
+
+on:
+  workflow_run:
+    workflows:
+      - Ingestão diária
+      - Ingestão semanal
+      - Ingestão mensal
+    types: [completed]
+
+permissions:
+  actions: write
+
+jobs:
+  rerun-failed:
+    name: Re-executar jobs falhos (attempt 2)
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Rerun failed jobs of ${{ github.event.workflow_run.name }} #${{ github.event.workflow_run.run_number }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          echo "Re-executando jobs falhos do run ${RUN_ID} (${{ github.event.workflow_run.html_url }})"
+          gh api -X POST "repos/${{ github.repository }}/actions/runs/${RUN_ID}/rerun-failed-jobs"
