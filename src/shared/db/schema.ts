@@ -6,6 +6,7 @@
 export * from '@/modules/discursos/domain/schema'
 export * from '@/modules/eleitoral/domain/schema'
 export * from '@/modules/gastos/domain/schema'
+export * from '@/modules/orcamento/domain/schema'
 export * from '@/modules/parlamentares/domain/schema'
 export * from '@/modules/proposicoes/domain/schema'
 export * from '@/modules/usuario/domain/schema'

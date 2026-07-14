@@ -267,6 +267,13 @@
       "when": 1783389600000,
       "tag": "0037_voto_candidato_municipio",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1784027913901,
+      "tag": "0038_emenda_parlamentar",
+      "breakpoints": true
     }
   ]
 }
