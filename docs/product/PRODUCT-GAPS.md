@@ -26,7 +26,7 @@ Esforço estimado: **P** = < 1 sprint, **M** = 1–2 sprints, **G** = wave intei
 |-----|--------|-----------|---------|
 | Custo do gabinete (comissionados) no perfil | pendente — fontes das casas confirmadas por probe (2026-07-14, E2), **sem token**; vínculo Câmara determinístico via `uriLotacao` | [ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | M |
 | Colégio eleitoral municipal no perfil | **entregue** (PRs #714/#715, Sprint 14.1) | [ADR-065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | — |
-| Emendas parlamentares (destino do dinheiro) | pendente — ADR-066 proposto; probe Fases A+B verdes (gate de aceite cumprido) | [ADR-066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) | M |
+| Emendas parlamentares (destino do dinheiro) | pendente — **ADR-066 aceito (2026-07-14)**; pronto para implementação (Sprint 14.2) | [ADR-066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) | M |
 | Alertas por e-mail quando parlamentar vota X | pendente — infra Resend/follows existe; falta o produtor de eventos | [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) · Wave 15 | P/M |
 | Página de metodologia pública (`/metodologia`) | pendente — obrigatória antes dos confrontos compostos | Sprint 6.5 → Wave 14.3 | P |
 | Gráfico de grafo legislativo interativo | pendente | issue #96 · Wave 16 | G |
@@ -108,7 +108,7 @@ Os 6 ADRs `proposed` da v1.0 deste doc (043/045/046/047/048/050) foram todos
 |-----|---------|-------------|---------------------|
 | [064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | Comissionados de gabinete | Ingestão (fontes das casas, E2) + seção "Gabinete"; probe Actions dos hosts das casas antes do PR | **Nenhuma** (fontes abertas sem token) |
 | [065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | Colégio eleitoral municipal | ✅ **Entregue** (PRs #714/#715) | — |
-| [066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) (proposed, gate cumprido) | Emendas parlamentares | Aceite do owner → ingestão + UI | **Nenhuma** (bulk sem token) |
+| [066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) (**aceito 2026-07-14**) | Emendas parlamentares | Ingestão + UI (Sprint 14.2) | **Nenhuma** (bulk sem token) |
 | ADR-067 (a redigir) | CEIS/CNEP × fornecedores CEAP | ADR → ingestão + confronto (probe Fases A+B verdes) | **Nenhuma** (bulk sem token) |
 
 ---
