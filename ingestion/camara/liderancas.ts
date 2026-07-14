@@ -4,7 +4,11 @@ import { liderancaCargo, parlamentar } from '@/shared/db/schema'
 import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
 import { db } from '../shared/db'
 import { fetchJson, paginate } from './camara-client'
-import { type LiderancaCargoRow, mapLiderCamara } from './liderancas-mapper'
+import {
+  dedupeLiderancas,
+  type LiderancaCargoRow,
+  mapLiderCamara,
+} from './liderancas-mapper'
 import { camaraLiderSchema, camaraPartidoSchema } from './liderancas-schema'
 
 // Ingere líderes e vice-líderes de partidos da Câmara na legislatura atual.
@@ -118,6 +122,9 @@ export async function ingestLiderancasCamara(): Promise<LiderancasStats> {
     await sleep(PACING_MS)
   }
 
+  // Mesma proteção do Senado (issue #727): fonte pode repetir o cargo.
+  const rowsUnicos = dedupeLiderancas(rows)
+
   // Substituição atômica: apaga lideranças CAMARA da legislatura atual e
   // reinsere o conjunto completo (princípio 5). Captura saídas de liderança
   // que um ON CONFLICT DO UPDATE não removeria.
@@ -130,12 +137,12 @@ export async function ingestLiderancasCamara(): Promise<LiderancasStats> {
           eq(liderancaCargo.legislatura, LEGISLATURA_ATUAL),
         ),
       )
-    if (rows.length > 0) {
-      await tx.insert(liderancaCargo).values(rows)
+    if (rowsUnicos.length > 0) {
+      await tx.insert(liderancaCargo).values(rowsUnicos)
     }
   })
 
-  stats.lideresUpserted = rows.length
+  stats.lideresUpserted = rowsUnicos.length
   return stats
 }
 
