@@ -27,6 +27,7 @@ import {
   FileText,
   Gavel,
   GitBranch,
+  HandCoins,
   Inbox,
   Landmark,
   MapPin,
@@ -51,6 +52,7 @@ import { ColegioEleitoral } from '@/components/parlamentar/colegio-eleitoral'
 import { ComissoesMembro } from '@/components/parlamentar/comissoes-membro'
 import { CompartilharButton } from '@/components/parlamentar/compartilhar-button'
 import { Discursos } from '@/components/parlamentar/discursos'
+import { Emendas } from '@/components/parlamentar/emendas'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
@@ -92,6 +94,7 @@ import {
   CursorVotosV1,
 } from '@/lib/queries/cursor-schemas'
 import { getDiscursosParlamentar } from '@/lib/queries/discursos'
+import { getEmendas } from '@/lib/queries/emendas'
 import {
   getFidelidadeBancada,
   getFidelidadeOrientacao,
@@ -304,6 +307,7 @@ export default async function ParlamentarPerfilPage({
     mandatosExternos,
     candidaturas,
     colegioEleitoral,
+    emendas,
     topTemasProposicoes,
     liderancasHistoricas,
     blocosComposicao,
@@ -398,6 +402,9 @@ export default async function ParlamentarPerfilPage({
     // Retorna array vazio quando sem vínculo; seção omitida quando vazio.
     getCandidaturasByParlamentar(parlamentar.id),
     getColegioEleitoral(parlamentar.id),
+    // Emendas individuais (ADR-066): vínculo por nome fail-closed — array
+    // vazio quando o parlamentar não é autor vinculado; seção omitida.
+    getEmendas(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
     getLiderancasHistoricas(parlamentar.id),
     // Composição dos blocos Gov/Oposição: Câmara-only (fonte ADR-040).
@@ -727,6 +734,22 @@ export default async function ParlamentarPerfilPage({
               'De quais municípios vieram os votos do parlamentar em cada pleito, segundo a votação nominal oficial do TSE. Agregação determinística com critério explícito; a eleição é por circunscrição estadual — o recorte municipal é informativo.',
             navIcon: <MapPin className="h-4 w-4" />,
             content: <ColegioEleitoral pleitos={colegioEleitoral} />,
+          },
+        ]
+      : []),
+    // Fail-closed (ADR-066): sem emenda individual vinculada por nome, a
+    // seção não existe — sem empty state. Ex-parlamentares autores de emendas
+    // antigas fora do banco também ficam de fora, por desenho.
+    ...(emendas.length > 0
+      ? [
+          {
+            id: 'emendas',
+            navLabel: 'Emendas',
+            title: 'Emendas parlamentares',
+            subtitle:
+              'Para onde o parlamentar indicou recursos do orçamento federal via emendas individuais, por ano e município de destino, segundo o Portal da Transparência (CGU). A indicação de emendas é prerrogativa constitucional — os valores são fatos orçamentários, sem juízo.',
+            navIcon: <HandCoins className="h-4 w-4" />,
+            content: <Emendas anos={emendas} />,
           },
         ]
       : []),
