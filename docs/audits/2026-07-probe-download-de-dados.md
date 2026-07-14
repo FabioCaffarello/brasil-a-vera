@@ -7,8 +7,9 @@
 > ([planejamento](2026-07-wave14-planejamento.md) §4, sprints 14.0/14.2 e
 > probe do ADR-067). Motivado pelo blocker do token (HTTP 401 no probe de
 > 2026-07-05) e pela [auditoria de produto](2026-07-auditoria-produto.md).
-> Status: **Fase A executada** (rede residencial) · Fase B a executar
-> (GitHub Actions) · Fase C a executar (fonte de comissionados).
+> Status: **Fases A, B e C executadas** (A: rede residencial 2026-07-14;
+> B: GitHub Actions run 29304740420, 3/3 verdes; C: fontes das casas
+> confirmadas — ver §Fase C).
 
 ---
 
@@ -109,35 +110,78 @@ fonte, não de acesso. → [Emenda no ADR-064](../architecture/ADR/064-comission
 
 ---
 
-## Fase B — origem GitHub Actions (a executar)
+## Fase B — origem GitHub Actions (executada 2026-07-14) ✅
 
-Lição da #701: o firewall de uma fonte pode bloquear parte do pool de IPs
-dos runners (caso `leg.br`). A infra CGU é distinta (Serpro/CloudFront),
-mas a aprovação final da fonte exige probe da origem real.
+Workflow [`probe-portal-transparencia.yml`](../../.github/workflows/probe-portal-transparencia.yml)
+executado pós-merge do PR #720 (run **29304740420**): **3/3 attempts
+verdes** (runners/IPs distintos), sem assinatura `UND_ERR_CONNECT_TIMEOUT`.
+Output literal (attempt 1; 2 e 3 idênticos em status):
 
-- **Como:** workflow [`probe-portal-transparencia.yml`](../../.github/workflows/probe-portal-transparencia.yml)
-  (`workflow_dispatch`, matrix de 3 attempts = 3 runners/IPs distintos;
-  resolve o 302 e baixa o primeiro 1 MB de emendas/CEIS/CNEP com timing).
-- **Critério:** 3/3 attempts com HTTP 200/206 e sem assinatura
-  `UND_ERR_CONNECT_TIMEOUT` → fonte aprovada. Falha parcial → mesma
-  classe de problema da #701; mitigação já existente (auto-retry #716).
-- **Registro:** colar output literal dos 3 jobs no ADR-066 (e no futuro
-  ADR-067) antes do PR de ingestão.
-- Lembrete operacional: workflow novo só é dispatchável **após merge na
-  main** (limitação do GitHub, registrada no harness).
+```
+CEIS/CNEP: snapshot mais recente = 20260713
+emendas: HTTP 206 | 1048576B | 0.055324s | …/saida/emendas-parlamentares/EmendasParlamentares.zip
+ceis:    HTTP 206 | 1048576B | 1.552783s | …/saida/ceis/20260713_CEIS.zip
+cnep:    HTTP 206 |  192089B | 1.142434s | …/saida/cnep/20260713_CNEP.zip
+```
 
-## Fase C — fonte real de comissionados (a executar, pré-requisito da Sprint 14.0)
+**Critério satisfeito** — fonte CGU aprovada da origem real de ingestão.
+Output colado no ADR-066 (gate de aceitação cumprido).
 
-O probe muda de alvo para as folhas das próprias casas:
+## Fase C — fonte real de comissionados (executada 2026-07-14) ✅
 
-| Alvo | O que verificar |
-|---|---|
-| Dados Abertos da Câmara (pessoal/secretários parlamentares) | Existe arquivo/endpoint com vínculo gabinete→deputado + remuneração? URL estável? Cadência? |
-| Transparência do Senado (RH) | Idem para gabinetes de senadores |
+O probe nas folhas das próprias casas **encontrou fonte aberta nas duas**,
+com perfis espelhados invertidos:
 
-Mesma mecânica da Fase A: URL, header literal, presença do vínculo e da
-remuneração, tamanho, freshness. Só depois o ADR-064 é revisado com a
-fonte real; **sem probe verde, a Sprint 14.0 não entra**.
+### C.1 Câmara — `dadosabertos.camara.leg.br/arquivos/funcionarios` ✅
+
+CSV/JSON públicos, sem token (`/arquivos/funcionarios/csv/funcionarios.csv`,
+3,4 MB, 15.425 linhas; dataset irmão `servidores` com 15.228). Grupos:
+**10.591 "Secretário Parlamentar"**, 2.597 efetivos, 1.705 CNE, 531
+parlamentares. Amostra literal:
+
+```
+"P_263202";"6";"Secretário Parlamentar";"ABDOU SADDI WARESS";"SP09C";
+"GAB. 4/511 - CÉLIO SILVEIRA";"LEI";"2026-02-18";…;
+"https://dadosabertos.camara.leg.br/api/v2/deputados/178876"
+```
+
+- **Vínculo determinístico**: coluna `uriLotacao` aponta o **ID do
+  deputado na API v2** — sem heurística de nome (melhor que o desenho
+  original do ADR-064, que dependia de CPF+Siape).
+- Nível do cargo presente (`SP09C`, `CNE07`…); **remuneração em R$ não
+  está no dataset** — os níveis SP/CNE têm tabela remuneratória oficial
+  publicada pela Câmara (valor fixo por nível → custo derivável como L2
+  com fórmula pública) ou fase 1 exibe contagem + cargos sem R$.
+
+### C.2 Senado — `adm.senado.gov.br/adm-dadosabertos` (API administrativa aberta) ✅
+
+OpenAPI pública (`/v3/api-docs`), sem token. Endpoints relevantes:
+
+- `/api/v1/servidores/servidores/comissionados` (+ `/csv`) — **14.505
+  itens** (inclui histórico/desligados), lotação estruturada:
+
+```json
+{"nome":"ABENILIO AIRES CIRQUEIRA","vinculo":"COMISSIONADO","situacao":"DESLIGADO",
+ "lotacao":{"sigla":"GSIZALCI","nome":"Gabinete do Senador Izalci Lucas"},
+ "categoria":{"codigo":"CARGO EM COMISSÃO"},"ano_admissao":…}
+```
+
+- `/api/v1/servidores/remuneracoes/{ano}/{mes}` (+ `/csv`) — 10.853 itens
+  em 2026/05, **valores completos** (básica, função comissionada, líquida,
+  indenizatórias…), join por `sequencial`; múltiplas folhas por pessoa
+  (`tipo_folha` Normal/Suplementar → agregação por competência necessária).
+- **Vínculo por lotação**: sigla `GS…` + nome "Gabinete do Senador X" —
+  match por nome oficial do senador (fail-closed, padrão ADR-063).
+
+### Consequência
+
+A Sprint 14.0 **desbloqueia** com fontes melhores que o desenho original:
+Câmara com vínculo mais forte (ID direto) porém R$ via tabela por nível;
+Senado com R$ exato porém vínculo por nome de lotação. Sem token, sem
+Portal da Transparência. → [Emenda E2 no ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md).
+Pendência da implementação: Fase B análoga para `dadosabertos.camara.leg.br`
+e `adm.senado.gov.br` a partir dos runners (o host `adm.senado.gov.br` é
+infra `senado.gov.br` — verificar se o firewall do caso #701 o afeta).
 
 ---
 

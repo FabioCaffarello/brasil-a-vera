@@ -81,4 +81,9 @@ jobs:
             probe "cnep" "https://portaldatransparencia.gov.br/download-de-dados/cnep/${ceis_date}"
           fi
 
+          # Fase C (comissionados) — fontes das casas confirmadas em
+          # 2026-07-14; validar acesso das MESMAS origens dos runners
+          probe "camara-funcionarios" "https://dadosabertos.camara.leg.br/arquivos/funcionarios/csv/funcionarios.csv"
+          probe "senado-comissionados" "https://adm.senado.gov.br/adm-dadosabertos/api/v1/servidores/servidores/comissionados/csv"
+
           exit "$fail"
