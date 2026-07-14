@@ -37,7 +37,7 @@ export async function ingestBlocosSenado(): Promise<BlocosStats> {
     return stats
   }
 
-  const blocos = parsedLista.data.Blocos.Bloco ?? []
+  const blocos = parsedLista.data.ListaBlocoParlamentar.Blocos.Bloco ?? []
   stats.blocosFetched = blocos.length
 
   for (const blocoItem of blocos) {

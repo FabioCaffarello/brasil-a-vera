@@ -5,9 +5,12 @@ import { z } from 'zod'
 // ⚠️  XML-convertido-em-JSON: elemento repetível vem como objeto único quando
 //     há um só, array quando há vários. `oneOrMany` normaliza para array.
 //
-// Probe empírico necessário antes do merge (Princípio 13):
-//   curl https://legis.senado.leg.br/dadosabertos/senador/{id}/cargos.json
-//   e copiar amostra no PR.
+// Shape verificado empiricamente em 2026-07-14 (#727 item 3, senador 470):
+// o envelope real é `CargoParlamentar` (não `CargosExercidosParlamentar`,
+// como o schema original assumia) e o item traz a comissão em
+// `IdentificacaoComissao` + o cargo em `DescricaoCargo` — o parse falhava
+// para 81/81 senadores ("expected object, received undefined") e a fonte
+// nunca populou prod. Não há `IndicadorAtividade`; vigência = DataFim nula.
 
 const oneOrMany = <T extends z.ZodTypeAny>(schema: T) =>
   z
@@ -16,14 +19,24 @@ const oneOrMany = <T extends z.ZodTypeAny>(schema: T) =>
 
 export const senadoCargoItemSchema = z
   .object({
-    NomeCargo: z.string().min(1),
-    // Sigla do colegiado (comissão/subcomissão). Ex.: "CCJ", "CRA".
-    SiglaColegiado: z.string().min(1),
-    NomeColegiado: z.string().nullable().optional(),
+    IdentificacaoComissao: z
+      .object({
+        // Sigla do colegiado. Ex.: "CCJ", "CRA", "GPGUIANA".
+        SiglaComissao: z.string().min(1),
+        NomeComissao: z.string().nullable().optional(),
+        // "SF" | "CN" (comissões mistas/grupos do Congresso).
+        SiglaCasaComissao: z.string().nullable().optional(),
+        CodigoComissao: z
+          .union([z.string(), z.number()])
+          .transform(String)
+          .optional(),
+      })
+      .passthrough(),
+    // Ex.: "PRESIDENTE", "VICE-PRESIDENTE", "MEMBRO", "TITULAR", "SUPLENTE".
+    DescricaoCargo: z.string().min(1),
+    CodigoCargo: z.union([z.string(), z.number()]).transform(String).optional(),
     DataInicio: z.string().nullable().optional(),
     DataFim: z.string().nullable().optional(),
-    // "Sim" = vigente, "Não" = encerrado.
-    IndicadorAtividade: z.string().nullable().optional(),
   })
   .passthrough()
 
@@ -31,7 +44,7 @@ export type SenadoCargoItem = z.infer<typeof senadoCargoItemSchema>
 
 export const senadoCargosEnvelopeSchema = z
   .object({
-    CargosExercidosParlamentar: z
+    CargoParlamentar: z
       .object({
         Parlamentar: z
           .object({
