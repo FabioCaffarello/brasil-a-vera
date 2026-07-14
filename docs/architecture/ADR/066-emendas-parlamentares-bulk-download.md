@@ -212,6 +212,23 @@ emenda ou por janela de anos — decisão no PR com números literais
 | Total por ano / top 5 municípios | **L2** | Agregação determinística sobre L1, condicionada ao vínculo L3 |
 | Confronto emendas × colégio eleitoral | **L2** | Cálculo determinístico com fórmula pública em `/metodologia` |
 
+## Validação Fase B — origem GitHub Actions (2026-07-14)
+
+Workflow `probe-portal-transparencia.yml` executado pós-merge do PR #720
+(run 29304740420): **3/3 attempts verdes**, runners distintos, sem
+assinatura `UND_ERR_CONNECT_TIMEOUT`. Output literal (attempt 1; 2 e 3
+idênticos em status):
+
+```
+CEIS/CNEP: snapshot mais recente = 20260713
+emendas: HTTP 206 | 1048576B | 0.055324s | https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/emendas-parlamentares/EmendasParlamentares.zip
+ceis:    HTTP 206 | 1048576B | 1.552783s | https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/ceis/20260713_CEIS.zip
+cnep:    HTTP 206 |  192089B | 1.142434s | https://dadosabertos-download.cgu.gov.br/PortalDaTransparencia/saida/cnep/20260713_CNEP.zip
+```
+
+O gate de aceitação deste ADR (Riscos §3) está satisfeito — a fonte é
+alcançável da origem real de ingestão.
+
 ## Riscos e pontos abertos
 
 1. **Ponte município TSE↔IBGE**: `voto_candidato_municipio` (ADR-065)
@@ -223,8 +240,8 @@ emenda ou por janela de anos — decisão no PR com números literais
 2. **Autor "Sem informação"** em anos antigos (2014 verificado): cobertura
    por ano deve ser exibida com honestidade (empty state por ano, não
    silêncio).
-3. **Fase B pendente**: acesso a partir dos runners do Actions ainda não
-   provado (lição #701). Gate de aceitação deste ADR.
+3. ~~**Fase B pendente**~~ — **resolvido em 2026-07-14**: ver
+   [Validação Fase B](#validação-fase-b--origem-github-actions-2026-07-14).
 
 ## Não-objetivos (fora de escopo)
 

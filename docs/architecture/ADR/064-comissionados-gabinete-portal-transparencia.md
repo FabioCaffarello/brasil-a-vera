@@ -1,9 +1,10 @@
 # ADR-064: Comissionados de gabinete via Portal da Transparência (Siape)
 
-> Brasil a Vera · Arquitetura · v0.2
+> Brasil a Vera · Arquitetura · v0.3
 > Última atualização: 2026-07-14
-> Status: accepted — **fonte em revisão** (emendado 2026-07-14; implementação
-> bloqueada até probe de fonte alternativa — ver [Emenda](#emenda-2026-07-14--fonte-siape-falsificada-por-probe-empírico))
+> Status: accepted — emendado 2026-07-14 ×2: fonte SIAPE falsificada (E1) e
+> **fontes das próprias casas confirmadas por probe (E2)** — implementação
+> desbloqueada com D2 revisado
 
 ## Contexto
 
@@ -148,6 +149,51 @@ Consequências:
 - As decisões D1/D3–D5 (schema, trust level, exibição, copy) permanecem
   válidas em espírito; D2 e o vínculo via Siape serão revisados quando a
   fonte real for confirmada — via nova emenda ou ADR substituto.
+
+## Emenda E2 2026-07-14 — fontes das próprias casas confirmadas (Fase C)
+
+Probe da Fase C ([anexo](../../audits/2026-07-probe-download-de-dados.md)
+§Fase C, output literal) confirmou fonte aberta e sem token nas duas casas.
+**Implementação desbloqueada** com D2 revisado:
+
+### Câmara — `dadosabertos.camara.leg.br/arquivos/funcionarios`
+
+- CSV/JSON públicos (3,4 MB, 15.425 linhas; 10.591 no grupo "Secretário
+  Parlamentar" + 1.705 CNE).
+- **Vínculo determinístico**: coluna `uriLotacao` referencia o deputado
+  na API v2 (`/api/v2/deputados/{id}`) — dispensa CPF e heurística de
+  nome; **melhor que o desenho original** (o vínculo sobe de L2-via-CPF
+  para referência direta da própria fonte).
+- Limitação: dataset traz nível do cargo (`SP09C`, `CNE07`…) mas **não a
+  remuneração em R$**. Caminhos, a decidir no PR de implementação:
+  (a) derivar custo pela tabela remuneratória oficial da Câmara por nível
+  (L2, fórmula pública); (b) fase 1 exibe contagem + lista de cargos sem
+  R$ (fail-honest). A seção "Gabinete" (D4) permanece; a copy do custo
+  segue o caminho escolhido.
+
+### Senado — `adm.senado.gov.br/adm-dadosabertos` (API administrativa aberta)
+
+- `/api/v1/servidores/servidores/comissionados` (+ `/csv`): 14.505 itens
+  (inclui desligados — filtrar `situacao`), lotação estruturada
+  `{"sigla":"GS…","nome":"Gabinete do Senador X"}`.
+- `/api/v1/servidores/remuneracoes/{ano}/{mes}` (+ `/csv`): valores
+  completos por competência, join por `sequencial`; agregar múltiplas
+  folhas (`tipo_folha` Normal/Suplementar) por pessoa/mês.
+- Vínculo por **nome do senador na lotação** — match determinístico
+  contra nome oficial com fail-closed em ambiguidade (padrão ADR-063,
+  L3); a restrição de CPF do texto original **cai** (CPF não é mais
+  necessário em nenhuma das casas).
+
+### Ajustes decorrentes
+
+- D1 (schema) ganha `casa` implícita via `orgao_exercicio` e o campo de
+  nível de cargo; chave natural revista no PR (fonte Câmara não tem
+  competência mensal — snapshot corrente; Senado tem).
+- D2 (cadência monthly) mantido; registry: `camara-comissionados` e
+  `senado-comissionados`, agora **sem secret**.
+- Gate remanescente: probe Fase B análogo para os dois hosts a partir dos
+  runners (adicionado ao `probe-portal-transparencia.yml`) — executar
+  antes do PR de ingestão.
 
 ## Referências
 
