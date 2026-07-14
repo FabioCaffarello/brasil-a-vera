@@ -49,11 +49,19 @@ export const senadoBlocoItemSchema = z
 
 export type SenadoBlocoItem = z.infer<typeof senadoBlocoItemSchema>
 
+// Envelope raiz verificado empiricamente em 2026-07-14 (#727 item 3): a
+// resposta vem embrulhada em `ListaBlocoParlamentar` (+ `Metadados`) — o
+// schema anterior esperava `Blocos` na raiz e falhava o parse de TODO run
+// ("expected object, received undefined") desde a troca do endpoint.
 export const senadoBlocosListaSchema = z
   .object({
-    Blocos: z
+    ListaBlocoParlamentar: z
       .object({
-        Bloco: oneOrMany(senadoBlocoItemSchema).optional(),
+        Blocos: z
+          .object({
+            Bloco: oneOrMany(senadoBlocoItemSchema).optional(),
+          })
+          .passthrough(),
       })
       .passthrough(),
   })
