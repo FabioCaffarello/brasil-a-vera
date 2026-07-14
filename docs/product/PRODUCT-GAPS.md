@@ -1,8 +1,9 @@
 # Product Gaps — Brasil a Vera
 
-> Brasil a Vera · Produto · v1.1
-> Última atualização: 2026-07-05 (revalidação prod pós-reset Neon; base do
-> planejamento Waves 14–16 em [docs/audits/2026-07-wave14-planejamento.md](../audits/2026-07-wave14-planejamento.md))
+> Brasil a Vera · Produto · v1.2
+> Última atualização: 2026-07-14 (probe bulk CGU: ADR-066 proposto sem token;
+> fonte do ADR-064 falsificada — ver [docs/audits/2026-07-probe-download-de-dados.md](../audits/2026-07-probe-download-de-dados.md);
+> auditoria de produto em [docs/audits/2026-07-auditoria-produto.md](../audits/2026-07-auditoria-produto.md))
 > Status: living document — atualizar ao fechar cada sprint
 
 Inventário honesto do que o produto **ainda não entrega** vs. o que está
@@ -23,9 +24,9 @@ Esforço estimado: **P** = < 1 sprint, **M** = 1–2 sprints, **G** = wave intei
 
 | Gap | Estado | Referência | Esforço |
 |-----|--------|-----------|---------|
-| Custo do gabinete (comissionados) no perfil | pendente — Wave 14 | [ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) | M |
-| Colégio eleitoral municipal no perfil | pendente — Wave 14 | [ADR-065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | M |
-| Emendas parlamentares (destino do dinheiro) | pendente — probe → ADR-066 | Wave 14 (planejamento) | M |
+| Custo do gabinete (comissionados) no perfil | **bloqueado** — fonte SIAPE falsificada por probe (2026-07-14); aguarda probe das fontes das casas | [ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado) | M |
+| Colégio eleitoral municipal no perfil | **entregue** (PRs #714/#715, Sprint 14.1) | [ADR-065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | — |
+| Emendas parlamentares (destino do dinheiro) | pendente — ADR-066 proposto (bulk sem token; Fase B do probe pendente) | [ADR-066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) | M |
 | Alertas por e-mail quando parlamentar vota X | pendente — infra Resend/follows existe; falta o produtor de eventos | [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) · Wave 15 | P/M |
 | Página de metodologia pública (`/metodologia`) | pendente — obrigatória antes dos confrontos compostos | Sprint 6.5 → Wave 14.3 | P |
 | Gráfico de grafo legislativo interativo | pendente | issue #96 · Wave 16 | G |
@@ -40,7 +41,7 @@ partidária (ADR-043), presença em votações (ADR-045).
 
 | Gap | Estado | Referência | Esforço |
 |-----|--------|-----------|---------|
-| Confronto CEIS/CNEP × fornecedores CEAP | pendente — probe → ADR-067 | Wave 14/16 (planejamento) | M |
+| Confronto CEIS/CNEP × fornecedores CEAP | pendente — probe de fonte verde (bulk diário sem token, 2026-07-14) → ADR-067 a redigir | Wave 14/16 (planejamento) | M |
 | API pública REST documentada (OpenAPI) | pendente | issue #98 | G |
 | Bulk export em Parquet (DuckDB/Pandas-friendly) | pendente | issue #58 · Wave 16 | M |
 | Doações de campanha (TSE `receitas_candidato`) | **descartado — decisão do owner (2026-07-05)** | planejamento Wave 14 §8 | — |
@@ -84,8 +85,8 @@ Contagens **verificadas contra Neon prod em 2026-07-05** (pós-reset de quota;
 | **Afastamentos de senadores** | **0 rows em prod** (ADR-058) | popular | idem |
 | **Blocos partidários** | **0 rows em prod** (ADR-056) | popular | idem |
 | Bens declarados TSE | 99.283 rows (2014/2018/2022) | + pleitos históricos | baixa prioridade |
-| Comissionados de gabinete | 0 (fonte nova) | mensal | ADR-064 aguarda implementação (Wave 14) |
-| Votação candidato×município TSE | 0 (fonte nova) | 3 pleitos | ADR-065 aguarda implementação (Wave 14) |
+| Comissionados de gabinete | 0 (fonte nova) | mensal | ADR-064 em revisão de fonte (SIAPE falsificado 2026-07-14) |
+| Votação candidato×município TSE | ingestão entregue (PR #714) | 3 pleitos | popular prod (depende de cron monthly verde) |
 | Vetos presidenciais | 184 vetos, 27.556 votos | 100% | — |
 
 > ⚠️ **Achado da revalidação (2026-07-05):** as tabelas em negrito acima têm
@@ -105,10 +106,10 @@ Os 6 ADRs `proposed` da v1.0 deste doc (043/045/046/047/048/050) foram todos
 
 | ADR | Feature | O que falta | Dependência externa |
 |-----|---------|-------------|---------------------|
-| [064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) | Comissionados de gabinete | Ingestão + seção "Gabinete" no perfil | Token `chave-api-dados` (GitHub Secret) |
-| [065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | Colégio eleitoral municipal | Ingestão + seção "Colégio eleitoral" | Nenhuma (infra TSE existe) |
-| ADR-066 (a redigir) | Emendas parlamentares | Probe empírico da API → ADR → ingestão + UI | Token idem ADR-064 |
-| ADR-067 (a redigir) | CEIS/CNEP × fornecedores CEAP | Probe empírico → ADR → ingestão + confronto | Token idem ADR-064 |
+| [064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) | Comissionados de gabinete | **Revisão de fonte** (SIAPE falsificado 2026-07-14) → ingestão + seção "Gabinete" | Probe das fontes das casas (Fase C) |
+| [065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | Colégio eleitoral municipal | ✅ **Entregue** (PRs #714/#715) | — |
+| [066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) (proposed) | Emendas parlamentares | Aceite + Fase B do probe (Actions) → ingestão + UI | **Nenhuma** (bulk sem token) |
+| ADR-067 (a redigir) | CEIS/CNEP × fornecedores CEAP | Fase B do probe → ADR → ingestão + confronto | **Nenhuma** (bulk sem token) |
 
 ---
 
