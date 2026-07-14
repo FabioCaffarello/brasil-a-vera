@@ -93,10 +93,16 @@ const OG_ROUTES = [
 // Strings âncora que precisam aparecer no HTML da home — guarda contra
 // regressão silenciosa de cards removidos do JSX (audit pré-3.2 mostrou
 // que status HTTP-only não pega esse caso). Sprint 3.1 hygiene.
+// ATENÇÃO: mudou o copy dos cards da home? Atualize AQUI no mesmo PR —
+// a âncora órfã de 'A plataforma em números' (CardStats removido no #344)
+// deixou o deploy vermelho por ~2 meses sem ninguém notar (0 sucessos nos
+// últimos 100 runs quando detectado, 2026-07-14). Deploy sempre-vermelho
+// esconde regressão real.
 const HOME_CARDS_ANCHORS = [
   'Quem está no Congresso',
+  'Proposições em tramitação',
+  'Explorar por tema',
   'Votações da semana',
-  'A plataforma em números',
 ] as const
 
 // Rotas OG fixas (listagens + global). Entidades amostrais são descobertas
