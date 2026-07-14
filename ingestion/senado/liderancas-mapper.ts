@@ -54,5 +54,9 @@ export function mapLiderancasSenado(
     })
   }
 
+  // ATENÇÃO: a fonte pode repetir o mesmo cargo com dataDesignacao distintas
+  // (redesignações, issue #727) — o main aplica dedupeLiderancas antes do
+  // INSERT; aqui devolvemos 1:1 para os stats distinguirem fora-da-base de
+  // duplicata colapsada.
   return rows
 }

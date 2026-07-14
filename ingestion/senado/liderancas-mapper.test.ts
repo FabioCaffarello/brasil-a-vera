@@ -86,4 +86,17 @@ describe('mapLiderancasSenado', () => {
     const rows = mapLiderancasSenado([], 57, mapaSenadoresSimples)
     expect(rows).toHaveLength(0)
   })
+
+  // Regressão #727: a API retorna o mesmo líder com dataDesignacao
+  // distintas (redesignações) — o mapper devolve 1:1 (stats distinguem
+  // fora-da-base de duplicata); o dedupe é aplicado pelo main via
+  // dedupeLiderancas (testado em camara/liderancas-mapper.test.ts).
+  it('preserva redesignações 1:1 (dedupe é responsabilidade do main)', () => {
+    const items: SenadoLiderancaItem[] = [
+      buildItem({ dataDesignacao: '2026-04-14' }),
+      buildItem({ dataDesignacao: '2026-04-15' }),
+    ]
+    const rows = mapLiderancasSenado(items, 57, mapaSenadoresSimples)
+    expect(rows).toHaveLength(2)
+  })
 })

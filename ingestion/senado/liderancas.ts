@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { liderancaCargo, parlamentar } from '@/shared/db/schema'
 import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
+import { dedupeLiderancas } from '../camara/liderancas-mapper'
 import { db } from '../shared/db'
 import { mapLiderancasSenado } from './liderancas-mapper'
 import { senadoLiderancasSchema } from './liderancas-schema'
@@ -18,6 +19,7 @@ interface LiderancasStats {
   lideresEncontrados: number
   lideresUpserted: number
   foraBaseParlamentar: number
+  duplicatasColapsadas: number
   errors: Array<{ context: string; reason: string }>
 }
 
@@ -41,6 +43,7 @@ export async function ingestLiderancasSenado(): Promise<LiderancasStats> {
     lideresEncontrados: 0,
     lideresUpserted: 0,
     foraBaseParlamentar: 0,
+    duplicatasColapsadas: 0,
     errors: [],
   }
 
@@ -64,6 +67,11 @@ export async function ingestLiderancasSenado(): Promise<LiderancasStats> {
   stats.lideresEncontrados = sfItems.length
   stats.foraBaseParlamentar = stats.lideresEncontrados - rows.length
 
+  // Fonte repete o mesmo cargo com dataDesignacao distintas (redesignações,
+  // issue #727) — sem dedupe o INSERT viola lideranca_cargo_natural_key.
+  const rowsUnicos = dedupeLiderancas(rows)
+  stats.duplicatasColapsadas = rows.length - rowsUnicos.length
+
   await db.transaction(async (tx) => {
     await tx
       .delete(liderancaCargo)
@@ -73,12 +81,12 @@ export async function ingestLiderancasSenado(): Promise<LiderancasStats> {
           eq(liderancaCargo.legislatura, LEGISLATURA_ATUAL),
         ),
       )
-    if (rows.length > 0) {
-      await tx.insert(liderancaCargo).values(rows)
+    if (rowsUnicos.length > 0) {
+      await tx.insert(liderancaCargo).values(rowsUnicos)
     }
   })
 
-  stats.lideresUpserted = rows.length
+  stats.lideresUpserted = rowsUnicos.length
   return stats
 }
 
@@ -93,6 +101,7 @@ ingestLiderancasSenado()
         lideresEncontrados: stats.lideresEncontrados,
         lideresUpserted: stats.lideresUpserted,
         foraBaseParlamentar: stats.foraBaseParlamentar,
+        duplicatasColapsadas: stats.duplicatasColapsadas,
         errorsCount: stats.errors.length,
         errorsSample: stats.errors.slice(0, 10),
       }),
