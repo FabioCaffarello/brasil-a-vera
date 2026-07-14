@@ -1,8 +1,9 @@
 # ADR-064: Comissionados de gabinete via Portal da Transparência (Siape)
 
-> Brasil a Vera · Arquitetura · v0.1
-> Última atualização: 2026-07-02
-> Status: accepted
+> Brasil a Vera · Arquitetura · v0.2
+> Última atualização: 2026-07-14
+> Status: accepted — **fonte em revisão** (emendado 2026-07-14; implementação
+> bloqueada até probe de fonte alternativa — ver [Emenda](#emenda-2026-07-14--fonte-siape-falsificada-por-probe-empírico))
 
 ## Contexto
 
@@ -122,6 +123,31 @@ comparativo contextual. O dado bruto é exibido; percentil vs mediana da casa
   gabinete pessoal do parlamentar.
 - Histórico multi-ano de comissionados de mandatos anteriores.
 - Percentil ou ranking comparativo entre gabinetes (incremento futuro).
+
+## Emenda 2026-07-14 — fonte SIAPE falsificada por probe empírico
+
+Probe do bulk `202605_Servidores_SIAPE.zip` (mesma base que alimenta a API
+`/servidores`) executado em 2026-07-14 — output literal em
+[docs/audits/2026-07-probe-download-de-dados.md](../../audits/2026-07-probe-download-de-dados.md)
+§A.5. Resultado: no `Cadastro.csv` (milhões de linhas), apenas **93
+ocorrências** de Câmara/Senado — todas servidores do **Executivo**
+cedidos ou em exercício nas casas (procuradores/advogados da AGU,
+requisitados). **Secretários parlamentares não constam do SIAPE**: a
+folha dos gabinetes é gerida pelas próprias casas legislativas e não é
+publicada no Portal da Transparência federal.
+
+Consequências:
+
+- A premissa de fonte deste ADR ("Fonte:
+  `api-de-dados/servidores`, filtro `orgaoExercicio` CD/SF") está
+  **falsificada** — o filtro retornaria só cedidos do Executivo, não o
+  gabinete. O 401 do token mascarava um problema de fonte, não de acesso.
+- **Implementação (Sprint 14.0) bloqueada** até probe das fontes das
+  próprias casas (Fase C do plano de probe): Dados Abertos da Câmara
+  (secretários parlamentares por gabinete) e Transparência do Senado (RH).
+- As decisões D1/D3–D5 (schema, trust level, exibição, copy) permanecem
+  válidas em espírito; D2 e o vínculo via Siape serão revisados quando a
+  fonte real for confirmada — via nova emenda ou ADR substituto.
 
 ## Referências
 

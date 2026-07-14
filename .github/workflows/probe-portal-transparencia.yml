@@ -1,0 +1,84 @@
+name: Probe download-de-dados (CGU)
+
+# Probe empírico (princípio 13) da fonte bulk do Portal da Transparência
+# a partir dos runners do GitHub Actions — Fase B do plano em
+# docs/audits/2026-07-probe-download-de-dados.md.
+#
+# Motivação: os incidentes #701 provaram que o firewall de uma fonte pode
+# bloquear parte do pool de IPs do Actions (caso leg.br). Antes de aprovar
+# a fonte para ingestão (ADR-066 / futuro ADR-067), validar o acesso da
+# origem real. Matrix de 3 attempts = 3 runners/IPs distintos.
+#
+# Sem secrets: a fonte é pública, sem token. Output literal dos 3 jobs
+# deve ser colado no ADR correspondente.
+#
+# Ciclo de vida: remover este workflow quando as ingestões cgu-* estiverem
+# em produção estável (ele é instrumento de probe, não de operação).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: probe-portal-transparencia
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe attempt ${{ matrix.attempt }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3]
+    steps:
+      - name: Resolve redirect e baixa 1 MB de cada dataset
+        run: |
+          set -u
+          fail=0
+
+          probe() {
+            local label="$1" url="$2" final out
+            final=$(curl -sIL -o /dev/null -w '%{url_effective}' --max-time 60 "$url") || {
+              echo "::error::${label}: falha ao resolver redirect de ${url}"
+              fail=1
+              return
+            }
+            out=$(curl -s -o /dev/null -w 'HTTP %{http_code} | %{size_download}B | %{time_total}s' \
+              --max-time 120 -r 0-1048575 "$final") || {
+              echo "::error::${label}: download parcial falhou (${final})"
+              fail=1
+              return
+            }
+            echo "${label}: ${out} | ${final}"
+            case "$out" in
+              "HTTP 200"*|"HTTP 206"*) ;;
+              *) echo "::error::${label}: status inesperado"; fail=1 ;;
+            esac
+          }
+
+          # CEIS/CNEP usam arquivo datado: tenta ontem e recua até 5 dias
+          ceis_date=""
+          for i in 1 2 3 4 5; do
+            d=$(date -u -d "-${i} day" +%Y%m%d)
+            code=$(curl -sIL -o /dev/null -w '%{http_code}' --max-time 60 \
+              "https://portaldatransparencia.gov.br/download-de-dados/ceis/${d}")
+            if [ "$code" = "200" ]; then ceis_date="$d"; break; fi
+          done
+          if [ -z "$ceis_date" ]; then
+            echo "::error::CEIS: nenhum snapshot encontrado nos últimos 5 dias"
+            fail=1
+          else
+            echo "CEIS/CNEP: snapshot mais recente = ${ceis_date}"
+          fi
+
+          probe "emendas" "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO"
+          if [ -n "$ceis_date" ]; then
+            probe "ceis" "https://portaldatransparencia.gov.br/download-de-dados/ceis/${ceis_date}"
+            probe "cnep" "https://portaldatransparencia.gov.br/download-de-dados/cnep/${ceis_date}"
+          fi
+
+          exit "$fail"
