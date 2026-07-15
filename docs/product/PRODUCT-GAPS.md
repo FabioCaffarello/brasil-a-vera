@@ -28,7 +28,7 @@ Esforço estimado: **P** = < 1 sprint, **M** = 1–2 sprints, **G** = wave intei
 | Colégio eleitoral municipal no perfil | **entregue** (PRs #714/#715, Sprint 14.1) | [ADR-065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | — |
 | Emendas parlamentares (destino do dinheiro) | **implementado** (Sprint 14.2, PR #723 + PR UI); dado em prod depende do primeiro cron monthly verde | [ADR-066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) | — |
 | Alertas por e-mail quando parlamentar vota X | pendente — infra Resend/follows existe; falta o produtor de eventos | [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) · Wave 15 | P/M |
-| Página de metodologia pública (`/metodologia`) | pendente — obrigatória antes dos confrontos compostos | Sprint 6.5 → Wave 14.3 | P |
+| Página de metodologia pública | **entregue** (Sprint 14.3) — `/docs/metodologia` consolidada (12 seções, smoke probe); confronto emendas×colégio publicado no perfil com fórmula documentada | Sprint 6.5 → Wave 14.3 | — |
 | Gráfico de grafo legislativo interativo | pendente | issue #96 · Wave 16 | G |
 | Índice de coerência completo com ranking | pendente | [COHERENCE-ENGINE.md](../future/COHERENCE-ENGINE.md) · Wave 16 | G |
 
@@ -62,7 +62,7 @@ partidária (ADR-043), presença em votações (ADR-045).
 |-----|--------|-----------|---------|
 | Dataset bulk em Parquet via R2 | pendente | issue #58 · Wave 16 | M |
 | Série histórica completa (todas as legislaturas) | parcial | Eixo 2 tem 3 pleitos; votações cobertura ~2 anos | — |
-| Metodologia pública detalhada | pendente | Wave 14.3 | P |
+| Metodologia pública detalhada | **entregue** (Sprint 14.3) — `/docs/metodologia`; export CSV de emendas com trust_level+source_url por linha | Wave 14.3 | — |
 
 ---
 

@@ -74,6 +74,7 @@ import { VariacaoPatrimonialBlock } from '@/components/parlamentar/variacao-patr
 import { VetosSenador } from '@/components/parlamentar/vetos-senador'
 import { VotacoesComissao } from '@/components/parlamentar/votacoes-comissao'
 import { VotosRecentes } from '@/components/parlamentar/votos-recentes'
+import { canExport } from '@/lib/auth-guards'
 import { decodeCursor } from '@/lib/cursor'
 import { formatBRL, formatPercentil } from '@/lib/format'
 import { getAfastamentosAtivosSenador } from '@/lib/queries/afastamentos'
@@ -271,6 +272,9 @@ export default async function ParlamentarPerfilPage({
   const temaPropos = sp.propos_tema ? Number(sp.propos_tema) : undefined
 
   const anoCorrente = new Date().getFullYear()
+  // Export = autenticação (auth-guards): anônimo não recebe o HTML do botão.
+  // A rota já é dynamic (ƒ) — auth() aqui não muda o modo de render.
+  const podeExportar = await canExport()
   const [
     votosPage,
     votosDistribuicao,
@@ -824,7 +828,17 @@ export default async function ParlamentarPerfilPage({
             subtitle:
               'Para onde o parlamentar indicou recursos do orçamento federal via emendas individuais, por ano e município de destino, segundo o Portal da Transparência (CGU). A indicação de emendas é prerrogativa constitucional — os valores são fatos orçamentários, sem juízo.',
             navIcon: <HandCoins className="h-4 w-4" />,
-            content: <Emendas anos={emendas} confronto={confrontoEmendas} />,
+            content: (
+              <Emendas
+                anos={emendas}
+                confronto={confrontoEmendas}
+                exportHref={
+                  podeExportar
+                    ? `/api/export/emendas?parlamentar=${parlamentar.id}`
+                    : undefined
+                }
+              />
+            ),
           },
         ]
       : []),
