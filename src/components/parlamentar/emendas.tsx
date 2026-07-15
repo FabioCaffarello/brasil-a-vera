@@ -1,6 +1,8 @@
+import Link from 'next/link'
+
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { formatBRL } from '@/lib/format'
-import type { EmendasAno } from '@/lib/queries/emendas'
+import type { ConfrontoEmendasColegio, EmendasAno } from '@/lib/queries/emendas'
 
 // Emendas parlamentares (ADR-066 §D5): totais do ano mais recente com top-5
 // municípios de destino em barras de proporção; anos anteriores em <details>
@@ -11,6 +13,8 @@ import type { EmendasAno } from '@/lib/queries/emendas'
 
 interface Props {
   anos: EmendasAno[]
+  /** Confronto emendas×colégio (ADR-066 D5); null/ausente = sem colégio. */
+  confronto?: ConfrontoEmendasColegio | null
 }
 
 // Municípios chegam MAIÚSCULOS da CGU (mesma convenção do TSE).
@@ -112,7 +116,55 @@ function AnoEmendas({ ano }: { ano: EmendasAno }) {
   )
 }
 
-export function Emendas({ anos }: Props) {
+// Confronto composto (ADR-066 D5), padrão do bloco de variação patrimonial
+// (ADR-047): frase factual + percentual em destaque + nota de recorte.
+// Copy neutra: aderência à base é prerrogativa esperada, não irregularidade.
+function ConfrontoColegio({
+  confronto,
+}: {
+  confronto: ConfrontoEmendasColegio
+}) {
+  const pct =
+    (confronto.centavosEmpenhadoNoColegio /
+      confronto.centavosEmpenhadoComMunicipio) *
+    100
+  return (
+    <div className="rounded-md border border-line-default bg-surface-elevated px-4 py-3">
+      <p className="text-fg-secondary text-sm">
+        Dos{' '}
+        <span className="tabular-nums">
+          {reais(confronto.centavosEmpenhadoComMunicipio)}
+        </span>{' '}
+        empenhados em emendas com município de destino identificado,{' '}
+        <strong className="text-fg-primary tabular-nums">
+          {pct.toLocaleString('pt-BR', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+          %
+        </strong>{' '}
+        foram para municípios entre os 20 maiores do colégio eleitoral de{' '}
+        {confronto.anoPleito} ({confronto.municipiosNoColegio} de{' '}
+        {confronto.municipiosComDestino} municípios de destino).
+      </p>
+      <p className="mt-1.5 text-fg-tertiary text-xs">
+        A legislação permite — e se espera — que emendas individuais atendam a
+        base eleitoral: é contexto factual, não acusação. Recorte usa os 20
+        maiores municípios do colégio; o percentual real pode ser maior, nunca
+        menor.{' '}
+        <Link
+          className="underline decoration-dotted underline-offset-2 hover:text-fg-secondary"
+          href="/docs/metodologia#confronto-emendas-colegio"
+        >
+          Fórmula na metodologia
+        </Link>
+        .
+      </p>
+    </div>
+  )
+}
+
+export function Emendas({ anos, confronto }: Props) {
   const [maisRecente, ...anteriores] = anos
 
   return (
@@ -125,6 +177,8 @@ export function Emendas({ anos }: Props) {
           fail-closed).
         </span>
       </div>
+
+      {confronto && <ConfrontoColegio confronto={confronto} />}
 
       <AnoEmendas ano={maisRecente} />
 
