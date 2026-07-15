@@ -164,6 +164,11 @@ function logCacheError(event: string, key: string, err: unknown): void {
 //   3. Se `caches.default` não existe (Node/dev/CI), chama loader direto.
 //   4. Valor cacheado é JSON-roundtripped: `Date` vira string ISO no
 //      consumo. Caller é responsável pela conversão se precisar de Date.
+//      ⚠️ NUNCA retorne `Map`/`Set` do loader: JSON.stringify(new Map())
+//      é `{}` — funciona no MISS e explode no HIT ("get is not a function"),
+//      e o bypass em dev/CI (garantia 3) esconde o bug até produção
+//      (perfis truncados em prod por 1 mês — frentes:name-to-id, sprint 26).
+//      Retorne entries/arrays e reconstrua a estrutura FORA do cached().
 //   5. Erro do `loader` propaga; nada é cacheado.
 export async function cached<T>(
   key: string,
