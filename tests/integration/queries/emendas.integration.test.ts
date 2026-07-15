@@ -2,11 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/shared/db', () => import('../setup/db'))
 
-import { getEmendas } from '@/lib/queries/emendas'
+import { getConfrontoEmendasColegio, getEmendas } from '@/lib/queries/emendas'
+import {
+  tseCandidatura,
+  votoCandidatoMunicipio,
+} from '@/modules/eleitoral/domain/schema'
 import { emendaParlamentar } from '@/modules/orcamento/domain/schema'
 import { parlamentar } from '@/modules/parlamentares/domain/schema'
+import { buildVotoMunicipio } from '../fixtures/colegio'
 import { buildEmenda } from '../fixtures/emendas'
 import { buildParlamentar } from '../fixtures/parlamentares'
+import { buildTseCandidatura } from '../fixtures/patrimonio'
 import { db } from '../setup/db'
 import { truncateAll } from '../setup/truncate'
 
@@ -112,5 +118,142 @@ describe('queries/emendas (integration)', () => {
       .values(buildEmenda({ parlamentarId: p2.id as string }))
 
     expect(await getEmendas(p1.id as string)).toEqual([])
+  })
+})
+
+describe('queries/emendas getConfrontoEmendasColegio (integration)', () => {
+  beforeEach(async () => {
+    await truncateAll()
+  })
+
+  async function seedColegio(
+    parlamentarId: string,
+    municipios: Array<{ nome: string; uf: string }>,
+  ) {
+    const cand = buildTseCandidatura({ parlamentarId })
+    await db.insert(tseCandidatura).values(cand)
+    await db.insert(votoCandidatoMunicipio).values(
+      municipios.map((m) =>
+        buildVotoMunicipio({
+          sqCandidato: cand.sqCandidato as number,
+          municipioNome: m.nome,
+          uf: m.uf,
+        }),
+      ),
+    )
+  }
+
+  it('null quando não há colégio ou não há emendas com município', async () => {
+    const p = buildParlamentar()
+    await db.insert(parlamentar).values(p)
+    const pid = p.id as string
+
+    // Sem colégio, mesmo com emendas.
+    await db
+      .insert(emendaParlamentar)
+      .values(buildEmenda({ parlamentarId: pid }))
+    expect(await getConfrontoEmendasColegio(pid)).toBeNull()
+
+    // Com colégio, mas só emendas sem município.
+    await seedColegio(pid, [{ nome: 'BELO HORIZONTE', uf: 'MG' }])
+    await db.delete(emendaParlamentar)
+    await db.insert(emendaParlamentar).values(
+      buildEmenda({
+        parlamentarId: pid,
+        localidade: 'MÚLTIPLO',
+        municipioIbgeCodigo: null,
+        municipioNome: null,
+        uf: null,
+      }),
+    )
+    expect(await getConfrontoEmendasColegio(pid)).toBeNull()
+  })
+
+  it('casa municípios por nome normalizado + UF (ponte TSE↔IBGE)', async () => {
+    const p = buildParlamentar()
+    await db.insert(parlamentar).values(p)
+    const pid = p.id as string
+    // Colégio com acento; emenda sem acento — a ponte deve casar.
+    await seedColegio(pid, [
+      { nome: 'BRASÍLIA', uf: 'DF' },
+      { nome: 'CONTAGEM', uf: 'MG' },
+    ])
+    await db.insert(emendaParlamentar).values([
+      buildEmenda({
+        parlamentarId: pid,
+        codigoEmenda: '202600030001',
+        localidade: 'BRASILIA - DF',
+        municipioIbgeCodigo: '5300108',
+        municipioNome: 'BRASILIA',
+        uf: 'DF',
+        valorEmpenhado: '75000.00',
+        valorPago: '50000.00',
+      }),
+      // Mesmo nome, UF diferente — NÃO casa (fail-closed).
+      buildEmenda({
+        parlamentarId: pid,
+        codigoEmenda: '202600030002',
+        localidade: 'CONTAGEM - XX',
+        municipioIbgeCodigo: '9999999',
+        municipioNome: 'CONTAGEM',
+        uf: 'SP',
+        valorEmpenhado: '25000.00',
+        valorPago: '0.00',
+      }),
+    ])
+
+    const confronto = await getConfrontoEmendasColegio(pid)
+    expect(confronto).not.toBeNull()
+    expect(confronto?.anoPleito).toBe(2022)
+    expect(confronto?.centavosEmpenhadoComMunicipio).toBe(10000000)
+    expect(confronto?.centavosEmpenhadoNoColegio).toBe(7500000)
+    expect(confronto?.centavosPagoNoColegio).toBe(5000000)
+    expect(confronto?.municipiosComDestino).toBe(2)
+    expect(confronto?.municipiosNoColegio).toBe(1)
+  })
+
+  it('usa o pleito mais recente quando há mais de um colégio', async () => {
+    const p = buildParlamentar()
+    await db.insert(parlamentar).values(p)
+    const pid = p.id as string
+
+    const cand2018 = buildTseCandidatura({
+      parlamentarId: pid,
+      anoEleicao: 2018,
+    })
+    const cand2022 = buildTseCandidatura({
+      parlamentarId: pid,
+      anoEleicao: 2022,
+    })
+    await db.insert(tseCandidatura).values([cand2018, cand2022])
+    await db.insert(votoCandidatoMunicipio).values([
+      buildVotoMunicipio({
+        sqCandidato: cand2018.sqCandidato as number,
+        anoEleicao: 2018,
+        municipioNome: 'SANTOS',
+        uf: 'SP',
+      }),
+      buildVotoMunicipio({
+        sqCandidato: cand2022.sqCandidato as number,
+        anoEleicao: 2022,
+        municipioNome: 'CAMPINAS',
+        uf: 'SP',
+      }),
+    ])
+    // Emenda para o município do colégio ANTIGO — não casa com o de 2022.
+    await db.insert(emendaParlamentar).values(
+      buildEmenda({
+        parlamentarId: pid,
+        localidade: 'SANTOS - SP',
+        municipioIbgeCodigo: '3548500',
+        municipioNome: 'SANTOS',
+        uf: 'SP',
+      }),
+    )
+
+    const confronto = await getConfrontoEmendasColegio(pid)
+    expect(confronto?.anoPleito).toBe(2022)
+    expect(confronto?.centavosEmpenhadoNoColegio).toBe(0)
+    expect(confronto?.municipiosNoColegio).toBe(0)
   })
 })

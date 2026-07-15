@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import type { EmendasAno } from '@/lib/queries/emendas'
+import type { ConfrontoEmendasColegio, EmendasAno } from '@/lib/queries/emendas'
 import { Emendas } from './emendas'
 
 function ano(overrides: Partial<EmendasAno> = {}): EmendasAno {
@@ -80,5 +80,34 @@ describe('Emendas', () => {
     expect(
       screen.getByText(/sem\s+município específico na fonte/),
     ).toBeDefined()
+  })
+
+  describe('confronto emendas×colégio (ADR-066 D5)', () => {
+    const confronto: ConfrontoEmendasColegio = {
+      anoPleito: 2022,
+      centavosEmpenhadoComMunicipio: 10000000,
+      centavosEmpenhadoNoColegio: 7500000,
+      centavosPagoComMunicipio: 6000000,
+      centavosPagoNoColegio: 5000000,
+      municipiosNoColegio: 3,
+      municipiosComDestino: 8,
+    }
+
+    it('exibe o percentual e o recorte com copy neutra', () => {
+      render(<Emendas anos={[ano()]} confronto={confronto} />)
+      expect(screen.getByText('75,0%')).toBeDefined()
+      expect(
+        screen.getByText(/20\s+maiores do colégio eleitoral de\s+2022/),
+      ).toBeDefined()
+      expect(screen.getByText(/não acusação/)).toBeDefined()
+      expect(
+        screen.getByRole('link', { name: /Fórmula na metodologia/ }),
+      ).toBeDefined()
+    })
+
+    it('sem confronto, o bloco não existe (fail-closed)', () => {
+      render(<Emendas anos={[ano()]} confronto={null} />)
+      expect(screen.queryByText(/colégio eleitoral de/)).toBeNull()
+    })
   })
 })

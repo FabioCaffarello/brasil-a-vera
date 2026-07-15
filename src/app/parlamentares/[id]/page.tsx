@@ -94,7 +94,7 @@ import {
   CursorVotosV1,
 } from '@/lib/queries/cursor-schemas'
 import { getDiscursosParlamentar } from '@/lib/queries/discursos'
-import { getEmendas } from '@/lib/queries/emendas'
+import { getConfrontoEmendasColegio, getEmendas } from '@/lib/queries/emendas'
 import {
   getFidelidadeBancada,
   getFidelidadeOrientacao,
@@ -308,6 +308,7 @@ export default async function ParlamentarPerfilPage({
     candidaturas,
     colegioEleitoral,
     emendas,
+    confrontoEmendas,
     topTemasProposicoes,
     liderancasHistoricas,
     blocosComposicao,
@@ -405,6 +406,8 @@ export default async function ParlamentarPerfilPage({
     // Emendas individuais (ADR-066): vínculo por nome fail-closed — array
     // vazio quando o parlamentar não é autor vinculado; seção omitida.
     getEmendas(parlamentar.id),
+    // Confronto emendas×colégio (ADR-066 D5): null quando falta um dos lados.
+    getConfrontoEmendasColegio(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
     getLiderancasHistoricas(parlamentar.id),
     // Composição dos blocos Gov/Oposição: Câmara-only (fonte ADR-040).
@@ -709,50 +712,6 @@ export default async function ParlamentarPerfilPage({
           },
         ]
       : []),
-    ...(candidaturas.length > 0
-      ? [
-          {
-            id: 'candidaturas-tse',
-            navLabel: 'Eleições',
-            title: 'Histórico eleitoral',
-            subtitle:
-              'Candidaturas declaradas ao TSE vinculadas por CPF. Mostra em quais eleições o parlamentar concorreu, a que cargo e o resultado.',
-            navIcon: <Vote className="h-4 w-4" />,
-            content: <CandidaturasEleitorais candidaturas={candidaturas} />,
-          },
-        ]
-      : []),
-    // Fail-closed (ADR-065): sem candidatura vinculada ou sem votos por
-    // município ingeridos, a seção não existe — sem empty state.
-    ...(colegioEleitoral.length > 0
-      ? [
-          {
-            id: 'colegio-eleitoral',
-            navLabel: 'Colégio eleitoral',
-            title: 'Colégio eleitoral',
-            subtitle:
-              'De quais municípios vieram os votos do parlamentar em cada pleito, segundo a votação nominal oficial do TSE. Agregação determinística com critério explícito; a eleição é por circunscrição estadual — o recorte municipal é informativo.',
-            navIcon: <MapPin className="h-4 w-4" />,
-            content: <ColegioEleitoral pleitos={colegioEleitoral} />,
-          },
-        ]
-      : []),
-    // Fail-closed (ADR-066): sem emenda individual vinculada por nome, a
-    // seção não existe — sem empty state. Ex-parlamentares autores de emendas
-    // antigas fora do banco também ficam de fora, por desenho.
-    ...(emendas.length > 0
-      ? [
-          {
-            id: 'emendas',
-            navLabel: 'Emendas',
-            title: 'Emendas parlamentares',
-            subtitle:
-              'Para onde o parlamentar indicou recursos do orçamento federal via emendas individuais, por ano e município de destino, segundo o Portal da Transparência (CGU). A indicação de emendas é prerrogativa constitucional — os valores são fatos orçamentários, sem juízo.',
-            navIcon: <HandCoins className="h-4 w-4" />,
-            content: <Emendas anos={emendas} />,
-          },
-        ]
-      : []),
     {
       id: 'relatorias',
       navLabel: 'Relatorias',
@@ -850,6 +809,53 @@ export default async function ParlamentarPerfilPage({
         </div>
       ),
     },
+    // ── Narrativa Mandato → Dinheiro → Base eleitoral → Patrimônio ──────
+    // (Sprint 14.3): emendas ficam junto de gastos (Dinheiro); eleições e
+    // colégio (Base) entram entre o Dinheiro e o Patrimônio.
+    // Fail-closed (ADR-066): sem emenda individual vinculada por nome, a
+    // seção não existe — sem empty state. Ex-parlamentares autores de emendas
+    // antigas fora do banco também ficam de fora, por desenho.
+    ...(emendas.length > 0
+      ? [
+          {
+            id: 'emendas',
+            navLabel: 'Emendas',
+            title: 'Emendas parlamentares',
+            subtitle:
+              'Para onde o parlamentar indicou recursos do orçamento federal via emendas individuais, por ano e município de destino, segundo o Portal da Transparência (CGU). A indicação de emendas é prerrogativa constitucional — os valores são fatos orçamentários, sem juízo.',
+            navIcon: <HandCoins className="h-4 w-4" />,
+            content: <Emendas anos={emendas} confronto={confrontoEmendas} />,
+          },
+        ]
+      : []),
+    ...(candidaturas.length > 0
+      ? [
+          {
+            id: 'candidaturas-tse',
+            navLabel: 'Eleições',
+            title: 'Histórico eleitoral',
+            subtitle:
+              'Candidaturas declaradas ao TSE vinculadas por CPF. Mostra em quais eleições o parlamentar concorreu, a que cargo e o resultado.',
+            navIcon: <Vote className="h-4 w-4" />,
+            content: <CandidaturasEleitorais candidaturas={candidaturas} />,
+          },
+        ]
+      : []),
+    // Fail-closed (ADR-065): sem candidatura vinculada ou sem votos por
+    // município ingeridos, a seção não existe — sem empty state.
+    ...(colegioEleitoral.length > 0
+      ? [
+          {
+            id: 'colegio-eleitoral',
+            navLabel: 'Colégio eleitoral',
+            title: 'Colégio eleitoral',
+            subtitle:
+              'De quais municípios vieram os votos do parlamentar em cada pleito, segundo a votação nominal oficial do TSE. Agregação determinística com critério explícito; a eleição é por circunscrição estadual — o recorte municipal é informativo.',
+            navIcon: <MapPin className="h-4 w-4" />,
+            content: <ColegioEleitoral pleitos={colegioEleitoral} />,
+          },
+        ]
+      : []),
     ...(patrimonio
       ? [
           {

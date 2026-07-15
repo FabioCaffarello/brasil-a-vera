@@ -1,8 +1,13 @@
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq, isNotNull } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
+import { normalizeNome } from '@/lib/normalize'
 import { db } from '@/shared/db'
-import { emendaParlamentar } from '@/shared/db/schema'
+import {
+  emendaParlamentar,
+  tseCandidatura,
+  votoCandidatoMunicipio,
+} from '@/shared/db/schema'
 
 // Emendas parlamentares (ADR-066): destino do dinheiro indicado pelo
 // parlamentar via emendas individuais ao orçamento, por ano. A tabela guarda
@@ -127,6 +132,126 @@ export async function getEmendas(parlamentarId: string): Promise<EmendasAno[]> {
             )
             .slice(0, TOP_MUNICIPIOS_EXIBIDOS),
         }))
+    },
+  )
+}
+
+// ── Confronto emendas × colégio eleitoral (ADR-066 D5) ────────────────────
+//
+// "Que fração do dinheiro indicado via emendas foi para os municípios que
+// elegeram o parlamentar?" — cálculo L2 sobre vínculos já estabelecidos.
+// Fórmula pública em /docs/metodologia#confronto-emendas-colegio (publicada
+// ANTES desta UI, exigência do planejamento da Wave 14).
+//
+// Ponte entre fontes: o TSE identifica municípios por código próprio e a CGU
+// pelo código IBGE — o casamento é por nome normalizado + UF, determinístico
+// e fail-closed (município que não casa conta no denominador, nunca no
+// numerador; emenda com município sem UF não é confrontável e fica fora dos
+// dois lados). O colégio persiste os 20 maiores municípios do pleito
+// (ADR-065 §E3) — o percentual real de aderência pode ser maior, nunca menor.
+
+export interface ConfrontoEmendasColegio {
+  /** Pleito mais recente do parlamentar com colégio persistido. */
+  anoPleito: number
+  centavosEmpenhadoComMunicipio: number
+  centavosEmpenhadoNoColegio: number
+  centavosPagoComMunicipio: number
+  centavosPagoNoColegio: number
+  /** Municípios de destino de emendas que casaram com o top-20 do colégio. */
+  municipiosNoColegio: number
+  /** Municípios distintos de destino de emendas (com UF identificada). */
+  municipiosComDestino: number
+}
+
+function chaveMunicipio(nome: string, uf: string): string {
+  return `${normalizeNome(nome)}|${uf.trim().toUpperCase()}`
+}
+
+export async function getConfrontoEmendasColegio(
+  parlamentarId: string,
+): Promise<ConfrontoEmendasColegio | null> {
+  return cached(
+    `parlamentar:confronto-emendas-colegio:${parlamentarId}`,
+    TTL.emendas,
+    async () => {
+      // Municípios do colégio do pleito mais recente (top-20 persistidos).
+      const colegioRows = await db
+        .select({
+          anoEleicao: votoCandidatoMunicipio.anoEleicao,
+          nome: votoCandidatoMunicipio.municipioNome,
+          uf: votoCandidatoMunicipio.uf,
+        })
+        .from(votoCandidatoMunicipio)
+        .innerJoin(
+          tseCandidatura,
+          and(
+            eq(tseCandidatura.anoEleicao, votoCandidatoMunicipio.anoEleicao),
+            eq(tseCandidatura.sqCandidato, votoCandidatoMunicipio.sqCandidato),
+          ),
+        )
+        .where(eq(tseCandidatura.parlamentarId, parlamentarId))
+        .orderBy(desc(votoCandidatoMunicipio.anoEleicao))
+
+      if (colegioRows.length === 0) return null
+      const anoPleito = colegioRows[0].anoEleicao
+      const colegio = new Set(
+        colegioRows
+          .filter((r) => r.anoEleicao === anoPleito)
+          .map((r) => chaveMunicipio(r.nome, r.uf)),
+      )
+
+      // Distribuição COMPLETA de emendas com município identificado (a
+      // getEmendas trunca top-5 só na exibição; aqui não há truncagem).
+      const emendasRows = await db
+        .select({
+          nome: emendaParlamentar.municipioNome,
+          uf: emendaParlamentar.uf,
+          valorEmpenhado: emendaParlamentar.valorEmpenhado,
+          valorPago: emendaParlamentar.valorPago,
+        })
+        .from(emendaParlamentar)
+        .where(
+          and(
+            eq(emendaParlamentar.parlamentarId, parlamentarId),
+            isNotNull(emendaParlamentar.municipioNome),
+            isNotNull(emendaParlamentar.uf),
+          ),
+        )
+
+      if (emendasRows.length === 0) return null
+
+      const confronto: ConfrontoEmendasColegio = {
+        anoPleito,
+        centavosEmpenhadoComMunicipio: 0,
+        centavosEmpenhadoNoColegio: 0,
+        centavosPagoComMunicipio: 0,
+        centavosPagoNoColegio: 0,
+        municipiosNoColegio: 0,
+        municipiosComDestino: 0,
+      }
+      const municipiosVistos = new Set<string>()
+      const municipiosCasados = new Set<string>()
+
+      for (const row of emendasRows) {
+        // isNotNull no WHERE garante; narrow para o type system.
+        if (row.nome === null || row.uf === null) continue
+        const chave = chaveMunicipio(row.nome, row.uf)
+        const empenhado = Math.round(Number(row.valorEmpenhado) * 100)
+        const pago = Math.round(Number(row.valorPago) * 100)
+        confronto.centavosEmpenhadoComMunicipio += empenhado
+        confronto.centavosPagoComMunicipio += pago
+        municipiosVistos.add(chave)
+        if (colegio.has(chave)) {
+          confronto.centavosEmpenhadoNoColegio += empenhado
+          confronto.centavosPagoNoColegio += pago
+          municipiosCasados.add(chave)
+        }
+      }
+
+      if (confronto.centavosEmpenhadoComMunicipio <= 0) return null
+      confronto.municipiosComDestino = municipiosVistos.size
+      confronto.municipiosNoColegio = municipiosCasados.size
+      return confronto
     },
   )
 }
