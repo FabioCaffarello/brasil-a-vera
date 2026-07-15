@@ -110,4 +110,21 @@ describe('Emendas', () => {
       expect(screen.queryByText(/colégio eleitoral de/)).toBeNull()
     })
   })
+
+  describe('export CSV (export = autenticação)', () => {
+    it('renderiza o link quando exportHref chega (usuário autenticado)', () => {
+      render(
+        <Emendas
+          anos={[ano()]}
+          exportHref="/api/export/emendas?parlamentar=x"
+        />,
+      )
+      expect(screen.getByRole('link', { name: /Exportar CSV/ })).toBeDefined()
+    })
+
+    it('sem exportHref (anônimo), o botão não existe no HTML', () => {
+      render(<Emendas anos={[ano()]} />)
+      expect(screen.queryByRole('link', { name: /Exportar CSV/ })).toBeNull()
+    })
+  })
 })

@@ -2,14 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/shared/db', () => import('./setup/db'))
 
+import { GET as exportEmendas } from '@/app/api/export/emendas/route'
 import { GET as exportParlamentares } from '@/app/api/export/parlamentares/route'
 import { GET as exportProposicoes } from '@/app/api/export/proposicoes/route'
 import { GET as exportVotos } from '@/app/api/export/votacoes/[id]/votos/route'
 import { GET as exportVotacoes } from '@/app/api/export/votacoes/route'
+import { emendaParlamentar } from '@/modules/orcamento/domain/schema'
 import { parlamentar } from '@/modules/parlamentares/domain/schema'
 import { proposicao } from '@/modules/proposicoes/domain/schema'
 import { votacao, votoNominal } from '@/modules/votacoes/domain/schema'
 
+import { buildEmenda } from './fixtures/emendas'
 import { buildParlamentar } from './fixtures/parlamentares'
 import { buildProposicao } from './fixtures/proposicoes'
 import { buildVotacao, buildVotoNominal } from './fixtures/votacoes'
@@ -370,5 +373,63 @@ describe('truncagem honesta (proposições)', () => {
     expect(res.headers.get('x-total-count')).toBe('2')
     expect(res.headers.get('x-returned-count')).toBe('2')
     expect(res.headers.get('x-truncated')).toBe('false')
+  })
+})
+
+describe('api/export/emendas (integration)', () => {
+  beforeEach(async () => {
+    await truncateAll()
+  })
+
+  it('400 sem ?parlamentar ou com id que não é uuid', async () => {
+    expect((await exportEmendas(reqFor('/api/export/emendas'))).status).toBe(
+      400,
+    )
+    expect(
+      (await exportEmendas(reqFor('/api/export/emendas?parlamentar=abc')))
+        .status,
+    ).toBe(400)
+  })
+
+  it('exporta a distribuição completa com trust_level e source_url por linha', async () => {
+    const p = buildParlamentar()
+    await db.insert(parlamentar).values(p)
+    const pid = p.id as string
+    await db.insert(emendaParlamentar).values([
+      buildEmenda({ parlamentarId: pid, codigoEmenda: '202600040001' }),
+      buildEmenda({
+        parlamentarId: pid,
+        codigoEmenda: '202600040002',
+        localidade: 'MÚLTIPLO',
+        municipioIbgeCodigo: null,
+        municipioNome: null,
+        uf: null,
+      }),
+    ])
+    // Emenda de OUTRO parlamentar não vaza.
+    const outro = buildParlamentar({ nome: 'Outro Nome' })
+    await db.insert(parlamentar).values(outro)
+    await db
+      .insert(emendaParlamentar)
+      .values(buildEmenda({ parlamentarId: outro.id as string }))
+
+    const res = await exportEmendas(
+      reqFor(`/api/export/emendas?parlamentar=${pid}`),
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-disposition')).toBe(
+      'attachment; filename="emendas.csv"',
+    )
+    expect(res.headers.get('x-total-count')).toBe('2')
+    expect(res.headers.get('x-truncated')).toBe('false')
+
+    const bytes = await bodyBytes(res)
+    expect(hasUtf8Bom(bytes)).toBe(true)
+    const text = decode(bytes)
+    expect(headerCols(text)).toContain('trust_level')
+    expect(headerCols(text)).toContain('source_url')
+    expect(dataRows(text)).toHaveLength(2)
+    expect(text).toContain('202600040001')
+    expect(text).toContain('MÚLTIPLO')
   })
 })

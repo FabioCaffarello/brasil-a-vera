@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { ExportCsvLink } from '@/components/export-csv-link'
 import { TrustBadge } from '@/components/trust/trust-badge'
 import { formatBRL } from '@/lib/format'
 import type { ConfrontoEmendasColegio, EmendasAno } from '@/lib/queries/emendas'
@@ -15,6 +16,11 @@ interface Props {
   anos: EmendasAno[]
   /** Confronto emendas×colégio (ADR-066 D5); null/ausente = sem colégio. */
   confronto?: ConfrontoEmendasColegio | null
+  /**
+   * URL do export CSV — só chega quando o usuário está autenticado
+   * (canExport() na page; export = autenticação). Ausente = sem botão.
+   */
+  exportHref?: string
 }
 
 // Municípios chegam MAIÚSCULOS da CGU (mesma convenção do TSE).
@@ -164,18 +170,19 @@ function ConfrontoColegio({
   )
 }
 
-export function Emendas({ anos, confronto }: Props) {
+export function Emendas({ anos, confronto, exportHref }: Props) {
   const [maisRecente, ...anteriores] = anos
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <TrustBadge trustLevel="L2" />
-        <span className="text-fg-tertiary text-xs">
+        <span className="flex-1 text-fg-tertiary text-xs">
           Agregação determinística sobre valores oficiais do Portal da
           Transparência (L1); vínculo autor→parlamentar por nome oficial (L3,
           fail-closed).
         </span>
+        {exportHref && <ExportCsvLink href={exportHref} label="Exportar CSV" />}
       </div>
 
       {confronto && <ConfrontoColegio confronto={confronto} />}
