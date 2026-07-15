@@ -480,7 +480,11 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       context: 'ingestion-senado-vetos',
       cadence: 'monthly',
       tier: 0,
-      timeoutMin: 30,
+      // Runtime saudável medido: 19m27s (run 29330565040, 2026-07-14). Com o
+      // teto anterior de 30, qualquer degradação de IP do leg.br (backoff
+      // acumulado nos ~600 calls) estourava o job — 3 timeout-cancels
+      // consecutivos em 2026-07-14. 60 dá folga 3× sobre o saudável.
+      timeoutMin: 60,
     },
     // Mandatos externos (carreira pré-mandato) de deputados federais (Sprint 14.0, G11).
     // Fonte: GET /deputados/{id}/mandatosExternos — TSE-verificado, não autodeclarado.
