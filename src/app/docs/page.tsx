@@ -36,6 +36,12 @@ const SUBPAGES = [
       'O que cada seção do perfil parlamentar mostra, o que ainda não cobre, e como interpretar os números.',
   },
   {
+    href: '/docs/metodologia',
+    title: 'Metodologia',
+    description:
+      'A fórmula, os parâmetros e os limites de cada número derivado — de alinhamento e coerência a patrimônio, colégio eleitoral e emendas.',
+  },
+  {
     href: '/docs/glossario',
     title: 'Glossário',
     description:

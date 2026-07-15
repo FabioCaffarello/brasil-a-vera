@@ -126,7 +126,7 @@ export default async function RankingPatrimonioPage() {
           pelo IPCA (ADR-047). Fonte: TSE — declarações de bens 2014, 2018 e
           2022. Câmara: 100%. Senado: 88,9% (9 suplentes sem registro TSE
           2014–2022 ficam de fora — ver{' '}
-          <a href="/sobre/metodologia" className="underline">
+          <a href="/docs/metodologia" className="underline">
             metodologia
           </a>
           ).

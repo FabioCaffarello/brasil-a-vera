@@ -141,6 +141,11 @@ const DOCS_ANCHORS_BY_PATH: Record<string, readonly string[]> = {
     'Top afinidade de voto',
     'Alinhamento partidário',
   ],
+  '/docs/metodologia': [
+    'Fidelidade partidária',
+    'Confronto: emendas',
+    'Pirâmide de confiança',
+  ],
   '/docs/glossario': ['Tipos de proposição', 'Tramitação'],
   '/docs/fontes': ['Princípio de rastreabilidade', 'Cobertura temporal'],
 }
