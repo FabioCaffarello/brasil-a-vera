@@ -110,11 +110,25 @@ export async function getFrenteById(id: string): Promise<FrenteDetalhe | null> {
 }
 
 // Retorna mapa nome→id para linkagem de frentes no perfil do parlamentar.
+//
+// ⚠️ O valor do `cached()` faz roundtrip por JSON no edge cache do Workers —
+// `Map` serializa como `{}` e, no cache HIT, o consumidor explodia com
+// "get is not a function", truncando o stream RSC de TODO perfil (bug latente
+// do sprint 26, mascarado pelo deploy sempre-vermelho; diagnosticado em
+// 2026-07-15 via wrangler tail). Em dev/CI não há `caches.default`, então o
+// loader roda direto e o bug nunca reproduz localmente. O loader agora
+// retorna entries JSON-safe e o Map é reconstruído FORA do cache. Chave com
+// sufixo :v2 para não ler o `{}` corrompido já gravado.
 export async function getFrentesNameToIdMap(): Promise<Map<string, string>> {
-  return cached('frentes:name-to-id', TTL.liderancas, async () => {
-    const rows = await db
-      .select({ id: frenteParlamentar.id, nome: frenteParlamentar.nome })
-      .from(frenteParlamentar)
-    return new Map(rows.map((r) => [r.nome, r.id]))
-  })
+  const entries = await cached<[string, string][]>(
+    'frentes:name-to-id:v2',
+    TTL.liderancas,
+    async () => {
+      const rows = await db
+        .select({ id: frenteParlamentar.id, nome: frenteParlamentar.nome })
+        .from(frenteParlamentar)
+      return rows.map((r) => [r.nome, r.id])
+    },
+  )
+  return new Map(entries)
 }
