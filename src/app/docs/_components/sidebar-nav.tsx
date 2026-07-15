@@ -9,6 +9,7 @@ const DOCS_NAV = [
   { href: '/docs', label: 'Visão geral' },
   { href: '/docs/piramide-de-confianca', label: 'Pirâmide de Confiança' },
   { href: '/docs/como-ler-um-perfil', label: 'Como ler um perfil' },
+  { href: '/docs/metodologia', label: 'Metodologia' },
   { href: '/docs/glossario', label: 'Glossário' },
   { href: '/docs/fontes', label: 'Fontes e cadência' },
 ] as const
