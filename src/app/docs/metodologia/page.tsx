@@ -119,6 +119,7 @@ const SECTIONS = [
   { id: 'afinidade', label: 'Afinidade de voto (Top 5)' },
   { id: 'presenca', label: 'Presença em plenário' },
   { id: 'gastos', label: 'Gastos CEAP' },
+  { id: 'gabinete', label: 'Gabinete (comissionados)' },
   { id: 'patrimonio', label: 'Patrimônio declarado' },
   { id: 'colegio', label: 'Colégio eleitoral' },
   { id: 'emendas', label: 'Emendas parlamentares' },
@@ -456,8 +457,65 @@ export default function MetodologiaPage() {
           </SubSection>
         </Section>
 
-        {/* ── 8. Patrimônio declarado ──────────────────────────────── */}
-        <Section id="patrimonio" title="8. Patrimônio declarado">
+        {/* ── 8. Gabinete (comissionados) ──────────────────────────── */}
+        <Section id="gabinete" title="8. Gabinete (comissionados)">
+          <P>
+            Servidores comissionados lotados no gabinete de cada parlamentar,
+            segundo o quadro de pessoal publicado pela própria casa. Junto com
+            os gastos CEAP e as emendas, compõe o retrato do{' '}
+            <em>custo do mandato</em>. Nomes, cargos e remunerações de
+            comissionados são públicos por força da LAI. Dados{' '}
+            <strong>L1</strong>; o custo mensal somado é <strong>L2</strong>.
+          </P>
+
+          <SubSection title="Fonte e vínculo por casa">
+            <ul className="space-y-2 text-fg-primary text-sm">
+              <li>
+                — <strong>Câmara</strong>: arquivo aberto de funcionários; o
+                vínculo com o deputado é <strong>determinístico</strong> (a
+                própria fonte referencia o gabinete pelo identificador oficial
+                do deputado). Entram secretários parlamentares e cargos de
+                natureza especial lotados em gabinete; servidores efetivos e
+                pessoal de liderança ficam fora.
+              </li>
+              <li>
+                — <strong>Senado</strong>: API administrativa aberta; o vínculo
+                é pelo <strong>nome do senador</strong> na lotação ("Gabinete do
+                Senador X", "Escritório de Apoio N do Senador X") — match por
+                nome normalizado, fail-closed em ambiguidade. Somente
+                comissionados ativos (desligados ficam fora do snapshot).
+              </li>
+            </ul>
+          </SubSection>
+
+          <SubSection title="Remuneração — recorte honesto por casa">
+            <ul className="space-y-2 text-fg-primary text-sm">
+              <li>
+                — <strong>Senado</strong>: remuneração básica da folha oficial
+                (competência mais recente publicada), somando as folhas do mês.
+                Não inclui vantagens, indenizações ou descontos. O casamento
+                comissionado↔folha é por nome normalizado (os identificadores
+                internos dos dois conjuntos não são compatíveis); homônimos na
+                folha ficam <em>sem</em> valor atribuído — nunca chutamos.
+              </li>
+              <li>
+                — <strong>Câmara</strong>: a casa publica nome, grupo e nível do
+                cargo, mas{' '}
+                <strong>não a remuneração por nível em formato aberto</strong> —
+                por isso a seção mostra o quadro sem valores. Quando houver
+                fonte estável, o custo entra como cálculo L2.
+              </li>
+            </ul>
+            <Note>
+              A nomeação de comissionados é prerrogativa do mandato prevista em
+              resolução das casas — o número de servidores e os cargos são fatos
+              administrativos, não indicativos de irregularidade.
+            </Note>
+          </SubSection>
+        </Section>
+
+        {/* ── 9. Patrimônio declarado ──────────────────────────────── */}
+        <Section id="patrimonio" title="9. Patrimônio declarado">
           <P>
             Bens declarados à Justiça Eleitoral nas candidaturas (TSE, pleitos
             de 2014, 2018 e 2022). Cada bem é <strong>L1</strong>; total,
@@ -492,7 +550,7 @@ export default function MetodologiaPage() {
         </Section>
 
         {/* ── 9. Colégio eleitoral ──────────────────────────────── */}
-        <Section id="colegio" title="9. Colégio eleitoral">
+        <Section id="colegio" title="10. Colégio eleitoral">
           <P>
             De quais municípios vieram os votos do parlamentar em cada pleito,
             segundo a votação nominal oficial do TSE (candidato × município ×
@@ -518,7 +576,7 @@ export default function MetodologiaPage() {
         </Section>
 
         {/* ── 10. Emendas parlamentares ──────────────────────────────── */}
-        <Section id="emendas" title="10. Emendas parlamentares">
+        <Section id="emendas" title="11. Emendas parlamentares">
           <P>
             Emendas individuais ao orçamento federal, conforme o Portal da
             Transparência (CGU). Valores por emenda e destino são{' '}
@@ -566,7 +624,7 @@ export default function MetodologiaPage() {
         {/* ── 11. Confronto emendas × colégio ─────────────────────── */}
         <Section
           id="confronto-emendas-colegio"
-          title="11. Confronto: emendas × colégio eleitoral"
+          title="12. Confronto: emendas × colégio eleitoral"
         >
           <P>
             Cruza duas seções do perfil para responder:{' '}
@@ -620,7 +678,7 @@ export default function MetodologiaPage() {
         </Section>
 
         {/* ── 12. Como auditar ──────────────────────────────────────── */}
-        <Section id="auditar" title="12. Como auditar">
+        <Section id="auditar" title="13. Como auditar">
           <P>
             Todo o código é aberto e auditável, e toda decisão de cálculo passa
             por validação empírica registrada em pull request com output literal
