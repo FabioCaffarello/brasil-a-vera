@@ -509,6 +509,86 @@ async function runDocsAnchorsProbe(
   }
 }
 
+// Âncoras de seção que todo perfil renderizado por inteiro contém (seções
+// incondicionais do sections[]). Regressão aqui = stream RSC abortado ou
+// seção removida do JSX sem intenção.
+const PERFIL_SECAO_ANCHORS = ['href="#votos"', 'href="#gastos"'] as const
+
+/**
+ * Probe pós-Sprint 14.3 — render completo do perfil (anti-$RX).
+ *
+ * Lição dos bugs mascarados de 2026-07: um server component que lança em
+ * runtime aborta o stream RSC com HTTP 200 e marcador `$RX(` no HTML — o
+ * perfil perde todas as seções e nenhum probe de status detecta. O caso
+ * concreto (Map dentro do cached(), sprint 26) só se manifestava no cache
+ * HIT: por isso o probe visita o MESMO perfil DUAS vezes (1ª = provável
+ * MISS, 2ª = HIT do edge cache) e exige as duas íntegras.
+ */
+async function runPerfilRenderProbe(baseUrl: string): Promise<
+  ProbeResult & {
+    failures: Array<{ label: string; reason: string }>
+  }
+> {
+  const failures: Array<{ label: string; reason: string }> = []
+  let total = 0
+  let expected = 0
+  let errors = 0
+
+  const listaHtml = await fetchHtml(`${baseUrl}/parlamentares`)
+  const parlamentarId =
+    listaHtml?.match(/href="\/parlamentares\/([0-9a-f-]{36})"/i)?.[1] ?? null
+
+  if (!parlamentarId) {
+    total = 1
+    errors = 1
+    failures.push({
+      label: 'discovery',
+      reason: 'não extraiu parlamentarId do HTML de /parlamentares',
+    })
+  } else {
+    for (const visita of ['1a-visita', '2a-visita-cache-hit'] as const) {
+      total++
+      const html = await fetchHtml(`${baseUrl}/parlamentares/${parlamentarId}`)
+      if (html === null) {
+        errors++
+        failures.push({ label: visita, reason: 'fetch falhou' })
+        continue
+      }
+      const problemas: string[] = []
+      if (html.includes('$RX(')) {
+        problemas.push('stream RSC abortado (marcador $RX no HTML)')
+      }
+      for (const anchor of PERFIL_SECAO_ANCHORS) {
+        if (!html.includes(anchor)) {
+          problemas.push(`âncora de seção ausente: ${anchor}`)
+        }
+      }
+      if (problemas.length > 0) {
+        failures.push({ label: visita, reason: problemas.join('; ') })
+      } else {
+        expected++
+      }
+    }
+  }
+
+  const unexpected = total - expected - errors
+  const successRate = total === 0 ? 0 : (expected / total) * 100
+  return {
+    name: 'perfil-render',
+    total,
+    expected,
+    unexpected,
+    errors,
+    successRate: Math.round(successRate * 100) / 100,
+    statuses: {
+      ok: expected,
+      ...(unexpected > 0 ? { broken_render: unexpected } : {}),
+      ...(errors > 0 ? { error: errors } : {}),
+    },
+    failures,
+  }
+}
+
 async function main() {
   const envResult = envSchema.safeParse(process.env)
   if (!envResult.success) {
@@ -601,6 +681,14 @@ async function main() {
   totalExpected += docsAnchorsResult.expected
   const docsAnchorsFailed = docsAnchorsResult.failures.length > 0
 
+  const perfilRenderResult = await runPerfilRenderProbe(baseUrl)
+  console.log(
+    JSON.stringify({ event: 'smoke_probe_result', ...perfilRenderResult }),
+  )
+  totalRequests += perfilRenderResult.total
+  totalExpected += perfilRenderResult.expected
+  const perfilRenderFailed = perfilRenderResult.failures.length > 0
+
   const overallSuccessRate =
     totalRequests === 0 ? 0 : (totalExpected / totalRequests) * 100
   const passed =
@@ -610,7 +698,8 @@ async function main() {
     !ogHashFailed &&
     !rssValidFailed &&
     !rssDiscoveryFailed &&
-    !docsAnchorsFailed
+    !docsAnchorsFailed &&
+    !perfilRenderFailed
 
   console.log(
     JSON.stringify({
@@ -625,6 +714,7 @@ async function main() {
       rssXmlValidFailed: rssValidFailed,
       rssDiscoveryFailed,
       docsAnchorsFailed,
+      perfilRenderFailed,
       ...(ogFailed ? { ogFailures: ogResult.failures } : {}),
       ...(anchorsFailed ? { missingAnchors: anchorsResult.missing } : {}),
       ...(ogHashFailed ? { ogHashFailures: ogHashResult.failures } : {}),
@@ -634,6 +724,9 @@ async function main() {
         : {}),
       ...(docsAnchorsFailed
         ? { docsAnchorsFailures: docsAnchorsResult.failures }
+        : {}),
+      ...(perfilRenderFailed
+        ? { perfilRenderFailures: perfilRenderResult.failures }
         : {}),
     }),
   )
