@@ -55,6 +55,7 @@ import { Discursos } from '@/components/parlamentar/discursos'
 import { Emendas } from '@/components/parlamentar/emendas'
 import { EvolucaoPatrimonialBlock } from '@/components/parlamentar/evolucao-patrimonial'
 import { FidelidadePartidaria } from '@/components/parlamentar/fidelidade'
+import { Gabinete } from '@/components/parlamentar/gabinete'
 import { GastosResumoBlock } from '@/components/parlamentar/gastos-resumo'
 import { GrafoParticipacaoBlock } from '@/components/parlamentar/grafo-participacao'
 import { LeituraRapida } from '@/components/parlamentar/leitura-rapida'
@@ -102,6 +103,7 @@ import {
   getTimelineMigracao,
 } from '@/lib/queries/fidelidade'
 import { getFrentesNameToIdMap } from '@/lib/queries/frentes'
+import { getGabineteParlamentar } from '@/lib/queries/gabinete'
 import {
   getFrentesByParlamentar,
   getLiderancasByParlamentar,
@@ -313,6 +315,7 @@ export default async function ParlamentarPerfilPage({
     colegioEleitoral,
     emendas,
     confrontoEmendas,
+    gabinete,
     topTemasProposicoes,
     liderancasHistoricas,
     blocosComposicao,
@@ -412,6 +415,8 @@ export default async function ParlamentarPerfilPage({
     getEmendas(parlamentar.id),
     // Confronto emendas×colégio (ADR-066 D5): null quando falta um dos lados.
     getConfrontoEmendasColegio(parlamentar.id),
+    // Comissionados de gabinete (ADR-064 E2): total 0 → seção omitida.
+    getGabineteParlamentar(parlamentar.id),
     getTopTemasByParlamentar(parlamentar.id),
     getLiderancasHistoricas(parlamentar.id),
     // Composição dos blocos Gov/Oposição: Câmara-only (fonte ADR-040).
@@ -814,8 +819,22 @@ export default async function ParlamentarPerfilPage({
       ),
     },
     // ── Narrativa Mandato → Dinheiro → Base eleitoral → Patrimônio ──────
-    // (Sprint 14.3): emendas ficam junto de gastos (Dinheiro); eleições e
-    // colégio (Base) entram entre o Dinheiro e o Patrimônio.
+    // (Sprints 14.0/14.3): gastos → gabinete → emendas compõem o "custo do
+    // mandato" (Dinheiro); eleições e colégio (Base) entram antes do Patrimônio.
+    // Fail-closed (ADR-064): sem comissionado vinculado, a seção não existe.
+    ...(gabinete.total > 0
+      ? [
+          {
+            id: 'gabinete',
+            navLabel: 'Gabinete',
+            title: 'Gabinete',
+            subtitle:
+              'Servidores comissionados lotados no gabinete do parlamentar, segundo o quadro de pessoal publicado pela própria casa. Nomes, cargos e remunerações de comissionados são públicos por força da LAI; a nomeação é prerrogativa do mandato — fato administrativo, sem juízo.',
+            navIcon: <Users className="h-4 w-4" />,
+            content: <Gabinete gabinete={gabinete} />,
+          },
+        ]
+      : []),
     // Fail-closed (ADR-066): sem emenda individual vinculada por nome, a
     // seção não existe — sem empty state. Ex-parlamentares autores de emendas
     // antigas fora do banco também ficam de fora, por desenho.

@@ -145,6 +145,7 @@ const DOCS_ANCHORS_BY_PATH: Record<string, readonly string[]> = {
     'Fidelidade partidária',
     'Confronto: emendas',
     'Pirâmide de confiança',
+    'Gabinete (comissionados)',
   ],
   '/docs/glossario': ['Tipos de proposição', 'Tramitação'],
   '/docs/fontes': ['Princípio de rastreabilidade', 'Cobertura temporal'],

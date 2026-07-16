@@ -24,7 +24,7 @@ Esforço estimado: **P** = < 1 sprint, **M** = 1–2 sprints, **G** = wave intei
 
 | Gap | Estado | Referência | Esforço |
 |-----|--------|-----------|---------|
-| Custo do gabinete (comissionados) no perfil | pendente — fontes das casas confirmadas por probe (2026-07-14, E2), **sem token**; vínculo Câmara determinístico via `uriLotacao` | [ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | M |
+| Custo do gabinete (comissionados) no perfil | **entregue** (Sprint 14.0) — seção Gabinete nas duas casas; Senado com R$ real (folha oficial); Câmara fase 1 sem R$ (tabela por nível não é aberta — follow-up registrado) | [ADR-064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | — |
 | Colégio eleitoral municipal no perfil | **entregue** (PRs #714/#715, Sprint 14.1) | [ADR-065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | — |
 | Emendas parlamentares (destino do dinheiro) | **implementado** (Sprint 14.2, PR #723 + PR UI); dado em prod depende do primeiro cron monthly verde | [ADR-066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) | — |
 | Alertas por e-mail quando parlamentar vota X | pendente — infra Resend/follows existe; falta o produtor de eventos | [ADR-030](../architecture/ADR/030-sistema-alertas-e-resend.md) · Wave 15 | P/M |
@@ -85,7 +85,7 @@ Contagens **verificadas contra Neon prod em 2026-07-05** (pós-reset de quota;
 | **Afastamentos de senadores** | **0 rows em prod** (ADR-058) | popular | idem |
 | **Blocos partidários** | **0 rows em prod** (ADR-056) | popular | idem |
 | Bens declarados TSE | 99.283 rows (2014/2018/2022) | + pleitos históricos | baixa prioridade |
-| Comissionados de gabinete | 0 (fonte nova) | mensal | ADR-064 E2 (fontes das casas confirmadas) aguarda implementação (Wave 14) |
+| Comissionados de gabinete | ingestão entregue (Sprint 14.0): ~12,2k Câmara + ~2,5k Senado | mensal | popular prod (dispatch monthly pós-merge) |
 | Votação candidato×município TSE | ingestão entregue (PR #714) | 3 pleitos | popular prod (depende de cron monthly verde) |
 | Vetos presidenciais | 184 vetos, 27.556 votos | 100% | — |
 
@@ -106,7 +106,7 @@ Os 6 ADRs `proposed` da v1.0 deste doc (043/045/046/047/048/050) foram todos
 
 | ADR | Feature | O que falta | Dependência externa |
 |-----|---------|-------------|---------------------|
-| [064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | Comissionados de gabinete | Ingestão (fontes das casas, E2) + seção "Gabinete"; probe Actions dos hosts das casas antes do PR | **Nenhuma** (fontes abertas sem token) |
+| [064](../architecture/ADR/064-comissionados-gabinete-portal-transparencia.md) (emendado ×2) | Comissionados de gabinete | ✅ **Entregue** (Sprint 14.0) — Wave 14 completa | — |
 | [065](../architecture/ADR/065-colegio-eleitoral-municipal-tse.md) | Colégio eleitoral municipal | ✅ **Entregue** (PRs #714/#715) | — |
 | [066](../architecture/ADR/066-emendas-parlamentares-bulk-download.md) (**aceito 2026-07-14**) | Emendas parlamentares | ✅ **Implementado** (Sprint 14.2); popular prod via monthly | **Nenhuma** (bulk sem token) |
 | ADR-067 (a redigir) | CEIS/CNEP × fornecedores CEAP | ADR → ingestão + confronto (probe Fases A+B verdes) | **Nenhuma** (bulk sem token) |

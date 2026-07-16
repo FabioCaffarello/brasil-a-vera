@@ -52,6 +52,8 @@ export const TTL = {
   mandatosExternos: 86_400,
   // Emendas parlamentares (ADR-066): ingestão mensal (bulk CGU) → 24h.
   emendas: 86_400,
+  // Comissionados de gabinete (ADR-064 E2): ingestão mensal → 24h.
+  gabinete: 86_400,
   // Rankings de transparência (Sprint 16.0): gastos CEAP e alinhamento.
   // Dado de estatistica_parlamentar_agregada — atualizado pelo seed diário → 24h.
   rankings: 86_400,
