@@ -28,7 +28,7 @@ function competencia(mesReferencia: string): string {
 function Pessoa({ pessoa }: { pessoa: GabineteView['pessoas'][number] }) {
   return (
     <li className="flex flex-wrap items-center gap-2 rounded-lg border border-line-default p-3">
-      {pessoa.cargo && <DataBadge tone="neutral">{pessoa.cargo}</DataBadge>}
+      {pessoa.cargo && <DataBadge label={pessoa.cargo} tone="neutral" />}
       <span className="text-fg-primary text-sm">{pessoa.nome}</span>
       <span className="ml-auto text-fg-tertiary text-xs tabular-nums">
         {pessoa.remuneracaoBasicaCentavos !== null
