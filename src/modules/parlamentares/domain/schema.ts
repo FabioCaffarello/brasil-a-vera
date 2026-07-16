@@ -302,6 +302,57 @@ export const mandatoExterno = parlamentaresSchema.table(
   ],
 )
 
+// Sprint 14.0 — comissionados de gabinete (ADR-064 v0.3, emenda E2).
+// Fontes por casa (heterogêneas, ambas sem token):
+// - CAMARA: dadosabertos.camara.leg.br/arquivos/funcionarios (CSV); vínculo
+//   determinístico via uriLotacao → sourceId do deputado. Fase 1 SEM R$
+//   (a Câmara não publica a tabela remuneratória em formato aberto —
+//   decisão do owner em 2026-07-16; remuneracao_basica fica NULL).
+// - SENADO: adm.senado.gov.br/adm-dadosabertos (comissionados + remunerações
+//   por competência, join por sequencial); vínculo por nome do senador na
+//   lotação (fail-closed, padrão ADR-063).
+// A fonte é snapshot completo do quadro ATUAL por casa → DELETE-by-casa +
+// INSERT em transação (princípio 5); sem unique constraint (padrão
+// mandato_externo). Nomes/cargos são públicos por força da LAI.
+export const comissionadoGabinete = parlamentaresSchema.table(
+  'comissionado_gabinete',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .$defaultFn(() => uuidv7()),
+    parlamentarId: uuid('parlamentar_id')
+      .notNull()
+      .references(() => parlamentar.id, { onDelete: 'cascade' }),
+    casa: casa('casa').notNull(),
+    nome: text('nome').notNull(),
+    // "Secretário Parlamentar" | "Cargo de Natureza Especial" (Câmara);
+    // "COMISSIONADO" (Senado, campo vinculo).
+    grupo: text('grupo').notNull(),
+    // Nível/descrição do cargo: "SP09C", "CNE07 - ASSESSOR TÉCNICO" (Câmara);
+    // cargo/função do Senado quando informado. Nullable — Senado às vezes omite.
+    cargo: text('cargo'),
+    // Senado: soma de remuneracao_basica das folhas da competência (L1
+    // agregado por mês). Câmara: NULL na fase 1 (ver nota acima).
+    remuneracaoBasica: numeric('remuneracao_basica', {
+      precision: 12,
+      scale: 2,
+      mode: 'string',
+    }),
+    // Competência da remuneração (dia 01). NULL na Câmara (snapshot sem mês).
+    mesReferencia: date('mes_referencia'),
+    // Auditoria: sequencial (Senado) / ponto (Câmara).
+    sourceId: text('source_id'),
+    trustLevel: trustLevel('trust_level').notNull().default('L1'),
+    sourceUrl: text('source_url').notNull(),
+    ingestedAt: timestamp('ingested_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index('comissionado_gabinete_parlamentar_id_idx').on(table.parlamentarId),
+  ],
+)
+
 export const eventoComissaoPresenca = parlamentaresSchema.table(
   'evento_comissao_presenca',
   {

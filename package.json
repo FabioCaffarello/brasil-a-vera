@@ -72,6 +72,8 @@
     "ingest:tse:bens": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/bens.ts",
     "ingest:tse:votacao-municipal": "tsx --tsconfig tsconfig.ingestion.json ingestion/tse/votacao-municipal.ts",
     "ingest:cgu:emendas": "tsx --tsconfig tsconfig.ingestion.json ingestion/cgu/emendas.ts",
+    "ingest:camara:comissionados": "tsx --tsconfig tsconfig.ingestion.json ingestion/camara/comissionados.ts",
+    "ingest:senado:comissionados": "tsx --tsconfig tsconfig.ingestion.json ingestion/senado/comissionados.ts",
     "seed:agregados:parlamentar": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-parlamentar.ts",
     "seed:agregados:proposicao": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/seed-agregados-proposicao.ts",
     "smoke": "tsx --tsconfig tsconfig.ingestion.json ingestion/ops/smoke.ts",

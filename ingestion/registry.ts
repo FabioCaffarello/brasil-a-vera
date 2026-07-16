@@ -380,6 +380,25 @@ export const SOURCES: readonly IngestionSource[] = ingestionSourcesSchema.parse(
       tier: 0,
       timeoutMin: 20,
     },
+    // Comissionados de gabinete (ADR-064 E2): fontes das próprias casas, sem
+    // token. tier 0: dependem apenas de parlamentar populado. Câmara = 1 CSV
+    // de 3,4MB; Senado = 2 endpoints JSON (quadro + remuneração do mês).
+    {
+      id: 'camara-comissionados',
+      script: 'ingest:camara:comissionados',
+      context: 'ingestion-camara-comissionados',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 10,
+    },
+    {
+      id: 'senado-comissionados',
+      script: 'ingest:senado:comissionados',
+      context: 'ingestion-senado-comissionados',
+      cadence: 'monthly',
+      tier: 0,
+      timeoutMin: 15,
+    },
     // Lideranças partidárias e institucionais (ADR-056): quase-estáticas,
     // mudam raramente dentro de uma legislatura → mensal. tier 0: dependem
     // apenas de parlamentar populado (ingestão diária de runs anteriores).

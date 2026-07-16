@@ -57,6 +57,8 @@ describe('buildTierMatrices', () => {
       'senado-filiacoes',
       'camara-backfill-cpf',
       'cgu-emendas',
+      'camara-comissionados',
+      'senado-comissionados',
       'camara-liderancas',
       'senado-liderancas',
       'camara-blocos',
