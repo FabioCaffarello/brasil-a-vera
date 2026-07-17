@@ -14,7 +14,13 @@ export const metadata: Metadata = {
     'Como cada número da plataforma é calculado, classificado e auditado: pirâmide de confiança, alinhamento, fidelidade, coerência, afinidade, presença, gastos, patrimônio, colégio eleitoral e emendas.',
 }
 
-export const revalidate = 86400
+// SEM `revalidate` — deliberado. Todas as páginas de /docs renderizam por
+// request (o auth() do Navbar no root layout torna o app dynamic) e por isso
+// nunca ficam stale; o revalidate=86400 herdado da /sobre/metodologia optava
+// ESTA página no cache incremental ISR, e em 2026-07-16 prod seguiu servindo
+// a versão do dia anterior por até 24h pós-deploy — o smoke docs-anchors
+// reprovou o deploy ao não achar a âncora nova. Conteúdo literal, sem DB:
+// render por request é barato e sempre fresco.
 
 // Página de metodologia consolidada (Sprint 14.3; sucede /sobre/metodologia,
 // que redireciona para cá). Responde: "Como esse número foi calculado e em
