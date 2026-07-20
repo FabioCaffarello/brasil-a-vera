@@ -30,11 +30,16 @@
 | 8 | Proposição 360° | `v0.8.0` | ADR-026 (paginação cursor) |
 | 9 | Votação 360° | `v0.9.0` | Incidentes #293 e #303→#304 (abaixo); ADR-028 |
 | 10 | Área logada: Clerk, alertas, LGPD | 2026-05-19 (`v0.10.0-area-logada`) | 26 PRs; ADRs 029/030/031; revisão dos matchers (origem do drift abaixo) |
-| Pós-10 | Refactor painel em tabs; licença; migração RDS | em curso | ADR-032; ADR-027; ADR-033 (RDS); auditoria do harness (2026-06-09/10) |
+| Pós-10 | Refactor painel em tabs; licença; migração RDS (completa: 14 rotas + consolidação ADR-038/053) | 2026-06 | ADR-032; ADR-027; ADR-033/034/038/039/053; auditoria do harness (2026-06-09/10) |
+| 11 | Eixo 2 Patrimonial: trilha TSE 3 pleitos + grafo societário + CPF senadores (heurística) | 2026-07 (sem tag própria) | ADRs 036/037/051/054/055/063 |
+| 12 | Eixo 1 Coerência: fidelidade 2 definições, presenças, variação patrimonial, discursos, busca por tema | 2026-07 (sem tag própria) | ADRs 040–050 |
+| 13 | Infra: comissões, lideranças/blocos/frentes, vetos; registry maduro; harness dotcontext; RDS compositivo | 2026-07 (sem tag própria) | ADRs 056–062 |
+| 14 (14.0–14.3) | Dossiê — custo do mandato: colégio eleitoral, emendas (bulk CGU sem token), confronto emendas×colégio, gabinete das duas casas; `/docs/metodologia` consolidada | 2026-07-16 (`v0.14.0-dossie`, consolida 11–14) | ADRs 064 (E1/E2)/065/066; auditoria de produto + probes empíricos (`docs/audits/2026-07-*`); incidente "cadeia de mascaramento" (abaixo) |
 
 Convenção de versionamento consolidada nas Waves 7–9: **1 tag final por
 wave**, sem `-alpha.X`/`-rc.X` intermediários (`v0.7.0`/`v0.8.0`/`v0.9.0`
-puras).
+puras). Exceção registrada: Waves 11–13 fecharam sem tag (planejamento
+just-in-time, releases contínuos) e foram consolidadas na `v0.14.0-dossie`.
 
 ---
 
@@ -43,6 +48,25 @@ puras).
 Cada incidente abaixo virou princípio, ADR ou guard determinístico. O
 padrão a preservar: **processo falhou, registramos sem maquiagem,
 seguimos**.
+
+### A cadeia de mascaramento — deploy vermelho por 2 meses escondeu 2 regressões reais (Wave 14, #725/#726/#735)
+
+O smoke pós-deploy exigia uma âncora de card que o #344 removera da home
+em maio — **0 deploys verdes em 100 runs** e ninguém notou, porque
+vermelho-permanente vira ruído. Atrás dele, invisíveis: `/partidos/[sigla]`
+retornando **500 desde junho** (`NOW() - INTERVAL '365 days'::date` — o
+cast liga no INTERVAL pela precedência do Postgres, #660→#726) e **todos os
+perfis truncando no cache HIT** desde o sprint 26 (`Map` retornado de
+dentro do `cached()` serializa como `{}` no roundtrip JSON; dev/CI fazem
+bypass do cache, então nunca reproduzia localmente; o primeiro request
+pós-deploy é MISS, então "parecia ok", #735 — diagnosticado com
+`wrangler tail`). Restaurar a âncora (#725) expôs as duas em 24h.
+
+Legado durável: contrato do `cached()` proíbe Map/Set/Date; probe
+`perfil-render` visita o mesmo perfil DUAS vezes (a 2ª pega a janela de
+HIT); âncoras de smoke atualizam no MESMO PR que muda o copy; e a lição
+mãe — **alarme permanente é ausência de alarme**: gate vermelho que
+ninguém trata deve ser consertado ou removido, nunca convivido.
 
 ### PR #57 — o cache que só existia na teoria (Wave 2.0)
 

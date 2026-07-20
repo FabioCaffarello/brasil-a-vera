@@ -1383,6 +1383,31 @@ sancionados como residuais permanentes por razão de bundle.
 
 ---
 
+## Wave 14 — Dossiê: custo do mandato (2026-07-05 → 2026-07-16)
+
+> **Pergunta validada**: "O cidadão consegue montar, numa sessão, o dossiê
+> do parlamentar — mandato, custo, base eleitoral e destino do dinheiro —
+> só com fatos L1/L2?"
+> **Tag**: `v0.14.0-dossie` (consolida também as Waves 11–13, sem tag própria)
+> **Planejamento**: [docs/audits/2026-07-wave14-planejamento.md](../audits/2026-07-wave14-planejamento.md)
+> **Release notes**: [v0.14.0-dossie](../releases/v0.14.0-dossie.md)
+
+| Sprint | Entrega | PRs principais |
+|---|---|---|
+| Fase 0 + planejamento | Revalidação prod, triage `fetch failed` (#701), auto-retry de ingestão | #699, #700, #716, #730, #731 |
+| 14.1 | Colégio eleitoral municipal (ADR-065): ingestão TSE munzona + seção no perfil | #714, #715 |
+| Auditoria + probes | Auditoria de produto; probe bulk CGU (SIAPE falsificado → fontes das casas, E2); ADR-066 aceito | #719–#722 |
+| 14.2 | Emendas parlamentares (ADR-066): contexto `orcamento` novo, bulk sem token, seção no perfil | #723, #724 |
+| 14.3 | `/docs/metodologia` consolidada + confronto emendas×colégio (ponte TSE↔IBGE por nome+UF) + narrativa Mandato→Dinheiro→Base→Patrimônio + export CSV de emendas | #732–#734 |
+| 14.0 | Gabinete: comissionados Câmara (CSV, vínculo determinístico) + Senado (API adm, R$ real, join por nome) | #737, #739, #740 |
+| Qualidade (transversal) | Cadeia de mascaramento desfeita (`home-anchors`, `/partidos` 500, Map no `cached()`); probes `perfil-render` e docs-anchors novos | #725, #726, #728, #729, #735, #736 |
+
+Decisões de escopo do owner registradas nas release notes: doações de
+campanha fora; contexto `orcamento` próprio; Câmara fase 1 sem R$ no
+gabinete (follow-up #738); prod do gabinete popula no cron mensal natural.
+
+---
+
 ## Estado em 2026-07-01
 
 | Métrica | Valor |
