@@ -5,6 +5,7 @@ import {
   classifyTipoLideranca,
   mapVotoOrientacao,
   materiaSessaoKey,
+  orientacoesRunFailed,
 } from './orientacoes-mapper'
 
 describe('mapVotoOrientacao', () => {
@@ -127,5 +128,32 @@ describe('materiaSessaoKey', () => {
     expect(
       materiaSessaoKey({ sigla: '  ', numero: 6, ano: 2019, numeroSessao: 1 }),
     ).toBeNull()
+  })
+})
+
+describe('orientacoesRunFailed (canário de saída)', () => {
+  it('run 100% colisão NÃO é falha (fail-closed legítimo)', () => {
+    // Reproduz o incidente 2026-07-17→20: 5 matérias votadas 2× na sessão.
+    expect(orientacoesRunFailed({ matched: 0, unmatchedSemVotacao: 0 })).toBe(
+      false,
+    )
+  })
+
+  it('nada casou por votação inexistente É falha (votacoes não rodou/chave driftou)', () => {
+    expect(orientacoesRunFailed({ matched: 0, unmatchedSemVotacao: 5 })).toBe(
+      true,
+    )
+  })
+
+  it('qualquer match torna o run bem-sucedido, mesmo com misses', () => {
+    expect(orientacoesRunFailed({ matched: 1, unmatchedSemVotacao: 9 })).toBe(
+      false,
+    )
+  })
+
+  it('janela vazia (nada a casar) não é falha', () => {
+    expect(orientacoesRunFailed({ matched: 0, unmatchedSemVotacao: 0 })).toBe(
+      false,
+    )
   })
 })

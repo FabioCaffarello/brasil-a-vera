@@ -5,7 +5,11 @@ import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
 import { readIngestEnv } from '../shared/env'
 import { warnSkipped } from '../shared/warnings'
-import { buildOrientacoes, materiaSessaoKey } from './orientacoes-mapper'
+import {
+  buildOrientacoes,
+  materiaSessaoKey,
+  orientacoesRunFailed,
+} from './orientacoes-mapper'
 import { senadoOrientacaoRespostaSchema } from './orientacoes-schema'
 import { fetchSenadoJson } from './senado-client'
 
@@ -189,9 +193,11 @@ ingestOrientacoesSenado({
         ...stats,
       }),
     )
-    // Sucesso parcial é normal (fail-closed em colisões). Só falha se nada casou
-    // E havia orientação para casar (forte indício de votacoes não rodado).
-    process.exit(stats.matched === 0 && stats.votacoesComOrientacao > 0 ? 1 : 0)
+    // Sucesso parcial é normal (fail-closed em colisões — matéria votada N× na
+    // sessão, sem desempate). Só falha se NADA casou E houve chave apontando
+    // para votação inexistente no índice (indício real de votacoes não rodado
+    // ou chave driftada) — ver orientacoesRunFailed. Run 100% colisão = exit 0.
+    process.exit(orientacoesRunFailed(stats) ? 1 : 0)
   })
   .catch((err) => {
     console.error(
