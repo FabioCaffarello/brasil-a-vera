@@ -7,6 +7,7 @@ import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
+import { selecionarMesaVigente } from '@/lib/mesa-vigente'
 import { getMesaDiretora } from '@/lib/queries/liderancas'
 
 export const revalidate = 86400
@@ -66,7 +67,9 @@ function MesaCard({
 }
 
 export default async function MesaDiretoraPage() {
-  const membros = await getMesaDiretora()
+  // selecionarMesaVigente: a fonte deixa biênios anteriores com data_fim
+  // NULL (dois "Presidente" em prod) — auditoria UX 2026-07-20, P1.5.
+  const membros = selecionarMesaVigente(await getMesaDiretora())
 
   const camara = membros
     .filter((m) => m.casa === 'CAMARA')
@@ -114,11 +117,11 @@ export default async function MesaDiretoraPage() {
           </section>
         )}
 
-        {senado.length > 0 && (
-          <section>
-            <h2 className="mb-3 font-semibold text-fg-primary text-lg">
-              Senado Federal
-            </h2>
+        <section>
+          <h2 className="mb-3 font-semibold text-fg-primary text-lg">
+            Senado Federal
+          </h2>
+          {senado.length > 0 ? (
             <div className="rounded-lg border border-line-default bg-surface-base">
               <ul aria-label="Mesa Diretora do Senado Federal">
                 {senado.map((m) => (
@@ -126,13 +129,20 @@ export default async function MesaDiretoraPage() {
                 ))}
               </ul>
             </div>
-          </section>
-        )}
+          ) : (
+            // Seção sempre presente: a página promete as duas casas no intro;
+            // esconder o Senado em silêncio lia como bug (auditoria UX, P1.5).
+            <p className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-4 text-fg-tertiary text-sm">
+              A composição da Mesa do Senado ainda não está integrada — a fonte
+              oficial do Senado não expõe esses cargos no mesmo formato da
+              Câmara. Enquanto isso, consulte o site oficial do Senado Federal.
+            </p>
+          )}
+        </section>
 
         {membros.length === 0 && (
           <p className="text-fg-tertiary text-sm">
-            Nenhum membro da Mesa Diretora registrado. Execute a ingestão
-            `camara-mesa-diretora` para popular os dados.
+            Nenhum membro da Mesa Diretora registrado na base atual.
           </p>
         )}
       </div>

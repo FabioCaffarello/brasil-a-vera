@@ -16,13 +16,13 @@ describe('NavLinks', () => {
     mockedPathname.mockReturnValue('/')
   })
 
-  it('renderiza os 5 links principais', () => {
+  it('renderiza os links principais', () => {
     render(<NavLinks />)
     expect(screen.getByRole('link', { name: 'Parlamentares' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Proposições' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Votações' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Rankings' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Temas' })).toBeDefined()
-    expect(screen.getByRole('link', { name: 'Docs' })).toBeDefined()
   })
 
   it('marca link active quando pathname é sub-rota (/parlamentares/123)', () => {
@@ -45,10 +45,10 @@ describe('NavLinks', () => {
     mockedPathname.mockReturnValue('/votacoes')
     render(<NavLinks />)
     const parlamentares = screen.getByRole('link', { name: 'Parlamentares' })
-    const docs = screen.getByRole('link', { name: 'Docs' })
+    const rankings = screen.getByRole('link', { name: 'Rankings' })
     expect(parlamentares.getAttribute('data-active')).toBe('false')
     expect(parlamentares.getAttribute('aria-current')).toBeNull()
-    expect(docs.getAttribute('data-active')).toBe('false')
+    expect(rankings.getAttribute('data-active')).toBe('false')
   })
 
   it('link active recebe data-active=true + aria-current (NavLink do RDS)', () => {

@@ -115,6 +115,7 @@ export interface MesaDiretoraEntry {
   tipo: string
   casa: 'CAMARA' | 'SENADO'
   legislatura: number
+  dataInicio: string | null
   parlamentarId: string
   parlamentarNome: string
   parlamentarPartidoSigla: string | null
@@ -123,13 +124,18 @@ export interface MesaDiretoraEntry {
 }
 
 // Mesa Diretora da Câmara e do Senado (cargos vigentes, data_fim IS NULL).
+// :v2 — a fonte deixa cargos de biênios anteriores com data_fim NULL (dois
+// "Presidente" simultâneos em prod). O consumidor resolve a vigência via
+// selecionarMesaVigente (auditoria UX 2026-07-20, P1.5), que precisa de
+// dataInicio na projeção.
 export async function getMesaDiretora(): Promise<MesaDiretoraEntry[]> {
-  return cached('mesa-diretora:vigente', TTL.liderancas, async () => {
+  return cached('mesa-diretora:vigente:v2', TTL.liderancas, async () => {
     const rows = await db
       .select({
         tipo: liderancaCargo.tipo,
         casa: liderancaCargo.casa,
         legislatura: liderancaCargo.legislatura,
+        dataInicio: liderancaCargo.dataInicio,
         parlamentarId: parlamentar.id,
         parlamentarNome: parlamentar.nome,
         parlamentarPartidoSigla: parlamentar.partidoSigla,
@@ -149,6 +155,7 @@ export async function getMesaDiretora(): Promise<MesaDiretoraEntry[]> {
       tipo: r.tipo,
       casa: r.casa as 'CAMARA' | 'SENADO',
       legislatura: r.legislatura,
+      dataInicio: r.dataInicio as string | null,
       parlamentarId: r.parlamentarId,
       parlamentarNome: r.parlamentarNome,
       parlamentarPartidoSigla: r.parlamentarPartidoSigla,
