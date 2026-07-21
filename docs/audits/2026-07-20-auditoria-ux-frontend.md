@@ -12,6 +12,30 @@
 
 ---
 
+## Status de execução (2026-07-21)
+
+As 4 ondas foram executadas e mergeadas; verificação pós-deploy via o mesmo
+harness Playwright confirmou os fixes em produção.
+
+| Onda | PR | Verificação em prod |
+|---|---|---|
+| A — runtime e dados | #743 | ordenação alfabética correta (unaccent aplicado); busca "educacao" retorna resultados; perfil de senador 54k→15,9k px; /frentes com `<details>`; 404/erro temáticos em PT; rankings presença/coerência corrigidos |
+| B — navegação e features órfãs | #744 | Rankings no menu; /votacoes default nominal (0 "Aprovado o Parecer." na 1ª página); /comparar com seletor; mesa com seção Senado |
+| C — pipeline de dados | #746 | `avatar-hydration-fix` no HTML; sanitização/title-case nos mappers; backfill validado localmente (**rodar em prod**: `DRY_RUN=1→0 npx tsx ingestion/ops/backfill-normaliza-texto.ts`) |
+| D — polish + RDS | #747 | pills DataBadge em prod; gramática ok; breadcrumbs/chart corrigidos; CLAUDE.md e memória atualizados (regra var() inline obsoleta, verificada no CSS de prod) |
+| Follow-up | #748 | mesa: dois "Presidente" persistiam — mapper não gravava dataInicio/dataFim da fonte; fix na ingestão (efeito na próxima run mensal de `camara-mesa-diretora`) |
+
+**Pendências (ação do owner):** backfill de texto em prod (acima); RUM/Web
+Analytics (issue #745); Avatar upstream (RDS#263 — remover o stopgap
+`.avatar-hydration-fix` quando resolvido); rodada manual opcional de
+`camara-mesa-diretora` para antecipar o efeito do #748.
+
+**Pendências deliberadas (não executadas):** P2.10 (padronização
+centralizado × esquerda dos headers — refactor maior de layout); cores
+categóricas dos ícones de rankings (mantidas por decisão).
+
+---
+
 ## P0 — Quebra de experiência
 
 ### P0.1 — Error boundary e 404 sem tema, em inglês
