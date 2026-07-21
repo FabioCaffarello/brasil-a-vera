@@ -139,7 +139,9 @@ export default async function RankingCoerenciaPage() {
           <div className="rounded-lg border border-line-default bg-surface-base">
             {maisPares.length === 0 ? (
               <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
-                Nenhum dado disponível — aguardando próxima execução do seed.
+                Nenhum par contraditório detectado na base atual. A coluna passa
+                a listar parlamentares quando houver votos opostos em
+                proposições do mesmo tema com direções contrárias.
               </p>
             ) : (
               <ul aria-label="Parlamentares com mais pares contraditórios de voto">
@@ -169,7 +171,7 @@ export default async function RankingCoerenciaPage() {
           <div className="rounded-lg border border-line-default bg-surface-base">
             {menosPares.length === 0 ? (
               <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
-                Nenhum dado disponível — aguardando próxima execução do seed.
+                Nenhum dado disponível na base atual.
               </p>
             ) : (
               <ul aria-label="Parlamentares com menos pares contraditórios de voto">
@@ -188,9 +190,16 @@ export default async function RankingCoerenciaPage() {
       </div>
 
       <p className="mt-8 text-fg-tertiary text-xs">
-        Fonte: Motor de Coerência (Sprint 33). Apenas proposições com ementa
-        classificável pelo analisador de direção. Federações e partidos sem
-        orientação publicada podem apresentar contagem subestimada.
+        Considera apenas proposições com ementa classificável pelo analisador de
+        direção. Federações e partidos sem orientação publicada podem apresentar
+        contagem subestimada. Fórmula aberta em{' '}
+        <Link
+          className="underline hover:text-fg-secondary"
+          href="/docs/metodologia"
+        >
+          /docs/metodologia
+        </Link>
+        .
       </p>
     </div>
   )

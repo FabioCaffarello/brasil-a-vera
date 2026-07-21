@@ -31,6 +31,16 @@ function LeaderboardRow({ rank, entry, variant }: RowProps) {
       ? 'text-green-700 dark:text-green-400'
       : 'text-amber-700 dark:text-amber-400'
 
+  // Cada coluna exibe a SUA métrica: a de ausentes mostra % e contagem de
+  // ausências (auditoria UX 2026-07-20, P1.4 — "7.7% ausente" era a presença
+  // de 4/52 rotulada como ausência).
+  const pct =
+    variant === 'presente' ? entry.pctPresenca : 100 - entry.pctPresenca
+  const contagem =
+    variant === 'presente'
+      ? `${entry.presentes}/${entry.elegiveis} presenças`
+      : `${entry.elegiveis - entry.presentes}/${entry.elegiveis} ausências`
+
   return (
     <li className="flex items-center gap-3 border-b border-line-default py-3 last:border-b-0">
       <span className="w-7 shrink-0 text-right font-mono text-fg-tertiary text-sm">
@@ -60,14 +70,13 @@ function LeaderboardRow({ rank, entry, variant }: RowProps) {
         </Link>
         <p className="text-fg-tertiary text-xs">
           {entry.partidoSigla ?? '—'}/{entry.uf} ·{' '}
-          {entry.casa === 'CAMARA' ? 'Câmara' : 'Senado'} · {entry.presentes}/
-          {entry.elegiveis} votações
+          {entry.casa === 'CAMARA' ? 'Câmara' : 'Senado'} · {contagem}
         </p>
       </div>
 
       <div className="shrink-0 text-right">
         <p className={`font-mono font-semibold text-sm ${colorClass}`}>
-          {entry.pctPresenca.toFixed(1)}%
+          {pct.toFixed(1)}%
         </p>
         <p className="text-fg-tertiary text-xs">
           {variant === 'presente' ? 'presente' : 'ausente'}
