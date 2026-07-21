@@ -23,7 +23,7 @@ import { sanitizeTexto, titleCaseNome } from '../shared/texto'
 
 // Mesma classe de caracteres de ingestion/shared/texto.ts, em sintaxe POSIX
 // pro regexp_replace do Postgres.
-const INVISIVEIS_SQL = `[\\u00AD\\u200B-\\u200D\\uFEFF\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F-\\x9F]`
+const INVISIVEIS_SQL = `[\\u00AC\\u00AD\\u200B-\\u200D\\uFEFF\\x01-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F-\\x9F]`
 
 async function main() {
   const dryRun = process.env.DRY_RUN !== '0'

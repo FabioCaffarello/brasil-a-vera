@@ -2,12 +2,15 @@
 // Funções puras, aplicadas nos mappers (dado novo) e no backfill
 // ingestion/ops/backfill-normaliza-texto.ts (dado já persistido).
 
-// Caracteres invisíveis que as fontes oficiais embutem em ementas/nomes:
-// soft hyphen (U+00AD — renderiza "Sa¬úde" em alguns contextos), zero-widths
-// (U+200B–U+200D), BOM (U+FEFF) e controles C0/C1 (exceto \n e \t).
+// Caracteres espúrios que as fontes oficiais embutem em ementas/nomes:
+// NOT SIGN (U+00AC — a API da Câmara devolve literalmente "Sa¬úde", soft
+// hyphen corrompido na origem; verificado no payload de /proposicoes/{id}),
+// soft hyphen (U+00AD), zero-widths (U+200B–U+200D), BOM (U+FEFF) e
+// controles C0/C1 (exceto \n e \t). "¬" nunca é legítimo em texto
+// legislativo pt-BR.
 const INVISIVEIS =
   // biome-ignore lint/suspicious/noControlCharactersInRegex: o propósito é justamente remover controles
-  /[\u00AD\u200B-\u200D\uFEFF\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g
+  /[\u00AC\u00AD\u200B-\u200D\uFEFF\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g
 
 export function sanitizeTexto(s: string): string {
   return s.replace(INVISIVEIS, '').replace(/ {2,}/g, ' ').trim()

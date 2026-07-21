@@ -9,6 +9,12 @@ describe('sanitizeTexto', () => {
     )
   })
 
+  it('remove NOT SIGN U+00AC (mojibake literal da API da Câmara: "Sa¬úde")', () => {
+    expect(sanitizeTexto('Agência Nacional de Sa¬úde Suplementar')).toBe(
+      'Agência Nacional de Saúde Suplementar',
+    )
+  })
+
   it('remove zero-widths, BOM e controles C0/C1', () => {
     expect(sanitizeTexto('﻿a​bcd')).toBe('abcd')
   })
