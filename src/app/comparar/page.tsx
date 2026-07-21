@@ -19,7 +19,9 @@ import {
 import { Columns3 } from 'lucide-react'
 import { ConcordanciaMatrix } from '@/components/comparar/concordancia-matrix'
 import { ParlamentaresGrid } from '@/components/comparar/parlamentares-grid'
+import { SeletorComparacao } from '@/components/comparar/seletor-comparacao'
 import { getCompararParlamentares } from '@/lib/queries/comparar'
+import { listParlamentares } from '@/lib/queries/parlamentares'
 
 export const metadata = {
   title: 'Comparar parlamentares — Brasil à Vera',
@@ -53,29 +55,53 @@ function parseIds(raw: string | string[] | undefined): {
 }
 
 /**
- * ErrorState — Sprint 4.3 D4 herdada. Caixa de "comparativo indisponível"
- * em warning subtle (mesmo padrão `ParesContraditorios`, `AlinhamentoBancada`
- * com amostra insuficiente). Mantido como helper local Sprint 6.4 — é
- * warning cirúrgico, não cabe em composição genérica. Tokens: `text-warning`
- * → `text-fg-warning`; `border-warning/40`/`bg-warning/10` homônimos.
+ * Tela de entrada do comparativo — auditoria UX 2026-07-20 (P1.6). Antes, o
+ * estado sem IDs mostrava uma caixa de erro instruindo a montar a URL à mão
+ * com UUIDs; agora é a porta de entrada da feature: hero + seletor zero-JS.
+ * `aviso` cobre os casos de URL malformada/parcial sem tom de erro fatal.
  */
-function ErrorState({ message }: { message: string }) {
+async function EntradaComparar({
+  aviso,
+  selecionados,
+}: {
+  aviso?: string
+  selecionados: string[]
+}) {
+  const parlamentares = await listParlamentares()
   return (
-    <div className="mx-auto max-w-2xl py-12">
-      <div className="rounded-lg border border-warning/40 bg-warning/10 p-5">
-        <h1 className="font-medium text-base text-fg-warning">
-          Comparativo indisponível
-        </h1>
-        <p className="mt-1 text-fg-warning text-sm">{message}</p>
-        <p className="mt-3 text-fg-warning text-xs">
-          Use a URL com 2 ou 3 IDs separados por vírgula:
-          <br />
-          <code className="font-mono">
-            /comparar?ids=&lt;uuid1&gt;,&lt;uuid2&gt;
-          </code>
-        </p>
+    <>
+      <HeroSection
+        align="center"
+        description="Escolha 2 ou 3 parlamentares e veja lado a lado presença em votações nominais, proposições de autoria, gastos da cota e concordância de voto."
+        kicker={
+          <DataBadge
+            icon={<Columns3 className="h-3 w-3" />}
+            label="Comparativo"
+            source="L1 · oficial"
+            tone="dataviz"
+          />
+        }
+        title="Compare parlamentares lado a lado"
+        variant="plain"
+      />
+      <div className="mx-auto max-w-3xl space-y-5 pb-8">
+        {aviso && (
+          <div className="rounded-lg border border-warning/40 bg-warning/10 p-4">
+            <p className="text-fg-warning text-sm">{aviso}</p>
+          </div>
+        )}
+        <SectionCard
+          id="escolher"
+          subtitle="A comparação usa apenas dados oficiais — mesma janela e mesma fórmula para todos."
+          title="Escolha quem comparar"
+        >
+          <SeletorComparacao
+            parlamentares={parlamentares}
+            selecionados={selecionados}
+          />
+        </SectionCard>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -84,30 +110,36 @@ export default async function CompararPage({ searchParams }: PageProps) {
   const { ids, hasInvalid } = parseIds(params.ids)
   const unique = Array.from(new Set(ids))
 
-  if (hasInvalid && unique.length === 0) {
-    return (
-      <ErrorState message="Nenhum ID válido encontrado. IDs devem ser UUIDs no formato 8-4-4-4-12." />
-    )
-  }
   if (unique.length < 2) {
     return (
-      <ErrorState
-        message={`Selecione 2 ou 3 parlamentares para comparar. ${
-          unique.length === 0 ? 'Nenhum' : 'Apenas 1'
-        } ID fornecido.`}
+      <EntradaComparar
+        aviso={
+          hasInvalid
+            ? 'O link continha identificadores inválidos — selecione os parlamentares abaixo.'
+            : unique.length === 1
+              ? 'Falta escolher pelo menos mais 1 parlamentar para comparar.'
+              : undefined
+        }
+        selecionados={unique}
       />
     )
   }
   if (unique.length > 3) {
     return (
-      <ErrorState message="Máximo 3 parlamentares simultâneos. Remova alguns IDs e tente de novo." />
+      <EntradaComparar
+        aviso="O comparativo aceita no máximo 3 parlamentares — escolha até 3 abaixo."
+        selecionados={unique.slice(0, 3)}
+      />
     )
   }
 
   const result = await getCompararParlamentares(unique)
   if (!result) {
     return (
-      <ErrorState message="Um ou mais IDs não correspondem a parlamentares na base. Verifique se os IDs estão corretos." />
+      <EntradaComparar
+        aviso="Um ou mais parlamentares do link não foram encontrados na base — selecione abaixo."
+        selecionados={[]}
+      />
     )
   }
 
