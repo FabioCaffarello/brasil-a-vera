@@ -5,7 +5,7 @@
 // senador nos dispositivos daquele veto; o detalhe por dispositivo vive em
 // /vetos/[id]. Vetos além dos primeiros ficam em <details> nativo (zero-JS).
 
-import { Card } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -59,21 +59,21 @@ function VetoCard({ veto }: { veto: VetoAgrupado }) {
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {veto.votosSim > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800 text-xs dark:bg-green-900/30 dark:text-green-300">
-              <ThumbsUp className="h-3 w-3" aria-hidden />
-              Sim × {veto.votosSim}
-            </span>
+            <DataBadge
+              icon={<ThumbsUp className="h-3 w-3" />}
+              label={`Sim × ${veto.votosSim}`}
+              tone="success"
+            />
           )}
           {veto.votosNao > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-800 text-xs dark:bg-red-900/30 dark:text-red-300">
-              <ThumbsDown className="h-3 w-3" aria-hidden />
-              Não × {veto.votosNao}
-            </span>
+            <DataBadge
+              icon={<ThumbsDown className="h-3 w-3" />}
+              label={`Não × ${veto.votosNao}`}
+              tone="error"
+            />
           )}
           {veto.votosOutros > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-fg-tertiary text-xs">
-              outros × {veto.votosOutros}
-            </span>
+            <DataBadge label={`outros × ${veto.votosOutros}`} tone="neutral" />
           )}
         </div>
       </div>
@@ -99,18 +99,21 @@ export function VetosSenador({ vetos, stats }: Props) {
     <div className="space-y-3">
       {stats && (
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 font-medium text-green-800 text-sm dark:bg-green-900/30 dark:text-green-300">
-            <ThumbsUp className="h-3.5 w-3.5" aria-hidden />
-            Sim — {stats.sim}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 font-medium text-red-800 text-sm dark:bg-red-900/30 dark:text-red-300">
-            <ThumbsDown className="h-3.5 w-3.5" aria-hidden />
-            Não — {stats.nao}
-          </span>
+          <DataBadge
+            icon={<ThumbsUp className="h-3.5 w-3.5" />}
+            label={`Sim — ${stats.sim}`}
+            tone="success"
+          />
+          <DataBadge
+            icon={<ThumbsDown className="h-3.5 w-3.5" />}
+            label={`Não — ${stats.nao}`}
+            tone="error"
+          />
           {stats.abstencao > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-3 py-1 text-fg-tertiary text-sm">
-              Abstenção — {stats.abstencao}
-            </span>
+            <DataBadge
+              label={`Abstenção — ${stats.abstencao}`}
+              tone="neutral"
+            />
           )}
         </div>
       )}

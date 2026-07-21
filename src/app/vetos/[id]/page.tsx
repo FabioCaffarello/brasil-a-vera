@@ -29,52 +29,55 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
+// Pills via DataBadge do RDS (débito ADR-053 apontado na auditoria UX
+// 2026-07-20: /vetos usava bg-green-100/red-100 cru).
 function VotoChip({ voto }: { voto: string }) {
   if (voto === 'SIM') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800 text-xs dark:bg-green-900/30 dark:text-green-300">
-        <ThumbsUp className="h-3 w-3" aria-hidden />
-        Sim
-      </span>
+      <DataBadge
+        icon={<ThumbsUp className="h-3 w-3" />}
+        label="Sim"
+        tone="success"
+      />
     )
   }
   if (voto === 'NAO') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-800 text-xs dark:bg-red-900/30 dark:text-red-300">
-        <ThumbsDown className="h-3 w-3" aria-hidden />
-        Não
-      </span>
+      <DataBadge
+        icon={<ThumbsDown className="h-3 w-3" />}
+        label="Não"
+        tone="error"
+      />
     )
   }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-fg-tertiary text-xs">
-      {voto.toLowerCase()}
-    </span>
-  )
+  return <DataBadge label={voto.toLowerCase()} tone="neutral" />
 }
 
 function SituacaoIcon({ situacao }: { situacao: string | null }) {
   if (situacao === 'Mantido') {
     return (
-      <span className="inline-flex items-center gap-1 text-red-700 text-sm dark:text-red-400">
-        <CheckCircle className="h-4 w-4" aria-hidden />
-        Mantido
-      </span>
+      <DataBadge
+        icon={<CheckCircle className="h-4 w-4" />}
+        label="Mantido"
+        tone="error"
+      />
     )
   }
   if (situacao === 'Rejeitado') {
     return (
-      <span className="inline-flex items-center gap-1 text-green-700 text-sm dark:text-green-400">
-        <XCircle className="h-4 w-4" aria-hidden />
-        Derrubado
-      </span>
+      <DataBadge
+        icon={<XCircle className="h-4 w-4" />}
+        label="Derrubado"
+        tone="success"
+      />
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 text-amber-700 text-sm dark:text-amber-400">
-      <Clock className="h-4 w-4" aria-hidden />
-      Em tramitação
-    </span>
+    <DataBadge
+      icon={<Clock className="h-4 w-4" />}
+      label="Em tramitação"
+      tone="warning"
+    />
   )
 }
 
@@ -262,9 +265,9 @@ export default async function VetoDetalhePage({ params }: Props) {
       </section>
 
       <p className="mt-8 text-fg-tertiary text-xs">
-        Votos nominais: apenas senadores com registro na nossa base. Câmara não
-        incluída nesta versão (ADR-059). "Mantido" = Congresso manteve o veto do
-        presidente; "Derrubado" = Congresso rejeitou o veto.
+        Votos nominais: apenas senadores — a fonte oficial não publica o voto
+        individual dos deputados na apreciação de vetos. "Mantido" = Congresso
+        manteve o veto do presidente; "Derrubado" = Congresso rejeitou o veto.
       </p>
     </div>
   )

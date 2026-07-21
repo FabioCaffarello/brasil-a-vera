@@ -1,4 +1,4 @@
-import { Card } from '@fabio.caffarello/react-design-system/server'
+import { Card, DataBadge } from '@fabio.caffarello/react-design-system/server'
 import { Vote } from 'lucide-react'
 
 import { EmptyState } from '@/components/ui/empty-state'
@@ -8,11 +8,12 @@ interface Props {
   candidaturas: CandidaturaTse[]
 }
 
-function situacaoClass(situacao: string): string {
+// Tons semânticos via DataBadge (débito ADR-053 — auditoria UX 2026-07-20).
+function situacaoTone(situacao: string): 'success' | 'warning' | 'neutral' {
   const s = situacao.toUpperCase()
-  if (s.startsWith('ELEITO')) return 'text-green-700 dark:text-green-400'
-  if (s === 'SUPLENTE') return 'text-amber-700 dark:text-amber-400'
-  return 'text-fg-tertiary'
+  if (s.startsWith('ELEITO')) return 'success'
+  if (s === 'SUPLENTE') return 'warning'
+  return 'neutral'
 }
 
 function formatCargo(dsCargo: string): string {
@@ -48,10 +49,11 @@ export function CandidaturasEleitorais({ candidaturas }: Props) {
                   {formatCargo(c.dsCargo)}
                 </span>
                 <span className="text-fg-secondary text-sm">{c.sgUf}</span>
-                <span
-                  className={`ml-auto text-xs font-medium ${situacaoClass(c.dsSituacaoCandidatura)}`}
-                >
-                  {formatSituacao(c.dsSituacaoCandidatura)}
+                <span className="ml-auto">
+                  <DataBadge
+                    label={formatSituacao(c.dsSituacaoCandidatura)}
+                    tone={situacaoTone(c.dsSituacaoCandidatura)}
+                  />
                 </span>
               </div>
               {c.qtVotosNominais != null &&

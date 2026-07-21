@@ -44,7 +44,14 @@ export default async function FrenteDetalhePage({ params }: PageProps) {
         items={[
           { label: 'Início', href: '/' },
           { label: 'Frentes Parlamentares', href: '/frentes' },
-          { label: frente.nome },
+          // Nomes de frente vêm longos e em caixa alta da fonte; sem truncar,
+          // o crumb quebrava em 4 linhas (auditoria UX 2026-07-20, P2.8).
+          {
+            label:
+              frente.nome.length > 60
+                ? `${frente.nome.slice(0, 57)}…`
+                : frente.nome,
+          },
         ]}
       />
 

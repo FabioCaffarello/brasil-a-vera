@@ -51,9 +51,10 @@ export function DistribuicaoBancadaBlock({ membros }: Props) {
                 </span>
                 <div className="flex-1 overflow-hidden rounded-full bg-surface-raised">
                   <div
-                    className="h-1.5 rounded-full bg-blue-400"
+                    className="h-1.5 rounded-full"
                     style={{
                       width: `${Math.round((count / membros.length) * 100)}%`,
+                      backgroundColor: 'var(--color-chart-2)',
                     }}
                     aria-hidden
                   />

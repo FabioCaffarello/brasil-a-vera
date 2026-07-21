@@ -47,9 +47,10 @@ export function GastoBancadaBlock({ ano, gasto, categorias }: Props) {
               <div className="flex-1 overflow-hidden rounded-full bg-surface-raised">
                 <div
                   aria-hidden
-                  className="h-1.5 rounded-full bg-orange-400"
+                  className="h-1.5 rounded-full"
                   style={{
                     width: `${Math.round((Number(c.total) / total) * 100)}%`,
+                    backgroundColor: 'var(--color-chart-1)',
                   }}
                 />
               </div>

@@ -182,7 +182,7 @@ Cada script de ingestão segue o padrão: `schema.ts` (Zod para API externa) + `
 
 `src/design-system/` é um **nó folha**: não pode importar de `src/components/`, `src/lib/queries/`, `src/modules/` ou `src/shared/db/`. O boundary é verificado automaticamente em `src/design-system/__tests__/import-boundaries.test.ts`.
 
-Em CSS inline / SVG / ReactFlow: use **classes Tailwind** para cor (`bg-surface-base`, `text-fg-quaternary`, `stroke-current`). Nunca use `var(--color-fg-*)` inline — esses tokens resolvem vazio fora do layer Tailwind. Apenas `--color-chart-N` funciona em `var()` inline.
+Em CSS inline / SVG / ReactFlow: prefira **classes Tailwind** para cor (`bg-surface-base`, `text-fg-quaternary`, `stroke-current`) — dão variantes hover/dark de graça e são grepáveis. Quando inline for inevitável (recharts, SVG attrs), `var(--color-<token>)` funciona para qualquer token semântico (`fg-*`, `line-*`, `surface-*`, `chart-N`): desde o consumo da fonte `@theme` do RDS (BaV#469), os tokens são emitidos em `:root` com light/dark — verificado empiricamente no CSS de produção em 2026-07-20. (A restrição antiga "só `--color-chart-N` resolve em var() inline" valia para o bridge pré-#469 e está obsoleta.)
 
 ## Convenções
 

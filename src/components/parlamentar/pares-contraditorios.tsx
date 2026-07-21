@@ -90,7 +90,8 @@ export function ParesContraditorios({ pares, stats, parlamentar }: Props) {
         <div className="flex items-center gap-2">
           <TrustBadge trustLevel="L2" />
           <span className="text-fg-tertiary text-xs">
-            Pipeline com verbos inequívocos — sem NLP no MVP.
+            Detecção por palavras inequívocas na ementa — método aberto em
+            /docs/metodologia.
           </span>
         </div>
         <p className="text-fg-tertiary text-sm">
@@ -105,10 +106,9 @@ export function ParesContraditorios({ pares, stats, parlamentar }: Props) {
             {stats.votosTotaisComProposicao === 1
               ? '1 voto deste parlamentar está vinculado'
               : `${stats.votosTotaisComProposicao} votos deste parlamentar estão vinculados`}{' '}
-            a uma proposição ingerida. O backfill cobre todas as votações
-            nominais Câmara automaticamente (auto-fetch reverso, Sprint 3.0.5);
-            Senado não retorna referência de proposição vinculada na API
-            pública.
+            a uma proposição da nossa base. Na Câmara, toda votação nominal é
+            vinculada automaticamente; o Senado não informa a proposição
+            correspondente na API pública.
           </li>
           <li>
             <strong className="font-medium">Ementa não classificada:</strong>{' '}
@@ -128,20 +128,10 @@ export function ParesContraditorios({ pares, stats, parlamentar }: Props) {
           </li>
         </ul>
         <p className="text-fg-tertiary text-xs">
-          A classificação de direção usa apenas verbos inequívocos — falso
-          negativo é preferível a falso positivo. Expansão do vocabulário
-          (verbos secundários, regex, NLP) entra apenas com evidência de gargalo
-          concreto (princípio do{' '}
-          <a
-            className="underline decoration-dotted underline-offset-2"
-            href="https://github.com/FabioCaffarello/brasil-a-vera/blob/main/docs/architecture/ADR/019-disciplina-arquitetural-sem-gargalo.md"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            ADR-019
-          </a>
-          ). A cobertura cresce naturalmente conforme novas votações nominais
-          são ingeridas.
+          A classificação de direção usa apenas verbos inequívocos — preferimos
+          deixar de apontar um par real (falso negativo) a acusar um par
+          inexistente (falso positivo). A cobertura cresce conforme novas
+          votações nominais são ingeridas.
         </p>
       </div>
     )

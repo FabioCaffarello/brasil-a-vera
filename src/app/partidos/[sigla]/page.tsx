@@ -18,7 +18,10 @@ import {
   DetailLayout,
   type DetailSection,
 } from '@fabio.caffarello/react-design-system'
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  DataBadge,
+} from '@fabio.caffarello/react-design-system/server'
 import { notFound } from 'next/navigation'
 import { AlinhamentoMedioBancadaBlock } from '@/components/partido/alinhamento-medio'
 import { BancadaList } from '@/components/partido/bancada-list'
@@ -80,14 +83,11 @@ function MovimentacoesFiliacoes({
           className="flex flex-wrap items-center gap-2 text-sm"
           key={`${m.parlamentarId}-${m.tipo}-${m.data}`}
         >
-          <span
-            className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
-              m.tipo === 'ENTRADA'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-            }`}
-          >
-            {m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}
+          <span className="shrink-0">
+            <DataBadge
+              label={m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}
+              tone={m.tipo === 'ENTRADA' ? 'success' : 'error'}
+            />
           </span>
           <span className="font-medium text-fg-primary">
             {m.parlamentarNome}

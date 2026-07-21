@@ -35,7 +35,10 @@ interface Props {
   coerencia: CoerenciaStats
 }
 
-const casaLabel = (casa: Casa) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
+// Artigo com gênero correto: "da Câmara" / "do Senado" (auditoria UX
+// 2026-07-20: "p1 da Senado").
+const casaComArtigo = (casa: Casa) =>
+  casa === 'CAMARA' ? 'da Câmara' : 'do Senado'
 
 /** Número factual em destaque tipográfico neutro (sem cor de juízo). */
 function N({ children }: { children: React.ReactNode }) {
@@ -47,7 +50,7 @@ function comparativoCasa(percentil: number | null, casa: Casa) {
   return (
     <>
       {' — '}
-      <N>{formatPercentil(percentil)}</N> da {casaLabel(casa)}
+      <N>{formatPercentil(percentil)}</N> {casaComArtigo(casa)}
     </>
   )
 }
@@ -62,7 +65,15 @@ function fraseAlinhamento(
       return (
         <>
           Votou de acordo com a orientação do partido em <N>{f.percentual}%</N>{' '}
-          das <N>{f.total}</N> votações com orientação registrada.
+          {f.total === 1 ? (
+            <>
+              da única votação com orientação registrada (<N>1</N> votação).
+            </>
+          ) : (
+            <>
+              das <N>{f.total}</N> votações com orientação registrada.
+            </>
+          )}
           {f.amostraInsuficiente ? (
             <span className="text-fg-tertiary">
               {' '}

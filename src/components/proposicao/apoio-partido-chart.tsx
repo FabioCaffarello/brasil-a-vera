@@ -113,6 +113,11 @@ export function ApoioPartidoChart({ data }: Props) {
     )
   }
 
+  // Um único partido com um único autor: o chart vira uma barra solitária
+  // com eixo 0-4 — ruído visual sem informação além da lista de autores logo
+  // abaixo (auditoria UX 2026-07-20, P2.15). Nada a plotar.
+  if (data.length === 1 && data[0]?.count === 1) return null
+
   // Altura proporcional ao número de barras: 36px por linha + margens
   // (~32px). Range 6-7 barras = 248-284px.
   const height = data.length * 36 + 32
@@ -138,7 +143,9 @@ export function ApoioPartidoChart({ data }: Props) {
             tick={{ fill: 'var(--foreground)', fontSize: 11 }}
             tickLine={false}
             type="category"
-            width={72}
+            // 96px: "REPUBLICANOS" (sigla mais longa) truncava em 72px
+            // ("ᵖUBLICANOS") — auditoria UX 2026-07-20, P2.15.
+            width={96}
           />
           <Tooltip
             content={(props: unknown) => (

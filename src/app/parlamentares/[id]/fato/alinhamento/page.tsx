@@ -12,6 +12,7 @@ import { CompartilharButton } from '@/components/parlamentar/compartilhar-button
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
 import { getAlinhamentoParlamentar } from '@/lib/queries/alinhamento'
 import { getParlamentarById } from '@/lib/queries/parlamentares'
+import { ALINHAMENTO_AMOSTRA_MINIMA } from '@/modules/parlamentares/domain/alinhamento'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -107,8 +108,11 @@ export default async function FatoAlinhamentoPage({ params }: PageProps) {
         ) : alinhamento.percentual === null ||
           alinhamento.amostraInsuficiente ? (
           <p className="text-fg-secondary text-base">
-            Amostra insuficiente para calcular o alinhamento (menos de{' '}
-            {alinhamento.total} votações comparáveis).
+            Amostra insuficiente para calcular o alinhamento:{' '}
+            {alinhamento.total === 1
+              ? 'apenas 1 votação comparável'
+              : `apenas ${alinhamento.total} votações comparáveis`}{' '}
+            (mínimo de {ALINHAMENTO_AMOSTRA_MINIMA}).
           </p>
         ) : (
           <>
