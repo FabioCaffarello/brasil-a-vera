@@ -1,5 +1,6 @@
 import { LEGISLATURA_ATUAL } from '@/shared/legislatura'
 import type { ParlamentarRow } from '../shared/parlamentar-row'
+import { titleCaseNome } from '../shared/texto'
 
 import type { SenadorItem } from './senadores-schema'
 
@@ -34,8 +35,12 @@ export function mapSenadorListagem(input: SenadorItem): ParlamentarRow {
     id.UfParlamentar.toUpperCase()
   return {
     sourceId: id.CodigoParlamentar,
-    nome: id.NomeParlamentar,
-    nomeCivil: id.NomeCompletoParlamentar ?? null,
+    // titleCaseNome: a fonte manda alguns nomes 100% em caixa alta
+    // ("ANDRÉ ABDON" na Câmara; senadores idem) — auditoria UX, Onda C.
+    nome: titleCaseNome(id.NomeParlamentar),
+    nomeCivil: id.NomeCompletoParlamentar
+      ? titleCaseNome(id.NomeCompletoParlamentar)
+      : null,
     cpf: null,
     casa: 'SENADO',
     partidoSigla: id.SiglaPartidoParlamentar,

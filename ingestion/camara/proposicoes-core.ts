@@ -10,6 +10,7 @@ import { runWithConcurrency } from '../shared/concurrency'
 import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
 import { fetchWithRetry } from '../shared/http'
+import { sanitizeTexto, sanitizeTextoNullable } from '../shared/texto'
 import { paginate } from './camara-client'
 import {
   extractDeputadoIdFromUri,
@@ -165,7 +166,10 @@ export async function ingestProposicaoBySourceId(
   const uri = buildProposicaoUri(sourceId)
   const situacao = mapSituacao(detalhe.statusProposicao?.descricaoSituacao)
   const regime = detalhe.statusProposicao?.regime ?? null
-  const ementaDetalhada = detalhe.ementaDetalhada ?? null
+  // sanitizeTexto: a fonte embute soft hyphen/controles na ementa
+  // ("Sa­úde" renderizado como "Sa¬úde") — auditoria UX 2026-07-20, Onda C.
+  const ementa = sanitizeTexto(detalhe.ementa)
+  const ementaDetalhada = sanitizeTextoNullable(detalhe.ementaDetalhada)
 
   const proposicaoId = await db.transaction(async (tx) => {
     const upserted = await tx
@@ -176,7 +180,7 @@ export async function ingestProposicaoBySourceId(
         tipo,
         numero: detalhe.numero,
         ano: detalhe.ano,
-        ementa: detalhe.ementa,
+        ementa,
         ementaDetalhada,
         situacao,
         regime,
@@ -191,7 +195,7 @@ export async function ingestProposicaoBySourceId(
         set: {
           sourceId,
           sourceIdCamara: sourceId,
-          ementa: detalhe.ementa,
+          ementa,
           ementaDetalhada,
           situacao,
           regime,
