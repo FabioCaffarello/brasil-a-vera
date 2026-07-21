@@ -281,6 +281,13 @@
       "when": 1784114313901,
       "tag": "0039_comissionado_gabinete",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1784590800000,
+      "tag": "0040_unaccent",
+      "breakpoints": true
     }
   ]
 }
