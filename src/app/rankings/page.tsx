@@ -1,7 +1,10 @@
 // Índice dos rankings de transparência — Sprint 16.0.
 // Cada card linka para um ranking específico.
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import {
   FileText,
   GitMerge,
@@ -74,42 +77,49 @@ const RANKINGS = [
 
 export default function RankingsIndexPage() {
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[{ label: 'Início', href: '/' }, { label: 'Rankings' }]}
-      />
-
-      <div className="mt-6 mb-8">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Rankings de transparência
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Classifique os parlamentares pelos dados públicos disponíveis — sem
-          julgamento de mérito, só fatos factuais.
-        </p>
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[{ label: 'Início', href: '/' }, { label: 'Rankings' }]}
+        />
       </div>
-
-      <ul className="space-y-4">
-        {RANKINGS.map(({ href, icon: Icon, iconClass, title, description }) => (
-          <li key={href}>
-            <Link
-              href={href}
-              className="group flex items-start gap-4 rounded-lg border border-line-default bg-surface-base p-5 transition-colors hover:bg-surface-raised"
-            >
-              <Icon
-                className={`mt-0.5 h-5 w-5 shrink-0 ${iconClass}`}
-                aria-hidden
-              />
-              <div className="min-w-0">
-                <p className="font-semibold text-fg-primary group-hover:underline">
-                  {title}
-                </p>
-                <p className="mt-1 text-fg-secondary text-sm">{description}</p>
-              </div>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Classifique os parlamentares pelos dados públicos disponíveis — sem julgamento de mérito, só fatos factuais.'
+        }
+        title="Rankings de transparência"
+        variant="plain"
+      />
+      <div className="mx-auto max-w-3xl pb-8">
+        <ul className="space-y-4">
+          {RANKINGS.map(
+            ({ href, icon: Icon, iconClass, title, description }) => (
+              <li key={href}>
+                <Link
+                  href={href}
+                  className="group flex items-start gap-4 rounded-lg border border-line-default bg-surface-base p-5 transition-colors hover:bg-surface-raised"
+                >
+                  <Icon
+                    className={`mt-0.5 h-5 w-5 shrink-0 ${iconClass}`}
+                    aria-hidden
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-fg-primary group-hover:underline">
+                      {title}
+                    </p>
+                    <p className="mt-1 text-fg-secondary text-sm">
+                      {description}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ),
+          )}
+        </ul>
+      </div>
+    </>
   )
 }

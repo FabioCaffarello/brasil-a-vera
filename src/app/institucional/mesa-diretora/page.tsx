@@ -3,7 +3,10 @@
 // SECRETARIO_MESA, SUPLENTE_MESA), ingestão mensal.
 // SSG revalidate 24h — dado quase-estático.
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
@@ -80,77 +83,79 @@ export default async function MesaDiretoraPage() {
     .sort((a, b) => (TIPO_ORDER[a.tipo] ?? 9) - (TIPO_ORDER[b.tipo] ?? 9))
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Institucional' },
-          { label: 'Mesa Diretora' },
-        ]}
-      />
-
-      <div className="mt-6 mb-8">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Mesa Diretora
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Composição atual da Mesa Diretora da Câmara dos Deputados e do Senado
-          Federal. Eleita pelos pares no início de cada biênio da legislatura,
-          responde pela condução dos trabalhos legislativos e pela administração
-          da Casa.
-        </p>
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Institucional' },
+            { label: 'Mesa Diretora' },
+          ]}
+        />
       </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Composição atual da Mesa Diretora da Câmara dos Deputados e do Senado Federal. Eleita pelos pares no início de cada biênio da legislatura, responde pela condução dos trabalhos legislativos e pela administração da Casa.'
+        }
+        title="Mesa Diretora"
+        variant="plain"
+      />
+      <div className="mx-auto max-w-3xl pb-8">
+        <div className="space-y-8">
+          {camara.length > 0 && (
+            <section>
+              <h2 className="mb-3 font-semibold text-fg-primary text-lg">
+                Câmara dos Deputados
+              </h2>
+              <div className="rounded-lg border border-line-default bg-surface-base">
+                <ul aria-label="Mesa Diretora da Câmara dos Deputados">
+                  {camara.map((m) => (
+                    <MesaCard key={`${m.tipo}-${m.parlamentarId}`} entry={m} />
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
 
-      <div className="space-y-8">
-        {camara.length > 0 && (
           <section>
             <h2 className="mb-3 font-semibold text-fg-primary text-lg">
-              Câmara dos Deputados
+              Senado Federal
             </h2>
-            <div className="rounded-lg border border-line-default bg-surface-base">
-              <ul aria-label="Mesa Diretora da Câmara dos Deputados">
-                {camara.map((m) => (
-                  <MesaCard key={`${m.tipo}-${m.parlamentarId}`} entry={m} />
-                ))}
-              </ul>
-            </div>
+            {senado.length > 0 ? (
+              <div className="rounded-lg border border-line-default bg-surface-base">
+                <ul aria-label="Mesa Diretora do Senado Federal">
+                  {senado.map((m) => (
+                    <MesaCard key={`${m.tipo}-${m.parlamentarId}`} entry={m} />
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              // Seção sempre presente: a página promete as duas casas no intro;
+              // esconder o Senado em silêncio lia como bug (auditoria UX, P1.5).
+              <p className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-4 text-fg-tertiary text-sm">
+                A composição da Mesa do Senado ainda não está integrada — a
+                fonte oficial do Senado não expõe esses cargos no mesmo formato
+                da Câmara. Enquanto isso, consulte o site oficial do Senado
+                Federal.
+              </p>
+            )}
           </section>
-        )}
 
-        <section>
-          <h2 className="mb-3 font-semibold text-fg-primary text-lg">
-            Senado Federal
-          </h2>
-          {senado.length > 0 ? (
-            <div className="rounded-lg border border-line-default bg-surface-base">
-              <ul aria-label="Mesa Diretora do Senado Federal">
-                {senado.map((m) => (
-                  <MesaCard key={`${m.tipo}-${m.parlamentarId}`} entry={m} />
-                ))}
-              </ul>
-            </div>
-          ) : (
-            // Seção sempre presente: a página promete as duas casas no intro;
-            // esconder o Senado em silêncio lia como bug (auditoria UX, P1.5).
-            <p className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-4 text-fg-tertiary text-sm">
-              A composição da Mesa do Senado ainda não está integrada — a fonte
-              oficial do Senado não expõe esses cargos no mesmo formato da
-              Câmara. Enquanto isso, consulte o site oficial do Senado Federal.
+          {membros.length === 0 && (
+            <p className="text-fg-tertiary text-sm">
+              Nenhum membro da Mesa Diretora registrado na base atual.
             </p>
           )}
-        </section>
+        </div>
 
-        {membros.length === 0 && (
-          <p className="text-fg-tertiary text-sm">
-            Nenhum membro da Mesa Diretora registrado na base atual.
-          </p>
-        )}
+        <p className="mt-8 text-fg-tertiary text-xs">
+          Dados atualizados mensalmente via API oficial da Câmara dos Deputados.
+          Legislatura {camara[0]?.legislatura ?? senado[0]?.legislatura ?? '—'}.
+        </p>
       </div>
-
-      <p className="mt-8 text-fg-tertiary text-xs">
-        Dados atualizados mensalmente via API oficial da Câmara dos Deputados.
-        Legislatura {camara[0]?.legislatura ?? senado[0]?.legislatura ?? '—'}.
-      </p>
-    </div>
+    </>
   )
 }

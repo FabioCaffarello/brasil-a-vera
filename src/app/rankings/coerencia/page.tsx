@@ -4,7 +4,10 @@
 // direções semânticas opostas (RESTRITIVA vs PERMISSIVA). Algoritmo idêntico
 // ao Motor de Coerência (coerencia.ts / direcao-classifier.ts).
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import { GitFork, GitMerge } from 'lucide-react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -91,116 +94,117 @@ export default async function RankingCoerenciaPage() {
   const { maisPares, menosPares } = await getRankingCoerencia(TOP_N)
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Rankings', href: '/rankings' },
-          { label: 'Coerência de voto' },
-        ]}
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Rankings', href: '/rankings' },
+            { label: 'Coerência de voto' },
+          ]}
+        />
+      </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Pares de votações em que o parlamentar votou de forma oposta em proposições do mesmo tema mas com direções semânticas contrárias — por exemplo, apoiar uma lei que amplia e depois apoiar outra que restringe o mesmo direito.'
+        }
+        title="Coerência de voto"
+        variant="plain"
       />
+      <div className="mx-auto max-w-3xl pb-8">
+        <p className="mb-8 text-fg-tertiary text-xs">
+          Calculado sobre votações nominais com proposição vinculada e ementa
+          classificável. Coerência é descritiva — não implica mérito ou acerto.
+          Ver{' '}
+          <Link
+            className="underline hover:text-fg-secondary"
+            href="/parlamentares"
+          >
+            perfis
+          </Link>{' '}
+          para o detalhe par a par.
+        </p>
 
-      <div className="mt-6 mb-2">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Coerência de voto
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Pares de votações em que o parlamentar votou de forma oposta em
-          proposições do mesmo tema mas com direções semânticas contrárias — por
-          exemplo, apoiar uma lei que amplia e depois apoiar outra que restringe
-          o mesmo direito.
+        <div className="space-y-8">
+          <section aria-labelledby="mais-pares">
+            <div className="mb-3 flex items-center gap-2">
+              <GitFork className="h-4 w-4 text-red-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="mais-pares"
+              >
+                Top {maisPares.length} — Mais contradições
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              {maisPares.length === 0 ? (
+                <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
+                  Nenhum par contraditório detectado na base atual. A coluna
+                  passa a listar parlamentares quando houver votos opostos em
+                  proposições do mesmo tema com direções contrárias.
+                </p>
+              ) : (
+                <ul aria-label="Parlamentares com mais pares contraditórios de voto">
+                  {maisPares.map((entry, i) => (
+                    <LeaderboardRow
+                      key={entry.id}
+                      entry={entry}
+                      rank={i + 1}
+                      variant="incoerente"
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+
+          <section aria-labelledby="menos-pares">
+            <div className="mb-3 flex items-center gap-2">
+              <GitMerge className="h-4 w-4 text-green-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="menos-pares"
+              >
+                Top {menosPares.length} — Mais coerentes
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              {menosPares.length === 0 ? (
+                <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
+                  Nenhum dado disponível na base atual.
+                </p>
+              ) : (
+                <ul aria-label="Parlamentares com menos pares contraditórios de voto">
+                  {menosPares.map((entry, i) => (
+                    <LeaderboardRow
+                      key={entry.id}
+                      entry={entry}
+                      rank={i + 1}
+                      variant="coerente"
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
+
+        <p className="mt-8 text-fg-tertiary text-xs">
+          Considera apenas proposições com ementa classificável pelo analisador
+          de direção. Federações e partidos sem orientação publicada podem
+          apresentar contagem subestimada. Fórmula aberta em{' '}
+          <Link
+            className="underline hover:text-fg-secondary"
+            href="/docs/metodologia"
+          >
+            /docs/metodologia
+          </Link>
+          .
         </p>
       </div>
-
-      <p className="mb-8 text-fg-tertiary text-xs">
-        Calculado sobre votações nominais com proposição vinculada e ementa
-        classificável. Coerência é descritiva — não implica mérito ou acerto.
-        Ver{' '}
-        <Link
-          className="underline hover:text-fg-secondary"
-          href="/parlamentares"
-        >
-          perfis
-        </Link>{' '}
-        para o detalhe par a par.
-      </p>
-
-      <div className="space-y-8">
-        <section aria-labelledby="mais-pares">
-          <div className="mb-3 flex items-center gap-2">
-            <GitFork className="h-4 w-4 text-red-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="mais-pares"
-            >
-              Top {maisPares.length} — Mais contradições
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            {maisPares.length === 0 ? (
-              <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
-                Nenhum par contraditório detectado na base atual. A coluna passa
-                a listar parlamentares quando houver votos opostos em
-                proposições do mesmo tema com direções contrárias.
-              </p>
-            ) : (
-              <ul aria-label="Parlamentares com mais pares contraditórios de voto">
-                {maisPares.map((entry, i) => (
-                  <LeaderboardRow
-                    key={entry.id}
-                    entry={entry}
-                    rank={i + 1}
-                    variant="incoerente"
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        <section aria-labelledby="menos-pares">
-          <div className="mb-3 flex items-center gap-2">
-            <GitMerge className="h-4 w-4 text-green-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="menos-pares"
-            >
-              Top {menosPares.length} — Mais coerentes
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            {menosPares.length === 0 ? (
-              <p className="px-4 py-6 text-center text-fg-tertiary text-sm">
-                Nenhum dado disponível na base atual.
-              </p>
-            ) : (
-              <ul aria-label="Parlamentares com menos pares contraditórios de voto">
-                {menosPares.map((entry, i) => (
-                  <LeaderboardRow
-                    key={entry.id}
-                    entry={entry}
-                    rank={i + 1}
-                    variant="coerente"
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      </div>
-
-      <p className="mt-8 text-fg-tertiary text-xs">
-        Considera apenas proposições com ementa classificável pelo analisador de
-        direção. Federações e partidos sem orientação publicada podem apresentar
-        contagem subestimada. Fórmula aberta em{' '}
-        <Link
-          className="underline hover:text-fg-secondary"
-          href="/docs/metodologia"
-        >
-          /docs/metodologia
-        </Link>
-        .
-      </p>
-    </div>
+    </>
   )
 }

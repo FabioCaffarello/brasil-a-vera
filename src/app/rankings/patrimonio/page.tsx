@@ -4,7 +4,10 @@
 // 2014–2022, ver ADR-063). Senadores com CPF aparecem desde Sprint 39/40.
 // Cache 24h (mesma cadência do getVariacaoPatrimonialRanking).
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
@@ -108,81 +111,84 @@ export default async function RankingPatrimonioPage() {
   const losers = leaderboard.slice(-TOP_N).reverse()
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Rankings', href: '/rankings' },
-          { label: 'Patrimônio no mandato' },
-        ]}
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Rankings', href: '/rankings' },
+            { label: 'Patrimônio no mandato' },
+          ]}
+        />
+      </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Diferença de patrimônio entre dois pleitos consecutivos, corrigida pela inflação (IPCA). Fonte: TSE — declarações de bens de 2014, 2018 e 2022.'
+        }
+        title="Variação patrimonial no mandato"
+        variant="plain"
       />
-
-      <div className="mt-6 mb-2">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Variação patrimonial no mandato
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Diferença de patrimônio entre dois pleitos consecutivos, corrigida
-          pelo IPCA (ADR-047). Fonte: TSE — declarações de bens 2014, 2018 e
-          2022. Câmara: 100%. Senado: 88,9% (9 suplentes sem registro TSE
-          2014–2022 ficam de fora — ver{' '}
+      <div className="mx-auto max-w-3xl pb-8">
+        <p className="mb-8 text-fg-tertiary text-xs">
+          Variação real calculada sobre {leaderboard.length} parlamentares com
+          pelo menos dois pleitos declarados. Cobertura: Câmara 100%; Senado
+          88,9% (9 suplentes sem registro TSE 2014–2022 ficam de fora — ver{' '}
           <a href="/docs/metodologia" className="underline">
             metodologia
           </a>
           ).
         </p>
+
+        <div className="space-y-8">
+          <section aria-labelledby="maiores-ganhos">
+            <div className="mb-3 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-green-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="maiores-ganhos"
+              >
+                Top {TOP_N} — Maior valorização
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              <ul aria-label="Parlamentares com maior valorização patrimonial">
+                {gainers.map((entry, i) => (
+                  <LeaderboardRow key={entry.id} entry={entry} rank={i + 1} />
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          <section aria-labelledby="maiores-perdas">
+            <div className="mb-3 flex items-center gap-2">
+              <TrendingDown className="h-4 w-4 text-red-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="maiores-perdas"
+              >
+                Top {TOP_N} — Maior desvalorização
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              <ul aria-label="Parlamentares com maior desvalorização patrimonial">
+                {losers.map((entry, i) => (
+                  <LeaderboardRow key={entry.id} entry={entry} rank={i + 1} />
+                ))}
+              </ul>
+            </div>
+          </section>
+        </div>
+
+        <p className="mt-8 text-fg-tertiary text-xs">
+          Variação patrimonial não implica irregularidade — é fato factual de
+          posição (ADR-040). Patrimônio declarado pode omitir bens ou incluir
+          estimativas imprecisas. A correção IPCA usa o deflator oficial do
+          IBGE.
+        </p>
       </div>
-
-      <p className="mb-8 text-fg-tertiary text-xs">
-        Variação real calculada sobre {leaderboard.length} parlamentares com
-        pelo menos dois pleitos declarados.
-      </p>
-
-      <div className="space-y-8">
-        <section aria-labelledby="maiores-ganhos">
-          <div className="mb-3 flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-green-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="maiores-ganhos"
-            >
-              Top {TOP_N} — Maior valorização
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            <ul aria-label="Parlamentares com maior valorização patrimonial">
-              {gainers.map((entry, i) => (
-                <LeaderboardRow key={entry.id} entry={entry} rank={i + 1} />
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section aria-labelledby="maiores-perdas">
-          <div className="mb-3 flex items-center gap-2">
-            <TrendingDown className="h-4 w-4 text-red-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="maiores-perdas"
-            >
-              Top {TOP_N} — Maior desvalorização
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            <ul aria-label="Parlamentares com maior desvalorização patrimonial">
-              {losers.map((entry, i) => (
-                <LeaderboardRow key={entry.id} entry={entry} rank={i + 1} />
-              ))}
-            </ul>
-          </div>
-        </section>
-      </div>
-
-      <p className="mt-8 text-fg-tertiary text-xs">
-        Variação patrimonial não implica irregularidade — é fato factual de
-        posição (ADR-040). Patrimônio declarado pode omitir bens ou incluir
-        estimativas imprecisas. A correção IPCA usa o deflator oficial do IBGE.
-      </p>
-    </div>
+    </>
   )
 }

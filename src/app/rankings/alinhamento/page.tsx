@@ -3,7 +3,10 @@
 // Requer >= 10 votações analisadas para entrar no ranking (amostra mínima).
 // Cache 24h — mesma cadência do seed de agregados.
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import { ShieldCheck, ShieldOff } from 'lucide-react'
 import Link from 'next/link'
 import { ParlamentarAvatar } from '@/components/parlamentar/parlamentar-avatar'
@@ -87,86 +90,88 @@ export default async function RankingAlinhamentoPage() {
   const { disciplinados, independentes } = await getRankingAlinhamento(TOP_N)
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Rankings', href: '/rankings' },
-          { label: 'Disciplina partidária' },
-        ]}
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Rankings', href: '/rankings' },
+            { label: 'Disciplina partidária' },
+          ]}
+        />
+      </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Percentual de votações nominais no plenário em que o parlamentar votou na mesma direção que a maioria do seu partido ou bloco. Inclui apenas parlamentares com ao menos 10 votações analisadas.'
+        }
+        title="Disciplina partidária"
+        variant="plain"
       />
+      <div className="mx-auto max-w-3xl pb-8">
+        <p className="mb-8 text-fg-tertiary text-xs">
+          Calculado sobre votações nominais (excluindo ausências e abstenções).
+          Alta disciplina significa coerência com o partido — não implica acerto
+          ou erro de mérito.
+        </p>
 
-      <div className="mt-6 mb-2">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Disciplina partidária
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Percentual de votações nominais no plenário em que o parlamentar votou
-          na mesma direção que a maioria do seu partido ou bloco. Inclui apenas
-          parlamentares com ao menos 10 votações analisadas.
+        <div className="space-y-8">
+          <section aria-labelledby="mais-disciplinados">
+            <div className="mb-3 flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-blue-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="mais-disciplinados"
+              >
+                Top {disciplinados.length} — Mais disciplinados
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              <ul aria-label="Parlamentares com maior disciplina partidária">
+                {disciplinados.map((entry, i) => (
+                  <LeaderboardRow
+                    key={entry.id}
+                    entry={entry}
+                    rank={i + 1}
+                    variant="disciplinado"
+                  />
+                ))}
+              </ul>
+            </div>
+          </section>
+
+          <section aria-labelledby="mais-independentes">
+            <div className="mb-3 flex items-center gap-2">
+              <ShieldOff className="h-4 w-4 text-amber-600" aria-hidden />
+              <h2
+                className="font-semibold text-fg-primary text-lg"
+                id="mais-independentes"
+              >
+                Top {independentes.length} — Mais independentes
+              </h2>
+            </div>
+            <div className="rounded-lg border border-line-default bg-surface-base">
+              <ul aria-label="Parlamentares com maior independência partidária">
+                {independentes.map((entry, i) => (
+                  <LeaderboardRow
+                    key={entry.id}
+                    entry={entry}
+                    rank={i + 1}
+                    variant="independente"
+                  />
+                ))}
+              </ul>
+            </div>
+          </section>
+        </div>
+
+        <p className="mt-8 text-fg-tertiary text-xs">
+          Disciplina e independência são descrições factuais de comportamento de
+          voto. Nenhuma implica avaliação de mérito.
         </p>
       </div>
-
-      <p className="mb-8 text-fg-tertiary text-xs">
-        Calculado sobre votações nominais (excluindo ausências e abstenções).
-        Alta disciplina significa coerência com o partido — não implica acerto
-        ou erro de mérito.
-      </p>
-
-      <div className="space-y-8">
-        <section aria-labelledby="mais-disciplinados">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-blue-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="mais-disciplinados"
-            >
-              Top {disciplinados.length} — Mais disciplinados
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            <ul aria-label="Parlamentares com maior disciplina partidária">
-              {disciplinados.map((entry, i) => (
-                <LeaderboardRow
-                  key={entry.id}
-                  entry={entry}
-                  rank={i + 1}
-                  variant="disciplinado"
-                />
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section aria-labelledby="mais-independentes">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldOff className="h-4 w-4 text-amber-600" aria-hidden />
-            <h2
-              className="font-semibold text-fg-primary text-lg"
-              id="mais-independentes"
-            >
-              Top {independentes.length} — Mais independentes
-            </h2>
-          </div>
-          <div className="rounded-lg border border-line-default bg-surface-base">
-            <ul aria-label="Parlamentares com maior independência partidária">
-              {independentes.map((entry, i) => (
-                <LeaderboardRow
-                  key={entry.id}
-                  entry={entry}
-                  rank={i + 1}
-                  variant="independente"
-                />
-              ))}
-            </ul>
-          </div>
-        </section>
-      </div>
-
-      <p className="mt-8 text-fg-tertiary text-xs">
-        Disciplina e independência são descrições factuais de comportamento de
-        voto. Nenhuma implica avaliação de mérito.
-      </p>
-    </div>
+    </>
   )
 }
