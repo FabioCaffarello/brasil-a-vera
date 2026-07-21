@@ -5,6 +5,7 @@ import { runWithConcurrency } from '../shared/concurrency'
 import { defaultDateRange } from '../shared/dates'
 import { db } from '../shared/db'
 import { readIngestEnv } from '../shared/env'
+import { sanitizeTexto } from '../shared/texto'
 import { warnIfAtLimit } from '../shared/warnings'
 import {
   mapSiglaSenado,
@@ -51,6 +52,9 @@ async function processProcesso(
   const sourceId = String(p.codigoMateria)
   const situacao = mapSituacaoFromTramitando(p.tramitando)
   const sourceUrl = `https://www25.senado.leg.br/web/atividade/materias/-/materia/${p.codigoMateria}`
+  // sanitizeTexto: soft hyphen/controles embutidos pela fonte na ementa —
+  // auditoria UX 2026-07-20, Onda C.
+  const ementa = sanitizeTexto(p.ementa)
 
   await db.transaction(async (tx) => {
     const upserted = await tx
@@ -61,7 +65,7 @@ async function processProcesso(
         tipo,
         numero: ref.numero,
         ano: ref.ano,
-        ementa: p.ementa,
+        ementa,
         ementaDetalhada: null,
         situacao,
         regime: null,
@@ -76,7 +80,7 @@ async function processProcesso(
         set: {
           sourceId,
           sourceIdSenado: sourceId,
-          ementa: p.ementa,
+          ementa,
           situacao,
           sourceUrl,
           sourceUrlSenado: sourceUrl,
