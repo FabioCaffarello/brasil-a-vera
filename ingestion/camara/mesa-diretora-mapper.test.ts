@@ -48,6 +48,16 @@ describe('mapMesaItemCamara', () => {
     })
   })
 
+  it('persiste dataInicio/dataFim da fonte (biênio encerrado sai do filtro vigente)', () => {
+    const row = mapMesaItemCamara(
+      { ...base, dataInicio: '2023-02-01', dataFim: '2025-02-01' },
+      legislatura,
+      parlamentarMap,
+    )
+    expect(row?.dataInicio).toBe('2023-02-01')
+    expect(row?.dataFim).toBe('2025-02-01')
+  })
+
   it('retorna null quando parlamentar não está na base', () => {
     const out = mapMesaItemCamara(
       { ...base, id: 99999 },

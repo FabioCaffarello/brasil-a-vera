@@ -42,7 +42,9 @@ export function mapMesaItemCamara(
     entidade: 'Mesa Diretora',
     casa: 'CAMARA',
     legislatura,
-    dataInicio: null,
-    dataFim: null,
+    // Período real do cargo: biênios encerrados chegam com dataFim
+    // preenchida e saem naturalmente do filtro data_fim IS NULL da app.
+    dataInicio: item.dataInicio ?? null,
+    dataFim: item.dataFim ?? null,
   }
 }
