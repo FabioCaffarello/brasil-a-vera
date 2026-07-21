@@ -1,14 +1,15 @@
 // Listagem de vetos presidenciais (ADR-059, Sprint 13.2).
 // SSG com revalidate 24h — ingestão mensal, resultados quase-imutáveis.
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  DataBadge,
+} from '@fabio.caffarello/react-design-system/server'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
 import { formatDataBR } from '@/lib/format'
 import { getAnosComVetos, getVetosByAno } from '@/lib/queries/vetos'
-
-export const revalidate = 86400
 
 export const metadata = {
   title: 'Vetos presidenciais — Brasil à Vera',
@@ -16,6 +17,8 @@ export const metadata = {
     'Vetos presidenciais apreciados pelo Congresso Nacional. Veja como os senadores votaram na manutenção ou derrubada de cada veto.',
 }
 
+// Pills via DataBadge do RDS (débito ADR-053 apontado na auditoria UX
+// 2026-07-20: /vetos usava bg-amber-100/red-100/green-100 cru).
 function SituacaoBadge({
   situacao,
   emTramitacao,
@@ -25,32 +28,40 @@ function SituacaoBadge({
 }) {
   if (emTramitacao) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 text-xs dark:bg-amber-900/30 dark:text-amber-300">
-        <Clock className="h-3 w-3" aria-hidden />
-        Em tramitação
-      </span>
+      <DataBadge
+        icon={<Clock className="h-3 w-3" />}
+        label="Em tramitação"
+        tone="warning"
+      />
     )
   }
   if (situacao === 'Mantido') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 font-medium text-red-800 text-xs dark:bg-red-900/30 dark:text-red-300">
-        <CheckCircle className="h-3 w-3" aria-hidden />
-        Mantido
-      </span>
+      <DataBadge
+        icon={<CheckCircle className="h-3 w-3" />}
+        label="Mantido"
+        tone="error"
+      />
     )
   }
   if (situacao === 'Rejeitado') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800 text-xs dark:bg-green-900/30 dark:text-green-300">
-        <XCircle className="h-3 w-3" aria-hidden />
-        Derrubado
-      </span>
+      <DataBadge
+        icon={<XCircle className="h-3 w-3" />}
+        label="Derrubado"
+        tone="success"
+      />
     )
   }
   return null
 }
 
-export default async function VetosPage() {
+interface VetosPageProps {
+  searchParams: Promise<{ ano?: string }>
+}
+
+export default async function VetosPage({ searchParams }: VetosPageProps) {
+  const params = await searchParams
   const anos = await getAnosComVetos()
 
   if (anos.length === 0) {
@@ -72,8 +83,11 @@ export default async function VetosPage() {
     )
   }
 
-  // Carrega o ano mais recente por padrão
-  const anoAtivo = anos[0]
+  // ?ano= era decorativo: a page não lia searchParams e os links do filtro
+  // sempre mostravam o ano mais recente (auditoria UX 2026-07-20, Onda D).
+  // Página passa a dynamic (filtro, regra 9); queries seguem em cached().
+  const anoParam = Number(params.ano)
+  const anoAtivo = anos.includes(anoParam) ? anoParam : anos[0]
   const vetos = await getVetosByAno(anoAtivo)
 
   return (
@@ -134,7 +148,7 @@ export default async function VetosPage() {
                       </span>
                       {v.vetoTotal && (
                         <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-fg-tertiary text-xs">
-                          Total
+                          Veto total
                         </span>
                       )}
                       <SituacaoBadge emTramitacao={v.emTramitacao} />
@@ -167,8 +181,8 @@ export default async function VetosPage() {
       )}
 
       <p className="mt-8 text-fg-tertiary text-xs">
-        Fonte: API do Congresso Nacional. Votos nominais disponíveis apenas para
-        senadores — ADR-059.
+        Fonte: API do Congresso Nacional. A fonte oficial publica voto nominal
+        apenas dos senadores; o voto dos deputados não é disponibilizado.
       </p>
     </div>
   )

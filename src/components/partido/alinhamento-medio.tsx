@@ -25,8 +25,11 @@ export function AlinhamentoMedioBancadaBlock({ alinhamento, sigla }: Props) {
 
       <div className="h-2 w-full overflow-hidden rounded-full bg-surface-raised">
         <div
-          className="h-full rounded-full bg-blue-500"
-          style={{ width: `${Math.min(alinhamento.percentualMedio, 100)}%` }}
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.min(alinhamento.percentualMedio, 100)}%`,
+            backgroundColor: 'var(--color-chart-5)',
+          }}
           aria-hidden
         />
       </div>
