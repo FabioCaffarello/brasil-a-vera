@@ -45,6 +45,17 @@ export default async function TemaPage({ params }: PageProps) {
 
   return (
     <>
+      {/* Breadcrumb ACIMA do H1 — nas demais rotas de detalhe ele antecede o
+          título; aqui aparecia depois do hero (auditoria UX 2026-07-20, P2.9). */}
+      <div className="mx-auto max-w-5xl pt-6">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Temas', href: '/temas' },
+            { label: tema.nome },
+          ]}
+        />
+      </div>
       <HeroSection
         align="center"
         description={`${tema.total} ${tema.total === 1 ? 'proposição classificada' : 'proposições classificadas'} neste tema e quem mais as propõe.`}
@@ -53,14 +64,6 @@ export default async function TemaPage({ params }: PageProps) {
       />
 
       <div className="mx-auto max-w-5xl space-y-8 py-8">
-        <Breadcrumb
-          items={[
-            { label: 'Início', href: '/' },
-            { label: 'Temas', href: '/temas' },
-            { label: tema.nome },
-          ]}
-        />
-
         <section className="space-y-3">
           <h2 className="font-semibold text-fg-primary text-lg">
             Quem mais propõe sobre o tema
