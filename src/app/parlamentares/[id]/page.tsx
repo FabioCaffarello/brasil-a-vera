@@ -151,7 +151,10 @@ import {
 import { getVotacoesComissaoByParlamentar } from '@/lib/queries/votacoes-comissao'
 import { buildMixComposicao } from '@/modules/eleitoral/domain/mix'
 
-const casaLabel = (casa: string) => (casa === 'CAMARA' ? 'Câmara' : 'Senado')
+// "da Câmara" / "do Senado" — artigo com gênero correto (auditoria UX
+// 2026-07-20: prod exibia "p1 da Senado").
+const casaComArtigo = (casa: string) =>
+  casa === 'CAMARA' ? 'da Câmara' : 'do Senado'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -758,7 +761,7 @@ export default async function ParlamentarPerfilPage({
                 <CompartilharButton
                   campaign="proposicoes"
                   fato={{
-                    mensagem: `Apresentou ${comparacoes.proposicoesCount} proposições como autor ou coautor${comparacoes.percentilProposicoesCasa !== null ? ` — ${formatPercentil(comparacoes.percentilProposicoesCasa)} da ${casaLabel(parlamentar.casa)}` : ''}.`,
+                    mensagem: `Apresentou ${comparacoes.proposicoesCount} proposições como autor ou coautor${comparacoes.percentilProposicoesCasa !== null ? ` — ${formatPercentil(comparacoes.percentilProposicoesCasa)} ${casaComArtigo(parlamentar.casa)}` : ''}.`,
                   }}
                   parlamentar={{
                     nome: parlamentar.nome,
@@ -1090,7 +1093,7 @@ export default async function ParlamentarPerfilPage({
                   <>
                     {' · '}
                     <span className="text-fg-quaternary">
-                      mediana da {casaLabel(parlamentar.casa)} em{' '}
+                      mediana {casaComArtigo(parlamentar.casa)} em{' '}
                       {Math.round(comparacoes.medianaAlinhamentoCasa)}%
                     </span>
                   </>
@@ -1117,8 +1120,8 @@ export default async function ParlamentarPerfilPage({
                   <>
                     {proposicoesPage.nextCursor ? ' · ' : ''}
                     <span className="text-fg-quaternary">
-                      {formatPercentil(comparacoes.percentilProposicoesCasa)} da{' '}
-                      {casaLabel(parlamentar.casa)}
+                      {formatPercentil(comparacoes.percentilProposicoesCasa)}{' '}
+                      {casaComArtigo(parlamentar.casa)}
                     </span>
                   </>
                 ) : null}
@@ -1141,8 +1144,8 @@ export default async function ParlamentarPerfilPage({
                   <>
                     {' · '}
                     <span className="text-fg-quaternary">
-                      {formatPercentil(comparacoes.percentilGastoCasa)} da{' '}
-                      {casaLabel(parlamentar.casa)}
+                      {formatPercentil(comparacoes.percentilGastoCasa)}{' '}
+                      {casaComArtigo(parlamentar.casa)}
                     </span>
                   </>
                 ) : null}

@@ -102,10 +102,8 @@ export function Top5Afinidade({ afinidades }: Props) {
           coincidiram (mesmo SIM/NÃO/Abstenção). Votos AUSENTE em qualquer lado
           são excluídos — &quot;ambos ausentes&quot; não é concordância
           política, é apenas não-presença. Mínimo de {TOP5_QUORUM_MINIMO}{' '}
-          votações em comum para incluir um par (recalibrado no Sprint 3.0.5 a
-          partir do mínimo anterior de 5 — distribuição empírica mostrou que
-          18,4% dos pares atingiam 100% com quórum 5, indicador de amostra
-          pequena, não de afinidade real).
+          votações em comum para incluir um par — abaixo disso, coincidências de
+          100% aparecem por acaso (amostra pequena), não por afinidade real.
         </p>
       </details>
     </div>

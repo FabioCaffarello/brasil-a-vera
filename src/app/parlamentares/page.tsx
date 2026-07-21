@@ -155,7 +155,7 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
     <>
       <HeroSection
         align="center"
-        description="Deputados federais (Câmara) e senadores (Senado) em exercício na legislatura atual."
+        description="Deputados federais (Câmara) e senadores (Senado) da legislatura atual — inclui titulares, suplentes em exercício e mandatos encerrados no período."
         kicker={
           <DataBadge
             icon={<Users className="h-3 w-3" />}
@@ -169,10 +169,17 @@ export default async function ParlamentaresPage({ searchParams }: PageProps) {
       />
 
       <div className="mx-auto max-w-6xl space-y-6 py-8">
+        {/* col-span no 3º Stat: o grid mobile do StatGroup é 2 colunas e
+            3 itens deixavam um "card" fantasma no 4º quadrante (auditoria
+            UX 2026-07-20, P2.13). */}
         <StatGroup cols={3} layout="grid">
           <Stat label="parlamentares" value={stats.totalParlamentares} />
           <Stat label="partidos" value={stats.totalPartidos} />
-          <Stat label="UFs" value={stats.totalUfs} />
+          <Stat
+            className="col-span-2 md:col-span-1"
+            label="UFs"
+            value={stats.totalUfs}
+          />
         </StatGroup>
 
         <Filtros partidos={partidos} selecionado={filtros} ufs={ufs} />

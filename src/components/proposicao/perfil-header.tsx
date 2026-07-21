@@ -27,6 +27,13 @@ interface Props {
   } | null
 }
 
+// A fonte manda regime "." ou só pontuação, que passa no truthiness e
+// renderizava "Regime: ." (auditoria UX 2026-07-20).
+function regimeLimpo(regime: string | null): string | null {
+  const limpo = regime?.trim().replace(/^[.··\-–—]+$/, '') ?? ''
+  return limpo === '' ? null : limpo
+}
+
 export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
   const ref = formatProposicaoRef(
     proposicao.tipo,
@@ -60,11 +67,11 @@ export function PerfilProposicaoHeader({ proposicao, stats }: Props) {
           </details>
         )}
 
-      {proposicao.regime ? (
+      {regimeLimpo(proposicao.regime) ? (
         <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1 text-fg-primary text-sm sm:grid-cols-2">
           <div>
             <dt className="inline font-medium">Regime: </dt>
-            <dd className="inline">{proposicao.regime}</dd>
+            <dd className="inline">{regimeLimpo(proposicao.regime)}</dd>
           </div>
         </dl>
       ) : null}
