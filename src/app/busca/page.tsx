@@ -149,7 +149,7 @@ export default async function BuscaPage({ searchParams }: PageProps) {
                 </Link>
               </Button>
             }
-            description="Tente termos mais curtos ou sem acento. O Brasil à Vera cobre o Legislativo federal — a Câmara dos Deputados e o Senado. Não temos dados municipais (vereadores, prefeitos)."
+            description="Tente termos mais curtos ou mais genéricos — acentos não fazem diferença. O Brasil à Vera cobre o Legislativo federal — a Câmara dos Deputados e o Senado. Não temos dados municipais (vereadores, prefeitos)."
             icon={MapPin}
             title="Nenhum resultado encontrado"
           />

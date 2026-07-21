@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
@@ -44,7 +44,9 @@ export async function listFrentes(
         legislatura: frenteParlamentar.legislatura,
       })
       .from(frenteParlamentar)
-      .orderBy(asc(frenteParlamentar.nome))
+      // lower(unaccent(...)): nomes vêm em caixa alta e com acento da fonte;
+      // byte-order (collation C) desordenava a lista. Migration 0040.
+      .orderBy(sql`lower(unaccent(${frenteParlamentar.nome}))`)
 
     // Contar membros por frente em uma segunda query (mais simples que GROUP BY
     // com Drizzle quando o join não é direto em select único).
@@ -97,7 +99,7 @@ export async function getFrenteById(id: string): Promise<FrenteDetalhe | null> {
       .from(frenteMembro)
       .innerJoin(parlamentar, eq(parlamentar.id, frenteMembro.parlamentarId))
       .where(eq(frenteMembro.frenteId, id))
-      .orderBy(asc(parlamentar.nome))
+      .orderBy(sql`lower(unaccent(${parlamentar.nome}))`)
 
     return {
       id: frente.id,

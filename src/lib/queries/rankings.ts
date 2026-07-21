@@ -312,7 +312,10 @@ export async function getRankingCoerencia(limit = 25): Promise<{
   maisPares: RankingCoerenciaEntry[]
   menosPares: RankingCoerenciaEntry[]
 }> {
-  return cached(`rankings:coerencia:n=${limit}`, TTL.rankings, async () => {
+  // :v2 — "mais contradições" passou a exigir count > 0 (auditoria UX
+  // 2026-07-20, P1.4: com a base 100% zerada as duas colunas listavam os
+  // mesmos parlamentares com 0 pares).
+  return cached(`rankings:coerencia:n=${limit}:v2`, TTL.rankings, async () => {
     const baseWhere = isNotNull(
       estatisticaParlamentarAgregada.paresContraditoriosCount,
     )
@@ -336,7 +339,12 @@ export async function getRankingCoerencia(limit = 25): Promise<{
           estatisticaParlamentarAgregada,
           eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
         )
-        .where(baseWhere)
+        .where(
+          and(
+            baseWhere,
+            gt(estatisticaParlamentarAgregada.paresContraditoriosCount, 0),
+          ),
+        )
         .orderBy(desc(estatisticaParlamentarAgregada.paresContraditoriosCount))
         .limit(limit),
       db
