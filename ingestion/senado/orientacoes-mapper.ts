@@ -116,3 +116,25 @@ export function materiaSessaoKey(parts: {
   }
   return `${sigla.trim().toUpperCase()}|${numero}|${ano}|${numeroSessao}`
 }
+
+// Métricas relevantes para decidir se um run de orientações "falhou de verdade"
+// ou apenas não teve nada seguramente casável (fail-closed legítimo).
+export interface OrientacaoOutcome {
+  matched: number
+  // Chave (matéria+sessão) NÃO encontrada no índice de votações: indício real
+  // de votações não ingeridas na janela OU de drift no formato da chave.
+  unmatchedSemVotacao: number
+}
+
+// Canário de saída do runner: `true` = falha dura (exit 1).
+//
+// Só falha quando NADA casou E ao menos uma orientação apontou para uma
+// votação inexistente no índice (`unmatchedSemVotacao`) — o sintoma real de
+// "votacoes não rodou" ou de chave driftada. Colisão (matéria votada N× na
+// sessão) é fail-closed por DESIGN: a chave existe no índice mas é ambígua, e
+// a fonte não dá desempate. Um run 100% colisão é o pipeline funcionando como
+// projetado — não pode virar incidente vermelho (lição do release v0.14.0:
+// fail-closed legítimo não é falha; alarme permanente é ausência de alarme).
+export function orientacoesRunFailed(outcome: OrientacaoOutcome): boolean {
+  return outcome.matched === 0 && outcome.unmatchedSemVotacao > 0
+}
