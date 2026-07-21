@@ -50,6 +50,26 @@ export function formatDataBR(value: Date | string | null | undefined): string {
   return FORMATADOR_DATA.format(d)
 }
 
+// "17 jul 2026" — para contextos onde as barras de DD/MM/AAAA colidem com
+// separadores visuais (ex.: breadcrumb — auditoria UX 2026-07-20, P2.7).
+export function formatDataExtensaCurta(
+  value: Date | string | null | undefined,
+): string {
+  if (!value) return '—'
+  const d = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(d.getTime())) return '—'
+  // UTC pela mesma razão do FORMATADOR_DATA (datas sem hora deslocariam
+  // 1 dia em fusos negativos).
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+    .format(d)
+    .replace(/\./g, '')
+}
+
 export function formatDataHoraBR(
   value: Date | string | null | undefined,
 ): string {

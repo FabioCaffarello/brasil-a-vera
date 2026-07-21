@@ -43,7 +43,7 @@ import { VotosDrawer } from '@/components/votacao/votos-drawer'
 import { VotosPorPartido } from '@/components/votacao/votos-por-partido'
 import { VotosResumo } from '@/components/votacao/votos-resumo'
 import { canExport } from '@/lib/auth-guards'
-import { formatDataBR } from '@/lib/format'
+import { formatDataExtensaCurta } from '@/lib/format'
 import {
   getDisciplinaPartidariaPorVotacao,
   getDivergenciasByVotacao,
@@ -146,12 +146,25 @@ export default async function VotacaoPage({ params }: PageProps) {
     disciplinas.map((d) => d.partido),
   )
 
+  // Votação simbólica: branch ÚNICO no parent. Antes, MargemDecisaoBar,
+  // Hemiciclo/Consolidados e VotosResumo renderizavam cada um a própria
+  // mensagem de "votação simbólica" — 3 avisos quase idênticos empilhados
+  // (auditoria UX 2026-07-20, P2.1).
+  const simbolica = votos.length === 0 && v.votosSim === 0 && v.votosNao === 0
+
   const sections: DetailSection[] = [
     {
       id: 'resumo',
       navLabel: 'Resumo',
       navIcon: <CircleSlash className="h-4 w-4" />,
-      content: (
+      content: simbolica ? (
+        <p className="rounded-lg border border-line-default border-dashed bg-surface-base/50 p-4 text-fg-tertiary text-sm">
+          Votação simbólica — a fonte oficial não registrou voto individual. É
+          comum em comissões e em encaminhamentos procedimentais: vale o
+          resultado do colegiado ({v.aprovada ? 'aprovada' : 'rejeitada'}), sem
+          placar por parlamentar.
+        </p>
+      ) : (
         <div className="space-y-4">
           <MargemDecisaoBar
             aprovada={v.aprovada}
@@ -261,21 +274,27 @@ export default async function VotacaoPage({ params }: PageProps) {
             : []),
         ]
       : []),
-    {
-      id: 'individuais',
-      navLabel: 'Individuais',
-      title: 'Votos individuais',
-      subtitle:
-        'Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV.',
-      navIcon: <Users className="h-4 w-4" />,
-      content: (
-        <VotosDrawer
-          canExport={canExportData}
-          exportHref={`/api/export/votacoes/${v.id}/votos`}
-          votos={votos}
-        />
-      ),
-    },
+    // Sem votos individuais não há o que abrir — a seção sumia atrás de um
+    // botão "Ver todos os 0 votos" (auditoria UX 2026-07-20, P2.1).
+    ...(simbolica
+      ? []
+      : [
+          {
+            id: 'individuais',
+            navLabel: 'Individuais',
+            title: 'Votos individuais',
+            subtitle:
+              'Abra a lista completa para navegar e filtrar os votos por direção (clique no nome para o perfil 360° do parlamentar) ou exporte tudo em CSV.',
+            navIcon: <Users className="h-4 w-4" />,
+            content: (
+              <VotosDrawer
+                canExport={canExportData}
+                exportHref={`/api/export/votacoes/${v.id}/votos`}
+                votos={votos}
+              />
+            ),
+          } satisfies DetailSection,
+        ]),
   ]
 
   return (
@@ -285,7 +304,9 @@ export default async function VotacaoPage({ params }: PageProps) {
           items={[
             { label: 'Início', href: '/' },
             { label: 'Votações', href: '/votacoes' },
-            { label: formatDataBR(v.dataHora) },
+            // "17 jul 2026": DD/MM/AAAA colidia com os separadores do
+            // breadcrumb (auditoria UX 2026-07-20, P2.7).
+            { label: formatDataExtensaCurta(v.dataHora) },
           ]}
         />
       }
