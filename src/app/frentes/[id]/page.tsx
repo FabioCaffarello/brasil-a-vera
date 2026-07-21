@@ -1,7 +1,10 @@
 // Detalhe de frente parlamentar — Sprint 26.
 // SSG revalidate 30d — ingestão mensal.
 
-import { Breadcrumb } from '@fabio.caffarello/react-design-system/server'
+import {
+  Breadcrumb,
+  HeroSection,
+} from '@fabio.caffarello/react-design-system/server'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -55,14 +58,14 @@ export default async function FrenteDetalhePage({ params }: PageProps) {
         ]}
       />
 
-      <div className="mt-6 mb-8">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          {frente.nome}
-        </h1>
-        <p className="mt-2 text-fg-tertiary text-sm">
-          Legislatura {frente.legislatura} · {frente.membros.length} membros
-        </p>
-      </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como tema-detalhe. */}
+      <HeroSection
+        align="center"
+        description={`Legislatura ${frente.legislatura} · ${frente.membros.length} ${frente.membros.length === 1 ? 'membro' : 'membros'}`}
+        title={frente.nome}
+        variant="plain"
+      />
 
       {frente.membros.length === 0 ? (
         <p className="text-fg-tertiary text-sm">

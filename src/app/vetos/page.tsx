@@ -4,6 +4,7 @@
 import {
   Breadcrumb,
   DataBadge,
+  HeroSection,
 } from '@fabio.caffarello/react-design-system/server'
 import { CheckCircle, Clock, XCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -91,99 +92,101 @@ export default async function VetosPage({ searchParams }: VetosPageProps) {
   const vetos = await getVetosByAno(anoAtivo)
 
   return (
-    <div className="mx-auto max-w-3xl py-8">
-      <Breadcrumb
-        items={[
-          { label: 'Início', href: '/' },
-          { label: 'Vetos presidenciais' },
-        ]}
-      />
-
-      <div className="mt-6 mb-2">
-        <h1 className="font-bold text-2xl text-fg-primary tracking-tight sm:text-3xl">
-          Vetos presidenciais
-        </h1>
-        <p className="mt-2 text-fg-secondary text-sm">
-          Vetos do Executivo apreciados pelo Congresso Nacional em sessão
-          conjunta. "Mantido" = Congresso manteve o veto; "Derrubado" =
-          Congresso rejeitou o veto e promulgou o trecho vetado.
-        </p>
-      </div>
-
-      {/* Filtro por ano */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {anos.map((ano) => (
-          <Link
-            key={ano}
-            className={`rounded-full border px-3 py-1 text-sm transition-colors ${
-              ano === anoAtivo
-                ? 'border-fg-primary bg-fg-primary text-surface-base'
-                : 'border-line-default text-fg-secondary hover:border-fg-tertiary hover:text-fg-primary'
-            }`}
-            href={`/vetos?ano=${ano}`}
-          >
-            {ano}
-          </Link>
-        ))}
-      </div>
-
-      {vetos.length === 0 ? (
-        <EmptyState
-          description={`Nenhum veto registrado para ${anoAtivo}.`}
-          title="Nenhum veto"
+    <>
+      <div className="mx-auto max-w-3xl pt-8">
+        <Breadcrumb
+          items={[
+            { label: 'Início', href: '/' },
+            { label: 'Vetos presidenciais' },
+          ]}
         />
-      ) : (
-        <ul className="space-y-3">
-          {vetos.map((v) => (
-            <li key={v.id}>
-              <Link
-                className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-fg-quaternary hover:bg-surface-raised"
-                href={`/vetos/${v.sourceId}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-fg-primary text-sm">
-                        VET {v.numero}/{v.ano}
-                      </span>
-                      {v.vetoTotal && (
-                        <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-fg-tertiary text-xs">
-                          Veto total
+      </div>
+      {/* P2.10 (auditoria UX 2026-07-20): header padronizado no
+          HeroSection centralizado, como nas rotas core. */}
+      <HeroSection
+        align="center"
+        description={
+          'Vetos do Executivo apreciados pelo Congresso Nacional em sessão conjunta. "Mantido" = Congresso manteve o veto; "Derrubado" = Congresso rejeitou o veto e promulgou o trecho vetado.'
+        }
+        title="Vetos presidenciais"
+        variant="plain"
+      />
+      <div className="mx-auto max-w-3xl pb-8">
+        {/* Filtro por ano */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          {anos.map((ano) => (
+            <Link
+              key={ano}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                ano === anoAtivo
+                  ? 'border-fg-primary bg-fg-primary text-surface-base'
+                  : 'border-line-default text-fg-secondary hover:border-fg-tertiary hover:text-fg-primary'
+              }`}
+              href={`/vetos?ano=${ano}`}
+            >
+              {ano}
+            </Link>
+          ))}
+        </div>
+
+        {vetos.length === 0 ? (
+          <EmptyState
+            description={`Nenhum veto registrado para ${anoAtivo}.`}
+            title="Nenhum veto"
+          />
+        ) : (
+          <ul className="space-y-3">
+            {vetos.map((v) => (
+              <li key={v.id}>
+                <Link
+                  className="block rounded-lg border border-line-default bg-surface-base p-4 transition-colors hover:border-fg-quaternary hover:bg-surface-raised"
+                  href={`/vetos/${v.sourceId}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-fg-primary text-sm">
+                          VET {v.numero}/{v.ano}
                         </span>
+                        {v.vetoTotal && (
+                          <span className="rounded-full bg-surface-subtle px-2 py-0.5 text-fg-tertiary text-xs">
+                            Veto total
+                          </span>
+                        )}
+                        <SituacaoBadge emTramitacao={v.emTramitacao} />
+                      </div>
+                      {v.assunto && (
+                        <p className="mb-1 font-medium text-fg-secondary text-sm">
+                          {v.assunto}
+                        </p>
                       )}
-                      <SituacaoBadge emTramitacao={v.emTramitacao} />
+                      <p className="line-clamp-2 text-fg-tertiary text-xs">
+                        {v.ementa}
+                      </p>
+                      {v.materiaVetadaSigla && v.materiaVetadaNumero && (
+                        <p className="mt-1 text-fg-quaternary text-xs">
+                          {v.materiaVetadaSigla} {v.materiaVetadaNumero}/
+                          {v.materiaVetadaAno}
+                        </p>
+                      )}
                     </div>
-                    {v.assunto && (
-                      <p className="mb-1 font-medium text-fg-secondary text-sm">
-                        {v.assunto}
-                      </p>
-                    )}
-                    <p className="line-clamp-2 text-fg-tertiary text-xs">
-                      {v.ementa}
-                    </p>
-                    {v.materiaVetadaSigla && v.materiaVetadaNumero && (
-                      <p className="mt-1 text-fg-quaternary text-xs">
-                        {v.materiaVetadaSigla} {v.materiaVetadaNumero}/
-                        {v.materiaVetadaAno}
-                      </p>
+                    {v.dataPublicacao && (
+                      <span className="shrink-0 text-fg-quaternary text-xs">
+                        {formatDataBR(v.dataPublicacao)}
+                      </span>
                     )}
                   </div>
-                  {v.dataPublicacao && (
-                    <span className="shrink-0 text-fg-quaternary text-xs">
-                      {formatDataBR(v.dataPublicacao)}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      <p className="mt-8 text-fg-tertiary text-xs">
-        Fonte: API do Congresso Nacional. A fonte oficial publica voto nominal
-        apenas dos senadores; o voto dos deputados não é disponibilizado.
-      </p>
-    </div>
+        <p className="mt-8 text-fg-tertiary text-xs">
+          Fonte: API do Congresso Nacional. A fonte oficial publica voto nominal
+          apenas dos senadores; o voto dos deputados não é disponibilizado.
+        </p>
+      </div>
+    </>
   )
 }
