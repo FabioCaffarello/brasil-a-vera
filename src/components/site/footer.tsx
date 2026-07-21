@@ -18,6 +18,9 @@ import Link from 'next/link'
  * - Link GitHub com rel/target corretos
  * - Estrutura semântica <footer>
  */
+const FOOTER_LINK_CLASS =
+  'rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+
 export function Footer() {
   return (
     <footer className="border-border border-t bg-surface">
@@ -39,21 +42,33 @@ export function Footer() {
             Dados oficiais da Câmara dos Deputados e do Senado Federal.
           </p>
         </div>
-        <nav aria-label="Footer" className="flex items-center gap-4">
-          <Link
-            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            href="/docs"
-          >
+        {/* Auditoria UX 2026-07-20 (P1.7): footer é o home das rotas
+            secundárias (Vetos/Frentes/Comparar/Feed) que não cabem no menu
+            desktop. gap-x/gap-y separados alinham o wrap no mobile. */}
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2"
+        >
+          <Link className={FOOTER_LINK_CLASS} href="/vetos">
+            Vetos
+          </Link>
+          <Link className={FOOTER_LINK_CLASS} href="/frentes">
+            Frentes
+          </Link>
+          <Link className={FOOTER_LINK_CLASS} href="/comparar">
+            Comparar
+          </Link>
+          <Link className={FOOTER_LINK_CLASS} href="/feed">
+            Feeds RSS
+          </Link>
+          <Link className={FOOTER_LINK_CLASS} href="/docs">
             Como ler os dados
           </Link>
-          <Link
-            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            href="/docs/metodologia"
-          >
+          <Link className={FOOTER_LINK_CLASS} href="/docs/metodologia">
             Metodologia
           </Link>
           <a
-            className="rounded transition-colors hover:text-fg-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className={FOOTER_LINK_CLASS}
             href="https://github.com/FabioCaffarello/brasil-a-vera"
             rel="noopener noreferrer"
             target="_blank"

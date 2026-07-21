@@ -12,6 +12,7 @@
 
 import { Avatar } from '@fabio.caffarello/react-design-system/granular'
 
+import { cn } from '@/lib/cn'
 import { type AvatarSize, iniciais } from '@/lib/iniciais'
 
 interface Props {
@@ -30,6 +31,11 @@ interface Props {
 /**
  * Foto de parlamentar sobre o `Avatar` do RDS. `urlFoto` null ou imagem
  * quebrada → fallback de iniciais (o Avatar trata o `onError`).
+ *
+ * `avatar-hydration-fix` (globals.css §7): o Avatar do RDS revela o <img>
+ * via estado onLoad; com SSR + eager a imagem carrega antes da hidratação e
+ * fica presa em opacity-0 (círculo vazio em prod — auditoria UX 2026-07-20,
+ * P1.9). Stopgap até o upstream checar `img.complete` no mount.
  */
 export function ParlamentarAvatar({
   nome,
@@ -42,7 +48,7 @@ export function ParlamentarAvatar({
     <Avatar
       alt=""
       aria-label={`Foto de ${nome}`}
-      className={className}
+      className={cn('avatar-hydration-fix', className)}
       fallback={iniciais(nome)}
       loading={loading}
       size={size}

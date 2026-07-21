@@ -33,7 +33,8 @@ const SELECT_CLASS =
  * Helper interno: constrói href preservando outros filtros. Override
  * com `null` remove o filtro do URL. Base /rds/.
  *
- * `somenteNominais` é boolean — passar `'1'` ativa, `null` desativa.
+ * `somenteNominais`: default é só nominais; `'0'` inclui simbólicas e
+ * `null` restaura o default.
  */
 function buildHref(
   current: Props['selecionado'],
@@ -55,13 +56,15 @@ function buildHref(
     overrides.resultado !== undefined ? overrides.resultado : current.resultado
   if (resultado) params.set('resultado', resultado)
 
+  // Default = nominais; só serializa o opt-out ('0'). `null` restaura o
+  // default (remove o param). Auditoria UX 2026-07-20, P1.1.
   const nominais =
     overrides.somenteNominais !== undefined
       ? overrides.somenteNominais
       : current.somenteNominais
-        ? '1'
-        : null
-  if (nominais) params.set('somenteNominais', nominais)
+        ? null
+        : '0'
+  if (nominais === '0') params.set('somenteNominais', '0')
 
   const query = params.toString()
   return query ? `/votacoes?${query}` : '/votacoes'
@@ -106,8 +109,13 @@ function FiltrosAtivos({ selecionado }: { selecionado: Props['selecionado'] }) {
   if (selecionado.ano) {
     ativos.push({ key: 'ano', label: 'Ano', value: selecionado.ano })
   }
-  if (selecionado.somenteNominais) {
-    ativos.push({ key: 'somenteNominais', label: 'Tipo', value: 'Só nominais' })
+  // O default (só nominais) não conta como filtro ativo; o desvio dele sim.
+  if (!selecionado.somenteNominais) {
+    ativos.push({
+      key: 'somenteNominais',
+      label: 'Tipo',
+      value: 'Todas (inclui simbólicas)',
+    })
   }
 
   if (ativos.length === 0) return null
@@ -183,12 +191,13 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
 
       <FilterChips label="Tipo de registro">
         <Chip asChild selected={Boolean(selecionado.somenteNominais)}>
-          <Link
-            href={buildHref(selecionado, {
-              somenteNominais: selecionado.somenteNominais ? null : '1',
-            })}
-          >
+          <Link href={buildHref(selecionado, { somenteNominais: null })}>
             Só nominais (com voto individual)
+          </Link>
+        </Chip>
+        <Chip asChild selected={!selecionado.somenteNominais}>
+          <Link href={buildHref(selecionado, { somenteNominais: '0' })}>
+            Todas (inclui simbólicas)
           </Link>
         </Chip>
       </FilterChips>
@@ -204,9 +213,9 @@ export function FiltrosVotacao({ anos, selecionado }: Props) {
         {selecionado.resultado ? (
           <input name="resultado" type="hidden" value={selecionado.resultado} />
         ) : null}
-        {selecionado.somenteNominais ? (
-          <input name="somenteNominais" type="hidden" value="1" />
-        ) : null}
+        {selecionado.somenteNominais ? null : (
+          <input name="somenteNominais" type="hidden" value="0" />
+        )}
 
         <div className="flex flex-col gap-1">
           <Label className="text-fg-tertiary text-xs" htmlFor="filtro-ano">

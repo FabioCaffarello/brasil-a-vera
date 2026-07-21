@@ -1,4 +1,5 @@
 import type { ParlamentarRow } from '../shared/parlamentar-row'
+import { titleCaseNome } from '../shared/texto'
 
 import type { CamaraDeputadoListagem } from './deputados-schema'
 
@@ -15,7 +16,9 @@ export function mapDeputadoListagem(
 ): ParlamentarRow {
   return {
     sourceId: String(input.id),
-    nome: input.nome,
+    // titleCaseNome: a fonte manda alguns nomes 100% em caixa alta
+    // ("ANDRÉ ABDON") — auditoria UX 2026-07-20, Onda C.
+    nome: titleCaseNome(input.nome),
     nomeCivil: null,
     cpf: null,
     casa: 'CAMARA',

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, ilike, sql, sum } from 'drizzle-orm'
+import { and, asc, count, desc, eq, sql, sum } from 'drizzle-orm'
 
 import { cached, TTL } from '@/lib/cache'
 import { encodeCursor } from '@/lib/cursor'
@@ -71,7 +71,10 @@ function buildParlamentaresWhere(
   if (filtros.partido)
     whereClauses.push(eq(parlamentar.partidoSigla, filtros.partido))
   if (filtros.uf) whereClauses.push(eq(parlamentar.uf, filtros.uf))
-  if (q) whereClauses.push(ilike(parlamentar.nome, `%${q}%`))
+  if (q)
+    whereClauses.push(
+      sql`unaccent(${parlamentar.nome}) ILIKE unaccent(${`%${q}%`})`,
+    )
   return whereClauses
 }
 
@@ -79,16 +82,23 @@ function buildParlamentaresWhere(
 // preserva parlamentares sem agregado (recém-empossados, suplência atípica) —
 // caem no fim via NULLS LAST + tiebreak por nome ASC. A ordem `nome` ganha
 // `id ASC` como tiebreaker para o keyset ser determinístico (nomes repetem).
+//
+// lower(unaccent(...)): o banco ordena em byte-order (collation C), que põe
+// maiúsculas antes de minúsculas e acentos depois de "z" — em prod a lista
+// abria com "AJ Albuquerque" < "ANDRÉ ABDON" < "Abilio Brunini". Requer a
+// extensão unaccent (migration 0040).
+const nomeOrdenado = sql`lower(unaccent(${parlamentar.nome}))`
+
 function parlamentaresOrderBy(ordem: OrdemListagem) {
   switch (ordem) {
     case 'alinhamento':
-      return sql`${estatisticaParlamentarAgregada.pctAlinhamento} DESC NULLS LAST, ${parlamentar.nome} ASC`
+      return sql`${estatisticaParlamentarAgregada.pctAlinhamento} DESC NULLS LAST, ${nomeOrdenado} ASC`
     case 'gasto':
-      return sql`${estatisticaParlamentarAgregada.gastoTotalAno} DESC NULLS LAST, ${parlamentar.nome} ASC`
+      return sql`${estatisticaParlamentarAgregada.gastoTotalAno} DESC NULLS LAST, ${nomeOrdenado} ASC`
     case 'proposicoes':
-      return sql`${estatisticaParlamentarAgregada.proposicoesCount} DESC NULLS LAST, ${parlamentar.nome} ASC`
+      return sql`${estatisticaParlamentarAgregada.proposicoesCount} DESC NULLS LAST, ${nomeOrdenado} ASC`
     default:
-      return sql`${parlamentar.nome} ASC, ${parlamentar.id} ASC`
+      return sql`${nomeOrdenado} ASC, ${parlamentar.id} ASC`
   }
 }
 
@@ -169,11 +179,13 @@ export async function listParlamentaresPaginado(
     }
 
     // Keyset (nome ASC, id ASC) — tuple compare: continuar onde parou.
+    // Mesma expressão lower(unaccent(...)) da ORDER BY, senão o cursor pula
+    // ou repete linhas na fronteira de página.
     if (opts.cursor) {
       const c = opts.cursor
       where.push(
-        sql`(${parlamentar.nome} > ${c.nome}
-        OR (${parlamentar.nome} = ${c.nome} AND ${parlamentar.id} > ${c.id}))`,
+        sql`(${nomeOrdenado} > lower(unaccent(${c.nome}))
+        OR (${nomeOrdenado} = lower(unaccent(${c.nome})) AND ${parlamentar.id} > ${c.id}))`,
       )
     }
 
@@ -186,7 +198,7 @@ export async function listParlamentaresPaginado(
         eq(estatisticaParlamentarAgregada.parlamentarId, parlamentar.id),
       )
       .where(where.length > 0 ? and(...where) : undefined)
-      .orderBy(asc(parlamentar.nome), asc(parlamentar.id))
+      .orderBy(sql`${nomeOrdenado} ASC`, asc(parlamentar.id))
       .limit(limitPlusOne)) as ParlamentarListRow[]
 
     const hasMore = rows.length > limit

@@ -78,11 +78,11 @@ export async function busca(query: string): Promise<ResultadosBusca> {
       .from(parlamentar)
       .where(
         or(
-          sql`${parlamentar.nome} ILIKE ${pattern}`,
-          sql`${parlamentar.nomeCivil} ILIKE ${pattern}`,
+          sql`unaccent(${parlamentar.nome}) ILIKE unaccent(${pattern})`,
+          sql`unaccent(${parlamentar.nomeCivil}) ILIKE unaccent(${pattern})`,
         ),
       )
-      .orderBy(parlamentar.nome)
+      .orderBy(sql`lower(unaccent(${parlamentar.nome}))`)
       .limit(LIMIT_POR_SECAO),
 
     db
@@ -95,7 +95,7 @@ export async function busca(query: string): Promise<ResultadosBusca> {
         situacao: proposicao.situacao,
       })
       .from(proposicao)
-      .where(sql`${proposicao.ementa} ILIKE ${pattern}`)
+      .where(sql`unaccent(${proposicao.ementa}) ILIKE unaccent(${pattern})`)
       .orderBy(desc(proposicao.ano), desc(proposicao.numero))
       .limit(LIMIT_POR_SECAO),
 
@@ -116,7 +116,7 @@ export async function busca(query: string): Promise<ResultadosBusca> {
       })
       .from(votacao)
       .leftJoin(proposicao, eq(proposicao.id, votacao.proposicaoId))
-      .where(sql`${votacao.descricao} ILIKE ${pattern}`)
+      .where(sql`unaccent(${votacao.descricao}) ILIKE unaccent(${pattern})`)
       .orderBy(desc(votacao.dataHora))
       .limit(LIMIT_POR_SECAO),
   ])

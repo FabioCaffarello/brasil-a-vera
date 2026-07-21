@@ -8,7 +8,12 @@ import { useEffect, useId, useState } from 'react'
 import { SearchForm } from '@/components/busca/search-form'
 import { cn } from '@/lib/cn'
 
-import { isNavLinkActive, NAV_LINKS, type NavLink } from './nav-links'
+import {
+  isNavLinkActive,
+  NAV_LINKS,
+  NAV_LINKS_SECUNDARIOS,
+  type NavLink,
+} from './nav-links'
 
 interface Props {
   /**
@@ -139,6 +144,32 @@ export function NavMobile({ personalLink }: Props = {}) {
                       isActive
                         ? 'bg-fg-primary/10 text-fg-primary ring-1 ring-fg-primary/10'
                         : 'text-fg-tertiary hover:bg-fg-primary/5 hover:text-fg-primary',
+                    )}
+                    href={link.href}
+                    tabIndex={open ? 0 : -1}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+          <ul
+            aria-label="Mais seções"
+            className="mt-2 flex flex-col gap-0.5 border-line-default border-t pt-2 text-sm"
+          >
+            {NAV_LINKS_SECUNDARIOS.map((link) => {
+              const isActive = isNavLinkActive(pathname, link.href)
+              return (
+                <li key={link.href}>
+                  <Link
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'flex items-center rounded-md px-3 py-2 transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                      isActive
+                        ? 'bg-fg-primary/10 text-fg-primary ring-1 ring-fg-primary/10'
+                        : 'text-fg-quaternary hover:bg-fg-primary/5 hover:text-fg-primary',
                     )}
                     href={link.href}
                     tabIndex={open ? 0 : -1}

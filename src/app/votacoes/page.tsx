@@ -62,6 +62,13 @@ function normalizeCasa(value: string | undefined): Casa | undefined {
   return undefined
 }
 
+// Default = só nominais (auditoria UX 2026-07-20, P1.1): a listagem crua
+// abria dominada por dezenas de "Aprovado o Parecer." simbólicos idênticos.
+// `somenteNominais=0` opta por ver tudo; `1` segue aceito (deep-links).
+function parseSomenteNominais(value: string | undefined): boolean {
+  return value !== '0'
+}
+
 function normalizeResultado(
   value: string | undefined,
 ): 'aprovadas' | 'rejeitadas' | undefined {
@@ -148,7 +155,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
     casa: normalizeCasa(params.casa),
     ano: normalizeAno(params.ano),
     resultado: normalizeResultado(params.resultado),
-    somenteNominais: params.somenteNominais === '1',
+    somenteNominais: parseSomenteNominais(params.somenteNominais),
     proposicaoId: params.proposicao_id || undefined,
   }
 
@@ -179,8 +186,8 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
   // (caso de bootstrap, jamais em produção).
   const descricaoNarrativa =
     stats.total > 0 && stats.anoMaisAntigo
-      ? `${formatNumeroAbreviado(stats.total)} votações desde ${stats.anoMaisAntigo} em plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais.`
-      : 'Plenário e comissões da Câmara e do Senado. A maioria das votações em comissão é simbólica (sem voto individual registrado) — use o filtro para ver só nominais.'
+      ? `${formatNumeroAbreviado(stats.total)} votações desde ${stats.anoMaisAntigo} em plenário e comissões da Câmara e do Senado. Por padrão mostramos as nominais (com voto individual registrado) — mude o filtro para incluir as simbólicas.`
+      : 'Plenário e comissões da Câmara e do Senado. Por padrão mostramos as nominais (com voto individual registrado) — mude o filtro para incluir as simbólicas.'
 
   return (
     <>
@@ -238,7 +245,7 @@ export default async function VotacoesPage({ searchParams }: PageProps) {
             casa: params.casa,
             ano: params.ano,
             resultado: params.resultado,
-            somenteNominais: params.somenteNominais === '1',
+            somenteNominais: parseSomenteNominais(params.somenteNominais),
           }}
         />
 

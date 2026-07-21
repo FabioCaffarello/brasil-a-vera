@@ -560,3 +560,17 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- 7. Stopgap: Avatar do RDS invisível pós-hydration ----------
+   O Avatar (client) renderiza o <img> com opacity-0 e só revela no onLoad.
+   Com SSR + loading=eager, a imagem carrega ANTES da hidratação, o evento
+   `load` se perde e a foto fica baixada porém invisível (círculo vazio) —
+   auditoria UX 2026-07-20, P1.9; verificado em prod: fotos 200 image/jpeg
+   com o img travado em opacity-0. Regra unlayered (vence layer utilities)
+   força a visibilidade; quando o RDS remove o img (fallback por erro), o
+   seletor não casa nada. Remover quando o upstream checar img.complete no
+   mount (issue no repo do RDS). */
+.avatar-hydration-fix img {
+  /* biome-ignore lint/complexity/noImportantStyles: precisa vencer a utility opacity-0 aplicada pelo componente do RDS */
+  opacity: 1 !important;
+}
