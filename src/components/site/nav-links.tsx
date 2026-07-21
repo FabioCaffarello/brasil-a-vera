@@ -9,13 +9,27 @@ export type NavLink = {
   label: string
 }
 
+// Auditoria UX 2026-07-20 (P1.7): Rankings entrou no menu (feature core sem
+// nenhum ponto de entrada na navegação); Docs saiu para o footer ("Como ler
+// os dados" + "Metodologia"), que também ganhou Vetos/Frentes/Comparar/Feed.
+// Trocar 1-por-1 mantém a largura do menu em md (7 itens estouram).
 export const NAV_LINKS: NavLink[] = [
   { href: '/quem-me-representa', label: 'Quem me representa' },
   { href: '/parlamentares', label: 'Parlamentares' },
   { href: '/proposicoes', label: 'Proposições' },
   { href: '/votacoes', label: 'Votações' },
+  { href: '/rankings', label: 'Rankings' },
   { href: '/temas', label: 'Temas' },
-  { href: '/docs', label: 'Docs' },
+]
+
+// Rotas secundárias — não cabem no menu desktop; aparecem no painel mobile
+// (abaixo de um divisor) e no footer.
+export const NAV_LINKS_SECUNDARIOS: NavLink[] = [
+  { href: '/vetos', label: 'Vetos presidenciais' },
+  { href: '/frentes', label: 'Frentes parlamentares' },
+  { href: '/comparar', label: 'Comparar parlamentares' },
+  { href: '/feed', label: 'Feeds RSS' },
+  { href: '/docs', label: 'Como ler os dados' },
 ]
 
 export function isNavLinkActive(pathname: string | null, href: string) {
@@ -61,7 +75,7 @@ export function NavLinks({ personalLink }: Props = {}) {
     : NAV_LINKS
 
   return (
-    <ul className="hidden items-center gap-0.5 text-sm md:flex">
+    <ul className="hidden items-center gap-1.5 text-sm md:flex">
       {links.map((link) => {
         const isActive = isNavLinkActive(pathname, link.href)
 

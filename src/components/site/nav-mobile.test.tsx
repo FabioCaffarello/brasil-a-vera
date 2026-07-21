@@ -60,14 +60,24 @@ describe('NavMobile', () => {
     expect(document.body.style.overflow).toBe('')
   })
 
-  it('lista todos os 5 links de navegação no painel', () => {
+  it('lista os links primários e o grupo secundário no painel', () => {
     render(<NavMobile />)
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     expect(screen.getByRole('link', { name: /^parlamentares$/i })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Proposições' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Votações' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Rankings' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Temas' })).toBeDefined()
-    expect(screen.getByRole('link', { name: 'Docs' })).toBeDefined()
+    // Grupo secundário (auditoria UX 2026-07-20, P1.7)
+    expect(
+      screen.getByRole('link', { name: 'Vetos presidenciais' }),
+    ).toBeDefined()
+    expect(
+      screen.getByRole('link', { name: 'Comparar parlamentares' }),
+    ).toBeDefined()
+    expect(
+      screen.getByRole('link', { name: 'Como ler os dados' }),
+    ).toBeDefined()
   })
 
   it('inclui SearchForm dentro do painel', () => {
@@ -90,16 +100,18 @@ describe('NavMobile', () => {
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(7)
+    // 6 primários + Painel + 5 secundários
+    expect(links).toHaveLength(12)
     expect(links[0].textContent).toBe('Painel')
   })
 
-  it('sem personalLink, lista preserva 5 links públicos (paridade anônima)', () => {
+  it('sem personalLink, lista preserva os links públicos (paridade anônima)', () => {
     render(<NavMobile personalLink={null} />)
     fireEvent.click(screen.getByRole('button', { name: /abrir menu/i }))
     const dialog = screen.getByRole('dialog', { name: /menu principal/i })
     const links = dialog.querySelectorAll('a[href]')
-    expect(links).toHaveLength(6)
+    // 6 primários + 5 secundários
+    expect(links).toHaveLength(11)
     expect(dialog.querySelector('a[href="/painel"]')).toBeNull()
   })
 })
