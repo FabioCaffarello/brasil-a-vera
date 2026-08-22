@@ -1,5 +1,13 @@
 # Investigação: por que o Neon não dorme
 
+> **Status 2026-08-22 — ofensor identificado (issue #768).** Diagnóstico:
+> egress de leitura em request-time (busca sem cache, OG de proposição sem
+> cache, export de emendas cru, TTL 300s × keyspace enorme × cache por colo)
+> × 50–70k req/dia estourava a cota de 5GB/mês de data transfer no dia ~19
+> (julho E agosto). Mitigação no PR do incidente; `busca()` agora é cacheada
+> (o `db_query_uncached` dela citado abaixo foi removido). A instrumentação
+> restante permanece até a verificação pós-deploy confirmar a queda de egress.
+
 O compute do Neon (Postgres serverless) deveria suspender após ~5min
 sem queries (scale-to-zero). Quando o dashboard mostra RAM
 allocated/used constante 24/7 — sem "ENDPOINT INACTIVE" aparecendo —

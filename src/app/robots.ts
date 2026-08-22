@@ -19,6 +19,13 @@ import { getSiteUrl } from '@/lib/site-url'
 
 const PRIVATE_PATHS = ['/painel', '/api/', '/sign-in', '/sign-up']
 
+// Rotas cache-hostis: keyspace ilimitado (busca `?q=`, comparar `?ids=` com
+// ~22M combinações) → cada hit de crawler é miss garantido no Neon. Fechadas
+// para TODOS os bots, inclusive Google/Bing, desde o incidente de egress #768.
+// `/comparar?` (com query) bloqueia as permutações sem tirar a página-base
+// do índice.
+const CACHE_HOSTILE_PATHS = ['/busca', '/comparar?']
+
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = getSiteUrl()
   return {
@@ -26,12 +33,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: 'Googlebot',
         allow: ['/'],
-        disallow: PRIVATE_PATHS,
+        disallow: [...PRIVATE_PATHS, ...CACHE_HOSTILE_PATHS],
       },
       {
         userAgent: 'Bingbot',
         allow: ['/'],
-        disallow: PRIVATE_PATHS,
+        disallow: [...PRIVATE_PATHS, ...CACHE_HOSTILE_PATHS],
       },
       // Crawlers comerciais de SEO — sem benefício para projeto cívico.
       { userAgent: 'AhrefsBot', disallow: '/' },
@@ -43,13 +50,18 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'ClaudeBot', disallow: '/' },
       { userAgent: 'PerplexityBot', disallow: '/' },
       { userAgent: 'Bytespider', disallow: '/' },
-      // Default: permitir com disallow das rotas privadas + /busca.
-      // /busca tem hit rate de cache zero (cada `?q=X` é único) e cada
-      // hit é miss garantido no Neon — fora do índice por design.
+      // Crawlers de ÍNDICE DE BUSCA de IA — UAs distintos dos de treino acima
+      // e nunca listados aqui. Evidência (wrangler tail 2026-08-22, incidente
+      // #768): 241/241 invocações em 7min eram Claude-SearchBot varrendo
+      // /parlamentares/[id] (~50k/dia ≈ 100% do tráfego do Worker). Os UAs
+      // *-User (fetch iniciado por humano) ficam PERMITIDOS de propósito.
+      { userAgent: 'Claude-SearchBot', disallow: '/' },
+      { userAgent: 'OAI-SearchBot', disallow: '/' },
+      // Default: permitir com disallow das rotas privadas + cache-hostis.
       {
         userAgent: '*',
         allow: ['/'],
-        disallow: [...PRIVATE_PATHS, '/busca'],
+        disallow: [...PRIVATE_PATHS, ...CACHE_HOSTILE_PATHS],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

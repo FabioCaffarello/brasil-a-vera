@@ -1,5 +1,6 @@
 import { asc, desc, eq } from 'drizzle-orm'
 
+import { cached, TTL } from '@/lib/cache'
 import { csvResponseHeaders, toCsv } from '@/lib/csv'
 import { db } from '@/shared/db'
 import { emendaParlamentar } from '@/shared/db/schema'
@@ -28,11 +29,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const all = await db
-      .select()
-      .from(emendaParlamentar)
-      .where(eq(emendaParlamentar.parlamentarId, parlamentarId))
-      .orderBy(desc(emendaParlamentar.ano), asc(emendaParlamentar.codigoEmenda))
+    // LIMIT+1 no SQL (não slice pós-fetch) e cached(): endpoint público por
+    // URL era o único /api/export/* com query crua — ofensor de egress no
+    // incidente #768. x-total-count fica capado em LIMITE_EXPORT+1 quando
+    // trunca; x-truncated segue correto.
+    const all = await cached(
+      `export:emendas:${parlamentarId}`,
+      TTL.emendas,
+      () =>
+        db
+          .select()
+          .from(emendaParlamentar)
+          .where(eq(emendaParlamentar.parlamentarId, parlamentarId))
+          .orderBy(
+            desc(emendaParlamentar.ano),
+            asc(emendaParlamentar.codigoEmenda),
+          )
+          .limit(LIMITE_EXPORT + 1),
+    )
     const rows = all.slice(0, LIMITE_EXPORT)
 
     const csv = toCsv(rows, [
