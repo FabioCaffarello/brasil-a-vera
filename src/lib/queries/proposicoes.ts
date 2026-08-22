@@ -278,7 +278,21 @@ export async function listProposicoes(
   })
 }
 
+// Cacheada porque é a query do opengraph-image de proposição — bots de
+// link-preview martelam OGs e cada render ia cru ao Neon (incidente #768).
 export async function getProposicaoByChave(
+  tipo: TipoProposicao,
+  numero: number,
+  ano: number,
+) {
+  return cached(
+    `proposicoes:bychave:${tipo}:${numero}:${ano}`,
+    TTL.proposicaoEmTramitacao,
+    () => getProposicaoByChaveUncached(tipo, numero, ano),
+  )
+}
+
+async function getProposicaoByChaveUncached(
   tipo: TipoProposicao,
   numero: number,
   ano: number,

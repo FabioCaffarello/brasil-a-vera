@@ -61,7 +61,13 @@ export const TTL = {
   // nova votação nominal é ingerida (cron diário) → 6h é folgado. Consumido
   // pela rota /contradicao (page + OG, martelada por scrapers) e pelo perfil.
   coerenciaPares: 21_600,
-  listagemFiltrada: 300,
+  // Listagens filtradas e busca. Era 300s (freshness herdada da Wave 2, quando
+  // o custo de miss era teórico); o dado só muda no cron diário de ingestão e
+  // o keyspace de filtros é enorme (~1M permutações em /proposicoes) sobre um
+  // cache por colo que ainda é zerado a cada deploy — na prática quase todo
+  // hit era miss (incidente #768). 1h corta os misses de repetição em 12× sem
+  // freshness perceptível a menos que a ingestão rode no meio da janela.
+  listagemFiltrada: 3_600,
 } as const
 
 export type TtlKey = keyof typeof TTL

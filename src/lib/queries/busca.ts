@@ -1,6 +1,7 @@
 import { desc, eq, or, sql } from 'drizzle-orm'
 
 import { escapeIlike, parseProposicaoRef } from '@/lib/busca-parser'
+import { cached, TTL } from '@/lib/cache'
 import { db } from '@/shared/db'
 import { parlamentar, proposicao, votacao } from '@/shared/db/schema'
 
@@ -54,17 +55,22 @@ export async function busca(query: string): Promise<ResultadosBusca> {
   const pattern = escapeIlike(termo)
   const proposicaoRef = parseProposicaoRef(termo)
 
-  // TODO(investigate-neon-wake): remover quando ofensor identificado.
-  // Termo do usuário NÃO entra no log (PII potencial — pode conter nome
-  // próprio em buscas livres); só o comprimento, suficiente pra correlacionar.
-  console.log(
-    JSON.stringify({
-      event: 'db_query_uncached',
-      fn: 'busca',
-      termoLen: termo.length,
-    }),
+  // Key em lowercase: as queries são case/accent-insensitive (unaccent+ILIKE),
+  // então variantes de caixa do mesmo termo compartilham o slot. O termo do
+  // usuário entra na key do Workers Cache API (mesma exposição da própria URL
+  // ?q=), nunca em log (#768 encerrou a caça ao ofensor do neon-wake).
+  const resultados = await cached(
+    `busca:q=${termo.toLowerCase()}`,
+    TTL.listagemFiltrada,
+    () => buscaUncached(pattern),
   )
 
+  return { ...resultados, proposicaoMatchExato: proposicaoRef }
+}
+
+async function buscaUncached(
+  pattern: string,
+): Promise<Omit<ResultadosBusca, 'proposicaoMatchExato'>> {
   const [parlamentares, proposicoes, votacoes] = await Promise.all([
     db
       .select({
@@ -121,10 +127,5 @@ export async function busca(query: string): Promise<ResultadosBusca> {
       .limit(LIMIT_POR_SECAO),
   ])
 
-  return {
-    parlamentares,
-    proposicoes,
-    votacoes,
-    proposicaoMatchExato: proposicaoRef,
-  }
+  return { parlamentares, proposicoes, votacoes }
 }
