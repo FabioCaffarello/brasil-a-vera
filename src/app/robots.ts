@@ -50,6 +50,13 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'ClaudeBot', disallow: '/' },
       { userAgent: 'PerplexityBot', disallow: '/' },
       { userAgent: 'Bytespider', disallow: '/' },
+      // Crawlers de ÍNDICE DE BUSCA de IA — UAs distintos dos de treino acima
+      // e nunca listados aqui. Evidência (wrangler tail 2026-08-22, incidente
+      // #768): 241/241 invocações em 7min eram Claude-SearchBot varrendo
+      // /parlamentares/[id] (~50k/dia ≈ 100% do tráfego do Worker). Os UAs
+      // *-User (fetch iniciado por humano) ficam PERMITIDOS de propósito.
+      { userAgent: 'Claude-SearchBot', disallow: '/' },
+      { userAgent: 'OAI-SearchBot', disallow: '/' },
       // Default: permitir com disallow das rotas privadas + cache-hostis.
       {
         userAgent: '*',
