@@ -161,6 +161,20 @@ API pública REST + OpenAPI com rate limiting (#98/G) e datasets Parquet no R2 (
 
 ---
 
+### Adendo de execução (2026-08-22, mesmo dia)
+
+A execução da Fase 0 descobriu que o problema era maior que "tabelas zeradas": a cota
+mensal de **data transfer** do Neon free (5GB) estoura no dia ~19 de cada mês (julho:
+incidentes #751–#765; agosto: escritas bloqueadas desde ~18/08), e a projeção de setembro
+cairia dias antes da eleição. Diagnóstico com evidência literal na issue **#768**; ofensor
+primário identificado por `wrangler tail`: **Claude-SearchBot = 100% do tráfego do Worker**
+(~50k req/dia em perfis), nunca listado no robots.txt (que só bloqueava `ClaudeBot`).
+Mitigação no PR **#769**. Consequências no plano: F0.2 (reabastecer prod) e F0.3 movem
+para **01/09** (reset da cota), com o merge+deploy do #769 como pré-condição; F0.1 ganhou
+a verificação empírica de egress da 1ª semana de setembro como critério de done; o item
+"pico de tráfego × free tiers" da tabela de riscos (§9) sobe de prob. baixa–média para
+**alta** enquanto a decisão Neon (upgrade vs mitigação) não for tomada pelo owner (#768).
+
 ## 6. Sequenciamento proposto
 
 ```
